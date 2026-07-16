@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Living vs Non-Living Lesson</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/LivingNonLivingLesson.css') }}">
+</head>
+<body>
+  <div class="container py-4 lesson-container">
+    <div class="lesson-header">
+      <div>
+        <h1>Interactive Lesson</h1>
+        <p>Learn how to tell living things from non-living things.</p>
+      </div>
+      <div class="lesson-progress-bar">
+        <div id="lesson-progress" class="lesson-progress-fill"></div>
+      </div>
+    </div>
+
+    <div id="slide-explanation" class="slide-explanation"></div>
+
+    <div class="slide-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 id="lesson-title"></h2>
+        <span id="lesson-progress-text" class="lesson-progress-text"></span>
+      </div>
+      <div id="slide-content"></div>
+      <div class="lesson-navigation">
+        <button id="prev-slide" class="btn btn-outline-primary">Back</button>
+        <button id="next-slide" class="btn btn-primary" disabled>Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="{{ url_for('static', filename='js/LivingNonLivingLesson.js') }}"></script>
+  <script>
+    window.currentLessonId = {{ lesson.id if lesson else 'null' }};
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.initLivingNonLivingLesson) {
+        window.initLivingNonLivingLesson();
+      }
+    });
+  </script>
+</body>
+</html>

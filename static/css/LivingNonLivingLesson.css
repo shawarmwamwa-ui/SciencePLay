@@ -1,0 +1,280 @@
+:root {
+  --page-bg: #f2f7ff;
+  --panel-bg: #ffffff;
+  --panel-border: rgba(15, 23, 42, 0.12);
+  --accent: #2563eb;
+  --accent-soft: #dbeafe;
+  --success: #16a34a;
+  --danger: #dc3545;
+  --text: #0f172a;
+  --muted: #475569;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Press Start 2P', monospace;
+  background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 20%),
+              radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.12), transparent 18%),
+              linear-gradient(180deg, #eef6ff 0%, #f8fbff 100%);
+  color: var(--text);
+}
+
+.lesson-container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.lesson-header {
+  width: 100%;
+  max-width: 840px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.lesson-header h1 {
+  font-size: 2.3rem;
+  margin: 0;
+}
+
+.lesson-header p {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.lesson-progress-bar {
+  width: 100%;
+  max-width: 420px;
+  height: 1rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.lesson-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.lesson-progress-text {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.slide-card {
+  width: 100%;
+  max-width: 840px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 2rem;
+  padding: 2rem;
+  min-height: 460px;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.08);
+  position: relative; /* ensure hotspots are positioned inside the card */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.slide-explanation {
+  width: 100%;
+  max-width: 840px;
+  margin: 0 auto 0.6rem auto;
+  padding: 0.25rem 1rem;
+  color: var(--muted);
+  font-size: 1rem;
+  text-align: left;
+}
+
+.slide-explanation-text {
+  display: inline-block;
+  background: transparent;
+  padding: 0.25rem 0.5rem;
+}
+
+.slide-card h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.slide-card #slide-content {
+  margin-top: 1rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.scene-image {
+  position: relative; /* anchor absolute hotspots */
+  min-height: 180px;
+  width: 100%;
+  border-radius: 1rem;
+  overflow: visible;
+}
+
+.lesson-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: auto; /* push navigation to bottom of the card */
+  width: 100%;
+}
+
+#prev-slide,
+#next-slide {
+  border-radius: 1.25rem;
+  padding: 0.95rem 1.2rem;
+  min-width: 110px;
+  font-weight: 700;
+}
+
+#prev-slide {
+  color: var(--accent);
+  background: #e2e8f0;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+}
+
+#next-slide {
+  color: #ffffff;
+  background: var(--accent);
+  border: none;
+}
+
+#next-slide:disabled {
+  opacity: 0.55;
+}
+
+.quick-options,
+.traits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+}
+
+.quick-option,
+.trait-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 1.5rem;
+  background: var(--panel-bg);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quick-option:hover,
+.trait-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+}
+
+.quick-option.correct,
+.trait-option.correct {
+  border-color: var(--success);
+  background: #dcfce7;
+}
+
+.quick-option.incorrect,
+.trait-option.incorrect {
+  border-color: var(--danger);
+  background: #ffe4e6;
+}
+
+.trait-selected {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.characteristics-feedback,
+.quick-feedback {
+  margin-top: 1rem;
+  min-height: 60px;
+  font-weight: 700;
+}
+
+.feedback-correct {
+  color: var(--success);
+}
+
+.feedback-incorrect {
+  color: var(--danger);
+}
+
+.hotspot {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: #16a34a; /* green icon background to match design */
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transform: translate(-50%, -50%); /* center on JS-provided coordinates */
+  z-index: 90; /* ensure hotspots appear above inner boxes */
+}
+
+.hotspot:hover {
+  transform: translate(-50%, -60%);
+}
+
+.hotspot-icon,
+.quick-option-icon {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+}
+
+.hotspot-bounce {
+  animation: hotspot-bounce 0.35s ease;
+}
+
+@keyframes hotspot-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.hotspot-card {
+  background: #f8fbff;
+  border: 1px solid var(--panel-border);
+  border-radius: 1.5rem;
+  padding: 1rem;
+  position: relative;
+  z-index: 10; /* lower than hotspots */
+}
+
+.hotspot-tapped {
+  background: var(--success);
+  color: #ffffff;
+  box-shadow: inset 0 0 0 4px rgba(25, 135, 84, 0.25);
+}
+
+.summary-slide ul {
+  list-style: disc;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.lesson-feedback,
+.quick-feedback {
+  margin-top: 1rem;
+}

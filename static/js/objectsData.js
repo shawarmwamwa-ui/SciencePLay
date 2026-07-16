@@ -1,0 +1,173 @@
+// objectsData.js
+// Shared living/non-living object data for lesson content and game logic.
+
+export const LIVING_NON_LIVING_OBJECTS = [
+  {
+    id: 1,
+    label: 'Tree',
+    isLiving: true,
+    explanation: 'A tree is living because it grows, breathes, and needs water.',
+    image: '/static/images/tree.png',
+    icon: '/static/images/tree.png',
+  },
+  {
+    id: 2,
+    label: 'Rock',
+    isLiving: false,
+    explanation: 'A rock is non-living because it does not grow, move, or need food.',
+    image: '/static/images/rock.png',
+    icon: '/static/images/rock.png',
+  },
+  {
+    id: 3,
+    label: 'Bird',
+    isLiving: true,
+    explanation: 'A bird is living because it eats, breathes, and moves on its own.',
+    image: '/static/images/bird.png',
+    icon: '/static/images/bird.png',
+  },
+  {
+    id: 4,
+    label: 'Bicycle',
+    isLiving: false,
+    explanation: 'A bicycle is non-living because it does not grow, breathe, or eat.',
+    image: '/static/images/bicycle.png',
+    icon: '/static/images/bicycle.png',
+  },
+  {
+    id: 5,
+    label: 'Fish',
+    isLiving: true,
+    explanation: 'A fish is living because it breathes, moves, grows, and needs food.',
+    image: '/static/images/fish.png',
+    icon: '/static/images/fish.png',
+  },
+  {
+    id: 6,
+    label: 'Ball',
+    isLiving: false,
+    explanation: 'A ball is non-living because it does not breathe, grow, or eat.',
+    image: '/static/images/ball.png',
+    icon: '/static/images/ball.png',
+  },
+  {
+    id: 7,
+    label: 'Plant',
+    isLiving: true,
+    explanation: 'A plant is living because it grows, makes food from sunlight, and needs water.',
+    image: '/static/images/plant.png',
+    icon: '/static/images/plant.png',
+  },
+  {
+    id: 8,
+    label: 'Chair',
+    isLiving: false,
+    explanation: 'A chair is non-living because it does not move or breathe on its own.',
+    image: '/static/images/chair.png',
+    icon: '/static/images/chair.png',
+  },
+  {
+    id: 9,
+    label: 'Cat',
+    isLiving: true,
+    explanation: 'A cat is living because it moves, eats, and grows.',
+    image: '/static/images/cat.png',
+    icon: '/static/images/cat.png',
+  },
+  {
+    id: 10,
+    label: 'Flower',
+    isLiving: true,
+    explanation: 'A flower is living because it grows and needs water.',
+    image: '/static/images/flower.png',
+    icon: '/static/images/flower.png',
+  },
+  {
+    id: 11,
+    label: 'Butterfly',
+    isLiving: true,
+    explanation: 'A butterfly is living because it flies, eats, and breathes.',
+    image: '/static/images/butterfly.png',
+    icon: '/static/images/butterfly.png',
+  },
+  {
+    id: 12,
+    label: 'Puddle',
+    isLiving: false,
+    explanation: 'A puddle is non-living because it does not grow or breathe.',
+    image: '/static/images/puddle.png',
+    icon: '/static/images/puddle.png',
+  },
+  {
+    id: 13,
+    label: 'Dog',
+    isLiving: true,
+    explanation: 'A dog is living because it breathes, grows, eats, and moves on its own.',
+    image: '/static/images/icons/dog.png',
+    icon: '/static/images/icons/dog.png',
+  },
+  {
+    id: 14,
+    label: 'Pencil',
+    isLiving: false,
+    explanation: 'A pencil is non-living because it does not breathe, grow, or eat.',
+    image: '/static/images/icons/pencil.png',
+    icon: '/static/images/icons/pencil.png',
+  },
+  {
+    id: 15,
+    label: 'Elephant',
+    isLiving: true,
+    explanation: 'An elephant is living because it eats, breathes, and grows.',
+    image: '/static/images/icons/elephant.png',
+    icon: '/static/images/icons/elephant.png',
+  },
+  {
+    id: 16,
+    label: 'Cup',
+    isLiving: false,
+    explanation: 'A cup is non-living because it does not grow, breathe, or need food.',
+    image: '/static/images/icons/cup.png',
+    icon: '/static/images/icons/cup.png',
+  },
+  {
+    id: 17,
+    label: 'Book',
+    isLiving: false,
+    explanation: 'A book is non-living because it is made by people and does not live.',
+    image: '/static/images/icons/book.png',
+    icon: '/static/images/icons/book.png',
+  },
+  {
+    id: 18,
+    label: 'Car',
+    isLiving: false,
+    explanation: 'A car is non-living because it cannot grow, breathe, or reproduce.',
+    image: '/static/images/icons/car.png',
+    icon: '/static/images/icons/car.png',
+  },
+  {
+    id: 19,
+    label: 'Monkey',
+    isLiving: true,
+    explanation: 'A monkey is living because it moves, eats, and grows.',
+    image: '/static/images/icons/monkey.png',
+    icon: '/static/images/icons/monkey.png',
+  },
+  {
+    id: 20,
+    label: 'Spoon',
+    isLiving: false,
+    explanation: 'A spoon is non-living because it does not have life processes like eating or breathing.',
+    image: '/static/images/icons/spoon.png',
+    icon: '/static/images/icons/spoon.png',
+  },
+];
+
+export function getObjectById(id) {
+  return LIVING_NON_LIVING_OBJECTS.find(object => object.id === id);
+}
+
+export function getObjectByLabel(label) {
+  return LIVING_NON_LIVING_OBJECTS.find(object => object.label.toLowerCase() === label.toLowerCase());
+}

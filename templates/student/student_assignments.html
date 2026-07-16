@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Assignments</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+</head>
+<body class="container mt-4">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="alerts-container mb-4">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2>My Assignments</h2>
+      <p>View your active lessons and activities.</p>
+    </div>
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+
+  <div class="row gy-4">
+    <div class="col-md-6">
+      <h4>Lesson Assignments</h4>
+      <table class="table table-bordered">
+        <thead><tr><th>Lesson</th><th>Status</th><th>Due</th></tr></thead>
+        <tbody>
+          {% for assignment in lesson_assignments %}
+            <tr>
+              <td>{{ assignment.lesson.title if assignment.lesson else assignment.lesson_id }}</td>
+              <td>{{ assignment.status }}</td>
+              <td>{{ assignment.due_date or '-' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="col-md-6">
+      <h4>Activity Assignments</h4>
+      <table class="table table-bordered">
+        <thead><tr><th>Activity</th><th>Status</th><th>Due</th></tr></thead>
+        <tbody>
+          {% for assignment in activity_assignments %}
+            <tr>
+              <td>{{ assignment.activity.type if assignment.activity else assignment.activity_id }}</td>
+              <td>{{ assignment.status }}</td>
+              <td>{{ assignment.due_date or '-' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

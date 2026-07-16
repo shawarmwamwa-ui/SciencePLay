@@ -1,0 +1,34 @@
+.password-toggle-wrapper {
+  position: relative;
+}
+
+.password-toggle-wrapper input {
+  padding-right: 2.75rem;
+}
+
+.password-toggle-wrapper .password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #495057;
+  padding: 0.25rem 0.35rem;
+  z-index: 2;
+}
+
+/* Hide browser native password reveal icon */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-search-decoration,
+input[type="password"]::-webkit-search-cancel-button,
+input[type="password"]::-webkit-search-results-button,
+input[type="password"]::-webkit-search-results-decoration {
+  display: none !important;
+}
+
+input[type="password"] {
+  -webkit-text-security: disc;
+}
