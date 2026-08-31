@@ -2,50 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Lessons</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson Adventure — SciencePlay</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
 </head>
-<body class="student-page container mt-4">
-  <div class="mb-4 d-flex justify-content-between align-items-center">
+<body class="student-page container mt-3 mb-4">
+
+  <!-- Top Banner Header -->
+  <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 page-top-banner">
     <div>
-      <h1>Lessons</h1>
-      <p class="text-muted">Browse all lessons and start learning.</p>
+      <h1 class="fw-black display-5 mb-1"><i class="bi bi-book-fill text-primary me-2"></i>Lesson Adventure</h1>
+      <p class="text-dark fw-bold fs-5 mb-0">Choose a lesson and explore science step by step!</p>
     </div>
-    <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    <a href="{{ url_for('student.dashboard') }}" class="brutal-btn brutal-btn-secondary">
+      <i class="bi bi-arrow-left-circle-fill me-1"></i>
+      <span>Back to Dashboard</span>
+    </a>
   </div>
 
   <div class="row g-4">
     {% if lesson_progress %}
       {% for item in lesson_progress %}
         <div class="col-md-6">
-          <a href="{{ url_for('student.living_non_living_lesson') }}" class="text-decoration-none">
-            <div class="card lesson-item-card p-4 h-100 clickable-card">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <h4>{{ item.lesson.title }}</h4>
-                  <p class="text-muted mb-0">{{ item.lesson.description }}</p>
-                </div>
-                <span class="badge bg-primary">{{ item.percent }}%</span>
+          {% if item.is_locked %}
+          <div class="lesson-grid-card h-100" style="background: #f1f5f9; opacity: 0.85;">
+            <div>
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h3 class="fw-black text-dark fs-3 mb-0"><i class="bi bi-lock-fill me-2 text-secondary"></i>{{ item.lesson.title }}</h3>
+                <span class="percent-pill-badge" style="background: #64748b;">Locked</span>
               </div>
-              <div class="progress lesson-progress mb-3">
+              <p class="text-dark fw-bold fs-6 mb-3">{{ item.lesson.description }}</p>
+            </div>
+            <div>
+              <div class="progress brutal-progress mb-3">
+                <div class="progress-bar bg-secondary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-black text-dark fs-6"><i class="bi bi-shield-lock me-1"></i>Locked</span>
+                <span class="btn btn-secondary disabled fw-bold" style="border-radius: 12px; border: 3px solid #18181b;">Complete Prereq First</span>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          {% if item.lesson.title == 'Animal Body Parts' %}
+            {% set lesson_url = url_for('student.animal_body_parts_lesson') %}
+          {% elif item.lesson.title == 'Plant Parts' %}
+            {% set lesson_url = url_for('student.plant_parts_lesson') %}
+          {% else %}
+            {% set lesson_url = url_for('student.living_non_living_lesson') %}
+          {% endif %}
+          {% set btn_colors = ['brutal-open-btn-green', 'brutal-open-btn-yellow', 'brutal-open-btn-pink', 'brutal-open-btn-purple', 'brutal-open-btn-cyan'] %}
+          {% set btn_class = btn_colors[loop.index0 % btn_colors|length] %}
+          <div class="lesson-grid-card h-100">
+            <div>
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h3 class="fw-black text-dark fs-3 mb-0"><i class="bi bi-journal-bookmark-fill me-2 text-primary"></i>{{ item.lesson.title }}</h3>
+                <span class="percent-pill-badge">{{ item.percent }}%</span>
+              </div>
+              <p class="text-dark fw-bold fs-6 mb-3">{{ item.lesson.description }}</p>
+            </div>
+            <div>
+              <div class="progress brutal-progress mb-3">
                 <div class="progress-bar" role="progressbar" style="width: {{ item.percent }}%;" aria-valuenow="{{ item.percent }}" aria-valuemin="0" aria-valuemax="100"></div>
               </div>
               <div class="d-flex justify-content-between align-items-center">
-                <div class="fw-bold">Current Lesson</div>
-                <span class="btn btn-sm btn-primary">Open</span>
+                <span class="fw-black text-dark fs-6"><i class="bi bi-compass-fill me-1 text-success"></i>Active Adventure</span>
+                <a href="{{ lesson_url }}" class="brutal-open-btn {{ btn_class }}">
+                  <span>Start Lesson</span>
+                  <i class="bi bi-arrow-right-circle-fill ms-1 fs-5"></i>
+                </a>
               </div>
             </div>
-          </a>
+          </div>
+          {% endif %}
         </div>
       {% endfor %}
     {% else %}
       <div class="col-12">
-        <div class="alert alert-info">No lessons are available yet. Check back soon.</div>
+        <div class="brutal-alert alert alert-info p-4 text-center">
+          <i class="bi bi-info-circle-fill me-2 fs-4"></i>No lessons are available yet. Check back soon!
+        </div>
       </div>
     {% endif %}
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 </body>
 </html>

@@ -1,31 +1,143 @@
 // LivingNonLivingLesson.js
 // Main lesson logic for the Living vs Non-Living interactive slideshow.
-// This file handles slide navigation, progress updates, and event logging.
+// This file handles slide navigation, progress updates, audio feedback, and event logging.
 
 import { LESSON_SLIDES } from './lessonSlidesData.js';
+import { speakText } from './ttsHelper.js';
 
 const lessonState = {
   currentIndex: 0,
   slideStartTime: null,
   log: [],
-  hotspotProgress: {},
-  quickCheckState: null,
-  characteristicSelections: new Set(),
+  slideStates: {},
   touchStartX: null,
 };
 
+let lessonAudioContext = null;
+
+function initLessonAudio() {
+  if (!lessonAudioContext) {
+    lessonAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return lessonAudioContext;
+}
+
+function playAudioTone(frequency, duration = 0.12, volume = 0.12) {
+  const ctx = initLessonAudio();
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+  oscillator.type = 'triangle';
+  oscillator.frequency.value = frequency;
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+  oscillator.start(ctx.currentTime);
+  oscillator.stop(ctx.currentTime + duration);
+}
+
+function playFeedbackSound(correct) {
+  playAudioTone(correct ? 660 : 260, 0.18, 0.18);
+}
+
+function playTapSound() {
+  playAudioTone(480, 0.08, 0.1);
+}
+
+function getActiveLessonSlides() {
+  if (window.publishedLessonPayload && Array.isArray(window.publishedLessonPayload.slides) && window.publishedLessonPayload.slides.length) {
+    return window.publishedLessonPayload.slides.map((slide, index) => ({
+      id: slide.id || `slide-${index + 1}`,
+      title: slide.title || `Slide ${index + 1}`,
+      type: slide.type || (slide.templateType === 'summary' ? 'summary' : 'quick-check'),
+      description: slide.metadata?.hintText || '',
+      prompt: slide.contentData?.prompt || 'Answer the question.',
+      options: (slide.contentData?.items || []).map((item, itemIndex) => ({
+        id: `${slide.id || index + 1}-option-${itemIndex + 1}`,
+        label: item.label || `Option ${itemIndex + 1}`,
+        icon: item.iconKey || '',
+        isLiving: item.category === 'living'
+      })),
+      targetIsLiving: (slide.contentData?.targets || []).some(target => target.accepts && target.accepts.includes('living')),
+      successMessage: slide.metadata?.correctFeedback || 'Correct!',
+      retryMessage: slide.metadata?.incorrectFeedback || 'Try again.',
+      retryHint: slide.metadata?.hintText || 'Think carefully.',
+      bullets: Array.isArray(slide.contentData?.bullets) ? slide.contentData.bullets : [],
+      hotspots: Array.isArray(slide.contentData?.hotspots) ? slide.contentData.hotspots : [],
+      traits: Array.isArray(slide.contentData?.traits) ? slide.contentData.traits : [],
+      object: slide.contentData?.object || {},
+      correctTraits: Array.isArray(slide.contentData?.correctTraits) ? slide.contentData.correctTraits : []
+    }));
+  }
+
+  return LESSON_SLIDES;
+}
+
+let lessonHeartbeatInterval = null;
+let lessonFinished = false;
+
 function initLesson() {
+  console.log('Initializing lesson...');
+  console.log('LESSON_SLIDES available:', LESSON_SLIDES ? LESSON_SLIDES.length + ' slides' : 'NOT LOADED');
   lessonState.currentIndex = 0;
   lessonState.log = [];
-  lessonState.hotspotProgress = {};
-  lessonState.quickCheckState = null;
-  lessonState.characteristicSelections = new Set();
+  lessonState.slideStates = {};
   lessonState.slideStartTime = Date.now();
   lessonState.touchStartX = null;
+  lastSavedTime = performance.now();
+  lessonFinished = false;
 
   renderLesson();
   bindNavigation();
   bindSwipe();
+  bindTTS();
+
+  // Immediate save to register student as active in live tracker
+  saveLessonProgress(false);
+
+  // Periodic 5-second heartbeat for real-time live time tracking
+  if (lessonHeartbeatInterval) {
+    clearInterval(lessonHeartbeatInterval);
+  }
+  lessonHeartbeatInterval = setInterval(() => {
+    if (!lessonFinished) {
+      saveLessonProgress(false);
+    }
+  }, 5000);
+
+  // Flush remaining time when leaving page (only if not already finished)
+  window.addEventListener('pagehide', () => {
+    if (!lessonFinished) {
+      saveLessonProgress(false);
+    }
+  });
+
+  console.log('Lesson initialized');
+}
+
+function getCurrentSlide() {
+  return getActiveLessonSlides()[lessonState.currentIndex];
+}
+
+function ensureSlideState(slide) {
+  if (!lessonState.slideStates[slide.id]) {
+    lessonState.slideStates[slide.id] = {
+      hotspotProgress: {},
+      lastHotspotId: null,
+      quickCheckState: null,
+      characteristicSelections: new Set(),
+    };
+  }
+  return lessonState.slideStates[slide.id];
+}
+
+function getCurrentSlideState() {
+  return ensureSlideState(getCurrentSlide());
+}
+
+function resetSlideState() {
+  lessonState.slideStartTime = Date.now();
 }
 
 function bindNavigation() {
@@ -34,12 +146,20 @@ function bindNavigation() {
       return;
     }
     logCurrentSlide();
-    const slide = LESSON_SLIDES[lessonState.currentIndex];
-    if (slide.type === 'summary') {
+    const slides = getActiveLessonSlides();
+    const slide = getCurrentSlide();
+    const isFinalSlide = lessonState.currentIndex === slides.length - 1;
+
+    if (slide.type === 'summary' || isFinalSlide) {
+      lessonFinished = true;
+      if (lessonHeartbeatInterval) {
+        clearInterval(lessonHeartbeatInterval);
+      }
       saveLessonProgress(true);
-      window.location.href = '/student/claw_machine';
+      window.location.href = '/student/lessons';
       return;
     }
+
     lessonState.currentIndex += 1;
     resetSlideState();
     renderLesson();
@@ -55,6 +175,30 @@ function bindNavigation() {
     resetSlideState();
     renderLesson();
     saveLessonProgress();
+  });
+}
+
+function bindTTS() {
+  const btn = document.querySelector('#tts-btn');
+  if (!btn) return;
+  
+  btn.addEventListener('click', () => {
+    const slide = getCurrentSlide();
+    let textToRead = `${slide.title}. `;
+    if (slide.description && slide.type !== 'intro') textToRead += `${slide.description}. `;
+    if (slide.prompt) textToRead += `${slide.prompt}. `;
+    
+    if (slide.bullets && slide.bullets.length) {
+       textToRead += slide.bullets.join('. ') + '. ';
+    }
+    
+    if (slide.options && slide.options.length) {
+       textToRead += "Options are: " + slide.options.map(o => o.label).join(', ') + '. ';
+    }
+
+    if (window.speechSynthesis) {
+      speakText(textToRead);
+    }
   });
 }
 
@@ -79,34 +223,29 @@ function bindSwipe() {
 
     if (deltaX > threshold && lessonState.currentIndex > 0) {
       document.querySelector('#prev-slide').click();
-    } else if (deltaX < -threshold && lessonState.currentIndex < LESSON_SLIDES.length - 1) {
+    } else if (deltaX < -threshold && lessonState.currentIndex < getActiveLessonSlides().length - 1) {
       document.querySelector('#next-slide').click();
     }
     lessonState.touchStartX = null;
   });
 }
 
-function resetSlideState() {
-  lessonState.slideStartTime = Date.now();
-  lessonState.hotspotProgress = {};
-  lessonState.quickCheckState = null;
-  lessonState.characteristicSelections = new Set();
-}
-
 function renderLesson() {
-  const slide = LESSON_SLIDES[lessonState.currentIndex];
+  const slide = getCurrentSlide();
+  console.log('Rendering slide:', slide.id, 'type:', slide.type);
+  const slides = getActiveLessonSlides();
   document.querySelector('#lesson-title').textContent = slide.title;
-  document.querySelector('#lesson-progress').style.width = `${((lessonState.currentIndex + 1) / LESSON_SLIDES.length) * 100}%`;
-  document.querySelector('#lesson-progress-text').textContent = `${lessonState.currentIndex + 1} / ${LESSON_SLIDES.length}`;
+  document.querySelector('#lesson-progress').style.width = `${((lessonState.currentIndex + 1) / slides.length) * 100}%`;
+  document.querySelector('#lesson-progress-text').textContent = `${lessonState.currentIndex + 1} / ${slides.length}`;
   document.querySelector('#prev-slide').disabled = lessonState.currentIndex === 0;
-  document.querySelector('#next-slide').textContent = slide.type === 'summary' ? slide.nextLabel : 'Next';
+  document.querySelector('#next-slide').textContent = slide.type === 'summary' ? (slide.nextLabel || 'Finish') : 'Next';
   const explanationContainer = document.querySelector('#slide-explanation');
   const slideContainer = document.querySelector('#slide-content');
   explanationContainer.innerHTML = '';
   slideContainer.innerHTML = '';
 
-  // Render explanation (outside the card) and interactive content inside the card.
-  if (slide.description) {
+  // Show description for non-intro slides above the card.
+  if (slide.description && slide.type !== 'intro') {
     explanationContainer.innerHTML = `<div class="slide-explanation-text">${slide.description}</div>`;
   }
 
@@ -123,39 +262,67 @@ function renderLesson() {
   }
 
   updateNavigationState();
+  console.log('Slide rendered, slideContainer innerHTML length:', slideContainer.innerHTML.length);
+}
+
+function getQuickFeedbackMessage(slide, isCorrect) {
+  if (isCorrect) {
+    const lead = slide.successMessage || 'Correct!';
+    return `${lead} ${slide.explanation || ''}`.trim();
+  }
+
+  const lead = slide.retryMessage || 'Try again.';
+  const hint = slide.retryHint || 'Think about what only living or non-living things can do on their own.';
+  return `${lead} ${hint}`.trim();
+}
+
+function getTraitMistakeMessage(slide, selectedCount, wrongLabels) {
+  const hint = slide.mistakeHint || 'Try choosing traits that living things do on their own.';
+  return `You picked ${selectedCount} trait${selectedCount === 1 ? '' : 's'}, but ${wrongLabels} ${wrongLabels.includes(',') ? 'are' : 'is'} not a living-thing clue. ${hint}`;
+}
+
+function getTraitProgressMessage(slide, correctCount) {
+  if (correctCount === slide.correctTraits.length) {
+    return slide.conclusion;
+  }
+
+  const lead = slide.partialMessage || 'Good start!';
+  return `${lead} You have found ${correctCount} correct trait${correctCount === 1 ? '' : 's'} so far.`;
 }
 
 function canAdvance() {
-  const slide = LESSON_SLIDES[lessonState.currentIndex];
+  const slide = getCurrentSlide();
+  const slideState = getCurrentSlideState();
   if (slide.type === 'hotspots') {
-    return Object.keys(lessonState.hotspotProgress).length === slide.hotspots.length;
+    return Object.keys(slideState.hotspotProgress).length === slide.hotspots.length;
   }
   if (slide.type === 'quick-check') {
-    return lessonState.quickCheckState !== null;
+    return Boolean(slideState.quickCheckState?.correct);
   }
   if (slide.type === 'characteristics') {
-    return lessonState.characteristicSelections.size > 0;
+    const selected = slideState.characteristicSelections;
+    const hasWrongChoice = Array.from(selected).some(id => !slide.correctTraits.includes(id));
+    const allCorrectSelected = slide.correctTraits.every(id => selected.has(id));
+    return allCorrectSelected && !hasWrongChoice;
   }
   return true;
 }
 
-function renderIntroSlide(slide, container, explanationContainer) {
-  // Show optional image inside the interactive card area, explanation shown outside.
+function renderIntroSlide(slide, container) {
   container.innerHTML = `
     <div class="lesson-intro">
       ${slide.image ? `<img src="${slide.image}" alt="Lesson intro" class="lesson-intro-image">` : ''}
+      ${slide.description ? `<p class="lesson-intro-description">${slide.description}</p>` : ''}
     </div>
   `;
-  if (slide.description && explanationContainer) {
-    explanationContainer.innerHTML = `<div class="slide-explanation-text">${slide.description}</div>`;
-  }
 }
 
 function renderHotspotSlide(slide, container, explanationContainer) {
+  const slideState = getCurrentSlideState();
   const hotspotHtml = slide.hotspots
     .map(hotspot => `
-      <button class="hotspot" data-id="${hotspot.id}" style="left: ${hotspot.x}%; top: ${hotspot.y}%">
-        ${hotspot.image ? `<img src="${hotspot.image}" alt="${hotspot.label}" class="hotspot-icon">` : ''}
+      <button class="hotspot ${slideState.hotspotProgress[hotspot.id] ? 'hotspot-tapped' : ''}" data-id="${hotspot.id}" style="left: ${hotspot.x}%; top: ${hotspot.y}%">
+        ${(hotspot.icon || hotspot.image) ? `<img src="${hotspot.icon || hotspot.image}" alt="${hotspot.label}" class="hotspot-icon">` : ''}
         <span>${hotspot.label}</span>
       </button>
     `)
@@ -174,20 +341,39 @@ function renderHotspotSlide(slide, container, explanationContainer) {
     </div>
   `;
 
+  if (slideState.lastHotspotId) {
+    const hotspot = slide.hotspots.find(item => item.id === slideState.lastHotspotId);
+    if (hotspot) {
+      const feedback = container.querySelector('#hotspot-feedback');
+      feedback.innerHTML = `
+        <div class="hotspot-card">
+          <strong>${hotspot.label}</strong>
+          <p>${hotspot.description}</p>
+        </div>
+      `;
+    }
+  }
+
   slide.hotspots.forEach(hotspot => {
     const button = container.querySelector(`.hotspot[data-id="${hotspot.id}"]`);
-    button.addEventListener('click', () => handleHotspotTap(slide, hotspot, button));
+    if (button) {
+      button.addEventListener('click', () => handleHotspotTap(slide, hotspot, button));
+    } else {
+      console.warn(`Hotspot button not found for id: ${hotspot.id}`);
+    }
   });
 }
 
 function handleHotspotTap(slide, hotspot, button) {
-  const tapped = lessonState.hotspotProgress[hotspot.id];
-  if (tapped) {
-    return;
+  playTapSound();
+  const slideState = getCurrentSlideState();
+  const wasTapped = Boolean(slideState.hotspotProgress[hotspot.id]);
+  if (!wasTapped) {
+    slideState.hotspotProgress[hotspot.id] = true;
+    button.classList.add('hotspot-tapped');
   }
+  slideState.lastHotspotId = hotspot.id;
 
-  lessonState.hotspotProgress[hotspot.id] = true;
-  button.classList.add('hotspot-tapped');
   const feedback = document.querySelector('#hotspot-feedback');
   feedback.innerHTML = `
     <div class="hotspot-card">
@@ -201,17 +387,27 @@ function handleHotspotTap(slide, hotspot, button) {
 }
 
 function renderQuickCheckSlide(slide, container, explanationContainer) {
+  const slideState = getCurrentSlideState();
+  const promptMarkup = slide.prompt
+    ? `<p class="quick-check-prompt">${slide.prompt}</p>`
+    : '';
   const optionsHtml = slide.options
-    .map(option => `
-      <button class="quick-option" data-id="${option.id}">
-        ${option.image ? `<img src="${option.image}" alt="${option.label}" class="quick-option-icon">` : ''}
+    .map(option => {
+      const selectedClass = slideState.quickCheckState?.selected === option.id
+        ? slideState.quickCheckState.correct ? 'option-correct' : 'option-incorrect'
+        : '';
+      return `
+      <button class="quick-option ${selectedClass}" data-id="${option.id}">
+        ${(option.icon || option.image) ? `<img src="${option.icon || option.image}" alt="${option.label}" class="quick-option-icon">` : ''}
         <span>${option.label}</span>
       </button>
-    `)
+    `;
+    })
     .join('');
 
   container.innerHTML = `
     <div class="quick-check-slide">
+      ${promptMarkup}
       <div class="quick-options">${optionsHtml}</div>
       <div id="quick-feedback" class="quick-feedback"></div>
     </div>
@@ -219,55 +415,110 @@ function renderQuickCheckSlide(slide, container, explanationContainer) {
 
   slide.options.forEach(option => {
     const button = container.querySelector(`.quick-option[data-id="${option.id}"]`);
-    button.addEventListener('click', () => handleQuickCheckTap(slide, option, button));
+    if (button) {
+      button.addEventListener('click', () => handleQuickCheckTap(slide, option, button));
+    } else {
+      console.warn(`Quick-check button not found for id: ${option.id}`);
+    }
   });
+
+  const feedback = container.querySelector('#quick-feedback');
+  feedback.classList.remove('feedback-correct', 'feedback-incorrect');
+  if (slideState.quickCheckState) {
+    const isCorrect = slideState.quickCheckState.correct;
+    feedback.textContent = getQuickFeedbackMessage(slide, isCorrect);
+    feedback.classList.add(isCorrect ? 'feedback-correct' : 'feedback-incorrect');
+  }
 }
 
 function handleQuickCheckTap(slide, option, button) {
-  if (lessonState.quickCheckState !== null) {
+  playTapSound();
+  const slideState = getCurrentSlideState();
+  if (slideState.quickCheckState?.correct) {
     return;
   }
+
+  const allOptions = document.querySelectorAll('.quick-option');
+  allOptions.forEach(opt => {
+    opt.classList.remove('option-correct', 'option-incorrect');
+  });
 
   const isCorrect = slide.hasOwnProperty('targetIsLiving')
     ? option.isLiving === slide.targetIsLiving
     : option.isLiving;
 
-  lessonState.quickCheckState = {
+  slideState.quickCheckState = {
     selected: option.id,
     correct: isCorrect,
   };
 
   const feedback = document.querySelector('#quick-feedback');
-  feedback.textContent = isCorrect ? `Correct! ${slide.explanation}` : `Try again! ${slide.explanation}`;
+  feedback.textContent = getQuickFeedbackMessage(slide, isCorrect);
   feedback.classList.add(isCorrect ? 'feedback-correct' : 'feedback-incorrect');
+  feedback.classList.remove(isCorrect ? 'feedback-incorrect' : 'feedback-correct');
   button.classList.add(isCorrect ? 'option-correct' : 'option-incorrect');
+  playFeedbackSound(isCorrect);
   updateNavigationState();
+  logQuickCheckAttempt(slide, option, isCorrect);
+}
 
-  if (isCorrect) {
-    setTimeout(() => {
-      if (lessonState.currentIndex < LESSON_SLIDES.length - 1) {
-        document.querySelector('#next-slide').click();
-      }
-    }, 900);
-  }
+function logQuickCheckAttempt(slide, option, isCorrect) {
+  const promptText = slide.prompt || `Question #${slide.id}`;
+  const optionName = option.label || option.name || option.id || '';
+  const questionTitle = optionName ? `${promptText} (${optionName})` : promptText;
+
+  fetch('/student/lesson_question_attempt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      lesson_id: 1,
+      question: questionTitle,
+      was_correct: isCorrect
+    })
+  }).catch(() => {});
 }
 
 function renderCharacteristicsSlide(slide, container, explanationContainer) {
+  const slideState = getCurrentSlideState();
   const traitsHtml = slide.traits
-    .map(trait => `
-      <button class="trait-option" data-id="${trait.id}">${trait.label}</button>
-    `)
+    .map(trait => {
+      const isSelected = slideState.characteristicSelections.has(trait.id);
+      const isCorrect = slide.correctTraits.includes(trait.id);
+      let stateClass = '';
+      let badgeHtml = '';
+      if (isSelected) {
+        if (isCorrect) {
+          stateClass = 'trait-selected trait-correct';
+          badgeHtml = '<span class="trait-check-badge"><i class="bi bi-check-circle-fill"></i></span>';
+        } else {
+          stateClass = 'trait-selected trait-incorrect';
+          badgeHtml = '<span class="trait-check-badge"><i class="bi bi-x-circle-fill"></i></span>';
+        }
+      }
+      return `
+        <button class="trait-option ${stateClass}" data-id="${trait.id}">
+          <span class="trait-label">${trait.label}</span>
+          ${badgeHtml}
+        </button>
+      `;
+    })
     .join('');
 
-  const objectImage = slide.object.image || '/static/images/fish.png';
+  const objectImage = slide.object.image || (slide.object.icon && (slide.object.icon.startsWith('http') || slide.object.icon.startsWith('/')) ? slide.object.icon : '') || '/static/images/fish.png';
   const objectDescription = slide.object.description || slide.object.explanation || '';
+
+  const imageHtml = objectImage 
+    ? `<img src="${objectImage}" alt="${slide.object.label}" class="characteristics-object-image">`
+    : `<div class="characteristics-object-emoji">${slide.object.icon || '🐟'}</div>`;
 
   container.innerHTML = `
     <div class="characteristics-slide">
       <div class="characteristics-object">
-        <img src="${objectImage}" alt="${slide.object.label}" class="characteristics-object-image">
-        <div class="object-label">${slide.object.label}</div>
-        <p>${objectDescription}</p>
+        ${imageHtml}
+        <div class="characteristics-object-info">
+          <div class="object-label">${slide.object.label}</div>
+          <p>${objectDescription}</p>
+        </div>
       </div>
       <div class="traits-grid">${traitsHtml}</div>
       <div id="characteristics-feedback" class="characteristics-feedback"></div>
@@ -279,18 +530,57 @@ function renderCharacteristicsSlide(slide, container, explanationContainer) {
 
   slide.traits.forEach(trait => {
     const button = container.querySelector(`.trait-option[data-id="${trait.id}"]`);
-    button.addEventListener('click', () => handleTraitTap(slide, trait, button));
+    if (button) {
+      button.addEventListener('click', () => handleTraitTap(slide, trait, button));
+    } else {
+      console.warn(`Trait button not found for id: ${trait.id}`);
+    }
   });
+
+  const feedback = container.querySelector('#characteristics-feedback');
+  feedback.classList.remove('feedback-correct', 'feedback-incorrect');
+  if (slideState.characteristicSelections.size > 0) {
+    const selectedCount = slideState.characteristicSelections.size;
+    const wrongTraits = Array.from(slideState.characteristicSelections).filter(id => !slide.correctTraits.includes(id));
+    if (wrongTraits.length > 0) {
+      const wrongLabels = wrongTraits
+        .map(id => slide.traits.find(trait => trait.id === id)?.label)
+        .filter(Boolean)
+        .join(', ');
+      feedback.textContent = getTraitMistakeMessage(slide, selectedCount, wrongLabels);
+      feedback.classList.add('feedback-incorrect');
+    } else {
+      const correctCount = slide.correctTraits.filter(id => slideState.characteristicSelections.has(id)).length;
+      const progressText = getTraitProgressMessage(slide, correctCount);
+      feedback.textContent = progressText;
+      feedback.classList.add('feedback-correct');
+    }
+  }
 }
 
 function handleTraitTap(slide, trait, button) {
-  const selected = lessonState.characteristicSelections;
+  playTapSound();
+  const slideState = getCurrentSlideState();
+  const selected = slideState.characteristicSelections;
+  const isCorrect = slide.correctTraits.includes(trait.id);
+
   if (selected.has(trait.id)) {
     selected.delete(trait.id);
-    button.classList.remove('trait-selected');
+    button.classList.remove('trait-selected', 'trait-correct', 'trait-incorrect');
+    const badge = button.querySelector('.trait-check-badge');
+    if (badge) badge.remove();
   } else {
     selected.add(trait.id);
     button.classList.add('trait-selected');
+    if (isCorrect) {
+      button.classList.add('trait-correct');
+      button.classList.remove('trait-incorrect');
+      button.innerHTML = `<span class="trait-label">${trait.label}</span><span class="trait-check-badge"><i class="bi bi-check-circle-fill"></i></span>`;
+    } else {
+      button.classList.add('trait-incorrect');
+      button.classList.remove('trait-correct');
+      button.innerHTML = `<span class="trait-label">${trait.label}</span><span class="trait-check-badge"><i class="bi bi-x-circle-fill"></i></span>`;
+    }
   }
 
   const feedback = document.querySelector('#characteristics-feedback');
@@ -308,11 +598,13 @@ function handleTraitTap(slide, trait, button) {
         .map(id => slide.traits.find(trait => trait.id === id)?.label)
         .filter(Boolean)
         .join(', ');
-      feedback.textContent = `You selected ${selectedCount} trait(s), but ${wrongLabels} ${wrongTraits.length === 1 ? 'is' : 'are'} not traits of living things. Try choosing grows, breathes, moves, and needs food.`;
+      feedback.textContent = getTraitMistakeMessage(slide, selectedCount, wrongLabels);
       feedback.classList.add('feedback-incorrect');
       feedback.classList.remove('feedback-correct');
     } else {
-      feedback.textContent = `You checked ${selectedCount} traits — ${slide.conclusion}`;
+      const correctCount = slide.correctTraits.filter(id => selected.has(id)).length;
+      const progressText = getTraitProgressMessage(slide, correctCount);
+      feedback.textContent = progressText;
       feedback.classList.add('feedback-correct');
       feedback.classList.remove('feedback-incorrect');
     }
@@ -334,17 +626,24 @@ function updateNavigationState() {
   nextButton.disabled = !canAdvance();
 }
 
+let lastSavedTime = performance.now();
+
 function saveLessonProgress(completed = false) {
   const lessonId = window.currentLessonId || null;
   if (!lessonId) {
     return;
   }
 
+  const now = performance.now();
+  const timeSpentDelta = Math.max(1, Math.round((now - lastSavedTime) / 1000));
+  lastSavedTime = now;
+
   const payload = {
     lesson_id: lessonId,
-    progress_percent: Math.round(((lessonState.currentIndex + 1) / LESSON_SLIDES.length) * 100),
+    progress_percent: completed ? 100 : Math.round(((lessonState.currentIndex + 1) / getActiveLessonSlides().length) * 100),
     current_slide: lessonState.currentIndex,
     completed: completed,
+    time_spent: timeSpentDelta,
   };
 
   fetch('/student/lesson_progress', {
@@ -367,16 +666,17 @@ function saveLessonProgress(completed = false) {
 }
 
 function logCurrentSlide() {
-  const slide = LESSON_SLIDES[lessonState.currentIndex];
+  const slide = getCurrentSlide();
+  const slideState = getCurrentSlideState();
   const timeSpentOnSlide = Date.now() - lessonState.slideStartTime;
 
   const logEntry = {
     studentId: window.currentStudentId || null,
     slideId: slide.id,
     timeSpentOnSlide,
-    hotspotsTapped: slide.type === 'hotspots' ? Object.keys(lessonState.hotspotProgress) : [],
-    quickCheckAnswer: slide.type === 'quick-check' ? lessonState.quickCheckState : null,
-    traitsSelected: slide.type === 'characteristics' ? Array.from(lessonState.characteristicSelections) : [],
+    hotspotsTapped: slide.type === 'hotspots' ? Object.keys(slideState.hotspotProgress) : [],
+    quickCheckAnswer: slide.type === 'quick-check' ? slideState.quickCheckState : null,
+    traitsSelected: slide.type === 'characteristics' ? Array.from(slideState.characteristicSelections) : [],
   };
 
   lessonState.log.push(logEntry);
@@ -385,3 +685,4 @@ function logCurrentSlide() {
 
 window.initLivingNonLivingLesson = initLesson;
 window.lessonState = lessonState;
+console.log('LivingNonLivingLesson module loaded, initLivingNonLivingLesson available:', typeof window.initLivingNonLivingLesson);

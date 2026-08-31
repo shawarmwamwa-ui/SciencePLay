@@ -1,0 +1,441 @@
+/* findThePartGame.css
+   "Find the Part" — Hotspot labeling game (Game 2A, Animal Body Parts)
+   Static 100vh Single-Screen Responsive Layout */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap');
+
+:root {
+  --ftp-dark:    #18181b;
+  --ftp-panel:   #ffffff;
+  --ftp-accent:  #3b82f6;
+  --ftp-yellow:  #fde047;
+  --ftp-shadow:  4px 4px 0px #18181b;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #fef3c7;
+}
+
+body {
+  height: 100%;
+  min-height: 100vh;
+  max-height: 100vh;
+  margin: 0;
+  padding: clamp(4px, 1vh, 10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--ftp-dark);
+  background: linear-gradient(135deg, #fef3c7 0%, #bfdbfe 50%, #ddd6fe 100%);
+  background-size: 200% 200%;
+  animation: ftpBg 20s ease infinite;
+}
+@keyframes ftpBg {
+  0%   { background-position: 0% 50%;   }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%;   }
+}
+
+/* ── Page Layout ──────────────────────────────────────────────────────────── */
+
+.ftp-page {
+  width: min(100%, 960px);
+  height: 100%;
+  max-height: calc(100vh - 10px);
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.8vh, 8px);
+  justify-content: space-between;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
+.ftp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--ftp-panel);
+  border: 2.5px solid var(--ftp-dark);
+  border-radius: 14px;
+  box-shadow: var(--ftp-shadow);
+  padding: clamp(4px, 0.6vh, 8px) clamp(8px, 1vw, 14px);
+  flex-shrink: 0;
+}
+
+.ftp-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: clamp(3px, 0.5vh, 6px) clamp(8px, 0.8vw, 12px);
+  border: 2px solid var(--ftp-dark);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ftp-dark);
+  font-weight: 800;
+  font-size: clamp(11px, 0.85vw, 13px);
+  text-decoration: none;
+  box-shadow: 2px 2px 0 #18181b;
+  transition: all 0.13s;
+  white-space: nowrap;
+}
+.ftp-back-btn:hover {
+  background: var(--ftp-yellow);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 #18181b;
+  color: var(--ftp-dark);
+}
+
+.ftp-header-title h1 {
+  font-size: clamp(13px, 1.1vw, 17px);
+  font-weight: 900;
+  margin: 0;
+  line-height: 1.15;
+}
+.ftp-header-title p {
+  font-size: clamp(9px, 0.75vw, 12px);
+  font-weight: 700;
+  color: #374151;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.ftp-hud {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.ftp-score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fef9c3;
+  border: 1.5px solid #fbbf24;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-weight: 800;
+  font-size: clamp(11px, 0.85vw, 13px);
+  color: #78350f;
+}
+.ftp-tts-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border: 1.5px solid var(--ftp-dark);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 800;
+  font-size: clamp(10px, 0.75vw, 12px);
+  cursor: pointer;
+  box-shadow: 1.5px 1.5px 0 #18181b;
+  transition: all 0.12s;
+}
+.ftp-tts-btn:hover { background: var(--ftp-yellow); transform: translate(-1px, -1px); }
+
+/* ── Main Game Card ──────────────────────────────────────────────────────── */
+
+.bpl-card,
+.ftp-page > .bpl-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 2.5px solid var(--ftp-dark);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: var(--ftp-shadow);
+  overflow: hidden;
+}
+
+/* ── Round card ──────────────────────────────────────────────────────────── */
+
+.ftp-round-header {
+  text-align: center;
+  margin-bottom: clamp(3px, 0.5vh, 6px);
+  flex-shrink: 0;
+}
+.ftp-round-badge {
+  display: inline-block;
+  background: var(--ftp-dark);
+  color: #fff;
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+.ftp-round-title {
+  font-size: clamp(14px, 1.1vw, 18px);
+  font-weight: 900;
+  margin: 0;
+}
+.ftp-round-sub {
+  font-size: clamp(10px, 0.75vw, 12px);
+  font-weight: 700;
+  color: #374151;
+  margin: 0;
+}
+
+/* ── Instruction banner ──────────────────────────────────────────────────── */
+
+.ftp-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: clamp(3px, 0.5vh, 6px) 10px;
+  border-radius: 10px;
+  font-size: clamp(11px, 0.8vw, 13px);
+  font-weight: 700;
+  border: 1.5px solid transparent;
+  margin-bottom: clamp(4px, 0.6vh, 6px);
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+.ftp-banner-info    { background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
+.ftp-banner-primary { background: #dbeafe; border-color: #3b82f6; color: #1d4ed8; }
+.ftp-banner-success { background: #dcfce7; border-color: #86efac; color: #166534; }
+.ftp-banner-warn    { background: #fef9c3; border-color: #fde047; color: #78350f; }
+.ftp-banner-danger  { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+
+/* ── Illustration + zones ────────────────────────────────────────────────── */
+
+.ftp-illustration-wrap {
+  border: 2px solid var(--ftp-dark);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 2px 2px 0 #18181b;
+  margin-bottom: clamp(4px, 0.6vh, 6px);
+  position: relative;
+  max-height: clamp(120px, 22vh, 180px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8fafc;
+}
+
+.ftp-illustration {
+  width: 100%;
+  height: clamp(120px, 22vh, 180px);
+  position: relative;
+  user-select: none;
+}
+
+.ftp-illustration svg,
+.ftp-illustration img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ftp-illus-placeholder-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(12px, 1.2vw, 16px);
+  font-weight: 900;
+  color: rgba(0,0,0,0.18);
+  pointer-events: none;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Hotspot zone boxes */
+.ftp-zone {
+  position: absolute;
+  border: 2px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  transition: transform 0.12s, box-shadow 0.12s;
+  min-width: 30px;
+  min-height: 24px;
+  padding: 1px 4px;
+}
+.ftp-zone:hover {
+  transform: scale(1.06);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+.ftp-zone-unlabeled { opacity: 0.88; }
+.ftp-zone-labeled   { opacity: 1; }
+.ftp-zone-error     { animation: ftpShake 0.3s ease; }
+
+@keyframes ftpShake {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px);  }
+}
+
+.ftp-zone-icon {
+  font-size: 0.8rem;
+  color: rgba(0,0,0,0.55);
+  pointer-events: none;
+}
+.ftp-zone-labeled .ftp-zone-icon { display: none; }
+
+.ftp-zone-label-text {
+  font-size: 9px;
+  font-weight: 900;
+  color: var(--ftp-dark);
+  pointer-events: none;
+  text-align: center;
+  line-height: 1.1;
+}
+
+/* ── Fact panel ───────────────────────────────────────────────────────────── */
+
+.ftp-fact-panel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 10px;
+  padding: clamp(3px, 0.5vh, 6px) 8px;
+  font-size: clamp(10px, 0.75vw, 12px);
+  font-weight: 700;
+  color: #166534;
+  line-height: 1.35;
+  margin-bottom: clamp(3px, 0.5vh, 5px);
+  flex-shrink: 0;
+}
+
+/* ── Word bank ────────────────────────────────────────────────────────────── */
+
+.ftp-bank-header {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+
+.ftp-word-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.ftp-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: clamp(3px, 0.4vh, 5px) clamp(8px, 0.9vw, 12px);
+  border: 2px solid var(--ftp-dark);
+  border-radius: 50px;
+  background: #fff;
+  font-weight: 800;
+  font-size: clamp(11px, 0.8vw, 13px);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #18181b;
+  transition: all 0.12s;
+}
+.ftp-chip:hover:not(:disabled) {
+  background: var(--ftp-yellow);
+  transform: translate(-1px, -1px);
+}
+.ftp-chip-selected {
+  background: var(--ftp-accent) !important;
+  color: #fff !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 2px 2px 0 #1d4ed8 !important;
+}
+.ftp-chip-used {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border-color: #16a34a !important;
+  box-shadow: 1px 1px 0 #16a34a !important;
+  text-decoration: line-through;
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+.ftp-chip-wrong {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #dc2626 !important;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* ── Summary ──────────────────────────────────────────────────────────────── */
+
+.ftp-summary { padding: 1rem; }
+.ftp-summary-icon {
+  font-size: clamp(2.5rem, 5vh, 3.5rem);
+  color: #f59e0b;
+  margin-bottom: 6px;
+}
+.ftp-summary-title { font-size: clamp(16px, 1.3vw, 22px); font-weight: 900; margin-bottom: 2px; }
+.ftp-summary-sub   { font-size: clamp(11px, 0.85vw, 13px); font-weight: 700; color: #374151; margin-bottom: 10px; }
+
+.ftp-stats-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.ftp-stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: #fff;
+  border: 2px solid var(--ftp-dark);
+  border-radius: 12px;
+  padding: 6px 12px;
+  box-shadow: 3px 3px 0 #18181b;
+  min-width: 70px;
+}
+.ftp-stat-val { font-size: clamp(16px, 1.2vw, 20px); font-weight: 900; }
+.ftp-stat-lbl { font-size: 9px; font-weight: 800; color: #6b7280; text-transform: uppercase; }
+
+.ftp-summary-btns { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+
+.ftp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: clamp(4px, 0.6vh, 7px) clamp(12px, 1.2vw, 18px);
+  border: 2px solid var(--ftp-dark);
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: clamp(12px, 0.85vw, 14px);
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #18181b;
+  text-decoration: none;
+  transition: all 0.13s;
+}
+.ftp-btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #18181b; }
+.ftp-btn-primary   { background: var(--ftp-accent); color: #fff; }
+.ftp-btn-secondary { background: #f1f5f9; color: var(--ftp-dark); }
+
+@media (orientation: portrait), (max-width: 600px) {
+  body {
+    height: auto;
+    min-height: 100vh;
+    max-height: none;
+    overflow-y: auto;
+    align-items: flex-start;
+  }
+  .ftp-page {
+    height: auto;
+    max-height: none;
+  }
+}

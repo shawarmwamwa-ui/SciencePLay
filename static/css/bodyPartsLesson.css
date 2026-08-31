@@ -1,0 +1,593 @@
+/* bodyPartsLesson.css
+   Shared stylesheet for Lesson 2A (Animal Body Parts) and Lesson 2B (Plant Parts).
+   Neubrutalist static 100vh single-screen responsive slide presentation. */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap');
+
+:root {
+  --bpl-dark:     #18181b;
+  --bpl-panel:    #ffffff;
+  --bpl-accent:   #3b82f6;
+  --bpl-success:  #4ade80;
+  --bpl-danger:   #f87171;
+  --bpl-yellow:   #fde047;
+  --bpl-border:   #18181b;
+  --bpl-shadow:   4px 4px 0px #18181b;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #fef9c3;
+}
+
+body {
+  height: 100%;
+  min-height: 100vh;
+  max-height: 100vh;
+  margin: 0;
+  padding: clamp(4px, 1vh, 10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--bpl-dark);
+  background: linear-gradient(135deg, #fef9c3 0%, #bbf7d0 40%, #bfdbfe 70%, #e9d5ff 100%);
+  background-size: 200% 200%;
+  animation: bplGradient 18s ease infinite;
+}
+
+@keyframes bplGradient {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Page Layout ─────────────────────────────────────────────────────────── */
+
+.bpl-page {
+  width: min(100%, 960px);
+  height: 100%;
+  max-height: calc(100vh - 10px);
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
+.bpl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 2.5px solid var(--bpl-border);
+  border-radius: 14px;
+  background: var(--bpl-panel);
+  box-shadow: var(--bpl-shadow);
+  padding: clamp(4px, 0.6vh, 8px) clamp(8px, 1vw, 14px);
+  flex-shrink: 0;
+}
+
+.bpl-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: clamp(3px, 0.5vh, 6px) clamp(8px, 0.8vw, 12px);
+  border: 2px solid var(--bpl-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--bpl-dark);
+  font-weight: 800;
+  font-size: 13px;
+  text-decoration: none;
+  box-shadow: 2px 2px 0 #18181b;
+  transition: all 0.14s ease;
+  white-space: nowrap;
+}
+.bpl-back-btn:hover {
+  background: var(--bpl-yellow);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 #18181b;
+  color: var(--bpl-dark);
+}
+
+.bpl-title-group h1 {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--bpl-dark);
+  margin: 0;
+  line-height: 1.15;
+}
+.bpl-title-group p {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+  color: #374151;
+  line-height: 1.15;
+}
+
+.bpl-progress-bar {
+  width: clamp(90px, 14vw, 150px);
+  height: clamp(6px, 0.9vh, 8px);
+  border-radius: 999px;
+  background: #e5e7eb;
+  border: 1.5px solid var(--bpl-border);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.bpl-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
+  transition: width 0.35s ease;
+}
+
+/* ── Slide Card ──────────────────────────────────────────────────────────── */
+
+.bpl-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 2.5px solid var(--bpl-border);
+  border-radius: 16px;
+  background: var(--bpl-panel);
+  box-shadow: var(--bpl-shadow);
+  overflow: hidden;
+}
+
+.bpl-card-header {
+  background: var(--bpl-dark);
+  color: #fff;
+  padding: clamp(3px, 0.4vh, 6px) 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.bpl-window-dots {
+  display: flex;
+  gap: 5px;
+}
+.bpl-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.bpl-dot-red    { background: #ef4444; }
+.bpl-dot-yellow { background: #f59e0b; }
+.bpl-dot-green  { background: #22c55e; }
+
+.bpl-window-label {
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #d1d5db;
+}
+
+.bpl-card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: clamp(8px, 1.2vh, 14px) clamp(12px, 1.5vw, 20px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow-y: auto;
+}
+
+.bpl-slide-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: clamp(6px, 1vh, 10px);
+  flex-shrink: 0;
+}
+
+.bpl-slide-title {
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--bpl-dark);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.bpl-tts-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: clamp(3px, 0.4vh, 5px) clamp(6px, 0.8vw, 10px);
+  border: 2px solid var(--bpl-border);
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #18181b;
+  transition: all 0.14s;
+  white-space: nowrap;
+}
+.bpl-tts-btn:hover {
+  background: var(--bpl-yellow);
+  transform: translate(-1px, -1px);
+}
+
+.bpl-progress-text {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b7280;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1px 6px;
+  background: #f9fafb;
+}
+
+#bpl-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: clamp(6px, 1vh, 10px);
+}
+
+/* ── Navigation ──────────────────────────────────────────────────────────── */
+
+.bpl-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: clamp(4px, 0.6vh, 8px);
+  border-top: 1.5px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.bpl-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: clamp(4px, 0.7vh, 7px) clamp(12px, 1.2vw, 18px);
+  border: 2.5px solid var(--bpl-border);
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: clamp(12px, 0.85vw, 14px);
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #18181b;
+  transition: all 0.14s ease;
+}
+.bpl-nav-btn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #18181b;
+}
+.bpl-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: 1px 1px 0 #18181b;
+}
+.bpl-btn-prev { background: #f1f5f9; color: var(--bpl-dark); }
+.bpl-btn-next { background: var(--bpl-accent); color: #fff; }
+.bpl-btn-next:hover:not(:disabled) { background: #2563eb; }
+
+/* ── Lottie Animation Presentation ─────────────────────────────────────── */
+
+.bpl-lottie-grid {
+  border: 2.5px solid var(--bpl-border);
+  border-radius: 16px;
+  padding: clamp(8px, 1.6vh, 16px) clamp(10px, 1.8vw, 20px);
+  margin-bottom: clamp(6px, 1.2vh, 12px);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: clamp(10px, 1.5vw, 20px);
+  flex-wrap: wrap;
+  box-shadow: 3.5px 3.5px 0 #18181b;
+  overflow: hidden;
+  background: #fefce8;
+}
+
+.bpl-lottie-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1 1 130px;
+  max-width: 240px;
+  min-width: 110px;
+}
+
+.bpl-lottie-player-box {
+  width: 100%;
+  height: clamp(110px, 24vh, 175px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bpl-lottie-player-box svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.bpl-lottie-count-1 .bpl-lottie-card {
+  max-width: 320px;
+  flex: 1 1 200px;
+}
+
+.bpl-lottie-count-1 .bpl-lottie-player-box {
+  height: clamp(130px, 28vh, 200px);
+}
+
+.bpl-lottie-count-1 .bpl-lottie-player-box svg {
+  max-height: 100%;
+}
+
+.bpl-lottie-caption {
+  font-size: 14px;
+  font-weight: 800;
+  color: #18181b;
+  margin-top: 6px;
+  margin-bottom: 0;
+  background: #ffffff;
+  border: 2px solid var(--bpl-border);
+  border-radius: 999px;
+  padding: 3px 12px;
+  box-shadow: 2px 2px 0 #18181b;
+  display: inline-block;
+}
+
+/* ── Info / Hook / Reflect / Discuss Slides ──────────────────────────────── */
+
+.bpl-illustration {
+  border: 2.5px solid var(--bpl-border);
+  border-radius: 16px;
+  padding: clamp(8px, 1.5vh, 16px);
+  text-align: center;
+  margin-bottom: clamp(6px, 1.2vh, 12px);
+  background: #fefce8;
+  box-shadow: 3px 3px 0 #18181b;
+}
+.bpl-illus-icon {
+  font-size: clamp(2.8rem, 6vh, 4rem);
+  color: #374151;
+  display: block;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+.bpl-illus-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #4b5563;
+  font-style: italic;
+  margin: 0;
+}
+.bpl-body-text {
+  font-size: 16px !important;
+  font-weight: 600;
+  line-height: 1.55;
+  color: #1f2937;
+  margin-bottom: clamp(6px, 1vh, 10px);
+}
+
+/* ── Predict Slides ──────────────────────────────────────────────────────── */
+
+.bpl-part-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 2px solid var(--bpl-border);
+  border-radius: 12px;
+  padding: clamp(4px, 0.6vh, 6px) 10px;
+  margin-bottom: clamp(4px, 0.6vh, 8px);
+  box-shadow: 2px 2px 0 #18181b;
+}
+.bpl-part-icon { font-size: 1.2rem; }
+.bpl-part-label { font-weight: 800; font-size: 15px; color: var(--bpl-dark); }
+
+.bpl-think-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: #fefce8;
+  border: 1.5px solid #fde047;
+  border-radius: 10px;
+  padding: clamp(6px, 0.9vh, 10px) 12px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #78350f;
+  margin-top: clamp(4px, 0.6vh, 8px);
+}
+
+/* ── Teach Slides ────────────────────────────────────────────────────────── */
+
+.bpl-key-fact {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 10px;
+  background: #f0fdf4;
+  padding: clamp(6px, 0.9vh, 10px) 12px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #166534;
+  margin-top: clamp(4px, 0.6vh, 8px);
+}
+
+/* ── Quick-Check & Assess Options ────────────────────────────────────────── */
+
+.bpl-prompt {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--bpl-dark);
+  margin-bottom: clamp(6px, 1vh, 10px);
+  line-height: 1.35;
+}
+
+.bpl-options {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.8vh, 10px);
+  margin-bottom: clamp(6px, 0.8vh, 10px);
+}
+
+.bpl-option,
+.bpl-assess-opt {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: clamp(8px, 1.2vh, 12px) clamp(12px, 1.4vw, 18px);
+  border: 2px solid var(--bpl-border);
+  border-radius: 12px;
+  background: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 2.5px 2.5px 0 #18181b;
+  transition: all 0.13s ease;
+  text-align: left;
+  width: 100%;
+}
+.bpl-option:hover:not(:disabled),
+.bpl-assess-opt:hover:not(:disabled) {
+  background: #f0f9ff;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 #18181b;
+}
+.bpl-option:disabled,
+.bpl-assess-opt:disabled { cursor: not-allowed; }
+
+.bpl-opt-icon {
+  font-size: 1rem;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.bpl-opt-correct {
+  background: #dcfce7 !important;
+  border-color: #16a34a !important;
+  box-shadow: 2px 2px 0 #16a34a !important;
+  color: #166534;
+}
+.bpl-opt-wrong {
+  background: #fee2e2 !important;
+  border-color: #dc2626 !important;
+  box-shadow: 2px 2px 0 #dc2626 !important;
+  color: #991b1b;
+}
+
+/* Assess letter badge */
+.bpl-assess-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #e5e7eb;
+  border: 1.5px solid #d1d5db;
+  font-weight: 900;
+  font-size: 11px;
+  flex-shrink: 0;
+  color: #374151;
+}
+.bpl-opt-correct .bpl-assess-letter { background: #86efac; border-color: #16a34a; color: #14532d; }
+.bpl-opt-wrong   .bpl-assess-letter { background: #fca5a5; border-color: #dc2626; color: #7f1d1d; }
+
+.bpl-assess-header {
+  margin-bottom: 3px;
+}
+.bpl-assess-num {
+  font-size: 10px;
+  font-weight: 800;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #f3f4f6;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 1px 5px;
+}
+
+/* ── Feedback Box ────────────────────────────────────────────────────────── */
+
+.bpl-feedback {
+  border-radius: 10px;
+  padding: clamp(4px, 0.6vh, 6px) 8px;
+  font-size: clamp(11px, 0.8vw, 13px);
+  font-weight: 700;
+  line-height: 1.35;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3rem;
+  margin-top: 2px;
+}
+.bpl-feedback-ok  { background: #dcfce7; border: 1.5px solid #86efac; color: #166534; }
+.bpl-feedback-err { background: #fee2e2; border: 1.5px solid #fca5a5; color: #991b1b; }
+
+/* ── Summary Slide ───────────────────────────────────────────────────────── */
+
+.bpl-summary-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.6vh, 6px);
+}
+.bpl-summary-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: clamp(12px, 0.85vw, 14px);
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.35;
+  padding: clamp(4px, 0.6vh, 6px) 8px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+}
+.bpl-summary-list li::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bpl-accent);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* ── Portrait Responsiveness ─────────────────────────────────────────────── */
+
+@media (orientation: portrait), (max-width: 600px) {
+  body {
+    height: auto;
+    min-height: 100vh;
+    max-height: none;
+    overflow-y: auto;
+    align-items: flex-start;
+  }
+  .bpl-page {
+    height: auto;
+    max-height: none;
+  }
+  .bpl-card {
+    min-height: 480px;
+  }
+}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Characters of Living Things — SciencePlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+  <style>
+    html { margin: 0; padding: 0; height: 100%; }
+    body {
+      margin: 0;
+      height: 100%;
+      min-height: 100vh;
+      max-height: 100vh;
+      padding: clamp(4px, 1vh, 10px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      background: linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 100%);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .char-page-container {
+      width: min(100%, 960px);
+      height: 100%;
+      max-height: calc(100vh - 10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: clamp(4px, 0.8vh, 8px);
+    }
+    .char-nav-header {
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
+      border-radius: 14px;
+      padding: clamp(4px, 0.6vh, 8px) 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      flex-shrink: 0;
+    }
+    .char-card-frame {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      padding: clamp(8px, 1.2vh, 16px) clamp(12px, 1.5vw, 20px);
+      border: 2px solid #e2e8f0;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: auto;
+    }
+    .char-card-frame p, .char-card-frame li, .char-card-frame .lead, #char-fact-text { font-size: clamp(12px, 0.9vw, 14px) !important; line-height: 1.4; }
+    .char-hotspot-dot { position: absolute; width: clamp(26px, 4vh, 32px); height: clamp(26px, 4vh, 32px); border-radius: 50%; background: #3b82f6; color: #fff; border: 2px solid #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 8px rgba(59,130,246,0.35); transform: translate(-50%, -50%); transition: all 0.2s ease; }
+    .char-hotspot-dot:hover { transform: translate(-50%, -50%) scale(1.12); }
+    .char-hotspot-dot.discovered { background: #10b981; }
+    .char-quick-opt-card { transition: all 0.15s ease; cursor: pointer; padding: clamp(6px, 0.8vh, 10px); }
+    .char-quick-opt-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.06) !important; }
+    .progress-bar-wrap { height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; flex-shrink: 0; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%); transition: width 0.3s ease; }
+
+    @media (orientation: portrait), (max-width: 600px) {
+      body { height: auto; min-height: 100vh; max-height: none; overflow-y: auto; align-items: flex-start; }
+      .char-page-container { height: auto; max-height: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="char-page-container">
+    <!-- Top Navbar -->
+    <div class="char-nav-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <a href="{{ url_for('student.lessons') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 fw-semibold">
+        <i class="bi bi-arrow-left me-1"></i>Back to Lessons
+      </a>
+      <div class="d-flex align-items-center gap-2">
+        <button id="char-tts-btn" class="btn btn-light btn-sm rounded-pill border px-3 py-1 shadow-sm" title="Read Aloud">
+          <i class="bi bi-volume-up-fill me-1 text-primary"></i><span>Read Aloud</span>
+        </button>
+        <span id="char-progress-info" class="badge bg-white text-dark border px-2 py-1 rounded-pill fw-bold">1 / 7</span>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar-wrap">
+      <div id="char-progress-fill" class="progress-bar-fill" style="width: 14%;"></div>
+    </div>
+
+    <!-- Main Slide Card Frame -->
+    <main class="char-card-frame position-relative d-flex flex-column justify-content-between">
+      <div id="char-slide-container" class="flex-grow-1"></div>
+
+      <!-- Slide Navigation Footer -->
+      <div class="d-flex justify-content-between align-items-center pt-2 border-top flex-shrink-0">
+        <button id="char-prev" class="btn btn-outline-secondary btn-sm rounded-pill px-3" disabled>
+          <i class="bi bi-chevron-left me-1"></i>Previous
+        </button>
+        <button id="char-next" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm" disabled>
+          Next<i class="bi bi-chevron-right ms-1"></i>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    window.currentLessonId = {{ lesson.id if lesson else 2 }};
+    window.initialSlideIndex = {{ initial_slide if initial_slide is defined else 0 }};
+  </script>
+  <script type="module">
+    import { initCharactersLesson } from "{{ url_for('static', filename='js/CharactersLesson.js') }}";
+    document.addEventListener('DOMContentLoaded', initCharactersLesson);
+  </script>
+</body>
+</html>

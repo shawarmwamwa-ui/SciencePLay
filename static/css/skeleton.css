@@ -1,0 +1,116 @@
+/* skeleton.css — Unified Accurate Skeleton Loading Engine for SciencePlay */
+
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.6) 25%,
+    rgba(241, 245, 249, 0.95) 50%,
+    rgba(226, 232, 240, 0.6) 75%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: skeletonShimmer 1.6s ease-in-out infinite !important;
+  border-color: transparent !important;
+  color: transparent !important;
+  user-select: none !important;
+  pointer-events: none !important;
+}
+
+.skeleton-box {
+  display: block;
+  border-radius: 8px;
+}
+
+.skeleton-line {
+  display: block;
+  height: 14px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.skeleton-line:last-child {
+  margin-bottom: 0;
+}
+
+.skeleton-title {
+  height: 22px;
+  border-radius: 6px;
+  width: 60%;
+  margin-bottom: 8px;
+}
+
+.skeleton-circle {
+  border-radius: 50% !important;
+  flex-shrink: 0;
+}
+
+.skeleton-pill {
+  border-radius: 999px !important;
+  display: inline-block;
+}
+
+/* Dashboard Skeleton Container Visibility Transition */
+.dashboard-skeleton-wrap {
+  opacity: 1;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s ease;
+  position: relative;
+  width: 100%;
+}
+
+.dashboard-real-content {
+  opacity: 0;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: none;
+}
+
+.dashboard-loaded .dashboard-skeleton-wrap {
+  opacity: 0;
+  pointer-events: none;
+  display: none !important;
+}
+
+.dashboard-loaded .dashboard-real-content {
+  opacity: 1;
+  display: block;
+  animation: dashboardFadeIn 0.35s ease forwards;
+}
+
+@keyframes dashboardFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Specific Skeleton Replicas */
+.skeleton-summary-card {
+  min-height: 96px;
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skeleton-panel {
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.07);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}

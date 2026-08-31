@@ -2,46 +2,75 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Living vs Non-Living Claw Machine</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/clawMachineGame.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/clawMachineGame.css', v='20260810') }}">
 </head>
 <body class="arcade-page">
-  <div class="container py-4">
-    <main class="claw-game-wrapper arcade-cabinet">
+  <div class="game-screen-wrapper">
+    <aside class="external-left-wing" aria-label="Game stats panel">
+      <section class="support-stats" aria-label="Round details">
+        <div class="support-pill stat-attempts">
+          <span class="support-label">Sorted</span>
+          <span id="attempt-value" class="support-value">0</span>
+        </div>
+        <div class="support-pill stat-objects-left">
+          <span class="support-label">Objects Left</span>
+          <span id="remaining-value" class="support-value">0</span>
+        </div>
+        <div class="support-pill support-holding stat-holding">
+          <span class="support-label">Holding</span>
+          <span id="holding-value" class="support-value">None</span>
+        </div>
+        <div id="attempts-today" class="attempts-display stat-attempts-today">Attempts today: Loading...</div>
+      </section>
+    </aside>
+
+    <main class="claw-game-wrapper arcade-cabinet" aria-label="Living and Non-Living Claw Machine">
       <header class="cabinet-marquee">
         <div class="marquee-title">
-          <h1>Living vs Non-Living Claw Machine</h1>
-          <p>Sort the objects into the correct chute.</p>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="{{ url_for('student.activities') }}" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1 me-1 text-decoration-none fw-bold" title="Back to Activities">
+              <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
+            <h1 class="mb-0 fs-3">Living vs Non-Living Claw Machine</h1>
+            <button id="tts-btn" class="btn btn-sm btn-outline-light rounded-circle p-1" aria-label="Read instructions aloud" title="Read aloud">
+              <i class="bi bi-volume-up"></i>
+            </button>
+          </div>
+          <p class="mb-0 mt-1">Sort each object into the correct chute to win stars.</p>
         </div>
-        <div class="stat-card score-display">
-          <div>Score</div>
-          <div id="score-value">0</div>
-        </div>
+
+        <section class="top-play-bar" aria-label="Game score and progress">
+          <div class="star-counter" role="status" aria-live="polite" aria-label="Star score">
+            <span class="star-badge" aria-hidden="true">★</span>
+            <div class="star-copy">
+              <span class="star-label">Stars</span>
+              <span id="score-value" class="star-value">0</span>
+            </div>
+          </div>
+
+          <div class="progress-cluster" aria-label="Round progress">
+            <span class="hud-progress-label">Progress</span>
+            <div class="hud-progress-track" aria-hidden="true">
+              <div class="hud-progress-fill"></div>
+            </div>
+            <span class="hud-progress-note">0 sorted of 0 objects</span>
+          </div>
+        </section>
       </header>
 
-      <div id="game-message" class="game-notification">Grab an object to begin.</div>
-      <div id="attempts-today" class="attempts-display">Attempts today: Loading...</div>
-
       <section class="arcade-stage" aria-label="Claw machine play area">
-        <aside id="living-bin" class="collection-bin living-bin" aria-label="Living bin">
-          <span class="bin-icon">🌱</span>
-          <strong>Living</strong>
-          <small>Move here, then drop</small>
-          <div class="bin-catch" aria-hidden="true"></div>
-        </aside>
+        <div id="left-bins" class="bins-column bins-left" aria-label="Left drop zones"></div>
 
         <div class="glass-case">
           <div class="case-label">OBJECT BAY</div>
           <div id="claw-tray"></div>
         </div>
 
-        <aside id="non-living-bin" class="collection-bin non-living-bin" aria-label="Non-Living bin">
-          <span class="bin-icon">🪨</span>
-          <strong>Non-Living</strong>
-          <small>Move here, then drop</small>
-          <div class="bin-catch" aria-hidden="true"></div>
-        </aside>
+        <div id="right-bins" class="bins-column bins-right" aria-label="Right drop zones"></div>
 
         <div class="claw-machine-wrapper" aria-hidden="true">
           <div class="claw-rail"></div>
@@ -49,37 +78,69 @@
         </div>
       </section>
 
-      <div class="control-panel">
-        <button id="move-left" class="btn btn-primary">Left</button>
-        <button id="move-right" class="btn btn-primary">Right</button>
-        <button id="grab-button" class="btn btn-success">Grab</button>
-        <button id="drop-button" class="btn btn-warning">Drop</button>
-      </div>
+      <section class="control-panel" aria-label="Claw controls">
+        <div class="move-controls" aria-label="Move controls">
+          <button id="move-left" class="arcade-btn move-btn" aria-label="Move left">
+            <span class="btn-icon" aria-hidden="true">◀</span>
+            <span class="btn-text">Left</span>
+          </button>
+          <button id="move-right" class="arcade-btn move-btn" aria-label="Move right">
+            <span class="btn-icon" aria-hidden="true">▶</span>
+            <span class="btn-text">Right</span>
+          </button>
+        </div>
 
-      <div class="game-stats">
-        <div class="stat-card">
-          <div>Holding</div>
-          <div id="holding-value">None</div>
+        <div class="action-controls" aria-label="Action controls">
+          <button id="grab-button" class="arcade-btn grab-btn" aria-label="Grab object">
+            <span class="btn-icon" aria-hidden="true">🦾</span>
+            <span class="btn-text">Grab</span>
+          </button>
+          <button id="drop-button" class="arcade-btn drop-btn" aria-label="Drop object">
+            <span class="btn-icon" aria-hidden="true">⬇</span>
+            <span class="btn-text">DROP</span>
+          </button>
         </div>
-        <div class="stat-card">
-          <div>Attempts</div>
-          <div id="attempt-value">0</div>
-        </div>
-        <div class="stat-card">
-          <div>Objects Left</div>
-          <div id="remaining-value">0</div>
-        </div>
-      </div>
+      </section>
 
-      <div id="summary-screen" class="d-none">
+      <div id="summary-screen" class="d-none summary-panel">
         <h3>Round Summary</h3>
-        <p>Correct on first try: <span id="summary-correct">0</span></p>
-        <p>Total attempts: <span id="summary-attempts">0</span></p>
-        <p>Correct answers: <span id="summary-sorted">0 / 0</span></p>
-        <p>Time taken: <span id="summary-time">0s</span></p>
-        <button id="restart-button" class="btn btn-primary mt-2">Play Again</button>
+        <p class="summary-text" id="summary-subtitle">Nice work! Tap below to play another round if you still have attempts remaining.</p>
+
+        <div id="summary-rating-block" class="summary-rating-block d-none">
+          <span id="summary-rating" class="summary-rating-badge"></span>
+          <p id="summary-hint" class="summary-hint-text"></p>
+        </div>
+
+        <div class="summary-row">
+          <div>
+            <p><strong>Correct:</strong> <span id="summary-correct">0</span></p>
+            <p><strong>Incorrect:</strong> <span id="summary-wrong">0</span></p>
+          </div>
+          <div>
+            <p><strong>Score:</strong> <span id="summary-sorted">0 pts</span></p>
+            <p><strong>Time:</strong> <span id="summary-time">0s</span></p>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-4 flex-wrap">
+          <a href="{{ url_for('student.activities') }}" class="btn btn-outline-light btn-lg px-4 rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i>Back to Activities
+          </a>
+          <button id="restart-button" class="btn btn-primary btn-lg px-4 rounded-pill">
+            <i class="bi bi-arrow-repeat me-1"></i>Play Again
+          </button>
+        </div>
       </div>
     </main>
+
+    <aside class="external-right-wing" aria-label="Hints and instructions panel">
+      <div id="game-message" class="game-notification">Grab an object to begin.</div>
+
+      <div class="first-action-cue" aria-live="polite">
+        <span class="cue-text">Tap an object, press GRAB, then hit the giant DROP button.</span>
+        <span class="cue-arrow" aria-hidden="true">↓</span>
+      </div>
+    </aside>
   </div>
 
   <script>window.clawMachineActivityId = {{ activity_id|tojson }};</script>

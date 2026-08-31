@@ -2,45 +2,98 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Living vs Non-Living Lesson</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Living vs Non-Living — Interactive Lesson | SciencePlay</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/LivingNonLivingLesson.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/LivingNonLivingLesson.css', v='20260811_2') }}">
 </head>
-<body>
-  <div class="container py-4 lesson-container">
+<body class="living-lesson-page">
+
+  <div class="container py-3 lesson-container">
+    <!-- Header Banner -->
     <div class="lesson-header">
-      <div>
-        <h1>Interactive Lesson</h1>
-        <p>Learn how to tell living things from non-living things.</p>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <a href="{{ url_for('student.lessons') }}" class="brutal-back-btn">
+          <i class="bi bi-arrow-left-circle-fill"></i>
+          <span>Back to Lessons</span>
+        </a>
+        <div>
+          <h1 class="mb-0"><i class="bi bi-journal-bookmark-fill me-2 text-primary"></i>Living vs Non-Living</h1>
+          <p class="mb-0 text-dark fw-bold">Learn how to tell living things from non-living things!</p>
+        </div>
       </div>
-      <div class="lesson-progress-bar">
-        <div id="lesson-progress" class="lesson-progress-fill"></div>
+      <div class="d-flex align-items-center gap-3">
+        <div class="lesson-progress-bar">
+          <div id="lesson-progress" class="lesson-progress-fill"></div>
+        </div>
       </div>
     </div>
 
+    <!-- Explanation Box -->
     <div id="slide-explanation" class="slide-explanation"></div>
 
+    <!-- Neubrutalist Slide Card -->
     <div class="slide-card">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 id="lesson-title"></h2>
-        <span id="lesson-progress-text" class="lesson-progress-text"></span>
+      <div class="brutal-window-header">
+        <div class="brutal-dots">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+        </div>
+        <span class="brutal-window-title"><i class="bi bi-book-fill me-1"></i>LIVING_VS_NONLIVING.EXE</span>
       </div>
-      <div id="slide-content"></div>
-      <div class="lesson-navigation">
-        <button id="prev-slide" class="btn btn-outline-primary">Back</button>
-        <button id="next-slide" class="btn btn-primary" disabled>Next</button>
+
+      <div class="slide-card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-shrink-0">
+          <div class="d-flex align-items-center gap-2">
+            <h2 id="lesson-title" class="mb-0 fw-black text-dark"></h2>
+            <button id="tts-btn" class="brutal-tts-btn" aria-label="Read slide aloud" title="Read slide aloud">
+              <i class="bi bi-volume-up-fill me-1"></i>Read Aloud
+            </button>
+          </div>
+          <span id="lesson-progress-text" class="lesson-progress-text"></span>
+        </div>
+
+        <div id="slide-content"></div>
+
+        <div class="lesson-navigation">
+          <button id="prev-slide" class="brutal-nav-btn btn-secondary">
+            <i class="bi bi-arrow-left-circle-fill me-1"></i> Back
+          </button>
+          <button id="next-slide" class="brutal-nav-btn btn-primary" disabled>
+            Next <i class="bi bi-arrow-right-circle-fill ms-1"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-  <script type="module" src="{{ url_for('static', filename='js/LivingNonLivingLesson.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='js/LivingNonLivingLesson.js') }}" onerror="console.error('Module loading failed')"></script>
   <script>
     window.currentLessonId = {{ lesson.id if lesson else 'null' }};
-    window.addEventListener('DOMContentLoaded', () => {
+    window.publishedLessonPayload = {{ published_payload|tojson if published_payload else 'null' }};
+    
+    window.addEventListener('error', function(event) {
+      console.error('Caught error event:', event.message, event.filename, event.lineno);
+    });
+    
+    function initLessonWhenReady() {
       if (window.initLivingNonLivingLesson) {
-        window.initLivingNonLivingLesson();
+        try {
+          window.initLivingNonLivingLesson();
+        } catch (error) {
+          console.error('Error initializing lesson:', error);
+        }
+      } else {
+        setTimeout(initLessonWhenReady, 80);
       }
+    }
+    
+    window.addEventListener('DOMContentLoaded', () => {
+      initLessonWhenReady();
     });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

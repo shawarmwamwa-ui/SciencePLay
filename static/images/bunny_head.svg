@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <!-- Transparent background vector bunny head card icon -->
+  <!-- Left Ear -->
+  <path d="M 70 90 C 45 20 75 5 92 12 C 108 20 98 65 85 95 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="4"/>
+  <path d="M 74 80 C 58 28 78 16 88 20 C 98 25 90 62 82 85 Z" fill="#fb7185" opacity="0.6"/>
+
+  <!-- Right Ear -->
+  <path d="M 130 90 C 102 65 92 20 108 12 C 125 5 155 20 130 95 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="4"/>
+  <path d="M 118 85 C 110 62 102 25 112 20 C 122 16 142 28 126 80 Z" fill="#fb7185" opacity="0.6"/>
+
+  <!-- Head Base -->
+  <ellipse cx="100" cy="120" rx="55" ry="48" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="4"/>
+
+  <!-- Eyes -->
+  <circle cx="78" cy="115" r="8" fill="#0f172a"/>
+  <circle cx="75" cy="112" r="3" fill="#ffffff"/>
+
+  <circle cx="122" cy="115" r="8" fill="#0f172a"/>
+  <circle cx="119" cy="112" r="3" fill="#ffffff"/>
+
+  <!-- Cheeks -->
+  <ellipse cx="65" cy="130" rx="10" ry="6" fill="#fb7185" opacity="0.4"/>
+  <ellipse cx="135" cy="130" rx="10" ry="6" fill="#fb7185" opacity="0.4"/>
+
+  <!-- Nose & Mouth -->
+  <polygon points="100,124 93,118 107,118" fill="#f43f5e"/>
+  <path d="M 100 124 Q 93 134 85 130 M 100 124 Q 107 134 115 130" stroke="#64748b" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

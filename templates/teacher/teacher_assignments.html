@@ -2,11 +2,144 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Teacher Assignments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Assignments — SciencePlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
 </head>
-<body class="container mt-4">
+<body class="teacher-page teacher-dashboard-page">
+
+  <div class="teacher-layout container-fluid">
+    <div class="row g-3 g-lg-4">
+      <aside class="col-12 col-lg-3 col-xl-2">
+        <nav class="teacher-sidebar h-100">
+          <div>
+            <div class="teacher-brand-wrap">
+              <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
+              <div>
+                <h1 class="teacher-brand-title">SciencePlay</h1>
+                <p class="teacher-brand-subtitle">Teacher Portal</p>
+              </div>
+            </div>
+
+            <div class="teacher-menu-group mt-4">
+              <a class="teacher-menu-link" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a class="teacher-menu-link active" data-nav="assignments" href="{{ url_for('teacher.assignments') }}">
+                <i class="bi bi-journal-plus"></i>
+                <span>Assignments</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
+                <i class="bi bi-bar-chart"></i>
+                <span>Analytics</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
+                <i class="bi bi-chat-square-quote-fill"></i>
+                <span>Feedback</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
+                <i class="bi bi-book"></i>
+                <span>Lessons</span>
+              </a>
+            </div>
+          </div>
+
+          <a href="{{ url_for('auth.logout') }}" class="teacher-logout-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="col-12 col-lg-9 col-xl-10">
+        <section class="teacher-content">
+          <div class="teacher-center-wrap">
+
+          <!-- Teacher Assignments Skeleton Loader -->
+          <div class="dashboard-skeleton-wrap">
+            <div class="mb-4">
+              <span class="skeleton-shimmer skeleton-line" style="width: 140px; height: 12px; margin-bottom: 8px;"></span>
+              <span class="skeleton-shimmer skeleton-line" style="width: 220px; height: 32px; margin-bottom: 8px;"></span>
+              <span class="skeleton-shimmer skeleton-line" style="width: 420px; height: 14px;"></span>
+            </div>
+
+            <!-- Assignment Creation Card Skeleton -->
+            <div class="dashboard-section teacher-panel mb-4 p-4">
+              <div class="mb-3">
+                <span class="skeleton-shimmer skeleton-line" style="width: 280px; height: 22px; margin-bottom: 6px;"></span>
+                <span class="skeleton-shimmer skeleton-line" style="width: 360px; height: 12px;"></span>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <span class="skeleton-shimmer skeleton-line" style="width: 60px; height: 11px; margin-bottom: 6px;"></span>
+                  <span class="skeleton-shimmer skeleton-box" style="width: 100%; height: 38px;"></span>
+                </div>
+                <div class="col-md-3">
+                  <span class="skeleton-shimmer skeleton-line" style="width: 60px; height: 11px; margin-bottom: 6px;"></span>
+                  <span class="skeleton-shimmer skeleton-box" style="width: 100%; height: 38px;"></span>
+                </div>
+                <div class="col-md-3">
+                  <span class="skeleton-shimmer skeleton-line" style="width: 90px; height: 11px; margin-bottom: 6px;"></span>
+                  <span class="skeleton-shimmer skeleton-box" style="width: 100%; height: 38px;"></span>
+                </div>
+                <div class="col-md-3">
+                  <span class="skeleton-shimmer skeleton-line" style="width: 40px; height: 11px; margin-bottom: 6px;"></span>
+                  <span class="skeleton-shimmer skeleton-box" style="width: 100%; height: 38px;"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Assignment List Panel Skeleton -->
+            <div class="dashboard-section teacher-panel p-4 mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="skeleton-shimmer skeleton-line" style="width: 220px; height: 22px;"></span>
+                <div class="d-flex gap-2">
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 120px; height: 32px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 120px; height: 32px;"></span>
+                </div>
+              </div>
+              <div class="list-group list-group-flush">
+                <div class="py-3 border-bottom d-flex justify-content-between align-items-center">
+                  <div class="w-50">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 16px; margin-bottom: 6px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 12px;"></span>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-box" style="width: 120px; height: 10px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 24px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 70px; height: 28px;"></span>
+                </div>
+                <div class="py-3 border-bottom d-flex justify-content-between align-items-center">
+                  <div class="w-50">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 55%; height: 16px; margin-bottom: 6px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 35%; height: 12px;"></span>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-box" style="width: 120px; height: 10px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 24px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 70px; height: 28px;"></span>
+                </div>
+                <div class="py-3 d-flex justify-content-between align-items-center">
+                  <div class="w-50">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 65%; height: 16px; margin-bottom: 6px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 12px;"></span>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-box" style="width: 120px; height: 10px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 24px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 70px; height: 28px;"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real Content Container -->
+          <div class="dashboard-real-content">
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div class="alerts-container mb-4">
@@ -20,74 +153,307 @@
     {% endif %}
   {% endwith %}
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap teacher-head-row">
     <div>
-      <h2>Assignments</h2>
-      <p>Assign lessons and activities to your students.</p>
+      <p class="teacher-eyebrow mb-2">Classroom Planning</p>
+      <h1 class="page-title">Assignments</h1>
+      <p class="page-subtitle">Assign lessons and activities to students, then track due dates and status.</p>
     </div>
-    <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
   </div>
 
-  <div class="row gy-4">
-    <div class="col-md-6">
-      <div class="dashboard-section">
-        <h4>Assign Lesson</h4>
-        <form method="POST" action="{{ url_for('teacher.assign_lesson') }}" class="row g-2">
-          <div class="col-md-4"><input name="lesson_id" class="form-control" placeholder="Lesson ID" required></div>
-          <div class="col-md-4"><input name="student_id" class="form-control" placeholder="Student ID" required></div>
-          <div class="col-md-3"><input name="due_date" type="date" class="form-control"></div>
-          <div class="col-md-1"><button class="btn btn-primary w-100" type="submit">Assign</button></div>
-        </form>
+  <!-- Unified Assignment Flow Card -->
+  <div class="dashboard-section teacher-panel mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h4 class="mb-1"><i class="bi bi-journal-plus me-2 text-primary"></i>Assign Lesson & Paired Activity</h4>
+        <p class="teacher-panel-note mb-0">Select a student and lesson. The paired game activity is automatically included.</p>
       </div>
     </div>
-    <div class="col-md-6">
-      <div class="dashboard-section">
-        <h4>Assign Activity</h4>
-        <form method="POST" action="{{ url_for('teacher.assign_activity') }}" class="row g-2">
-          <div class="col-md-4"><input name="activity_id" class="form-control" placeholder="Activity ID" required></div>
-          <div class="col-md-4"><input name="student_id" class="form-control" placeholder="Student ID" required></div>
-          <div class="col-md-3"><input name="due_date" type="date" class="form-control"></div>
-          <div class="col-md-1"><button class="btn btn-primary w-100" type="submit">Assign</button></div>
-        </form>
+
+    <form method="POST" action="{{ url_for('teacher.assign_lesson') }}" id="unifiedAssignForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="paired_activity_id" id="pairedActivityIdInput" value="">
+
+      <div class="row g-3 align-items-end">
+        <!-- 1. Select Student -->
+        <div class="col-md-3">
+          <label class="form-label fw-bold small text-muted mb-1" for="assignStudentSelect">1. Student</label>
+          <select name="student_id" id="assignStudentSelect" class="form-select" required>
+            <option value="">Select Student...</option>
+            {% for student in students %}
+              <option value="{{ student.id }}">{{ student.name }} (@{{ student.username }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- 2. Select Lesson -->
+        <div class="col-md-3">
+          <label class="form-label fw-bold small text-muted mb-1" for="assignLessonSelect">2. Lesson</label>
+          <select name="lesson_id" id="assignLessonSelect" class="form-select" required>
+            <option value="">Select Lesson...</option>
+            {% for lesson in lessons %}
+              <option value="{{ lesson.id }}">{{ lesson.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- 3. Due Date & Time -->
+        <div class="col-md-3">
+          <label class="form-label fw-bold small text-muted mb-1" for="assignDueDate">3. Due Date & Time</label>
+          <input name="due_date" id="assignDueDate" type="datetime-local" class="form-control" title="Due Date & Time">
+        </div>
+
+        <!-- 4. Submit Button -->
+        <div class="col-md-3">
+          <button class="btn btn-primary w-100 py-2 fw-semibold" id="assignSubmitBtn" type="submit">
+            <i class="bi bi-plus-circle me-1"></i>
+            <span id="assignBtnText">Assign Lesson</span>
+          </button>
+        </div>
       </div>
+
+      <!-- Paired Activity Box & Duplicate Status Area -->
+      <div class="mt-3" id="assignmentDetailsArea" style="display: none;">
+        <div class="p-3 bg-light rounded-3 border d-flex flex-column gap-2">
+          
+          <!-- Paired Activity Selection & Label -->
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2" id="pairedActivityRow">
+            <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
+              <input class="form-check-input" type="checkbox" name="include_activity" id="includeActivityCheck" value="1" checked style="cursor: pointer; width: 2.2em; height: 1.2em;">
+              <label class="form-check-label fw-semibold text-dark mb-0" for="includeActivityCheck" style="cursor: pointer;">
+                Also assign paired activity: <strong id="pairedActivityNameText" class="text-primary"></strong>
+              </label>
+            </div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1">
+              <i class="bi bi-controller me-1"></i>Paired Game Activity
+            </span>
+          </div>
+
+          <!-- Duplicate Warning Banner -->
+          <div id="duplicateWarning" class="alert alert-warning d-flex align-items-center py-2 px-3 mb-0 mt-1" style="display: none !important;">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5 text-warning"></i>
+            <div id="duplicateWarningText" class="fw-semibold text-dark">Already assigned to this student</div>
+          </div>
+
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Existing Assignment Tables -->
+  <div class="row g-3">
+    <div class="col-md-6">
+      <section class="table-shell teacher-table-shell">
+        <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-book me-2"></i>Lesson Assignments</h5>
+          <span class="badge bg-secondary rounded-pill">{{ lesson_assignments|length }} Total</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead><tr><th>Lesson</th><th>Student</th><th>Status</th><th>Due</th></tr></thead>
+            <tbody>
+              {% for assignment in lesson_assignments %}
+                <tr>
+                  <td><strong class="text-dark">{{ assignment.lesson.title if assignment.lesson else assignment.lesson_id }}</strong></td>
+                  <td>{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
+                  <td>
+                    {% if assignment.status == 'completed' %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
+                    {% else %}
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-hourglass-split me-1"></i>Assigned</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <small class="text-muted">
+                      {% if assignment.due_date %}
+                        {{ assignment.due_date.strftime('%b %d, %Y at %I:%M %p') if assignment.due_date.strftime is defined else assignment.due_date }}
+                      {% else %}
+                        No due date
+                      {% endif %}
+                    </small>
+                  </td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">No lesson assignments found.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+    <div class="col-md-6">
+      <section class="table-shell teacher-table-shell">
+        <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-controller me-2"></i>Activity Assignments</h5>
+          <span class="badge bg-secondary rounded-pill">{{ activity_assignments|length }} Total</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead><tr><th>Activity</th><th>Student</th><th>Status</th><th>Due</th></tr></thead>
+            <tbody>
+              {% for assignment in activity_assignments %}
+                <tr>
+                  <td><strong class="text-dark">{{ assignment.activity.type if assignment.activity else assignment.activity_id }}</strong></td>
+                  <td>{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
+                  <td>
+                    {% if assignment.status == 'completed' %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
+                    {% else %}
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-hourglass-split me-1"></i>Assigned</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <small class="text-muted">
+                      {% if assignment.due_date %}
+                        {{ assignment.due_date.strftime('%b %d, %Y at %I:%M %p') if assignment.due_date.strftime is defined else assignment.due_date }}
+                      {% else %}
+                        No due date
+                      {% endif %}
+                    </small>
+                  </td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">No activity assignments found.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+  </div>
+  <!-- End .dashboard-real-content -->
+
+          </div>
+        </section>
+      </main>
     </div>
   </div>
 
-  <div class="row mt-4">
-    <div class="col-md-6">
-      <h4>Lesson Assignments</h4>
-      <table class="table table-bordered">
-        <thead><tr><th>Lesson</th><th>Student</th><th>Status</th><th>Due</th></tr></thead>
-        <tbody>
-          {% for assignment in lesson_assignments %}
-            <tr>
-              <td>{{ assignment.lesson.title if assignment.lesson else assignment.lesson_id }}</td>
-              <td>{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
-              <td>{{ assignment.status }}</td>
-              <td>{{ assignment.due_date or '-' }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div class="col-md-6">
-      <h4>Activity Assignments</h4>
-      <table class="table table-bordered">
-        <thead><tr><th>Activity</th><th>Student</th><th>Status</th><th>Due</th></tr></thead>
-        <tbody>
-          {% for assignment in activity_assignments %}
-            <tr>
-              <td>{{ assignment.activity.type if assignment.activity else assignment.activity_id }}</td>
-              <td>{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
-              <td>{{ assignment.status }}</td>
-              <td>{{ assignment.due_date or '-' }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
+  <!-- Assignment Validation & Pairing Script -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/teacher.js') }}"></script>
+  <script>
+    const lessonActivityMap = {{ lesson_activity_map|tojson }};
+    const existingAssignments = {{ existing_assignments|tojson }};
+
+    const studentSelect = document.getElementById('assignStudentSelect');
+    const lessonSelect = document.getElementById('assignLessonSelect');
+    const detailsArea = document.getElementById('assignmentDetailsArea');
+    const pairedRow = document.getElementById('pairedActivityRow');
+    const pairedNameText = document.getElementById('pairedActivityNameText');
+    const pairedIdInput = document.getElementById('pairedActivityIdInput');
+    const includeActivityCheck = document.getElementById('includeActivityCheck');
+    const duplicateWarning = document.getElementById('duplicateWarning');
+    const duplicateWarningText = document.getElementById('duplicateWarningText');
+    const submitBtn = document.getElementById('assignSubmitBtn');
+    const btnText = document.getElementById('assignBtnText');
+
+    function updateAssignmentFormState() {
+      const studentId = parseInt(studentSelect.value, 10);
+      const lessonId = lessonSelect.value;
+
+      if (!lessonId) {
+        detailsArea.style.display = 'none';
+        duplicateWarning.style.setProperty('display', 'none', 'important');
+        submitBtn.disabled = false;
+        submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';
+        btnText.textContent = 'Assign Lesson';
+        return;
+      }
+
+      detailsArea.style.display = 'block';
+      const pairedData = lessonActivityMap[lessonId];
+
+      if (pairedData) {
+        pairedRow.style.display = 'flex';
+        pairedNameText.textContent = pairedData.name;
+        pairedIdInput.value = pairedData.id;
+      } else {
+        pairedRow.style.display = 'none';
+        pairedIdInput.value = '';
+      }
+
+      if (!studentId) {
+        duplicateWarning.style.setProperty('display', 'none', 'important');
+        submitBtn.disabled = false;
+        submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';
+        btnText.textContent = (pairedData && includeActivityCheck.checked) ? 'Assign Lesson & Activity' : 'Assign Lesson';
+        return;
+      }
+
+      // Check if student already has this lesson assigned
+      const isLessonAssigned = existingAssignments.lessons.some(
+        a => a.student_id === studentId && a.lesson_id === parseInt(lessonId, 10)
+      );
+
+      // Check if student already has the paired activity assigned
+      const isActivityAssigned = pairedData ? existingAssignments.activities.some(
+        a => a.student_id === studentId && a.activity_id === pairedData.id
+      ) : false;
+
+      const studentName = studentSelect.options[studentSelect.selectedIndex].text.split('(')[0].trim();
+      const lessonTitle = lessonSelect.options[lessonSelect.selectedIndex].text.trim();
+
+      if (isLessonAssigned && isActivityAssigned) {
+        // Both already assigned
+        duplicateWarning.className = 'alert alert-warning d-flex align-items-center py-2 px-3 mb-0 mt-1';
+        duplicateWarning.style.setProperty('display', 'flex', 'important');
+        duplicateWarningText.textContent = `Both "${lessonTitle}" and "${pairedData.name}" are already assigned to ${studentName}.`;
+        submitBtn.disabled = true;
+        submitBtn.className = 'btn btn-secondary w-100 py-2 fw-semibold';
+        btnText.textContent = 'Already Assigned';
+      } else if (isLessonAssigned && pairedData && !isActivityAssigned) {
+        // Lesson is already assigned, but the paired activity can be assigned!
+        if (includeActivityCheck.checked) {
+          duplicateWarning.className = 'alert alert-info d-flex align-items-center py-2 px-3 mb-0 mt-1';
+          duplicateWarning.style.setProperty('display', 'flex', 'important');
+          duplicateWarningText.innerHTML = `<i class="bi bi-info-circle-fill me-2 text-info fs-5"></i><span><strong>"${lessonTitle}"</strong> is already assigned to ${studentName}. Click below to assign the paired activity <strong>"${pairedData.name}"</strong>.</span>`;
+          submitBtn.disabled = false;
+          submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';
+          btnText.textContent = 'Assign Paired Activity';
+        } else {
+          duplicateWarning.className = 'alert alert-warning d-flex align-items-center py-2 px-3 mb-0 mt-1';
+          duplicateWarning.style.setProperty('display', 'flex', 'important');
+          duplicateWarningText.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2 text-warning fs-5"></i><span>"${lessonTitle}" is already assigned to ${studentName}. Turn on the switch above to assign the paired activity.</span>`;
+          submitBtn.disabled = true;
+          submitBtn.className = 'btn btn-secondary w-100 py-2 fw-semibold';
+          btnText.textContent = 'Lesson Already Assigned';
+        }
+      } else if (isLessonAssigned && !pairedData) {
+        // Lesson assigned and no paired activity exists
+        duplicateWarning.className = 'alert alert-warning d-flex align-items-center py-2 px-3 mb-0 mt-1';
+        duplicateWarning.style.setProperty('display', 'flex', 'important');
+        duplicateWarningText.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2 text-warning fs-5"></i><span>"${lessonTitle}" is already assigned to ${studentName}.</span>`;
+        submitBtn.disabled = true;
+        submitBtn.className = 'btn btn-secondary w-100 py-2 fw-semibold';
+        btnText.textContent = 'Already Assigned';
+      } else if (!isLessonAssigned && pairedData && isActivityAssigned && includeActivityCheck.checked) {
+        // Lesson not assigned, but paired activity already is
+        duplicateWarning.className = 'alert alert-info d-flex align-items-center py-2 px-3 mb-0 mt-1';
+        duplicateWarning.style.setProperty('display', 'flex', 'important');
+        duplicateWarningText.innerHTML = `<i class="bi bi-info-circle-fill me-2 text-info fs-5"></i><span>Note: Paired activity "<em>${pairedData.name}</em>" is already assigned to ${studentName}. Only the lesson will be newly assigned.</span>`;
+        submitBtn.disabled = false;
+        submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';
+        btnText.textContent = 'Assign Lesson';
+      } else {
+        // Clean to assign
+        duplicateWarning.style.setProperty('display', 'none', 'important');
+        submitBtn.disabled = false;
+        submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';
+        btnText.textContent = (pairedData && includeActivityCheck.checked) ? 'Assign Lesson & Activity' : 'Assign Lesson';
+      }
+    }
+
+    studentSelect.addEventListener('change', updateAssignmentFormState);
+    lessonSelect.addEventListener('change', updateAssignmentFormState);
+    includeActivityCheck.addEventListener('change', updateAssignmentFormState);
+
+    document.addEventListener('DOMContentLoaded', updateAssignmentFormState);
+  </script>
 </body>
 </html>

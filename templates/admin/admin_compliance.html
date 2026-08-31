@@ -2,48 +2,537 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Compliance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Compliance — SciencePlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
+  <style>
+    .compliance-filter-bar {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+    .compiled-user-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+      margin-bottom: 1rem;
+      overflow: hidden;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .compiled-user-card:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    .user-avatar-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .avatar-admin { background: #fee2e2; color: #dc2626; }
+    .avatar-teacher { background: #dbeafe; color: #2563eb; }
+    .avatar-student { background: #dcfce7; color: #16a34a; }
+    .event-type-badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+  </style>
 </head>
-<body class="container mt-4">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="alerts-container mb-4">
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
+<body class="admin-page">
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h2>Compliance Log</h2>
-      <p>Review recent security and access events.</p>
+  <div class="admin-layout container-fluid">
+    <div class="row g-3 g-lg-4">
+      <aside class="col-12 col-lg-3 col-xl-2">
+        <nav class="admin-sidebar h-100">
+          <div>
+            <div class="brand-wrap">
+              <span class="brand-icon"><i class="bi bi-shield-lock"></i></span>
+              <div>
+                <h1 class="brand-title">SciencePlay</h1>
+                <p class="brand-subtitle">Admin Portal</p>
+              </div>
+            </div>
+
+            <div class="menu-group mt-4">
+              <a class="menu-link" data-nav="dashboard" href="{{ url_for('admin.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+              </a>
+              <a class="menu-link" data-nav="user-management" href="{{ url_for('admin.user_management') }}">
+                <i class="bi bi-people"></i>
+                <span>User Management</span>
+              </a>
+              <a class="menu-link active" data-nav="compliance" href="{{ url_for('admin.compliance') }}">
+                <i class="bi bi-clipboard-data"></i>
+                <span>Compliance Logs</span>
+              </a>
+            </div>
+          </div>
+
+          <a href="{{ url_for('auth.logout') }}" class="logout-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="col-12 col-lg-9 col-xl-10">
+        <section class="admin-content">
+          <div class="content-center-wrap">
+
+          <!-- Compliance Skeleton View -->
+          <div class="dashboard-skeleton-wrap">
+            <header class="page-header mb-4">
+              <div>
+                <span class="skeleton-shimmer skeleton-line" style="width: 140px; height: 12px; margin-bottom: 8px;"></span>
+                <span class="skeleton-shimmer skeleton-line" style="width: 250px; height: 28px; margin-bottom: 8px;"></span>
+                <span class="skeleton-shimmer skeleton-line" style="width: 420px; height: 14px;"></span>
+              </div>
+              <span class="skeleton-shimmer skeleton-pill" style="width: 120px; height: 38px;"></span>
+            </header>
+
+            <!-- Filter Controls Bar Skeleton -->
+            <div class="compliance-filter-bar mb-4">
+              <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+                <div class="d-flex gap-2">
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 100px; height: 32px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 32px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 32px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 32px;"></span>
+                </div>
+                <span class="skeleton-shimmer skeleton-pill" style="width: 140px; height: 32px;"></span>
+              </div>
+              <div class="row g-2">
+                <div class="col-md-5"><span class="skeleton-shimmer skeleton-box" style="height: 38px; width: 100%;"></span></div>
+                <div class="col-md-3"><span class="skeleton-shimmer skeleton-box" style="height: 38px; width: 100%;"></span></div>
+                <div class="col-md-4"><span class="skeleton-shimmer skeleton-box" style="height: 38px; width: 100%;"></span></div>
+              </div>
+            </div>
+
+            <!-- Compiled User Cards Skeleton -->
+            <div class="d-flex flex-column gap-3 mb-4">
+              <div class="compiled-user-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div class="d-flex align-items-center gap-3 w-50">
+                    <span class="skeleton-shimmer skeleton-circle" style="width: 48px; height: 48px;"></span>
+                    <div class="w-75">
+                      <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 16px; margin-bottom: 6px;"></span>
+                      <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 12px;"></span>
+                    </div>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 26px;"></span>
+                </div>
+                <div class="border-top pt-3">
+                  <div class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 110px; height: 20px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 90px; height: 16px;"></span>
+                  </div>
+                  <div class="py-2 d-flex justify-content-between align-items-center">
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 110px; height: 20px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 90px; height: 16px;"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="compiled-user-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div class="d-flex align-items-center gap-3 w-50">
+                    <span class="skeleton-shimmer skeleton-circle" style="width: 48px; height: 48px;"></span>
+                    <div class="w-75">
+                      <span class="skeleton-shimmer skeleton-line" style="width: 55%; height: 16px; margin-bottom: 6px;"></span>
+                      <span class="skeleton-shimmer skeleton-line" style="width: 35%; height: 12px;"></span>
+                    </div>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 26px;"></span>
+                </div>
+                <div class="border-top pt-3">
+                  <div class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 110px; height: 20px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 35%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 90px; height: 16px;"></span>
+                  </div>
+                  <div class="py-2 d-flex justify-content-between align-items-center">
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 110px; height: 20px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 90px; height: 16px;"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real Content View -->
+          <div class="dashboard-real-content">
+            <header class="page-header mb-4">
+              <div>
+                <p class="eyebrow mb-1">Security & Audit Tracking</p>
+                <h2 class="mb-1">Compliance & Access Logs</h2>
+                <p class="mb-0 text-muted">Compiled activity profiles and full audit trails for Admin, Teacher, and Student roles.</p>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-danger admin-action-btn-outline" data-bs-toggle="modal" data-bs-target="#clearLogsModal">
+                  <i class="bi bi-trash3-fill"></i>
+                  <span>Clear Logs</span>
+                </button>
+              </div>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div class="alerts-container admin-toast-stack" aria-live="polite" aria-atomic="true">
+                  {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show admin-toast" role="alert">
+                      {{ message }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}            <!-- Filter Controls Bar -->
+            <div class="compliance-filter-bar">
+              <form method="GET" action="{{ url_for('admin.compliance') }}">
+                <!-- Top Row: Role Filter Pills & View Format Switcher -->
+                <div class="row g-3 align-items-center mb-3">
+                  <div class="col-12 col-md-7 col-lg-8">
+                    <label class="form-label small fw-bold text-muted mb-1 d-block"><i class="bi bi-person-gear me-1"></i>Filter by Role:</label>
+                    <div class="btn-group flex-wrap" role="group">
+                      <a href="{{ url_for('admin.compliance', role='all', view=selected_view, search=search_query, start_date=start_date, end_date=end_date) }}" class="btn btn-sm btn-outline-secondary px-3 {{ 'active fw-bold' if selected_role == 'all' }}">
+                        All Users ({{ role_counts.all }})
+                      </a>
+                      <a href="{{ url_for('admin.compliance', role='admin', view=selected_view, search=search_query, start_date=start_date, end_date=end_date) }}" class="btn btn-sm btn-outline-danger px-3 {{ 'active fw-bold' if selected_role == 'admin' }}">
+                        Admins ({{ role_counts.admin }})
+                      </a>
+                      <a href="{{ url_for('admin.compliance', role='teacher', view=selected_view, search=search_query, start_date=start_date, end_date=end_date) }}" class="btn btn-sm btn-outline-primary px-3 {{ 'active fw-bold' if selected_role == 'teacher' }}">
+                        Teachers ({{ role_counts.teacher }})
+                      </a>
+                      <a href="{{ url_for('admin.compliance', role='student', view=selected_view, search=search_query, start_date=start_date, end_date=end_date) }}" class="btn btn-sm btn-outline-success px-3 {{ 'active fw-bold' if selected_role == 'student' }}">
+                        Students ({{ role_counts.student }})
+                      </a>
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-5 col-lg-4 text-md-end">
+                    <label class="form-label small fw-bold text-muted mb-1 d-block"><i class="bi bi-eye me-1"></i>View Format:</label>
+                    <div class="btn-group" role="group">
+                      <a href="{{ url_for('admin.compliance', role=selected_role, view='compiled', search=search_query, start_date=start_date, end_date=end_date) }}" class="btn btn-sm btn-primary px-3 {{ 'active fw-bold' if selected_view == 'compiled' }}">
+                        <i class="bi bi-collection-fill me-1"></i>Compiled Activity
+                      </a>
+                      <a href="{{ url_for('admin.compliance', role=selected_role, view='detailed', search=search_query, start_date=start_date, end_date=end_date) }}" class="btn btn-sm btn-outline-primary px-3 {{ 'active fw-bold' if selected_role == 'detailed' }}">
+                        <i class="bi bi-list-ul me-1"></i>Detailed Timeline
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <hr class="my-3 text-muted opacity-25">
+
+                <!-- Bottom Row: Date Range & Search Input -->
+                <div class="row g-3 align-items-center">
+                  <div class="col-12 col-md-7 col-lg-6">
+                    <label class="form-label small fw-bold text-muted mb-1 d-block"><i class="bi bi-calendar3 me-1"></i>Date Range:</label>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                      <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}" style="max-width: 170px;">
+                      <span class="text-muted small fw-bold">to</span>
+                      <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}" style="max-width: 170px;">
+                      <button class="btn btn-sm btn-primary fw-bold px-3" type="submit"><i class="bi bi-funnel-fill me-1"></i>Apply Filter</button>
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-5 col-lg-6 text-md-end">
+                    <label class="form-label small fw-bold text-muted mb-1 d-block"><i class="bi bi-search me-1"></i>Search User:</label>
+                    <div class="d-inline-flex gap-2 w-100 justify-content-md-end" style="max-width: 380px;">
+                      <input type="hidden" name="role" value="{{ selected_role }}">
+                      <input type="hidden" name="view" value="{{ selected_view }}">
+                      <input type="text" name="search" class="form-control form-control-sm" placeholder="Name or username..." value="{{ search_query }}">
+                      <button class="btn btn-sm btn-primary fw-bold px-3" type="submit"><i class="bi bi-search"></i></button>
+                      {% if start_date or end_date or search_query %}
+                        <a href="{{ url_for('admin.compliance', role=selected_role, view=selected_view) }}" class="btn btn-sm btn-outline-secondary" title="Reset Filters"><i class="bi bi-x-lg"></i></a>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- VIEW MODE 1: COMPILED USER ACTIVITY (Grouped per User) -->
+            {% if selected_view == 'compiled' %}
+              {% if compiled_users %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h4 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-people-fill me-2 text-primary"></i>Compiled User Activity Profiles ({{ compiled_users|length }})
+                  </h4>
+                  <span class="badge bg-secondary">Role: {{ selected_role|upper }}</span>
+                </div>
+
+                <div class="accordion" id="compiledUsersAccordion">
+                  {% for item in compiled_users %}
+                    {% set u = item.user %}
+                    {% set role_class = 'admin' if u.role == 'admin' else 'teacher' if u.role == 'teacher' else 'student' %}
+                    <div class="compiled-user-card p-3 p-md-4">
+                      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                          <div class="user-avatar-badge avatar-{{ role_class }}">
+                            <i class="bi {{ 'bi-shield-check' if u.role == 'admin' else 'bi-person-badge-fill' if u.role == 'teacher' else 'bi-mortarboard-fill' }}"></i>
+                          </div>
+                          <div>
+                            <h4 class="mb-1 fw-bold text-dark">{{ u.name }}</h4>
+                            <div class="d-flex align-items-center gap-2">
+                              <span class="role-pill role-{{ role_class }}">{{ u.role|title }}</span>
+                              <span class="small fw-bold text-muted">@{{ u.username }}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Right Stats & Actions -->
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                          <div class="text-end me-2">
+                            <span class="badge bg-primary fs-6 px-3 py-2 fw-bold d-block mb-1">
+                              {{ item.total_actions }} Total Actions
+                            </span>
+                            <span class="small text-muted fw-bold">
+                              <i class="bi bi-clock-history me-1"></i>Last Active: {{ item.last_active.strftime('%Y-%m-%d %H:%M:%S') if item.last_active else 'N/A' }}
+                            </span>
+                          </div>
+
+                          <button class="btn btn-sm btn-outline-primary fw-bold px-3 py-2" type="button" data-bs-toggle="collapse" data-bs-target="#userLogs{{ u.id }}">
+                            <i class="bi bi-journal-text me-1"></i>Action History
+                          </button>
+
+                          <button class="btn btn-sm btn-outline-danger fw-bold px-2 py-2" type="button" data-bs-toggle="modal" data-bs-target="#clearUserLogsModal{{ u.id }}" title="Clear logs for {{ u.name }}">
+                            <i class="bi bi-trash3"></i>
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Action Breakdown Pills -->
+                      <div class="mt-3 pt-3 border-top d-flex align-items-center gap-2 flex-wrap">
+                        <span class="small fw-bold text-muted me-1">Action Summary:</span>
+                        {% for event_type, count in item.action_counts.items() %}
+                          <span class="event-type-badge">
+                            {{ event_type }}: <strong>{{ count }}</strong>
+                          </span>
+                        {% endfor %}
+                      </div>
+
+                      <!-- Expandable Action History Trail -->
+                      <div class="collapse mt-3" id="userLogs{{ u.id }}" data-bs-parent="#compiledUsersAccordion">
+                        <div class="p-3 bg-light rounded-3 border">
+                          <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-list-nested me-2 text-primary"></i>All Compiled Actions for {{ u.name }} ({{ item.recent_logs|length }} total)</h6>
+                            <span class="badge bg-secondary">Showing all {{ item.recent_logs|length }} logs</span>
+                          </div>
+                          <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                            <table class="table table-sm align-middle mb-0 bg-white rounded border">
+                              <thead class="table-light">
+                                <tr>
+                                  <th>Timestamp</th>
+                                  <th>Action Event</th>
+                                  <th>Details</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {% for log in item.recent_logs %}
+                                  <tr>
+                                    <td style="white-space: nowrap;">{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') if log.created_at else 'N/A' }}</td>
+                                    <td><span class="role-pill role-{{ role_class }}">{{ log.event_type }}</span></td>
+                                    <td class="text-muted">{{ log.event_details or 'No details' }}</td>
+                                  </tr>
+                                {% endfor %}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Modal for clearing individual user logs -->
+                    <div class="modal fade" id="clearUserLogsModal{{ u.id }}" tabindex="-1">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+                          <form method="POST" action="{{ url_for('admin.clear_user_logs', target_user_id=u.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="modal-header">
+                              <h5 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Clear Logs for {{ u.name }}</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                              <p>Are you sure you want to clear all compliance access logs for <strong>{{ u.name }}</strong> (@{{ u.username }})?</p>
+                              <p class="text-muted small mb-0">This action will delete {{ item.total_actions }} recorded audit events for this user.</p>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                              <button type="submit" class="btn btn-danger fw-bold"><i class="bi bi-trash3-fill me-1"></i>Yes, Clear User Logs</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="alert alert-info text-center p-5 rounded-4 shadow-sm">
+                  <i class="bi bi-info-circle display-4 d-block mb-2"></i>
+                  <h4>No compiled activity records found</h4>
+                  <p class="mb-0">Try clearing your role or search filter.</p>
+                </div>
+              {% endif %}
+
+            <!-- VIEW MODE 2: DETAILED TIMELINE (Log by log) -->
+            {% else %}
+              {% if access_logs %}
+                <section class="table-shell">
+                  <div class="table-header">
+                    <div>
+                      <h4 class="fw-bold">Detailed Access Log Timeline</h4>
+                      <p class="mb-0 text-muted">Showing {{ access_logs|length }} log records for role: <strong>{{ selected_role|upper }}</strong></p>
+                    </div>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                      <thead>
+                        <tr>
+                          <th>Time</th>
+                          <th>User</th>
+                          <th>Role</th>
+                          <th>Event Type</th>
+                          <th>Details</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for log in access_logs %}
+                        {% set log_user = log.user %}
+                        {% set r_class = log_user.role if log_user else 'admin' %}
+                        <tr>
+                          <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') if log.created_at else 'N/A' }}</td>
+                          <td><strong>{{ log_user.name if log_user else 'Unknown' }}</strong> <span class="small text-muted">(@{{ log_user.username if log_user else 'N/A' }})</span></td>
+                          <td><span class="role-pill role-{{ r_class }}">{{ log_user.role|title if log_user else 'N/A' }}</span></td>
+                          <td><span class="role-pill role-admin">{{ log.event_type }}</span></td>
+                          <td><span class="text-muted">{{ log.event_details or 'No details' }}</span></td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                {% if pagination.pages > 1 %}
+                  <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                      {% if pagination.has_prev %}
+                        <li class="page-item">
+                          <a class="page-link" href="{{ url_for('admin.compliance', page=pagination.prev_num, role=selected_role, view='detailed', search=search_query) }}">Previous</a>
+                        </li>
+                      {% else %}
+                        <li class="page-item disabled">
+                          <span class="page-link">Previous</span>
+                        </li>
+                      {% endif %}
+
+                      {% for page_num in pagination.iter_pages() %}
+                        {% if page_num %}
+                          {% if page_num == pagination.page %}
+                            <li class="page-item active">
+                              <span class="page-link">{{ page_num }}</span>
+                            </li>
+                          {% else %}
+                            <li class="page-item">
+                              <a class="page-link" href="{{ url_for('admin.compliance', page=page_num, role=selected_role, view='detailed', search=search_query) }}">{{ page_num }}</a>
+                            </li>
+                          {% endif %}
+                        {% else %}
+                          <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                          </li>
+                        {% endif %}
+                      {% endfor %}
+
+                      {% if pagination.has_next %}
+                        <li class="page-item">
+                          <a class="page-link" href="{{ url_for('admin.compliance', page=pagination.next_num, role=selected_role, view='detailed', search=search_query) }}">Next</a>
+                        </li>
+                      {% else %}
+                        <li class="page-item disabled">
+                          <span class="page-link">Next</span>
+                        </li>
+                      {% endif %}
+                    </ul>
+                  </nav>
+                  <div class="text-center text-muted mt-3">
+                    Page {{ pagination.page }} of {{ pagination.pages }} (Total: {{ pagination.total }} logs)
+                  </div>
+                {% endif %}
+              {% else %}
+                <div class="alert alert-info text-center p-5 rounded-4 shadow-sm">
+                  <i class="bi bi-info-circle display-4 d-block mb-2"></i>
+                  <h4>No access logs found</h4>
+                  <p class="mb-0">User activities will appear here as they occur.</p>
+                </div>
+              {% endif %}
+            {% endif %}
+          </div>
+          <!-- End .dashboard-real-content -->
+
+          </div>
+        </section>
+      </main>
     </div>
-    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
   </div>
 
-  <table class="table table-striped">
-    <thead>
-      <tr><th>Time</th><th>User</th><th>Event</th><th>Details</th></tr>
-    </thead>
-    <tbody>
-      {% for log in access_logs %}
-        <tr>
-          <td>{{ log.created_at }}</td>
-          <td>{{ log.user.name if log.user else log.user_id }}</td>
-          <td>{{ log.event_type }}</td>
-          <td>{{ log.event_details }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <!-- Global Modal for Clearing Logs -->
+  <div class="modal fade" id="clearLogsModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST" action="{{ url_for('admin.clear_logs') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-danger"><i class="bi bi-trash3-fill me-2"></i>Clear Compliance Access Logs</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p class="fw-bold mb-2">Select which compliance logs you want to clear:</p>
+            <div class="mb-3">
+              <select name="role_target" class="form-select">
+                <option value="all">Clear ALL Compliance Logs</option>
+                <option value="student">Clear Student Logs Only</option>
+                <option value="teacher">Clear Teacher Logs Only</option>
+                <option value="admin">Clear Admin Logs Only</option>
+              </select>
+            </div>
+            <div class="alert alert-warning small mb-0">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i>
+              This action will permanently remove compliance access records from the database.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-danger fw-bold"><i class="bi bi-trash3-fill me-1"></i>Clear Selected Logs</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
 </html>

@@ -1,8 +1,93 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
-from database.models import db, Lesson, Activity, User, ProgressLog, ClassGroup, UserClass, LessonAssignment, ActivityAssignment, AttemptLog, UserBadge
-from routes.utils import get_current_user, require_role, log_access
+import json
+from datetime import datetime, timedelta
+from pathlib import Path
+
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+from database.models import db, Lesson, Activity, User, ProgressLog, LessonAssignment, ActivityAssignment, AttemptLog, UserBadge, LessonProgress, LessonAttemptLog, Badge, LessonContent, AttemptObjectLog
+from routes.utils import get_current_user, require_role, log_access, csrf
 
 teacher_bp = Blueprint('teacher', __name__, url_prefix='/teacher')
+GAME_TYPE_PRESETS = [
+    {
+        'value': 'Living vs Non-Living Claw Machine',
+        'label': 'Claw Machine',
+        'description': 'Students grab and sort objects into the correct chute.',
+        'points': 20,
+        'badge_class': 'preset-claw'
+    },
+    {
+        'value': 'Animal Body Parts — Find the Part',
+        'label': 'Find the Part',
+        'description': 'Match animal outer body parts to body zones on characters.',
+        'points': 20,
+        'badge_class': 'preset-hotspot'
+    },
+    {
+        'value': 'Plant Parts — Streak Race',
+        'label': 'Streak Race',
+        'description': 'Answer plant part questions in a race to the finish line.',
+        'points': 20,
+        'badge_class': 'preset-trait'
+    },
+]
+
+
+def get_lesson_total_slides(lesson):
+    if not lesson:
+        return 7
+    title = getattr(lesson, 'title', '') or ''
+    if 'Animal Body Parts' in title or 'Plant Parts' in title:
+        return 12
+    return 7
+
+
+
+def load_teacher_object_library():
+    config_file = Path(__file__).resolve().parent.parent / 'static' / 'data' / 'sortingActivities.json'
+    if not config_file.exists():
+        return []
+
+    try:
+        with config_file.open('r', encoding='utf-8') as file:
+            configs = json.load(file)
+    except (json.JSONDecodeError, OSError):
+        return []
+
+    default_config = configs.get('default') if isinstance(configs, dict) else None
+    objects = default_config.get('objects', []) if isinstance(default_config, dict) else []
+    bins = default_config.get('bins', []) if isinstance(default_config, dict) else []
+    bin_labels = {bin_entry.get('id'): bin_entry.get('label') for bin_entry in bins if isinstance(bin_entry, dict)}
+
+    library = []
+    for idx, object_entry in enumerate(objects):
+        if not isinstance(object_entry, dict):
+            continue
+        category_id = object_entry.get('categoryId')
+        library.append({
+            'id': str(object_entry.get('id', idx + 1)),
+            'label': object_entry.get('name') or object_entry.get('label') or 'Unnamed object',
+            'category_id': category_id,
+            'category_label': bin_labels.get(category_id, category_id or 'Unknown'),
+            'explanation': object_entry.get('explanation') or 'Shared object content comes from the current lesson library.',
+        })
+
+    return library
+
+
+
+def save_lesson_content(lesson_id, payload, status='draft'):
+    existing = LessonContent.query.filter_by(lesson_id=lesson_id, status=status).order_by(LessonContent.version.desc()).first()
+    version = 1 if not existing else (existing.version + 1)
+    content = LessonContent(
+        lesson_id=lesson_id,
+        version=version,
+        status=status,
+        payload=json.dumps(payload)
+    )
+    db.session.add(content)
+    db.session.commit()
+    return content
+
 
 @teacher_bp.route('/dashboard')
 @require_role('teacher')
@@ -10,82 +95,216 @@ def dashboard():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'teacher_dashboard')
 
-    lessons = Lesson.query.filter_by(deleted_at=None).all()
-    activities = Activity.query.filter_by(deleted_at=None).all()
-    student_count = User.query.filter_by(role='student', deleted_at=None).count()
-    progress_logs = ProgressLog.query.filter_by(deleted_at=None).all()
-    avg_progress = 0
+    lessons = Lesson.query.all()
+    activities = Activity.query.filter(
+        ~Activity.engine.in_(['quick_check', 'lesson']),
+        ~Activity.type.ilike('%Quick Check%'),
+        ~Activity.type.ilike('%Slide Questions%')
+    ).all()
+    claw_activity = Activity.query.filter_by(type='Living vs Non-Living Claw Machine').first()
+    students = User.query.filter_by(role='student').all()
+    student_count = len(students)
+
+    online_threshold = datetime.utcnow() - timedelta(minutes=3)
+    online_students = User.query.filter(
+        User.role == 'student',
+        User.last_seen >= online_threshold
+    ).order_by(User.name.asc()).all()
+
+    lesson_assignments = LessonAssignment.query.all()
+    activity_assignments = ActivityAssignment.query.all()
+    total_assignments = len(lesson_assignments) + len(activity_assignments)
+
+    # Average Curriculum Progress (Lessons + Playable Activities across all enrolled students)
+    lesson_progress_records = LessonProgress.query.all()
+    lp_sum = sum(min(100, (lp.progress_percent or 0)) for lp in lesson_progress_records)
+
+    activity_completed_count = 0
+    if student_count > 0 and len(activities) > 0:
+        ap_set = set((al.student_id, al.activity_id) for al in AttemptLog.query.all())
+        ap_set.update((pl.student_id, pl.activity_id) for pl in ProgressLog.query.all())
+        activity_completed_count = len(ap_set)
+
+    total_curriculum_slots = student_count * (len(lessons) + len(activities))
+    if total_curriculum_slots > 0:
+        total_progress_points = lp_sum + (activity_completed_count * 100)
+        avg_progress = min(100, round(total_progress_points / total_curriculum_slots))
+    else:
+        avg_progress = 0
+
+    progress_logs = ProgressLog.query.all()
+    avg_time_spent = 0
     if progress_logs:
-        total_score = sum((log.score or 0) for log in progress_logs)
-        avg_progress = min(100, round((total_score / (len(progress_logs) * 10)) * 100))
+        total_time = sum((log.time_spent or 0) for log in progress_logs)
+        avg_time_spent = round(total_time / len(progress_logs))
+
+    # Calculate replay rate (§1.3 engagement metric)
+    total_players = db.session.query(db.func.count(db.func.distinct(AttemptLog.student_id))).scalar() or 0
+    replayers = db.session.query(db.func.count(db.func.distinct(AttemptLog.student_id))).filter(AttemptLog.attempt_number > 1).scalar() or 0
+    replay_rate = round((replayers / total_players * 100)) if total_players > 0 else 0
+
+    claw_leaderboard = []
+    animal_leaderboard = []
+    plant_leaderboard = []
+
+    def get_teacher_game_leaderboard(activity_name_fragment):
+        return db.session.query(
+            User.id.label('id'),
+            User.name.label('name'),
+            db.func.max(ProgressLog.score).label('best_score'),
+            db.func.min(ProgressLog.time_spent).label('time_spent')
+        ).join(ProgressLog, User.id == ProgressLog.student_id
+        ).join(Activity, Activity.id == ProgressLog.activity_id
+        ).filter(
+            User.role == 'student',
+            Activity.type.ilike(f'%{activity_name_fragment}%')
+        ).group_by(User.id, User.name).order_by(
+            db.desc('best_score'), User.name
+        ).limit(10).all()
+
+    claw_leaderboard = get_teacher_game_leaderboard('Claw Machine')
+    animal_leaderboard = get_teacher_game_leaderboard('Find the Part')
+    plant_leaderboard = get_teacher_game_leaderboard('Streak Race')
 
     top_students = db.session.query(
+        User.id.label('id'),
         User.name.label('name'),
         db.func.sum(ProgressLog.score).label('total_score')
     ).join(ProgressLog, User.id == ProgressLog.student_id).filter(
-        User.role == 'student',
-        User.deleted_at == None,
-        ProgressLog.deleted_at == None
+        User.role == 'student'
     ).group_by(User.id).order_by(db.desc('total_score')).limit(5).all()
 
     recent_activity = db.session.query(
         ProgressLog,
         User.name.label('student_name'),
         Activity.type.label('activity_type')
-    ).join(User, User.id == ProgressLog.student_id).join(Activity, Activity.id == ProgressLog.activity_id).filter(
-        ProgressLog.deleted_at == None
+    ).join(User, User.id == ProgressLog.student_id).join(Activity, Activity.id == ProgressLog.activity_id
     ).order_by(ProgressLog.created_at.desc()).limit(5).all()
+
+    # Query for most-missed in Lessons (Lesson slide questions & quick checks)
+    missed_lessons_query = db.session.query(
+        AttemptObjectLog.object_id,
+        Activity.type.label('activity_type'),
+        db.func.count(AttemptObjectLog.id).label('miss_count')
+    ).join(
+        AttemptLog, AttemptLog.id == AttemptObjectLog.attempt_log_id
+    ).join(
+        Activity, Activity.id == AttemptLog.activity_id
+    ).filter(
+        AttemptObjectLog.was_correct == False,
+        (Activity.type.ilike('%Lesson%') | Activity.type.ilike('%Quick Check%') | (Activity.engine == 'lesson') | (Activity.engine == 'quick_check'))
+    ).group_by(AttemptObjectLog.object_id, Activity.type).order_by(db.desc('miss_count')).limit(5).all()
+
+    # Query for most-missed in Activities (Games)
+    missed_activities_query = db.session.query(
+        AttemptObjectLog.object_id,
+        Activity.type.label('activity_type'),
+        db.func.count(AttemptObjectLog.id).label('miss_count')
+    ).join(
+        AttemptLog, AttemptLog.id == AttemptObjectLog.attempt_log_id
+    ).join(
+        Activity, Activity.id == AttemptLog.activity_id
+    ).filter(
+        AttemptObjectLog.was_correct == False,
+        ~(Activity.type.ilike('%Lesson%') | Activity.type.ilike('%Quick Check%') | (Activity.engine == 'lesson') | (Activity.engine == 'quick_check'))
+    ).group_by(AttemptObjectLog.object_id, Activity.type).order_by(db.desc('miss_count')).limit(5).all()
+
+    object_library = {obj['id']: obj for obj in load_teacher_object_library()}
+
+    most_missed_lessons = []
+    for row in missed_lessons_query:
+        obj_id = str(row.object_id)
+        obj_name = object_library.get(obj_id, {}).get('label', obj_id)
+        most_missed_lessons.append({
+            'name': obj_name,
+            'activity_type': row.activity_type,
+            'misses': row.miss_count
+        })
+
+    most_missed_activities = []
+    for row in missed_activities_query:
+        obj_id = str(row.object_id)
+        obj_name = object_library.get(obj_id, {}).get('label')
+        if not obj_name:
+            for item in object_library.values():
+                if item.get('label', '').lower() == obj_id.lower():
+                    obj_name = item.get('label')
+                    break
+        if not obj_name:
+            obj_name = obj_id
+
+        most_missed_activities.append({
+            'name': obj_name,
+            'activity_type': row.activity_type,
+            'misses': row.miss_count
+        })
+
+    # Fallback to general query if no type-specific items match
+    if not most_missed_lessons and not most_missed_activities:
+        general_query = db.session.query(
+            AttemptObjectLog.object_id,
+            db.func.count(AttemptObjectLog.id).label('miss_count')
+        ).filter(
+            AttemptObjectLog.was_correct == False
+        ).group_by(AttemptObjectLog.object_id).order_by(db.desc('miss_count')).limit(5).all()
+
+        for row in general_query:
+            obj_id = str(row.object_id)
+            obj_name = object_library.get(obj_id, {}).get('label', f'Item #{obj_id}')
+            most_missed_activities.append({
+                'name': obj_name,
+                'activity_type': 'Sorting Activity',
+                'misses': row.miss_count
+            })
 
     return render_template(
         'teacher/teacher_dashboard.html',
         lessons=lessons,
         activities=activities,
+        students=students,
         student_count=student_count,
+        online_students=online_students,
         avg_progress=avg_progress,
+        avg_time_spent=avg_time_spent,
+        total_assignments=total_assignments,
+        replay_rate=replay_rate,
         badges_count=0,
+        claw_activity=claw_activity,
+        claw_leaderboard=claw_leaderboard,
+        animal_leaderboard=animal_leaderboard,
+        plant_leaderboard=plant_leaderboard,
         top_students=top_students,
         recent_activity=recent_activity,
+        most_missed_lessons=most_missed_lessons,
+        most_missed_activities=most_missed_activities,
         current_user=current_user
     )
 
-@teacher_bp.route('/create_lesson', methods=['POST'])
-def create_lesson():
-    title = request.form['title']
-    description = request.form['description']
-    lesson = Lesson(title=title, description=description)
-    db.session.add(lesson)
-    db.session.commit()
-    flash("Lesson created successfully!", "success")
-    return redirect(url_for('teacher.dashboard'))
 
-@teacher_bp.route('/create_activity', methods=['POST'])
-def create_activity():
-    lesson_id = request.form['lesson_id']
-    activity_type = request.form['type']
-    points = request.form.get('points', 0) or 0
-    activity = Activity(lesson_id=lesson_id, type=activity_type, points=int(points))
-    db.session.add(activity)
-    db.session.commit()
-    flash("Activity created successfully!", "success")
-    return redirect(url_for('teacher.dashboard'))
+@teacher_bp.route('/lessons')
+@require_role('teacher')
+def lessons():
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', 'teacher_lessons')
 
-@teacher_bp.route('/delete_lesson/<int:lesson_id>')
-def delete_lesson(lesson_id):
-    lesson = Lesson.query.get(lesson_id)
-    if lesson:
-        lesson.soft_delete()
-        db.session.commit()
-        flash("Lesson soft deleted.", "warning")
-    return redirect(url_for('teacher.dashboard'))
+    lessons = Lesson.query.order_by(Lesson.created_at.desc()).all()
+    activities = Activity.query.filter(
+        ~Activity.engine.in_(['quick_check', 'lesson']),
+        ~Activity.type.ilike('%Quick Check%'),
+        ~Activity.type.ilike('%Slide Questions%')
+    ).order_by(Activity.created_at.desc()).all()
+    students = User.query.filter_by(role='student').order_by(User.name.asc()).all()
 
-@teacher_bp.route('/delete_activity/<int:activity_id>')
-def delete_activity(activity_id):
-    activity = Activity.query.get(activity_id)
-    if activity:
-        activity.soft_delete()
-        db.session.commit()
-        flash("Activity soft deleted.", "warning")
-    return redirect(url_for('teacher.dashboard'))
+    return render_template(
+        'teacher/teacher_lessons.html',
+        current_user=current_user,
+        lessons=lessons,
+        activities=activities,
+        students=students,
+        game_presets=GAME_TYPE_PRESETS
+    )
+
+
 
 
 @teacher_bp.route('/assignments')
@@ -93,23 +312,153 @@ def delete_activity(activity_id):
 def assignments():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'teacher_assignments')
-    lesson_assignments = LessonAssignment.query.filter_by(deleted_at=None).all()
-    activity_assignments = ActivityAssignment.query.filter_by(deleted_at=None).all()
-    return render_template('teacher/teacher_assignments.html', current_user=current_user, lesson_assignments=lesson_assignments, activity_assignments=activity_assignments)
+    lesson_assignments = LessonAssignment.query.order_by(LessonAssignment.created_at.desc()).all()
+    activity_assignments = ActivityAssignment.query.order_by(ActivityAssignment.created_at.desc()).all()
+    lessons = Lesson.query.order_by(Lesson.id.asc()).all()
+    students = User.query.filter_by(role='student').order_by(User.name.asc()).all()
+
+    # Map each lesson to its primary paired game activity (e.g. Claw Machine, Safari Quest)
+    lesson_activity_map = {}
+    for lesson in lessons:
+        paired_act = Activity.query.filter_by(lesson_id=lesson.id).filter(
+            ~Activity.engine.in_(['quick_check', 'lesson']),
+            ~Activity.type.ilike('%Quick Check%'),
+            ~Activity.type.ilike('%Slide Questions%')
+        ).first()
+        if not paired_act:
+            paired_act = Activity.query.filter_by(lesson_id=lesson.id).first()
+
+        if paired_act:
+            lesson_activity_map[str(lesson.id)] = {
+                'id': paired_act.id,
+                'name': paired_act.type,
+                'engine': paired_act.engine
+            }
+
+    # Pass active assignment lookups for real-time duplicate checking
+    existing_assignments = {
+        'lessons': [{'student_id': a.student_id, 'lesson_id': a.lesson_id, 'status': a.status} for a in lesson_assignments],
+        'activities': [{'student_id': a.student_id, 'activity_id': a.activity_id, 'status': a.status} for a in activity_assignments]
+    }
+
+    return render_template(
+        'teacher/teacher_assignments.html',
+        current_user=current_user,
+        lesson_assignments=lesson_assignments,
+        activity_assignments=activity_assignments,
+        lessons=lessons,
+        students=students,
+        lesson_activity_map=lesson_activity_map,
+        existing_assignments=existing_assignments
+    )
 
 
 @teacher_bp.route('/assign_lesson', methods=['POST'])
 @require_role('teacher')
 def assign_lesson():
     current_user = get_current_user()
-    lesson_id = request.form['lesson_id']
-    student_id = request.form['student_id']
-    due_date = request.form.get('due_date')
-    assignment = LessonAssignment(lesson_id=lesson_id, student_id=student_id, assigned_by=current_user.id, due_date=due_date)
+    lesson_id = request.form.get('lesson_id')
+    student_id = request.form.get('student_id')
+    include_activity = request.form.get('include_activity') in ['1', 'on', 'true', True]
+    paired_activity_id = request.form.get('paired_activity_id')
+    due_date_raw = request.form.get('due_date')
+
+    if not lesson_id or not student_id:
+        flash('Please select both a student and a lesson.', 'danger')
+        return redirect(url_for('teacher.assignments'))
+
+    try:
+        lesson_id = int(lesson_id)
+        student_id = int(student_id)
+    except (ValueError, TypeError):
+        flash('Invalid lesson or student selection.', 'danger')
+        return redirect(url_for('teacher.assignments'))
+
+    due_date = None
+    if due_date_raw:
+        try:
+            due_date = datetime.fromisoformat(due_date_raw)
+        except Exception:
+            due_date = None
+
+    # Check if lesson is already assigned to this student
+    existing_lesson_assign = LessonAssignment.query.filter_by(student_id=student_id, lesson_id=lesson_id).first()
+    student = User.query.get(student_id)
+    student_name = student.name if student else f"Student #{student_id}"
+    lesson = Lesson.query.get(lesson_id)
+    lesson_title = lesson.title if lesson else f"Lesson #{lesson_id}"
+
+    # Resolve paired activity id if requested
+    act_id = None
+    act_name = "game activity"
+    if include_activity:
+        if paired_activity_id:
+            try:
+                act_id = int(paired_activity_id)
+            except (ValueError, TypeError):
+                act_id = None
+
+        if not act_id:
+            paired_act = Activity.query.filter_by(lesson_id=lesson_id).filter(
+                ~Activity.engine.in_(['quick_check', 'lesson']),
+                ~Activity.type.ilike('%Quick Check%'),
+                ~Activity.type.ilike('%Slide Questions%')
+            ).first()
+            if paired_act:
+                act_id = paired_act.id
+
+        if act_id:
+            activity = Activity.query.get(act_id)
+            if activity:
+                act_name = activity.type
+
+    existing_act_assign = ActivityAssignment.query.filter_by(student_id=student_id, activity_id=act_id).first() if act_id else None
+
+    # Case 1: Both already assigned (or lesson assigned and no activity requested)
+    if existing_lesson_assign and (not act_id or existing_act_assign):
+        if existing_act_assign:
+            flash(f'Both "{lesson_title}" and "{act_name}" are already assigned to {student_name}.', 'warning')
+        else:
+            flash(f'"{lesson_title}" is already assigned to {student_name}.', 'warning')
+        return redirect(url_for('teacher.assignments'))
+
+    # Case 2: Lesson is already assigned, but assigning the Paired Activity
+    if existing_lesson_assign and act_id and not existing_act_assign:
+        act_assign = ActivityAssignment(
+            activity_id=act_id,
+            student_id=student_id,
+            assigned_by=current_user.id,
+            due_date=due_date
+        )
+        db.session.add(act_assign)
+        db.session.commit()
+        log_access(current_user, 'assign_activity', f'activity_id={act_id} student_id={student_id}')
+        flash(f'Paired activity "{act_name}" assigned successfully to {student_name}.', 'success')
+        return redirect(url_for('teacher.assignments'))
+
+    # Case 3: Lesson is newly assigned (and optionally paired activity too)
+    assignment = LessonAssignment(
+        lesson_id=lesson_id,
+        student_id=student_id,
+        assigned_by=current_user.id,
+        due_date=due_date
+    )
     db.session.add(assignment)
+
+    activity_msg = ""
+    if act_id and not existing_act_assign:
+        act_assign = ActivityAssignment(
+            activity_id=act_id,
+            student_id=student_id,
+            assigned_by=current_user.id,
+            due_date=due_date
+        )
+        db.session.add(act_assign)
+        activity_msg = f' and paired activity "{act_name}"'
+
     db.session.commit()
-    log_access(current_user, 'assign_lesson', f'lesson_id={lesson_id} student_id={student_id}')
-    flash('Lesson assigned successfully.', 'success')
+    log_access(current_user, 'assign_lesson', f'lesson_id={lesson_id} student_id={student_id} include_activity={include_activity}')
+    flash(f'Lesson{activity_msg} assigned successfully.', 'success')
     return redirect(url_for('teacher.assignments'))
 
 
@@ -117,9 +466,38 @@ def assign_lesson():
 @require_role('teacher')
 def assign_activity():
     current_user = get_current_user()
-    activity_id = request.form['activity_id']
-    student_id = request.form['student_id']
-    due_date = request.form.get('due_date')
+    activity_id = request.form.get('activity_id')
+    student_id = request.form.get('student_id')
+    due_date_raw = request.form.get('due_date')
+
+    if not activity_id or not student_id:
+        flash('Please select both a student and an activity.', 'danger')
+        return redirect(url_for('teacher.assignments'))
+
+    try:
+        activity_id = int(activity_id)
+        student_id = int(student_id)
+    except (ValueError, TypeError):
+        flash('Invalid activity or student selection.', 'danger')
+        return redirect(url_for('teacher.assignments'))
+
+    # Check for duplicate activity assignment
+    existing = ActivityAssignment.query.filter_by(student_id=student_id, activity_id=activity_id).first()
+    if existing:
+        student = User.query.get(student_id)
+        student_name = student.name if student else f"Student #{student_id}"
+        activity = Activity.query.get(activity_id)
+        act_name = activity.type if activity else f"Activity #{activity_id}"
+        flash(f'"{act_name}" is already assigned to {student_name}.', 'warning')
+        return redirect(url_for('teacher.assignments'))
+
+    due_date = None
+    if due_date_raw:
+        try:
+            due_date = datetime.fromisoformat(due_date_raw)
+        except Exception:
+            due_date = None
+
     assignment = ActivityAssignment(activity_id=activity_id, student_id=student_id, assigned_by=current_user.id, due_date=due_date)
     db.session.add(assignment)
     db.session.commit()
@@ -133,6 +511,677 @@ def assign_activity():
 def analytics():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'teacher_analytics')
-    assignments = LessonAssignment.query.filter_by(deleted_at=None).all()
-    activity_attempts = AttemptLog.query.filter_by(deleted_at=None).all()
-    return render_template('teacher/teacher_analytics.html', current_user=current_user, assignments=assignments, activity_attempts=activity_attempts)
+    
+    lesson_assignments = LessonAssignment.query.all()
+    activity_assignments = ActivityAssignment.query.all()
+    
+    activity_attempts = AttemptLog.query.join(
+        Activity, Activity.id == AttemptLog.activity_id
+    ).filter(
+        ~Activity.engine.in_(['quick_check', 'lesson']),
+        ~Activity.type.ilike('%Quick Check%'),
+        ~Activity.type.ilike('%Slide Questions%')
+    ).order_by(AttemptLog.created_at.desc()).all()
+
+    # Pre-map student lesson progress and activity completion/attempts for dynamic status resolution
+    lp_map = {
+        (lp.student_id, lp.lesson_id): lp
+        for lp in LessonProgress.query.all()
+    }
+    ap_map = set()
+    for al in AttemptLog.query.all():
+        ap_map.add((al.student_id, al.activity_id))
+    for pl in ProgressLog.query.all():
+        ap_map.add((pl.student_id, pl.activity_id))
+
+    all_assignments = []
+    lesson_comp_count = 0
+    for la in lesson_assignments:
+        lp = lp_map.get((la.student_id, la.lesson_id))
+        is_comp = (la.status == 'completed') or (lp and (lp.completed or (lp.progress_percent or 0) >= 100))
+        status = 'completed' if is_comp else (la.status or 'assigned')
+
+        if is_comp and la.status != 'completed':
+            la.status = 'completed'
+            db.session.add(la)
+
+        if is_comp:
+            lesson_comp_count += 1
+
+        all_assignments.append({
+            'type': 'Lesson',
+            'type_badge_class': 'bg-primary-subtle text-primary border border-primary-subtle',
+            'title': la.lesson.title if la.lesson else f'Lesson #{la.lesson_id}',
+            'student_name': la.student.name if la.student else f'Student #{la.student_id}',
+            'student_id': la.student_id,
+            'assigned_at': la.assigned_at,
+            'due_date': la.due_date,
+            'status': status
+        })
+
+    activity_comp_count = 0
+    for aa in activity_assignments:
+        has_attempt = (aa.student_id, aa.activity_id) in ap_map
+        is_comp = (aa.status == 'completed') or has_attempt
+        status = 'completed' if is_comp else (aa.status or 'assigned')
+
+        if is_comp and aa.status != 'completed':
+            aa.status = 'completed'
+            db.session.add(aa)
+
+        if is_comp:
+            activity_comp_count += 1
+
+        all_assignments.append({
+            'type': 'Activity',
+            'type_badge_class': 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
+            'title': aa.activity.type if aa.activity else f'Activity #{aa.activity_id}',
+            'student_name': aa.student.name if aa.student else f'Student #{aa.student_id}',
+            'student_id': aa.student_id,
+            'assigned_at': aa.assigned_at,
+            'due_date': aa.due_date,
+            'status': status
+        })
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    all_assignments.sort(key=lambda x: x['assigned_at'] or datetime.min, reverse=True)
+
+    total_assignments = len(all_assignments)
+    completed_count = sum(1 for a in all_assignments if a['status'] == 'completed')
+    overall_completion_rate = round((completed_count / total_assignments * 100)) if total_assignments > 0 else 0
+    lesson_completion_rate = round((lesson_comp_count / len(lesson_assignments) * 100)) if lesson_assignments else 0
+    activity_completion_rate = round((activity_comp_count / len(activity_assignments) * 100)) if activity_assignments else 0
+
+    total_attempts = len(activity_attempts)
+    avg_score = round(sum((a.score or 0) for a in activity_attempts) / total_attempts) if total_attempts > 0 else 0
+
+    # Calculate activity replay rate for playable activities
+    playable_attempts = AttemptLog.query.join(
+        Activity, Activity.id == AttemptLog.activity_id
+    ).join(
+        User, User.id == AttemptLog.student_id
+    ).filter(
+        User.role == 'student',
+        ~Activity.engine.in_(['quick_check', 'lesson']),
+        ~Activity.type.ilike('%Quick Check%'),
+        ~Activity.type.ilike('%Slide Questions%')
+    ).all()
+
+    student_activity_counts = {}
+    for al in playable_attempts:
+        key = (al.student_id, al.activity_id)
+        student_activity_counts[key] = student_activity_counts.get(key, 0) + 1
+
+    distinct_players = set(s_id for (s_id, act_id) in student_activity_counts.keys())
+    replaying_players = set(s_id for (s_id, act_id), count in student_activity_counts.items() if count > 1)
+    replay_rate = round((len(replaying_players) / len(distinct_players) * 100)) if distinct_players else 0
+
+    # Live Lesson Slide & Progress Tracker
+    lesson_progress_records = LessonProgress.query.join(
+        User, User.id == LessonProgress.student_id
+    ).filter(
+        User.role == 'student'
+    ).order_by(LessonProgress.updated_at.desc()).all()
+    def format_time_duration(seconds):
+        if not seconds:
+            return "0s"
+        mins, secs = divmod(int(seconds), 60)
+        return f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
+
+    live_lesson_tracker = []
+    for lp in lesson_progress_records:
+        attempts = LessonAttemptLog.query.filter_by(
+            student_id=lp.student_id, lesson_id=lp.lesson_id
+        ).order_by(LessonAttemptLog.attempt_number.asc()).all()
+
+        total_slides = get_lesson_total_slides(lp.lesson)
+        curr = (lp.current_slide or 0) + 1
+        revisit_count = lp.revisit_count or 0
+
+        if attempts:
+            first_att = attempts[0]
+            first_time_str = format_time_duration(first_att.time_spent)
+            latest_att = attempts[-1]
+            latest_time_str = format_time_duration(latest_att.time_spent)
+            tot_sec = sum((att.time_spent or 0) for att in attempts)
+            tot_str = format_time_duration(tot_sec)
+
+            if len(attempts) > 1:
+                time_spent_display = (
+                    f'<div class="d-flex flex-column gap-1">'
+                    f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
+                    f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" title="First Visit (Initial)"><i class="bi bi-flag-fill me-1"></i>First: {first_time_str}</span>'
+                    f'    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1" title="Latest Revisit"><i class="bi bi-arrow-repeat me-1"></i>R{len(attempts)-1}: {latest_time_str}</span>'
+                    f'  </div>'
+                    f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: {tot_str}</div>'
+                    f'</div>'
+                )
+            else:
+                time_spent_display = (
+                    f'<div class="d-flex flex-column gap-1">'
+                    f'  <span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-clock me-1 text-primary"></i>First: {first_time_str}</span>'
+                    f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: {tot_str}</div>'
+                    f'</div>'
+                )
+        else:
+            sec = lp.time_spent or 0
+            init_sec = lp.initial_time_spent or sec
+            tot_sec = lp.total_time_spent or (init_sec + (sec if revisit_count > 0 else 0))
+            if revisit_count > 0:
+                time_spent_display = (
+                    f'<div class="d-flex flex-column gap-1">'
+                    f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
+                    f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-flag-fill me-1"></i>First: {format_time_duration(init_sec)}</span>'
+                    f'    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-arrow-repeat me-1"></i>Current: {format_time_duration(sec)}</span>'
+                    f'  </div>'
+                    f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: {format_time_duration(tot_sec)}</div>'
+                    f'</div>'
+                )
+            else:
+                time_spent_display = (
+                    f'<div class="d-flex flex-column gap-1">'
+                    f'  <span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-clock me-1 text-primary"></i>First: {format_time_duration(sec)}</span>'
+                    f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: {format_time_duration(sec)}</div>'
+                    f'</div>'
+                )
+
+        is_completed = False
+        is_revisit = False
+        revisit_num = 0
+
+        if attempts:
+            latest_attempt = attempts[-1]
+            is_completed = bool(latest_attempt.completed)
+            if latest_attempt.attempt_number > 1:
+                is_revisit = True
+                revisit_num = latest_attempt.attempt_number - 1
+        else:
+            is_completed = bool(lp.completed)
+            is_revisit = (revisit_count > 0)
+            revisit_num = revisit_count
+
+        if is_completed:
+            status_text = 'Completed'
+            status_badge_class = 'bg-success text-white'
+            slide_display = f"Completed (Slide {total_slides} / {total_slides})"
+        elif is_revisit:
+            status_text = f'In Progress (Revisit #{revisit_num})'
+            status_badge_class = 'bg-warning text-dark'
+            slide_display = f"Slide {curr} / {total_slides} ({lp.progress_percent or 0}%)"
+        else:
+            status_text = 'In Progress'
+            status_badge_class = 'bg-warning text-dark'
+            slide_display = f"Slide {curr} / {total_slides} ({lp.progress_percent or 0}%)"
+
+        history_url = url_for('teacher.lesson_history', student_id=lp.student_id, lesson_id=lp.lesson_id)
+        if revisit_count > 0 or len(attempts) > 1:
+            revisit_display = (
+                f'<a href="{history_url}" class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold text-nowrap">'
+                f'<i class="bi bi-arrow-repeat me-1"></i>View History ({max(revisit_count, len(attempts)-1)}x) <i class="bi bi-chevron-right ms-1"></i></a>'
+            )
+        else:
+            revisit_display = (
+                f'<a href="{history_url}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-semibold text-nowrap">'
+                f'<i class="bi bi-clock-history me-1"></i>First Visit <i class="bi bi-chevron-right ms-1"></i></a>'
+            )
+
+        live_lesson_tracker.append({
+            'student_id': lp.student_id,
+            'student_name': lp.student.name if lp.student else f'Student #{lp.student_id}',
+            'lesson_title': lp.lesson.title if lp.lesson else f'Lesson #{lp.lesson_id}',
+            'status': status_text,
+            'status_badge_class': status_badge_class,
+            'current_slide_display': slide_display,
+            'time_spent_display': time_spent_display,
+            'revisit_display': revisit_display
+        })
+
+    # --- Per-student retry progression (teacher-only: does replaying improve scores?) ---
+    all_game_attempts = AttemptLog.query.join(
+        Activity, Activity.id == AttemptLog.activity_id
+    ).join(
+        User, User.id == AttemptLog.student_id
+    ).filter(
+        User.role == 'student',
+        ~Activity.engine.in_(['quick_check', 'lesson']),
+        ~Activity.type.ilike('%Quick Check%'),
+        ~Activity.type.ilike('%Slide Questions%')
+    ).order_by(AttemptLog.student_id, AttemptLog.activity_id, AttemptLog.attempt_number.asc()).all()
+
+    # Group by student + activity
+    from collections import defaultdict
+    retry_groups = defaultdict(list)
+    for a in all_game_attempts:
+        key = (a.student_id, a.activity_id)
+        retry_groups[key].append(a)
+
+    retry_progression = []
+    for (student_id, activity_id), attempts in retry_groups.items():
+        if len(attempts) < 2:
+            continue  # Only show students who actually retried
+        first_score = attempts[0].score or 0
+        best_score = max(a.score or 0 for a in attempts)
+        latest_score = attempts[-1].score or 0
+        improvement = best_score - first_score
+        student_name = attempts[0].student.name if attempts[0].student else f'Student #{student_id}'
+        activity_name = attempts[0].activity.type if attempts[0].activity else f'Activity #{activity_id}'
+        retry_progression.append({
+            'student_name': student_name,
+            'student_id': student_id,
+            'activity_name': activity_name,
+            'attempt_count': len(attempts),
+            'first_score': first_score,
+            'best_score': best_score,
+            'latest_score': latest_score,
+            'improvement': improvement,
+            'improved': improvement > 0,
+            'attempts': [{'num': a.attempt_number, 'score': a.score or 0, 'time': a.time_spent or 0} for a in attempts]
+        })
+
+    retry_progression.sort(key=lambda x: x['improvement'], reverse=True)
+
+    # --- Full Ranked Top Students Performance ---
+    all_top_students_raw = db.session.query(
+        User.id.label('id'),
+        User.name.label('name'),
+        User.username.label('username'),
+        db.func.coalesce(db.func.sum(ProgressLog.score), 0).label('total_score'),
+        db.func.count(db.func.distinct(ProgressLog.activity_id)).label('activities_completed')
+    ).outerjoin(ProgressLog, User.id == ProgressLog.student_id).filter(
+        User.role == 'student'
+    ).group_by(User.id, User.name, User.username).order_by(db.desc('total_score'), User.name.asc()).all()
+
+    all_top_students = [
+        {
+            'rank': idx + 1,
+            'id': row.id,
+            'name': row.name,
+            'username': row.username,
+            'total_score': int(row.total_score or 0),
+            'activities_completed': int(row.activities_completed or 0)
+        }
+        for idx, row in enumerate(all_top_students_raw)
+    ]
+
+    # --- Full Breakdown: Most Missed in Lessons (Quick Checks) ---
+    missed_lessons_query = db.session.query(
+        AttemptObjectLog.object_id,
+        Activity.type.label('activity_type'),
+        db.func.count(AttemptObjectLog.id).label('miss_count')
+    ).join(
+        AttemptLog, AttemptLog.id == AttemptObjectLog.attempt_log_id
+    ).join(
+        Activity, Activity.id == AttemptLog.activity_id
+    ).filter(
+        AttemptObjectLog.was_correct == False,
+        (Activity.type.ilike('%Lesson%') | Activity.type.ilike('%Quick Check%') | (Activity.engine == 'lesson') | (Activity.engine == 'quick_check'))
+    ).group_by(AttemptObjectLog.object_id, Activity.type).order_by(db.desc('miss_count')).all()
+
+    # --- Full Breakdown: Most Missed in Activities (Games) ---
+    missed_activities_query = db.session.query(
+        AttemptObjectLog.object_id,
+        Activity.type.label('activity_type'),
+        db.func.count(AttemptObjectLog.id).label('miss_count')
+    ).join(
+        AttemptLog, AttemptLog.id == AttemptObjectLog.attempt_log_id
+    ).join(
+        Activity, Activity.id == AttemptLog.activity_id
+    ).filter(
+        AttemptObjectLog.was_correct == False,
+        ~(Activity.type.ilike('%Lesson%') | Activity.type.ilike('%Quick Check%') | (Activity.engine == 'lesson') | (Activity.engine == 'quick_check'))
+    ).group_by(AttemptObjectLog.object_id, Activity.type).order_by(db.desc('miss_count')).all()
+
+    object_library = {obj['id']: obj for obj in load_teacher_object_library()}
+
+    analytics_missed_lessons = []
+    for row in missed_lessons_query:
+        obj_id = str(row.object_id)
+        obj_name = object_library.get(obj_id, {}).get('label', obj_id)
+        analytics_missed_lessons.append({
+            'name': obj_name,
+            'activity_type': row.activity_type,
+            'misses': row.miss_count
+        })
+
+    analytics_missed_activities = []
+    for row in missed_activities_query:
+        obj_id = str(row.object_id)
+        obj_name = object_library.get(obj_id, {}).get('label', obj_id)
+        analytics_missed_activities.append({
+            'name': obj_name,
+            'activity_type': row.activity_type,
+            'misses': row.miss_count
+        })
+
+    # Fallback to general query if no type-specific items match
+    if not analytics_missed_lessons and not analytics_missed_activities:
+        general_query = db.session.query(
+            AttemptObjectLog.object_id,
+            db.func.count(AttemptObjectLog.id).label('miss_count')
+        ).filter(
+            AttemptObjectLog.was_correct == False
+        ).group_by(AttemptObjectLog.object_id).order_by(db.desc('miss_count')).all()
+
+        for row in general_query:
+            obj_id = str(row.object_id)
+            obj_name = object_library.get(obj_id, {}).get('label', f'Item #{obj_id}')
+            analytics_missed_activities.append({
+                'name': obj_name,
+                'activity_type': 'Sorting Activity',
+                'misses': row.miss_count
+            })
+
+    # --- Per-game leaderboards for dashboard widget ---
+    def build_teacher_game_lb(activity_type_fragment):
+        rows = db.session.query(
+            User.id,
+            User.name,
+            db.func.max(ProgressLog.score).label('best_score'),
+            db.func.min(ProgressLog.time_spent).label('best_time')
+        ).join(ProgressLog, ProgressLog.student_id == User.id
+        ).join(Activity, Activity.id == ProgressLog.activity_id
+        ).filter(
+            User.role == 'student',
+            Activity.type.ilike(f'%{activity_type_fragment}%')
+        ).group_by(User.id, User.name).order_by(db.desc('best_score'), User.name).limit(10).all()
+        return rows
+
+    claw_leaderboard_rows = build_teacher_game_lb('Claw Machine')
+    animal_leaderboard_rows = build_teacher_game_lb('Find the Part')
+    plant_leaderboard_rows = build_teacher_game_lb('Streak Race')
+
+    analytics_stats = {
+        'total_assignments': total_assignments,
+        'overall_completion_rate': overall_completion_rate,
+        'lesson_completion_rate': lesson_completion_rate,
+        'activity_completion_rate': activity_completion_rate,
+        'replay_rate': replay_rate,
+        'total_attempts': total_attempts,
+        'avg_score': avg_score
+    }
+
+    return render_template(
+        'teacher/teacher_analytics.html',
+        current_user=current_user,
+        analytics_stats=analytics_stats,
+        all_assignments=all_assignments,
+        activity_attempts=activity_attempts,
+        live_lesson_tracker=live_lesson_tracker,
+        retry_progression=retry_progression,
+        claw_leaderboard_rows=claw_leaderboard_rows,
+        animal_leaderboard_rows=animal_leaderboard_rows,
+        plant_leaderboard_rows=plant_leaderboard_rows,
+        all_top_students=all_top_students,
+        analytics_missed_lessons=analytics_missed_lessons,
+        analytics_missed_activities=analytics_missed_activities
+    )
+
+
+@teacher_bp.route('/add_feedback', methods=['POST'])
+@csrf.exempt
+@require_role('teacher')
+def add_feedback():
+    """Add teacher feedback to a student's attempt"""
+    current_user = get_current_user()
+    data = request.get_json(force=True, silent=True) or request.form or {}
+    
+    try:
+        raw_attempt_id = data.get('attempt_id') or request.values.get('attempt_id')
+        attempt_id = int(raw_attempt_id)
+        teacher_feedback_text = (data.get('teacher_feedback') or data.get('feedback') or request.values.get('teacher_feedback') or '').strip()
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid attempt_id'}), 400
+    
+    if not teacher_feedback_text:
+        return jsonify({'error': 'Feedback cannot be empty'}), 400
+    
+    attempt = AttemptLog.query.get(attempt_id)
+    if not attempt:
+        return jsonify({'error': 'Attempt not found'}), 404
+    
+    attempt.teacher_feedback = teacher_feedback_text
+    db.session.commit()
+    log_access(current_user, 'add_feedback', f'attempt_id={attempt_id}')
+    
+    if request.is_json or request.content_type == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'status': 'ok', 'message': 'Feedback saved successfully'})
+    return redirect(url_for('teacher.dashboard'))
+
+
+@teacher_bp.route('/award_badge', methods=['POST'])
+@require_role('teacher')
+def award_badge():
+    """Award a badge to a student"""
+    current_user = get_current_user()
+    data = request.get_json(silent=True) or request.form
+    
+    try:
+        student_id = int(data.get('student_id'))
+        badge_id = int(data.get('badge_id'))
+    except (TypeError, ValueError):
+        return {'error': 'Invalid student_id or badge_id'}, 400
+    
+    user = User.query.get(student_id)
+    badge = Badge.query.get(badge_id)
+    
+    if not user or not badge:
+        return {'error': 'Student or badge not found'}, 404
+    
+    # Check if already awarded
+    existing = UserBadge.query.filter_by(user_id=student_id, badge_id=badge_id).first()
+    if existing:
+        return {'error': 'Badge already awarded to this student'}, 400
+    
+    user_badge = UserBadge(user_id=student_id, badge_id=badge_id)
+    db.session.add(user_badge)
+    db.session.commit()
+    log_access(current_user, 'award_badge', f'student_id={student_id} badge_id={badge_id}')
+    
+    return {'status': 'ok', 'message': f'Badge "{badge.name}" awarded to {user.name}'} if request.is_json else redirect(url_for('teacher.dashboard'))
+
+
+@teacher_bp.route('/feedback')
+@require_role('teacher')
+def feedback():
+    """Centralized Teacher Feedback Hub for student activity submissions"""
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', 'teacher_feedback')
+
+    # Get all student game attempts
+    attempts = db.session.query(AttemptLog, Activity, User).join(
+        Activity, Activity.id == AttemptLog.activity_id
+    ).join(
+        User, User.id == AttemptLog.student_id
+    ).filter(
+        User.role == 'student',
+        ~Activity.engine.in_(['quick_check', 'lesson']),
+        ~Activity.type.ilike('%Quick Check%'),
+        ~Activity.type.ilike('%Slide Questions%')
+    ).order_by(
+        AttemptLog.created_at.desc()
+    ).all()
+
+    enriched_attempts = []
+    needs_feedback_count = 0
+    feedback_given_count = 0
+
+    for attempt, activity, student in attempts:
+        has_feedback = bool(attempt.teacher_feedback and attempt.teacher_feedback.strip())
+        if has_feedback:
+            feedback_given_count += 1
+        else:
+            needs_feedback_count += 1
+
+        total_for_activity = AttemptLog.query.filter_by(
+            student_id=student.id,
+            activity_id=activity.id
+        ).count()
+
+        enriched_attempts.append({
+            'attempt': attempt,
+            'activity': activity,
+            'student': student,
+            'has_feedback': has_feedback,
+            'total_attempts': total_for_activity
+        })
+
+    students_list = User.query.filter_by(role='student').order_by(User.name.asc()).all()
+    activities_list = Activity.query.filter(
+        ~Activity.engine.in_(['quick_check', 'lesson']),
+        ~Activity.type.ilike('%Quick Check%'),
+        ~Activity.type.ilike('%Slide Questions%')
+    ).all()
+
+    return render_template(
+        'teacher/teacher_feedback.html',
+        attempts=enriched_attempts,
+        total_submissions=len(enriched_attempts),
+        needs_feedback_count=needs_feedback_count,
+        feedback_given_count=feedback_given_count,
+        students=students_list,
+        activities=activities_list,
+        active_page='feedback'
+    )
+
+
+@teacher_bp.route('/student_performance/<int:student_id>')
+@require_role('teacher')
+def student_performance(student_id):
+    """Get detailed performance report for a student"""
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', f'student_performance_{student_id}')
+    
+    student = User.query.get(student_id)
+    if not student:
+        flash('Student not found', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+    
+    # Activity progress
+    progress_logs = ProgressLog.query.filter_by(student_id=student_id).all()
+    
+    # Lesson progress  
+    lesson_progress_raw = LessonProgress.query.filter_by(student_id=student_id).all()
+    lesson_progress = []
+    lessons_completed = 0
+    for lp in lesson_progress_raw:
+        att_logs = LessonAttemptLog.query.filter_by(
+            student_id=student_id, lesson_id=lp.lesson_id
+        ).order_by(LessonAttemptLog.attempt_number.asc()).all()
+        tot_time = sum((a.time_spent or 0) for a in att_logs) if att_logs else (lp.total_time_spent or lp.time_spent or 0)
+        is_ever_completed = lp.completed or (lp.revisit_count and lp.revisit_count > 0) or bool(lp.initial_time_spent) or any(a.completed for a in att_logs)
+        revisit_count = len(att_logs) - 1 if len(att_logs) > 1 else (lp.revisit_count or 0)
+        total_visits = len(att_logs) if att_logs else (revisit_count + 1 if is_ever_completed else 1)
+        if is_ever_completed:
+            lessons_completed += 1
+
+        lesson_progress.append({
+            'lp': lp,
+            'lesson': lp.lesson,
+            'attempts': att_logs,
+            'total_time': tot_time,
+            'progress_percent': lp.progress_percent,
+            'completed': lp.completed,
+            'is_ever_completed': is_ever_completed,
+            'revisit_count': revisit_count,
+            'total_visits': total_visits
+        })
+    
+    # Recent attempts with feedback
+    attempts = db.session.query(AttemptLog, Activity).join(
+        Activity, Activity.id == AttemptLog.activity_id
+    ).filter(AttemptLog.student_id == student_id).order_by(
+        AttemptLog.created_at.desc()
+    ).limit(10).all()
+    
+    # Badges earned
+    badges = db.session.query(UserBadge, Badge).join(
+        Badge, Badge.id == UserBadge.badge_id
+    ).filter(UserBadge.user_id == student_id).all()
+    
+    # Overall stats
+    total_score = sum((log.score or 0) for log in progress_logs)
+    avg_score = round(total_score / len(progress_logs)) if progress_logs else 0
+    
+    return render_template(
+        'teacher/student_performance.html',
+        student=student,
+        progress_logs=progress_logs,
+        lesson_progress=lesson_progress,
+        attempts=attempts,
+        badges=badges,
+        total_score=total_score,
+        avg_score=avg_score,
+        lessons_completed=lessons_completed,
+        current_user=current_user
+    )
+
+
+@teacher_bp.route('/lesson_history/<int:student_id>/<int:lesson_id>')
+@require_role('teacher')
+def lesson_history(student_id, lesson_id):
+    """Detailed timeline of a student's initial visit and all revisits for a lesson"""
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', f'lesson_history_{student_id}_{lesson_id}')
+
+    student = User.query.get_or_404(student_id)
+    lesson = Lesson.query.get_or_404(lesson_id)
+    log = LessonProgress.query.filter_by(student_id=student_id, lesson_id=lesson_id).first()
+
+    attempts = LessonAttemptLog.query.filter_by(
+        student_id=student_id, lesson_id=lesson_id
+    ).order_by(LessonAttemptLog.attempt_number.asc()).all()
+
+    total_slides = get_lesson_total_slides(lesson)
+
+    if not attempts and log:
+        first_time = log.initial_time_spent or log.time_spent or 0
+        pct = log.progress_percent or (100 if log.completed else 0)
+        curr_slide = total_slides if log.completed else max(1, min(total_slides, round((pct / 100) * total_slides)))
+        attempts_list = [{
+            'attempt_number': 1,
+            'visit_title': 'First Visit (Initial)',
+            'time_spent': first_time,
+            'completed': log.completed,
+            'progress_percent': pct,
+            'current_slide': curr_slide,
+            'total_slides': total_slides,
+            'created_at': log.created_at
+        }]
+    else:
+        attempts_list = []
+        for a in attempts:
+            title = 'First Visit (Initial)' if a.attempt_number == 1 else f'Revisit #{a.attempt_number - 1}'
+            pct = a.progress_percent or (100 if a.completed else 0)
+            curr_slide = total_slides if a.completed else max(1, min(total_slides, round((pct / 100) * total_slides)))
+            attempts_list.append({
+                'attempt_number': a.attempt_number,
+                'visit_title': title,
+                'time_spent': a.time_spent or 0,
+                'completed': a.completed,
+                'progress_percent': pct,
+                'current_slide': curr_slide,
+                'total_slides': total_slides,
+                'created_at': a.created_at
+            })
+
+    total_time_seconds = sum(item['time_spent'] for item in attempts_list) if attempts_list else (log.total_time_spent if log else 0)
+    first_visit_time = attempts_list[0]['time_spent'] if attempts_list else 0
+    revisit_attempts = attempts_list[1:] if len(attempts_list) > 1 else []
+    avg_revisit_time = round(sum(r['time_spent'] for r in revisit_attempts) / len(revisit_attempts)) if revisit_attempts else 0
+
+    return render_template(
+        'teacher/lesson_history.html',
+        student=student,
+        lesson=lesson,
+        log=log,
+        attempts=attempts_list,
+        total_time_seconds=total_time_seconds,
+        first_visit_time=first_visit_time,
+        avg_revisit_time=avg_revisit_time,
+        revisit_count=len(revisit_attempts),
+        current_user=current_user
+    )

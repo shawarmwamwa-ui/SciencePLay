@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <!-- Transparent background vector rabbit diagram -->
+  <g id="rabbit-shadow">
+    <ellipse cx="200" cy="350" rx="110" ry="20" fill="#e2e8f0" opacity="0.8"/>
+  </g>
+  
+  <!-- Back Leg -->
+  <path d="M 130 260 C 100 260 90 310 120 340 C 140 355 170 350 170 330 C 170 300 150 260 130 260 Z" fill="#94a3b8"/>
+  <path d="M 110 330 Q 140 350 175 345" stroke="#64748b" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <!-- Main Body -->
+  <path d="M 150 190 C 90 200 80 300 150 335 C 220 350 270 320 280 260 C 290 210 220 180 150 190 Z" fill="#cbd5e1"/>
+
+  <!-- Fluffy Tail -->
+  <circle cx="85" cy="275" r="24" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
+  <circle cx="78" cy="268" r="16" fill="#ffffff"/>
+
+  <!-- Front Leg -->
+  <path d="M 230 250 C 230 290 220 330 240 345 C 255 352 275 345 270 330 C 260 300 260 260 245 250 Z" fill="#94a3b8"/>
+  <path d="M 235 330 Q 255 348 275 340" stroke="#64748b" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <!-- Front Foot Overlap -->
+  <ellipse cx="250" cy="340" rx="20" ry="10" fill="#cbd5e1"/>
+
+  <!-- Main Hip Line -->
+  <path d="M 135 230 A 45 45 0 0 0 175 325" stroke="#94a3b8" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- Neck & Chest -->
+  <path d="M 200 190 C 230 190 270 210 275 250 C 250 240 210 220 200 190 Z" fill="#e2e8f0"/>
+
+  <!-- Back Ear -->
+  <g id="back-ear">
+    <path d="M 195 130 C 160 50 190 20 215 25 C 235 30 230 80 215 135 Z" fill="#94a3b8"/>
+    <path d="M 200 115 C 180 60 200 38 212 42 C 222 45 220 80 210 120 Z" fill="#f43f5e" opacity="0.35"/>
+  </g>
+
+  <!-- Head -->
+  <path d="M 190 140 C 180 100 230 90 265 125 C 290 150 280 195 240 195 C 200 195 190 170 190 140 Z" fill="#e2e8f0"/>
+
+  <!-- Front Ear -->
+  <g id="front-ear">
+    <path d="M 220 135 C 200 45 230 10 255 15 C 275 20 265 80 240 140 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="3"/>
+    <path d="M 228 120 C 215 55 238 30 250 32 C 262 35 255 80 238 125 Z" fill="#fb7185" opacity="0.5"/>
+  </g>
+
+  <!-- Eye -->
+  <circle cx="245" cy="135" r="10" fill="#0f172a"/>
+  <circle cx="242" cy="131" r="3.5" fill="#ffffff"/>
+  <circle cx="248" cy="138" r="1.5" fill="#ffffff"/>
+
+  <!-- Cute Eyelash/Cheek -->
+  <ellipse cx="260" cy="155" rx="10" ry="7" fill="#f43f5e" opacity="0.3"/>
+
+  <!-- Nose & Snout -->
+  <path d="M 278 145 C 285 148 285 155 275 160 Z" fill="#fb7185"/>
+  <path d="M 275 160 Q 268 168 260 165" stroke="#64748b" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+  <!-- Whiskers -->
+  <path d="M 275 155 Q 310 150 325 145" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M 275 158 Q 315 165 330 170" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+</svg>

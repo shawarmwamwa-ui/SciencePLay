@@ -1,0 +1,71 @@
+{
+  "default": {
+    "title": "Living vs Non-Living Claw Machine",
+    "instructions": "Sort the objects into the correct chute.",
+    "round_size": 12,
+    "bins": [
+      {
+        "id": "living",
+        "label": "Living",
+        "icon": "🌱",
+        "color": "#4ade80"
+      },
+      {
+        "id": "non-living",
+        "label": "Non-Living",
+        "icon": "🪨",
+        "color": "#fb923c"
+      }
+    ],
+    "objects": [
+      {
+        "name": "Tree",
+        "categoryId": "living"
+      },
+      {
+        "name": "Bird",
+        "categoryId": "living"
+      },
+      {
+        "name": "Fish",
+        "categoryId": "living"
+      },
+      {
+        "name": "Plant",
+        "categoryId": "living"
+      },
+      {
+        "name": "Cat",
+        "categoryId": "living"
+      },
+      {
+        "name": "Butterfly",
+        "categoryId": "living"
+      },
+      {
+        "name": "Rock",
+        "categoryId": "non-living"
+      },
+      {
+        "name": "Bicycle",
+        "categoryId": "non-living"
+      },
+      {
+        "name": "Ball",
+        "categoryId": "non-living"
+      },
+      {
+        "name": "Chair",
+        "categoryId": "non-living"
+      },
+      {
+        "name": "Book",
+        "categoryId": "non-living"
+      },
+      {
+        "name": "Spoon",
+        "categoryId": "non-living"
+      }
+    ]
+  }
+}

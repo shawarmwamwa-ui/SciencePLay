@@ -1,0 +1,57 @@
+/* Extra claw animations: sway, cable bounce, drop arc, bin hit */
+
+/* Ensure the cable pivots from the top */
+.claw-cable {
+  transform-origin: top center;
+}
+
+#claw-machine.sway-left .claw-cable {
+  animation: sway-left 700ms cubic-bezier(.22,.8,.28,1) forwards;
+}
+#claw-machine.sway-right .claw-cable {
+  animation: sway-right 700ms cubic-bezier(.22,.8,.28,1) forwards;
+}
+
+@keyframes sway-left {
+  0% { transform: rotate(0deg) translateX(0); }
+  30% { transform: rotate(-10deg) translateX(-8px); }
+  60% { transform: rotate(6deg) translateX(4px); }
+  100% { transform: rotate(0deg) translateX(0); }
+}
+@keyframes sway-right {
+  0% { transform: rotate(0deg) translateX(0); }
+  30% { transform: rotate(10deg) translateX(8px); }
+  60% { transform: rotate(-6deg) translateX(-4px); }
+  100% { transform: rotate(0deg) translateX(0); }
+}
+
+/* Cable bounce when lowering/raising */
+#claw-machine.cable-bounce .claw-cable {
+  animation: cable-bounce 700ms cubic-bezier(.22,.8,.28,1) both;
+}
+@keyframes cable-bounce {
+  0% { transform: translateY(0) scaleY(1); }
+  30% { transform: translateY(8px) scaleY(0.98); }
+  60% { transform: translateY(-6px) scaleY(1.02); }
+  100% { transform: translateY(0) scaleY(1); }
+}
+
+/* Drop arc + small landing bounce for dropped tiles */
+.dropped-object.land {
+  animation: drop-bounce 300ms ease-out forwards;
+}
+@keyframes drop-bounce {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.04); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* Bin visual reaction */
+.collection-bin.bin-hit {
+  animation: bin-hit 420ms cubic-bezier(.22,.8,.28,1) forwards;
+}
+@keyframes bin-hit {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}

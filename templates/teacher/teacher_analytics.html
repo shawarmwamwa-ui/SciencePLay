@@ -2,11 +2,173 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Teacher Analytics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Analytics — SciencePlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
 </head>
-<body class="container mt-4">
+<body class="teacher-page teacher-dashboard-page">
+
+  <div class="teacher-layout container-fluid">
+    <div class="row g-3 g-lg-4">
+      <aside class="col-12 col-lg-3 col-xl-2">
+        <nav class="teacher-sidebar h-100">
+          <div>
+            <div class="teacher-brand-wrap">
+              <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
+              <div>
+                <h1 class="teacher-brand-title">SciencePlay</h1>
+                <p class="teacher-brand-subtitle">Teacher Portal</p>
+              </div>
+            </div>
+
+            <div class="teacher-menu-group mt-4">
+              <a class="teacher-menu-link" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="assignments" href="{{ url_for('teacher.assignments') }}">
+                <i class="bi bi-journal-plus"></i>
+                <span>Assignments</span>
+              </a>
+              <a class="teacher-menu-link active" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
+                <i class="bi bi-bar-chart"></i>
+                <span>Analytics</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
+                <i class="bi bi-chat-square-quote-fill"></i>
+                <span>Feedback</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
+                <i class="bi bi-book"></i>
+                <span>Lessons</span>
+              </a>
+            </div>
+          </div>
+
+          <a href="{{ url_for('auth.logout') }}" class="teacher-logout-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="col-12 col-lg-9 col-xl-10">
+        <section class="teacher-content">
+          <div class="teacher-center-wrap">
+
+          <!-- Teacher Analytics Skeleton Loader -->
+          <div class="dashboard-skeleton-wrap">
+            <div class="mb-4">
+              <span class="skeleton-shimmer skeleton-line" style="width: 140px; height: 12px; margin-bottom: 8px;"></span>
+              <span class="skeleton-shimmer skeleton-line" style="width: 200px; height: 32px; margin-bottom: 8px;"></span>
+              <span class="skeleton-shimmer skeleton-line" style="width: 440px; height: 14px;"></span>
+            </div>
+
+            <!-- 5 KPI Cards Skeleton -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-3 mb-4">
+              <div class="col">
+                <div class="teacher-summary-card skeleton-summary-card">
+                  <div class="teacher-summary-text w-75">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 70%; height: 11px; margin-bottom: 8px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 24px;"></span>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-circle" style="width: 44px; height: 44px;"></span>
+                </div>
+              </div>
+              <div class="col">
+                <div class="teacher-summary-card skeleton-summary-card">
+                  <div class="teacher-summary-text w-75">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 70%; height: 11px; margin-bottom: 8px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 24px;"></span>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-circle" style="width: 44px; height: 44px;"></span>
+                </div>
+              </div>
+              <div class="col">
+                <div class="teacher-summary-card skeleton-summary-card">
+                  <div class="teacher-summary-text w-75">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 70%; height: 11px; margin-bottom: 8px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 24px;"></span>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-circle" style="width: 44px; height: 44px;"></span>
+                </div>
+              </div>
+              <div class="col">
+                <div class="teacher-summary-card skeleton-summary-card">
+                  <div class="teacher-summary-text w-75">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 70%; height: 11px; margin-bottom: 8px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 24px;"></span>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-circle" style="width: 44px; height: 44px;"></span>
+                </div>
+              </div>
+              <div class="col">
+                <div class="teacher-summary-card skeleton-summary-card">
+                  <div class="teacher-summary-text w-75">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 70%; height: 11px; margin-bottom: 8px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 24px;"></span>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-circle" style="width: 44px; height: 44px;"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Analytics Panels Skeleton -->
+            <div class="row g-3 mb-4">
+              <div class="col-lg-6">
+                <div class="dashboard-section teacher-panel p-4 h-100">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 180px; height: 22px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 70px; height: 24px;"></span>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-line mb-3" style="width: 80%; height: 12px;"></span>
+                  <div class="py-2 border-bottom d-flex justify-content-between">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-box" style="width: 45%; height: 14px;"></span>
+                  </div>
+                  <div class="py-2 border-bottom d-flex justify-content-between">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-box" style="width: 45%; height: 14px;"></span>
+                  </div>
+                  <div class="py-2 d-flex justify-content-between">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 35%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-box" style="width: 45%; height: 14px;"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="dashboard-section teacher-panel p-4 h-100">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 190px; height: 22px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 75px; height: 24px;"></span>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-line mb-3" style="width: 75%; height: 12px;"></span>
+                  <div class="py-2 border-bottom d-flex justify-content-between">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 50%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 60px; height: 20px;"></span>
+                  </div>
+                  <div class="py-2 border-bottom d-flex justify-content-between">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 55%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 60px; height: 20px;"></span>
+                  </div>
+                  <div class="py-2 d-flex justify-content-between">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 60px; height: 20px;"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real Content Container -->
+          <div class="dashboard-real-content">
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div class="alerts-container mb-4">
@@ -20,54 +182,646 @@
     {% endif %}
   {% endwith %}
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap teacher-head-row">
     <div>
-      <h2>Analytics</h2>
-      <p>Review assignment and attempt performance.</p>
+      <p class="teacher-eyebrow mb-2">Insights & Trends</p>
+      <h1 class="page-title">Analytics</h1>
+      <p class="page-subtitle">Normalized view of assignment completions, student progress, and attempt performance.</p>
     </div>
-    <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
   </div>
 
-  <div class="row gy-4">
-    <div class="col-md-6">
-      <div class="dashboard-section">
-        <h4>Lesson Assignments</h4>
-        <p>Assigned lessons for your students.</p>
-        <table class="table table-bordered">
-          <thead><tr><th>Lesson</th><th>Student</th><th>Status</th></tr></thead>
-          <tbody>
-            {% for assignment in assignments %}
-              <tr>
-                <td>{{ assignment.lesson.title if assignment.lesson else assignment.lesson_id }}</td>
-                <td>{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
-                <td>{{ assignment.status }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  <!-- KPI / Completion Cards -->
+  <div class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-3 mb-4">
+    <div class="col">
+      <div class="teacher-summary-card">
+        <div class="teacher-summary-text">
+          <div class="metric-label">Overall Completion</div>
+          <div class="metric-value text-success">{{ analytics_stats.overall_completion_rate }}%</div>
+        </div>
+        <span class="teacher-summary-icon" style="background-color: #dcfce7; color: #16a34a;"><i class="bi bi-check-circle-fill"></i></span>
       </div>
     </div>
-    <div class="col-md-6">
-      <div class="dashboard-section">
-        <h4>Activity Attempts</h4>
-        <p>Review activity attempt trends.</p>
-        <table class="table table-bordered">
-          <thead><tr><th>Student</th><th>Activity</th><th>Score</th><th>Attempt</th></tr></thead>
-          <tbody>
-            {% for attempt in activity_attempts %}
-              <tr>
-                <td>{{ attempt.student.name if attempt.student else attempt.student_id }}</td>
-                <td>{{ attempt.activity.type if attempt.activity else attempt.activity_id }}</td>
-                <td>{{ attempt.score }}</td>
-                <td>{{ attempt.attempt_number }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    <div class="col">
+      <div class="teacher-summary-card">
+        <div class="teacher-summary-text">
+          <div class="metric-label">Lesson Completion</div>
+          <div class="metric-value text-primary">{{ analytics_stats.lesson_completion_rate }}%</div>
+        </div>
+        <span class="teacher-summary-icon ts-blue"><i class="bi bi-book-half"></i></span>
       </div>
+    </div>
+    <div class="col">
+      <div class="teacher-summary-card">
+        <div class="teacher-summary-text">
+          <div class="metric-label">Activity Completion</div>
+          <div class="metric-value text-warning-emphasis">{{ analytics_stats.activity_completion_rate }}%</div>
+        </div>
+        <span class="teacher-summary-icon ts-orange"><i class="bi bi-controller"></i></span>
+      </div>
+    </div>
+    <div class="col">
+      <div class="teacher-summary-card">
+        <div class="teacher-summary-text">
+          <div class="metric-label">Game Replay Rate</div>
+          <div class="metric-value text-info">{{ analytics_stats.replay_rate }}%</div>
+        </div>
+        <span class="teacher-summary-icon" style="background-color: #e0f2fe; color: #0284c7;"><i class="bi bi-arrow-repeat"></i></span>
+      </div>
+    </div>
+    <div class="col">
+      <div class="teacher-summary-card">
+        <div class="teacher-summary-text">
+          <div class="metric-label">Avg Attempt Score</div>
+          <div class="metric-value ts-orange">{{ analytics_stats.avg_score }} pts</div>
+        </div>
+        <span class="teacher-summary-icon ts-purple" style="background-color: #f3e8ff; color: #9333ea;"><i class="bi bi-trophy"></i></span>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Analytics View Toggle Pills */
+    .analytics-view-pills .nav-link {
+      background: #ffffff;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      font-weight: 700;
+      font-size: 0.92rem;
+      padding: 0.65rem 1.4rem;
+      border-radius: 999px;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .analytics-view-pills .nav-link:hover {
+      background: #f1f5f9;
+      color: #0284c7;
+      border-color: #94a3b8;
+    }
+    .analytics-view-pills .nav-link.active {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #ffffff;
+      border-color: #0369a1;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+    }
+
+    /* Smooth pagination styles */
+    .pagination-smooth .page-item .page-link {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px !important;
+      color: #475569;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      margin: 0 2px;
+      background: #ffffff;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    .pagination-smooth .page-item .page-link:hover {
+      background: #f1f5f9;
+      color: #0284c7;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .pagination-smooth .page-item.active .page-link {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: #ffffff;
+      border-color: #2563eb;
+      font-weight: 700;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    }
+    .pagination-smooth .page-item.disabled .page-link {
+      background: #f8fafc;
+      color: #cbd5e1;
+      border-color: #f1f5f9;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .table-row-fade {
+      animation: fadeInRow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes fadeInRow {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
+  <!-- ══════ View Toggle Tabs (Reduces Simultaneous Visual Density) ══════ -->
+  <ul class="nav nav-pills analytics-view-pills mb-4 gap-2" id="analyticsViewTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="tab-performance" data-bs-toggle="pill" data-bs-target="#pane-performance" type="button" role="tab" aria-controls="pane-performance" aria-selected="true">
+        <i class="bi bi-mortarboard-fill me-2"></i>Performance & Struggle Insights
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-live-logs" data-bs-toggle="pill" data-bs-target="#pane-live-logs" type="button" role="tab" aria-controls="pane-live-logs" aria-selected="false">
+        <i class="bi bi-clock-history me-2"></i>Live Progress & Attempt Logs
+      </button>
+    </li>
+  </ul>
+
+  <!-- ══════ Tab Contents ══════ -->
+  <div class="tab-content" id="analyticsViewTabContent">
+
+    <!-- TAB 1: Performance & Struggle Insights (Default Active) -->
+    <div class="tab-pane fade show active" id="pane-performance" role="tabpanel" aria-labelledby="tab-performance">
+      <!-- Full Ranked Top Students Performance -->
+      <section class="table-shell teacher-table-shell mb-4" id="top-students-section">
+        <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-stars me-2 text-warning"></i>Top Student Performance — Full Class Rankings</h5>
+          <span class="badge bg-warning text-dark rounded-pill">{{ all_top_students|length }} Ranked Students</span>
+        </div>
+        <div class="table-responsive">
+          <table id="top-students-table" class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th style="width: 85px;">Rank</th>
+                <th>Student Name</th>
+                <th>Username</th>
+                <th>Activities Completed</th>
+                <th>Total Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for student in all_top_students %}
+                <tr>
+                  <td>
+                    <span class="fw-bold fs-6 {% if student.rank == 1 %}text-warning{% elif student.rank == 2 %}text-secondary{% elif student.rank == 3 %}text-danger{% else %}text-muted{% endif %}">
+                      {% if student.rank == 1 %}🥇 #1
+                      {% elif student.rank == 2 %}🥈 #2
+                      {% elif student.rank == 3 %}🥉 #3
+                      {% else %}#{{ student.rank }}
+                      {% endif %}
+                    </span>
+                  </td>
+                  <td>
+                    <a href="{{ url_for('teacher.student_performance', student_id=student.id) }}" class="btn btn-sm btn-light border border-2 px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
+                      <i class="bi bi-person-fill text-primary"></i> {{ student.name }} <i class="bi bi-arrow-right-short text-muted"></i>
+                    </a>
+                  </td>
+                  <td><span class="text-muted small">@{{ student.username }}</span></td>
+                  <td><span class="badge bg-light text-dark border">{{ student.activities_completed }} activity types</span></td>
+                  <td><span class="badge bg-primary fs-6">{{ student.total_score }} pts</span></td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-4">No student scores recorded yet.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div id="top-students-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+          <small id="top-students-page-info" class="text-muted fw-semibold">Showing entries</small>
+          <nav><ul id="top-students-pagination-nav" class="pagination pagination-smooth mb-0"></ul></nav>
+        </div>
+      </section>
+
+      <!-- Full Missed Items Row: Lessons & Activities -->
+      <div class="row gy-4 mb-4">
+        <div class="col-lg-6">
+          <section class="table-shell teacher-table-shell h-100 d-flex flex-column justify-content-between" id="missed-lessons-section">
+            <div>
+              <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-journal-x me-2 text-warning"></i>Most Missed in Lessons (Quick Checks)</h5>
+                <span class="badge bg-warning text-dark rounded-pill">{{ analytics_missed_lessons|length }} Items</span>
+              </div>
+              <div class="table-responsive">
+                <table id="missed-lessons-table" class="table align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>Item / Question</th>
+                      <th>Lesson / Context</th>
+                      <th class="text-end">Total Misses</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for obj in analytics_missed_lessons %}
+                      <tr>
+                        <td><strong class="text-dark">{{ obj.name }}</strong></td>
+                        <td><span class="small fw-semibold text-secondary">{{ obj.activity_type }}</span></td>
+                        <td class="text-end"><span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">{{ obj.misses }} misses</span></td>
+                      </tr>
+                    {% else %}
+                      <tr>
+                        <td colspan="3" class="text-center text-muted py-4">No lesson quick-check misses recorded yet.</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div id="missed-lessons-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+              <small id="missed-lessons-page-info" class="text-muted fw-semibold">Showing entries</small>
+              <nav><ul id="missed-lessons-pagination-nav" class="pagination pagination-smooth mb-0"></ul></nav>
+            </div>
+          </section>
+        </div>
+
+        <div class="col-lg-6">
+          <section class="table-shell teacher-table-shell h-100 d-flex flex-column justify-content-between" id="missed-activities-section">
+            <div>
+              <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-controller me-2 text-danger"></i>Most Missed in Activities (Games)</h5>
+                <span class="badge bg-danger rounded-pill">{{ analytics_missed_activities|length }} Items</span>
+              </div>
+              <div class="table-responsive">
+                <table id="missed-activities-table" class="table align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>Game Object / Target</th>
+                      <th>Activity Type</th>
+                      <th class="text-end">Total Misses</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for obj in analytics_missed_activities %}
+                      <tr>
+                        <td><strong class="text-dark">{{ obj.name }}</strong></td>
+                        <td><span class="small fw-semibold text-secondary">{{ obj.activity_type }}</span></td>
+                        <td class="text-end"><span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">{{ obj.misses }} misses</span></td>
+                      </tr>
+                    {% else %}
+                      <tr>
+                        <td colspan="3" class="text-center text-muted py-4">No activity misses recorded yet.</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div id="missed-activities-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+              <small id="missed-activities-page-info" class="text-muted fw-semibold">Showing entries</small>
+              <nav><ul id="missed-activities-pagination-nav" class="pagination pagination-smooth mb-0"></ul></nav>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Student Retry Improvement Tracker -->
+      <section class="table-shell teacher-table-shell mb-4" id="retry-improvement-section">
+        <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-graph-up-arrow me-2 text-success"></i>
+            Student Retry Improvement — Does replaying help?
+          </h5>
+          <span class="badge bg-success rounded-pill">{{ retry_progression|length }} student-game pairs</span>
+        </div>
+        <p class="px-3 pt-2 pb-0 text-muted small mb-0">Only shows students who played a game <strong>more than once</strong>. Sorted by most improved.</p>
+        <div class="table-responsive">
+          <table id="retry-table" class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Game</th>
+                <th>Tries</th>
+                <th>1st Score</th>
+                <th>Best Score</th>
+                <th>Latest</th>
+                <th>Improvement</th>
+                <th>Each Attempt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in retry_progression %}
+                <tr>
+                  <td>
+                    <a href="{{ url_for('teacher.student_performance', student_id=row.student_id) }}" class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
+                      <i class="bi bi-person-fill text-primary"></i> {{ row.student_name }}
+                    </a>
+                  </td>
+                  <td><span class="small fw-semibold text-secondary">{{ row.activity_name }}</span></td>
+                  <td><span class="badge bg-light text-dark border">{{ row.attempt_count }}x</span></td>
+                  <td><span class="badge bg-secondary">{{ row.first_score }} pts</span></td>
+                  <td><span class="badge bg-primary">{{ row.best_score }} pts</span></td>
+                  <td><span class="badge bg-info text-dark">{{ row.latest_score }} pts</span></td>
+                  <td>
+                    {% if row.improvement > 0 %}
+                      <span class="badge bg-success">▲ +{{ row.improvement }} pts improved</span>
+                    {% elif row.improvement < 0 %}
+                      <span class="badge bg-danger">▼ {{ row.improvement }} pts dropped</span>
+                    {% else %}
+                      <span class="badge bg-light text-dark border">= No change</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1 flex-wrap">
+                      {% for a in row.attempts %}
+                        <span class="badge {% if loop.index == 1 %}bg-secondary{% elif a.score >= row.best_score %}bg-primary{% else %}bg-light text-dark border{% endif %}" title="Attempt #{{ a.num }}: {{ a.score }} pts, {{ a.time }}s">
+                          #{{ a.num }}: {{ a.score }}
+                        </span>
+                      {% endfor %}
+                    </div>
+                  </td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="8" class="text-center text-muted py-4">
+                    No students have replayed a game yet. Retry data will appear here once students play more than once.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div id="retry-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+          <small id="retry-page-info" class="text-muted fw-semibold">Showing entries</small>
+          <nav><ul id="retry-pagination-nav" class="pagination pagination-smooth mb-0"></ul></nav>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB 2: Live Progress & Attempt Logs -->
+    <div class="tab-pane fade" id="pane-live-logs" role="tabpanel" aria-labelledby="tab-live-logs">
+      <!-- Live Lesson Progress & Slide Tracker -->
+      <section class="table-shell teacher-table-shell mb-4" id="live-tracker-section">
+        <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-play-btn me-2 text-primary"></i>Live Student Lesson Progress & Slide Tracker</h5>
+          <span class="badge bg-primary rounded-pill">{{ live_lesson_tracker|length }} Active Students</span>
+        </div>
+        <div class="table-responsive">
+          <table id="tracker-table" class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Lesson Title</th>
+                <th>Status</th>
+                <th>Current Slide</th>
+                <th>Time Spent</th>
+                <th>Revisit History</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tracker in live_lesson_tracker %}
+                <tr>
+                  <td>
+                    <a href="{{ url_for('teacher.student_performance', student_id=tracker.student_id) }}" class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
+                      <i class="bi bi-person-fill text-primary"></i> {{ tracker.student_name }}
+                    </a>
+                  </td>
+                  <td><span class="fw-semibold text-secondary">{{ tracker.lesson_title }}</span></td>
+                  <td><span class="badge {{ tracker.status_badge_class }} px-3 py-2 rounded-pill">{{ tracker.status }}</span></td>
+                  <td><strong class="text-primary">{{ tracker.current_slide_display }}</strong></td>
+                  <td>{{ tracker.time_spent_display|safe }}</td>
+                  <td>{{ tracker.revisit_display|safe }}</td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="6" class="text-center text-muted py-4">No student lesson progress recorded yet.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div id="tracker-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+          <small id="tracker-page-info" class="text-muted fw-semibold">Showing 1 to 5 entries</small>
+          <nav>
+            <ul id="tracker-pagination-nav" class="pagination pagination-smooth mb-0"></ul>
+          </nav>
+        </div>
+      </section>
+
+      <!-- Assignments & Activity Attempts Row -->
+      <div class="row gy-4 mb-4">
+        <div class="col-lg-6">
+          <section class="table-shell teacher-table-shell h-100 d-flex flex-column justify-content-between" id="assignments-section">
+            <div>
+              <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-journal-check me-2"></i>Normalized Assignments (Lessons & Activities)</h5>
+                <span class="badge bg-secondary rounded-pill">{{ all_assignments|length }} Total</span>
+              </div>
+              <div class="table-responsive">
+                <table id="assignments-table" class="table align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Item Title</th>
+                      <th>Student</th>
+                      <th>Due Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for assignment in all_assignments %}
+                      <tr>
+                        <td><span class="badge {{ assignment.type_badge_class }}">{{ assignment.type }}</span></td>
+                        <td><strong class="text-dark">{{ assignment.title }}</strong></td>
+                        <td>
+                          <a href="{{ url_for('teacher.student_performance', student_id=assignment.student_id) }}" class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
+                            <i class="bi bi-person-fill text-primary"></i> {{ assignment.student_name }}
+                          </a>
+                        </td>
+                        <td>
+                          <small class="text-muted">
+                            {% if assignment.due_date %}
+                              {{ (assignment.due_date|string).split(' ')[0] }}
+                            {% else %}
+                              No due date
+                            {% endif %}
+                          </small>
+                        </td>
+                        <td>
+                          {% if assignment.status == 'completed' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i>Done</span>
+                          {% else %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-hourglass-split me-1"></i>Assigned</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% else %}
+                      <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No assignments recorded yet.</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div id="assignments-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+              <small id="assignments-page-info" class="text-muted fw-semibold">Showing 1 to 5 entries</small>
+              <nav>
+                <ul id="assignments-pagination-nav" class="pagination pagination-smooth mb-0"></ul>
+              </nav>
+            </div>
+          </section>
+        </div>
+        <div class="col-lg-6">
+          <section class="table-shell teacher-table-shell h-100 d-flex flex-column justify-content-between" id="attempts-section">
+            <div>
+              <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-controller me-2"></i>Game Activity Attempts & Performance</h5>
+                <span class="badge bg-secondary rounded-pill">{{ activity_attempts|length }} Total</span>
+              </div>
+              <div class="table-responsive">
+                <table id="attempts-table" class="table align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Activity</th>
+                      <th>Attempt</th>
+                      <th>Score</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for attempt in activity_attempts %}
+                      <tr>
+                        <td>
+                          <a href="{{ url_for('teacher.student_performance', student_id=attempt.student_id) }}" class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
+                            <i class="bi bi-person-fill text-primary"></i> {{ attempt.student.name if attempt.student else attempt.student_id }}
+                          </a>
+                        </td>
+                        <td><span class="small fw-semibold text-secondary">{{ attempt.activity.type if attempt.activity else attempt.activity_id }}</span></td>
+                        <td><span class="badge bg-light text-dark border">#{{ attempt.attempt_number }}</span></td>
+                        <td><span class="badge bg-primary fs-6">{{ attempt.score }} pts</span></td>
+                        <td><small class="text-muted">{{ attempt.time_spent or 0 }}s</small></td>
+                      </tr>
+                    {% else %}
+                      <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No activity attempts found.</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div id="attempts-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+              <small id="attempts-page-info" class="text-muted fw-semibold">Showing 1 to 5 entries</small>
+              <nav>
+                <ul id="attempts-pagination-nav" class="pagination pagination-smooth mb-0"></ul>
+              </nav>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end tab-content -->
+  </div>
+  <!-- End .dashboard-real-content -->
+
+          </div>
+        </section>
+      </main>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/teacher.js') }}"></script>
+  <script>
+    function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSelector, itemsPerPage = 5) {
+      const table = document.querySelector(tableSelector);
+      const wrap = document.querySelector(wrapSelector);
+      const info = document.querySelector(infoSelector);
+      const nav = document.querySelector(navSelector);
+
+      if (!table || !nav) return;
+
+      const rows = Array.from(table.querySelectorAll('tbody tr')).filter(r => !r.querySelector('td[colspan]'));
+      const totalRows = rows.length;
+
+      if (totalRows === 0) {
+        if (wrap) wrap.classList.add('d-none');
+        return;
+      }
+
+      if (totalRows <= itemsPerPage) {
+        if (info) info.textContent = `Showing 1 to ${totalRows} of ${totalRows} entries`;
+        if (nav) nav.innerHTML = '';
+        return;
+      }
+
+      if (wrap) wrap.classList.remove('d-none');
+      let currentPage = 1;
+      const totalPages = Math.ceil(totalRows / itemsPerPage);
+
+      function showPage(page) {
+        currentPage = page;
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+
+        rows.forEach((row, idx) => {
+          if (idx >= start && idx < end) {
+            row.style.display = '';
+            row.classList.remove('table-row-fade');
+            void row.offsetWidth; // Trigger reflow for smooth animation
+            row.classList.add('table-row-fade');
+          } else {
+            row.style.display = 'none';
+          }
+        });
+
+        if (info) {
+          info.textContent = `Showing ${Math.min(start + 1, totalRows)} to ${Math.min(end, totalRows)} of ${totalRows} entries`;
+        }
+
+        renderControls();
+      }
+
+      function renderControls() {
+        nav.innerHTML = '';
+
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><i class="bi bi-chevron-left"></i></a>`;
+        prevLi.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (currentPage > 1) showPage(currentPage - 1);
+        });
+        nav.appendChild(prevLi);
+
+        for (let i = 1; i <= totalPages; i++) {
+          const li = document.createElement('li');
+          li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+          li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+          li.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPage(i);
+          });
+          nav.appendChild(li);
+        }
+
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+        nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><i class="bi bi-chevron-right"></i></a>`;
+        nextLi.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (currentPage < totalPages) showPage(currentPage + 1);
+        });
+        nav.appendChild(nextLi);
+      }
+
+      showPage(1);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize pagination for all tables across both tabs
+      setupTablePagination('#top-students-table', '#top-students-pagination-wrap', '#top-students-page-info', '#top-students-pagination-nav', 5);
+      setupTablePagination('#missed-lessons-table', '#missed-lessons-pagination-wrap', '#missed-lessons-page-info', '#missed-lessons-pagination-nav', 5);
+      setupTablePagination('#missed-activities-table', '#missed-activities-pagination-wrap', '#missed-activities-page-info', '#missed-activities-pagination-nav', 5);
+      setupTablePagination('#retry-table', '#retry-pagination-wrap', '#retry-page-info', '#retry-pagination-nav', 8);
+      setupTablePagination('#tracker-table', '#tracker-pagination-wrap', '#tracker-page-info', '#tracker-pagination-nav', 5);
+      setupTablePagination('#assignments-table', '#assignments-pagination-wrap', '#assignments-page-info', '#assignments-pagination-nav', 5);
+      setupTablePagination('#attempts-table', '#attempts-pagination-wrap', '#attempts-page-info', '#attempts-pagination-nav', 5);
+
+      // Auto-switch to tab if URL hash points to an element inside it
+      const hash = window.location.hash;
+      if (hash) {
+        const targetEl = document.querySelector(hash);
+        if (targetEl) {
+          const parentPane = targetEl.closest('.tab-pane');
+          if (parentPane) {
+            const tabTrigger = document.querySelector(`[data-bs-target="#${parentPane.id}"]`);
+            if (tabTrigger && window.bootstrap && window.bootstrap.Tab) {
+              const tab = new window.bootstrap.Tab(tabTrigger);
+              tab.show();
+            }
+          }
+        }
+      }
+    });
+  </script>
 </body>
 </html>

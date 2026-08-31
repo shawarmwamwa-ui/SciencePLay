@@ -1,0 +1,110 @@
+/**
+ * ttsHelper.js
+ * Shared Text-to-Speech utility for SciencePlay.
+ *
+ * Selects a friendly female English voice when available, with full fallback.
+ * Pitch and rate are tuned for Grade 3 learners.
+ *
+ * Usage:
+ *   import { speakText } from './ttsHelper.js';
+ *   speakText("Hello, scientist!");
+ */
+
+// ---------------------------------------------------------------------------
+// Priority list — checked in order against each voice's .name (case-insensitive)
+// Common female voices across Chrome on Windows, macOS, Android, and ChromeOS
+// ---------------------------------------------------------------------------
+const FEMALE_VOICE_KEYWORDS = [
+  'zira',        // Microsoft Zira — Windows (very common in school labs)
+  'samantha',    // macOS / iOS
+  'victoria',    // macOS
+  'karen',       // macOS / iOS Australian
+  'moira',       // macOS Irish
+  'tessa',       // macOS South African
+  'fiona',       // macOS
+  'allison',     // macOS
+  'ava',         // macOS
+  'susan',       // some Windows / Edge builds
+  'female',      // generic flag used by some browser synth engines
+  'google us english',   // Chrome's built-in high-quality voice (neutral/female-leaning)
+  'google uk english female',
+  'en-us',       // last-resort: any en-US voice is usually gender-neutral but clear
+];
+
+let _cachedVoice = null;  // resolved once, reused for every call
+
+/**
+ * Resolve and cache the preferred voice.
+ * Must be called after voices have loaded (inside voiceschanged or a timeout).
+ */
+function resolveVoice() {
+  const voices = window.speechSynthesis.getVoices();
+
+  // --- Debug: log all available voices so the teacher can inspect them ---
+  console.group('[SciencePlay TTS] Available voices on this device:');
+  voices.forEach((v, i) => {
+    console.log(`  [${i}] "${v.name}" | lang: ${v.lang} | local: ${v.localService} | default: ${v.default}`);
+  });
+  console.groupEnd();
+
+  if (!voices.length) return null;
+
+  const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+
+  // Walk the priority list and return the first match
+  for (const keyword of FEMALE_VOICE_KEYWORDS) {
+    const match = englishVoices.find(v => v.name.toLowerCase().includes(keyword));
+    if (match) {
+      console.log(`[SciencePlay TTS] Selected voice: "${match.name}" (matched keyword: "${keyword}")`);
+      return match;
+    }
+  }
+
+  // Fallback: first English voice available
+  if (englishVoices.length) {
+    console.log(`[SciencePlay TTS] No preferred voice found — falling back to: "${englishVoices[0].name}"`);
+    return englishVoices[0];
+  }
+
+  // Last resort: browser default (non-English system)
+  console.log('[SciencePlay TTS] No English voice found — using browser default.');
+  return null;
+}
+
+/**
+ * Speak a string of text using the preferred voice settings.
+ *
+ * @param {string} text   The text to read aloud.
+ * @param {object} [opts] Optional overrides: { pitch, rate, volume }
+ */
+export function speakText(text, opts = {}) {
+  if (!window.speechSynthesis) return;
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  // Tuned for Grade 3 — slightly higher pitch, slightly slower pace
+  utterance.pitch  = opts.pitch  ?? 1.2;   // 1.0 = default; 1.2 = friendlier / more expressive
+  utterance.rate   = opts.rate   ?? 0.9;   // 1.0 = default; 0.9 = a touch slower, clearer
+  utterance.volume = opts.volume ?? 1.0;
+
+  const applyVoiceAndSpeak = () => {
+    if (!_cachedVoice) {
+      _cachedVoice = resolveVoice();
+    }
+    if (_cachedVoice) {
+      utterance.voice = _cachedVoice;
+    }
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Chrome loads voices asynchronously — voices may not be ready on first call
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    applyVoiceAndSpeak();
+  } else {
+    // Wait for voiceschanged, then speak
+    window.speechSynthesis.addEventListener('voiceschanged', applyVoiceAndSpeak, { once: true });
+  }
+}

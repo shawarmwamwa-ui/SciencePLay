@@ -2,11 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Student Assignments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Learning Tasks — Student Portal</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+  <style>
+    .task-card {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(14px) saturate(1.2);
+      border: 3.5px solid var(--kid-border) !important;
+      border-radius: 1.35rem !important;
+      padding: 1.4rem !important;
+      box-shadow: 0 10px 0 rgba(42, 70, 117, 0.14), 0 20px 32px rgba(42, 70, 117, 0.16) !important;
+    }
+    .task-title {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #1f3762;
+    }
+    .table-custom {
+      margin-bottom: 0;
+      border-radius: 0.85rem;
+      overflow: hidden;
+      border: 2px solid #e2e8f0;
+    }
+    .table-custom th {
+      background: #f1f5f9;
+      color: #1e293b;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      padding: 0.75rem 1rem;
+    }
+    .table-custom td {
+      padding: 0.85rem 1rem;
+      vertical-align: middle;
+      color: #334155;
+    }
+    .status-badge {
+      font-weight: 700;
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+    }
+  </style>
 </head>
-<body class="container mt-4">
+<body class="student-page container mt-4 mb-4">
+
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div class="alerts-container mb-4">
@@ -20,47 +63,158 @@
     {% endif %}
   {% endwith %}
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <!-- Frosted glass top header banner matching Lessons & Activities -->
+  <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 page-top-banner">
     <div>
-      <h2>My Assignments</h2>
-      <p>View your active lessons and activities.</p>
+      <h1 class="mb-1">My Learning Tasks</h1>
+      <p class="text-muted mb-0">Check what to do next in your lessons and activities.</p>
     </div>
-    <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    <a href="{{ url_for('student.dashboard') }}" class="fmatch-back-btn" style="padding: 0.55rem 1.2rem; text-decoration: none;">
+      <i class="bi bi-arrow-left-circle-fill me-1"></i>
+      <span>Back to Dashboard</span>
+    </a>
   </div>
 
-  <div class="row gy-4">
-    <div class="col-md-6">
-      <h4>Lesson Assignments</h4>
-      <table class="table table-bordered">
-        <thead><tr><th>Lesson</th><th>Status</th><th>Due</th></tr></thead>
-        <tbody>
-          {% for assignment in lesson_assignments %}
-            <tr>
-              <td>{{ assignment.lesson.title if assignment.lesson else assignment.lesson_id }}</td>
-              <td>{{ assignment.status }}</td>
-              <td>{{ assignment.due_date or '-' }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <div class="row g-4">
+    <!-- Lesson Assignments Card -->
+    <div class="col-lg-6">
+      <div class="task-card h-100">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="fs-4 text-primary"><i class="bi bi-journal-bookmark-fill"></i></span>
+          <h2 class="task-title mb-0">Lesson Assignments</h2>
+        </div>
+
+        {% if lesson_assignments %}
+          <div class="table-responsive">
+            <table class="table table-custom">
+              <thead>
+                <tr>
+                  <th>Lesson</th>
+                  <th>Status</th>
+                  <th>Due</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for assignment in lesson_assignments %}
+                  <tr>
+                    <td>
+                      <strong class="text-dark">{{ assignment.lesson.title if assignment.lesson else ('Lesson #' ~ assignment.lesson_id) }}</strong>
+                    </td>
+                    <td>
+                      {% if assignment.status == 'completed' %}
+                        <span class="status-badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i>Done</span>
+                      {% else %}
+                        <span class="status-badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-hourglass-split me-1"></i>Assigned</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <small class="fw-bold text-secondary">
+                        {% if assignment.due_date %}
+                          {{ (assignment.due_date|string).split(' ')[0] }}
+                        {% else %}
+                          No due date
+                        {% endif %}
+                      </small>
+                    </td>
+                    <td>
+                      {% set lesson_title = assignment.lesson.title if assignment.lesson else '' %}
+                      {% set target_url = url_for('student.living_non_living_lesson') if 'Living vs Non-Living' in lesson_title
+                             else url_for('student.parts_lesson') if 'Parts of an Animal' in lesson_title
+                             else url_for('student.lessons') %}
+                      <a href="{{ target_url }}" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="text-decoration:none;">
+                        <i class="bi bi-play-fill"></i> Start
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="alert alert-light text-center py-4 border rounded-3">
+            <i class="bi bi-check-all text-success display-6 d-block mb-2"></i>
+            <p class="mb-0 text-muted fw-bold">All caught up! No active lesson assignments.</p>
+          </div>
+        {% endif %}
+      </div>
     </div>
-    <div class="col-md-6">
-      <h4>Activity Assignments</h4>
-      <table class="table table-bordered">
-        <thead><tr><th>Activity</th><th>Status</th><th>Due</th></tr></thead>
-        <tbody>
-          {% for assignment in activity_assignments %}
-            <tr>
-              <td>{{ assignment.activity.type if assignment.activity else assignment.activity_id }}</td>
-              <td>{{ assignment.status }}</td>
-              <td>{{ assignment.due_date or '-' }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+    <!-- Activity Assignments Card -->
+    <div class="col-lg-6">
+      <div class="task-card h-100">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="fs-4 text-warning"><i class="bi bi-controller"></i></span>
+          <h2 class="task-title mb-0">Activity Assignments</h2>
+        </div>
+
+        {% if activity_assignments %}
+          <div class="table-responsive">
+            <table class="table table-custom">
+              <thead>
+                <tr>
+                  <th>Activity</th>
+                  <th>Status</th>
+                  <th>Due</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for assignment in activity_assignments %}
+                  <tr>
+                    <td>
+                      <strong class="text-dark">{{ assignment.activity.type if assignment.activity else ('Activity #' ~ assignment.activity_id) }}</strong>
+                    </td>
+                    <td>
+                      {% if assignment.status == 'completed' %}
+                        <span class="status-badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i>Done</span>
+                      {% else %}
+                        <span class="status-badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-hourglass-split me-1"></i>Assigned</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <small class="fw-bold text-secondary">
+                        {% if assignment.due_date %}
+                          {{ (assignment.due_date|string).split(' ')[0] }}
+                        {% else %}
+                          No due date
+                        {% endif %}
+                      </small>
+                    </td>
+                    <td>
+                      {% set is_unlocked = unlocked_by_activity.get(assignment.activity_id, false) %}
+                      {% set act_type = assignment.activity.type if assignment.activity else '' %}
+                      {% set act_engine = assignment.activity.engine if assignment.activity else '' %}
+                      {% set target_url = url_for('student.claw_machine') if ('Claw Machine' in act_type or act_engine == 'claw_machine')
+                             else url_for('student.find_the_part_game') if ('Find the Part' in act_type or act_engine == 'find_the_part')
+                             else url_for('student.streak_race_game') if ('Streak Race' in act_type or act_engine == 'streak_race')
+                             else url_for('student.activities') %}
+                      {% if is_unlocked %}
+                        <a href="{{ target_url }}" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold text-dark" style="text-decoration:none;">
+                          <i class="bi bi-controller me-1"></i> Play
+                        </a>
+                      {% else %}
+                        <a href="{{ url_for('student.lessons') }}" class="btn btn-sm btn-secondary rounded-pill px-3 fw-bold text-white opacity-75" title="Complete the lesson first to unlock this game" style="text-decoration:none;">
+                          <i class="bi bi-lock-fill me-1"></i> Lesson Required
+                        </a>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="alert alert-light text-center py-4 border rounded-3">
+            <i class="bi bi-check-all text-success display-6 d-block mb-2"></i>
+            <p class="mb-0 text-muted fw-bold">All caught up! No active activity assignments.</p>
+          </div>
+        {% endif %}
+      </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 </body>
 </html>

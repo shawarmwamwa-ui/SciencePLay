@@ -1,6 +1,9 @@
 from functools import wraps
 from flask import session, flash, redirect, url_for
+from flask_wtf.csrf import CSRFProtect
 from database.models import db, User, AccessLog
+
+csrf = CSRFProtect()
 
 
 def get_current_user():

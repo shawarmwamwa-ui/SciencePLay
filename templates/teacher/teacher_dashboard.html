@@ -1,289 +1,689 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teacher Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
 </head>
-<body class="teacher-page container teacher-dashboard mt-4">
 
-  <!-- Alerts -->
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="alerts-container mb-4">
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
+<body class="teacher-page teacher-dashboard-page">
 
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-    <div>
-      <h1 class="page-title">Hello, {{ current_user.name if current_user else 'Teacher' }}!</h1>
-      <p class="page-subtitle">Manage lessons, activities, and student progress from one place.</p>
-    </div>
-    <div class="dashboard-actions d-flex gap-2 flex-wrap align-items-center">
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createLessonModal">Add Lesson</button>
-      <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#createActivityModal">Add Activity</button>
-      <a href="{{ url_for('teacher.assignments') }}" class="btn btn-info">Assignments</a>
-      <a href="{{ url_for('teacher.analytics') }}" class="btn btn-outline-primary">Analytics</a>
-      <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
-    </div>
-  </div>
+  <div class="teacher-layout container-fluid">
+    <div class="row g-3 g-lg-4">
+      <aside class="col-12 col-lg-3 col-xl-2">
+        <nav class="teacher-sidebar h-100">
+          <div>
+            <div class="teacher-brand-wrap">
+              <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
+              <div>
+                <h1 class="teacher-brand-title">SciencePlay</h1>
+                <p class="teacher-brand-subtitle">Teacher Portal</p>
+              </div>
+            </div>
 
-  <div class="dashboard-header mb-4">
-    <div class="row gy-3">
-      <div class="col-lg-3 col-sm-6">
-        <div class="metric-card metric-card-green">
-          <div class="metric-label">Students</div>
-          <div class="metric-value">{{ student_count }}</div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-sm-6">
-        <div class="metric-card metric-card-blue">
-          <div class="metric-label">Lessons</div>
-          <div class="metric-value">{{ lessons|length }}</div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-sm-6">
-        <div class="metric-card metric-card-orange">
-          <div class="metric-label">Average Progress</div>
-          <div class="metric-value">{{ avg_progress }}%</div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-sm-6">
-        <div class="metric-card metric-card-purple">
-          <div class="metric-label">Badges Earned</div>
-          <div class="metric-value">{{ badges_count }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
+            <div class="teacher-menu-group mt-4">
+              <a class="teacher-menu-link active" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+              </a>
 
-  <div class="row mb-4">
-    <div class="col-md-6">
-      <div class="dashboard-section">
-        <h5>Quick Access</h5>
-        <div class="row g-3 mt-3">
-          <div class="col-6">
-            <div class="quick-access-card students">
-              <div class="card-icon">👥</div>
-              <div>Students</div>
+              <a class="teacher-menu-link" data-nav="assignments" href="{{ url_for('teacher.assignments') }}">
+                <i class="bi bi-journal-plus"></i>
+                <span>Assignments</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
+                <i class="bi bi-bar-chart"></i>
+                <span>Analytics</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
+                <i class="bi bi-chat-square-quote-fill"></i>
+                <span>Feedback</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
+                <i class="bi bi-book"></i>
+                <span>Lessons</span>
+              </a>
             </div>
           </div>
-          <div class="col-6">
-            <div class="quick-access-card progress">
-              <div class="card-icon">📈</div>
-              <div>Progress</div>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="quick-access-card leaderboard">
-              <div class="card-icon">🏆</div>
-              <div>Leaderboard</div>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="quick-access-card reports">
-              <div class="card-icon">📊</div>
-              <div>Reports</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="dashboard-section">
-        <h5>Recent Student Activity</h5>
-        <ul class="activity-status-list mt-3">
-          {% for log, student_name, activity_type in recent_activity %}
-          <li>
-            <span class="status-label">{{ student_name }}</span> completed <strong>{{ activity_type }}</strong> and scored <strong>{{ log.score }}</strong>.
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-  </div>
 
-  <div class="row mb-4">
-    <div class="col-md-6">
-      <div class="dashboard-section">
-        <h5>Top Students</h5>
-        <table class="table table-borderless mb-0">
-          <thead>
-            <tr>
-              <th>Student</th>
-              <th>Stars</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for student in top_students %}
-            <tr>
-              <td>{{ student.name }}</td>
-              <td>{{ student.total_score }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="dashboard-section">
-        <h5>Lesson Management</h5>
-        <div class="table-responsive">
-          <table class="table table-bordered mb-0">
-            <thead>
-              <tr><th>ID</th><th>Title</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-              {% for lesson in lessons %}
-              <tr>
-                <td>{{ lesson.id }}</td>
-                <td>{{ lesson.title }}</td>
-                <td>
-                  <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteLesson{{ lesson.id }}">Delete</button>
-                </td>
-              </tr>
+          <a href="{{ url_for('auth.logout') }}" class="teacher-logout-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="col-12 col-lg-9 col-xl-10">
+        <section class="teacher-content">
+          <div class="teacher-center-wrap">
+
+            <!-- Teacher Skeleton Loader View (Accurate 1-to-1 Container Mapping) -->
+            <div id="teacher-skeleton-view" class="dashboard-skeleton-wrap">
+              <div class="mb-4">
+                <span class="skeleton-shimmer skeleton-line" style="width: 140px; height: 12px; margin-bottom: 8px;"></span>
+                <span class="skeleton-shimmer skeleton-line" style="width: 260px; height: 32px; margin-bottom: 8px;"></span>
+                <span class="skeleton-shimmer skeleton-line" style="width: 380px; height: 14px;"></span>
+              </div>
+
+              <!-- Stat Cards Skeleton: 3 Clusters x 2 Metrics -->
+              <div class="row g-3 g-xl-4 mb-4">
+                <!-- Cluster 1 -->
+                <div class="col-12 col-md-4">
+                  <div class="d-flex gap-2 h-100">
+                    <div class="teacher-summary-card flex-fill skeleton-summary-card">
+                      <div class="teacher-summary-text w-75">
+                        <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 11px; margin-bottom: 8px;"></span>
+                        <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 24px;"></span>
+                      </div>
+                      <span class="skeleton-shimmer skeleton-circle" style="width: 44px; height: 44px;"></span>
+                    </div>
+                    <div class="teacher-summary-card flex-fill skeleton-summary-card">
+                      <div class="teacher-summary-text w-75">
+                        <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 11px; margin-bottom: 8px;"></span>
+                        <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 24px;"></span>
+                      </div>
+                      <span class="skeleton-shimmer skeleton-circle" style="width: 44px; height: 44px;"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cluster 2 -->
+                <div class="col-12 col-md-4">
+                  <div class="d-flex gap-2 h-100">
+                    <div class="teacher-summary-card flex-fill skeleton-summary-card">
+                      <div class="teacher-summary-text w-75">
+                        <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 11px; margin-bottom: 8px;"></span>
+                        <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 24px;"></span>
+                      </div>
+                      <span class="skeleton-shimmer skeleton-circle" style="width: 44px; height: 44px;"></span>
+                    </div>
+                    <div class="teacher-summary-card flex-fill skeleton-summary-card">
+                      <div class="teacher-summary-text w-75">
+                        <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 11px; margin-bottom: 8px;"></span>
+                        <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 24px;"></span>
+                      </div>
+                      <span class="skeleton-shimmer skeleton-circle" style="width: 44px; height: 44px;"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cluster 3 -->
+                <div class="col-12 col-md-4">
+                  <div class="d-flex gap-2 h-100">
+                    <div class="teacher-summary-card flex-fill skeleton-summary-card">
+                      <div class="teacher-summary-text w-75">
+                        <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 11px; margin-bottom: 8px;"></span>
+                        <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 24px;"></span>
+                      </div>
+                      <span class="skeleton-shimmer skeleton-circle" style="width: 44px; height: 44px;"></span>
+                    </div>
+                    <div class="teacher-summary-card flex-fill skeleton-summary-card">
+                      <div class="teacher-summary-text w-75">
+                        <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 11px; margin-bottom: 8px;"></span>
+                        <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 24px;"></span>
+                      </div>
+                      <span class="skeleton-shimmer skeleton-circle" style="width: 44px; height: 44px;"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 1: Live Pulse Skeleton -->
+              <div class="mb-4">
+                <span class="skeleton-shimmer skeleton-line" style="width: 60px; height: 12px; margin-bottom: 8px;"></span>
+                <div class="row g-3">
+                  <!-- Recent Activity Skeleton -->
+                  <div class="col-lg-6">
+                    <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between p-4">
+                      <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <span class="skeleton-shimmer skeleton-line" style="width: 180px; height: 20px;"></span>
+                          <span class="skeleton-shimmer skeleton-pill" style="width: 70px; height: 22px;"></span>
+                        </div>
+                        <span class="skeleton-shimmer skeleton-line mb-3" style="width: 80%; height: 12px;"></span>
+                        <div class="activity-status-list">
+                          <div class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="skeleton-shimmer skeleton-line" style="width: 70%; height: 14px;"></span>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 90px; height: 20px;"></span>
+                          </div>
+                          <div class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="skeleton-shimmer skeleton-line" style="width: 65%; height: 14px;"></span>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 90px; height: 20px;"></span>
+                          </div>
+                          <div class="py-2 d-flex justify-content-between align-items-center">
+                            <span class="skeleton-shimmer skeleton-line" style="width: 75%; height: 14px;"></span>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 90px; height: 20px;"></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="pt-3 border-top mt-3 d-flex justify-content-end">
+                        <span class="skeleton-shimmer skeleton-pill" style="width: 150px; height: 32px;"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Currently Online Students Skeleton -->
+                  <div class="col-lg-6">
+                    <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between p-4">
+                      <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <span class="skeleton-shimmer skeleton-line" style="width: 190px; height: 20px;"></span>
+                          <span class="skeleton-shimmer skeleton-pill" style="width: 75px; height: 22px;"></span>
+                        </div>
+                        <span class="skeleton-shimmer skeleton-line mb-3" style="width: 70%; height: 12px;"></span>
+                        <div class="list-group list-group-flush">
+                          <div class="p-2 border rounded d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center gap-2 w-75">
+                              <span class="skeleton-shimmer skeleton-circle" style="width: 32px; height: 32px;"></span>
+                              <div class="w-75">
+                                <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 12px; margin-bottom: 4px;"></span>
+                                <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 10px;"></span>
+                              </div>
+                            </div>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 60px; height: 20px;"></span>
+                          </div>
+                          <div class="p-2 border rounded d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center gap-2 w-75">
+                              <span class="skeleton-shimmer skeleton-circle" style="width: 32px; height: 32px;"></span>
+                              <div class="w-75">
+                                <span class="skeleton-shimmer skeleton-line" style="width: 55%; height: 12px; margin-bottom: 4px;"></span>
+                                <span class="skeleton-shimmer skeleton-line" style="width: 35%; height: 10px;"></span>
+                              </div>
+                            </div>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 60px; height: 20px;"></span>
+                          </div>
+                          <div class="p-2 border rounded d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2 w-75">
+                              <span class="skeleton-shimmer skeleton-circle" style="width: 32px; height: 32px;"></span>
+                              <div class="w-75">
+                                <span class="skeleton-shimmer skeleton-line" style="width: 65%; height: 12px; margin-bottom: 4px;"></span>
+                                <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 10px;"></span>
+                              </div>
+                            </div>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 60px; height: 20px;"></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="pt-3 border-top mt-3 d-flex justify-content-end">
+                        <span class="skeleton-shimmer skeleton-pill" style="width: 140px; height: 32px;"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 2: Insights Skeleton -->
+              <div class="mb-4">
+                <span class="skeleton-shimmer skeleton-line" style="width: 70px; height: 12px; margin-bottom: 8px;"></span>
+                <div class="row g-3">
+                  <!-- Struggling Concepts Skeleton -->
+                  <div class="col-lg-6">
+                    <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between p-4">
+                      <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <span class="skeleton-shimmer skeleton-line" style="width: 170px; height: 20px;"></span>
+                          <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 22px;"></span>
+                        </div>
+                        <span class="skeleton-shimmer skeleton-line mb-3" style="width: 85%; height: 12px;"></span>
+                        <div class="d-flex gap-2 mb-3">
+                          <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 28px;"></span>
+                          <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 28px;"></span>
+                        </div>
+                        <div class="activity-status-list">
+                          <div class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="skeleton-shimmer skeleton-line" style="width: 65%; height: 14px;"></span>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 75px; height: 20px;"></span>
+                          </div>
+                          <div class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 14px;"></span>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 75px; height: 20px;"></span>
+                          </div>
+                          <div class="py-2 d-flex justify-content-between align-items-center">
+                            <span class="skeleton-shimmer skeleton-line" style="width: 70%; height: 14px;"></span>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 75px; height: 20px;"></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="pt-3 border-top mt-3 d-flex justify-content-end">
+                        <span class="skeleton-shimmer skeleton-pill" style="width: 180px; height: 32px;"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Leaderboard Skeleton -->
+                  <div class="col-lg-6">
+                    <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between p-4">
+                      <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <span class="skeleton-shimmer skeleton-line" style="width: 160px; height: 20px;"></span>
+                          <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 22px;"></span>
+                        </div>
+                        <span class="skeleton-shimmer skeleton-line mb-3" style="width: 75%; height: 12px;"></span>
+                        <div class="d-flex gap-2 mb-3">
+                          <span class="skeleton-shimmer skeleton-pill" style="width: 75px; height: 28px;"></span>
+                          <span class="skeleton-shimmer skeleton-pill" style="width: 65px; height: 28px;"></span>
+                          <span class="skeleton-shimmer skeleton-pill" style="width: 70px; height: 28px;"></span>
+                        </div>
+                        <div class="list-group">
+                          <div class="list-group-item d-flex justify-content-between align-items-center py-2 mb-1 border rounded">
+                            <div class="d-flex align-items-center gap-2 w-75">
+                              <span class="skeleton-shimmer skeleton-pill" style="width: 24px; height: 20px;"></span>
+                              <span class="skeleton-shimmer skeleton-line" style="width: 50%; height: 14px;"></span>
+                            </div>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 65px; height: 20px;"></span>
+                          </div>
+                          <div class="list-group-item d-flex justify-content-between align-items-center py-2 mb-1 border rounded">
+                            <div class="d-flex align-items-center gap-2 w-75">
+                              <span class="skeleton-shimmer skeleton-pill" style="width: 24px; height: 20px;"></span>
+                              <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 14px;"></span>
+                            </div>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 65px; height: 20px;"></span>
+                          </div>
+                          <div class="list-group-item d-flex justify-content-between align-items-center py-2 border rounded">
+                            <div class="d-flex align-items-center gap-2 w-75">
+                              <span class="skeleton-shimmer skeleton-pill" style="width: 24px; height: 20px;"></span>
+                              <span class="skeleton-shimmer skeleton-line" style="width: 55%; height: 14px;"></span>
+                            </div>
+                            <span class="skeleton-shimmer skeleton-pill" style="width: 65px; height: 20px;"></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="pt-3 border-top mt-3 d-flex justify-content-end">
+                        <span class="skeleton-shimmer skeleton-pill" style="width: 170px; height: 32px;"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Real Content Container -->
+            <div id="teacher-real-content" class="dashboard-real-content">
+
+            <!-- Alerts -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="alerts-container mb-4">
+              {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
               {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+            </div>
+            {% endif %}
+            {% endwith %}
 
-  <!-- Create Lesson Modal -->
-  <div class="modal fade" id="createLessonModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form method="POST" action="{{ url_for('teacher.create_lesson') }}">
-          <div class="modal-header"><h5 class="modal-title">Create Lesson</h5></div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label class="form-label">Lesson Title</label>
-              <input type="text" name="title" class="form-control" placeholder="Lesson Title" required>
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap teacher-head-row">
+              <div>
+                <p class="teacher-eyebrow mb-2">Classroom Management</p>
+                <h1 class="page-title">Hello, {{ current_user.name if current_user else 'Teacher' }}!</h1>
+                <p class="page-subtitle">Manage lessons, activities, and student progress from one place.</p>
+              </div>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Description</label>
-              <textarea name="description" class="form-control" placeholder="Description"></textarea>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Create</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
 
-  <!-- Create Activity Modal -->
-  <div class="modal fade" id="createActivityModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form method="POST" action="{{ url_for('teacher.create_activity') }}">
-          <div class="modal-header"><h5 class="modal-title">Create Activity</h5></div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label class="form-label">Lesson</label>
-              <select name="lesson_id" class="form-select" required>
-                <option value="">Select Lesson</option>
-                {% for lesson in lessons %}
-                  <option value="{{ lesson.id }}">{{ lesson.title }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Activity Type</label>
-              <input type="text" name="type" class="form-control" placeholder="Quiz, Game, Matching" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Points</label>
-              <input type="number" name="points" class="form-control" placeholder="Points" min="0" value="0">
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-secondary">Create Activity</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+            <!-- Stat Cards: 3 Conceptual Clusters (Students/Online, Content/Activities, Progress/Assignments) -->
+            <div class="row g-3 g-xl-4 mb-4">
+              <!-- Cluster 1: Students & Live Presence -->
+              <div class="col-12 col-md-4">
+                <div class="d-flex gap-2 h-100">
+                  <div class="teacher-summary-card flex-fill">
+                    <div class="teacher-summary-text">
+                      <div class="metric-label">Students</div>
+                      <div class="metric-value">{{ student_count }}</div>
+                    </div>
+                    <span class="teacher-summary-icon ts-blue"><i class="bi bi-people"></i></span>
+                  </div>
+                  <div class="teacher-summary-card flex-fill">
+                    <div class="teacher-summary-text">
+                      <div class="metric-label">Online Now</div>
+                      <div class="metric-value text-success online-count-badge">{{ online_students|length }}</div>
+                    </div>
+                    <span class="teacher-summary-icon" style="background-color: #dcfce7; color: #16a34a;"><i class="bi bi-person-check-fill"></i></span>
+                  </div>
+                </div>
+              </div>
 
-  <!-- Lessons Table -->
-  <h4>Lessons</h4>
-  <table class="table table-bordered">
-    <thead>
-      <tr><th>ID</th><th>Title</th><th>Description</th><th>Actions</th></tr>
-    </thead>
-    <tbody>
-      {% for lesson in lessons %}
-      <tr>
-        <td>{{ lesson.id }}</td>
-        <td>{{ lesson.title }}</td>
-        <td>{{ lesson.description }}</td>
-        <td>
-          <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteLesson{{ lesson.id }}">Delete</button>
+              <!-- Cluster 2: Curriculum & Content (Lessons & Activities) -->
+              <div class="col-12 col-md-4">
+                <div class="d-flex gap-2 h-100">
+                  <div class="teacher-summary-card flex-fill">
+                    <div class="teacher-summary-text">
+                      <div class="metric-label">Lessons</div>
+                      <div class="metric-value">{{ lessons|length }}</div>
+                    </div>
+                    <span class="teacher-summary-icon ts-cyan"><i class="bi bi-book"></i></span>
+                  </div>
+                  <div class="teacher-summary-card flex-fill">
+                    <div class="teacher-summary-text">
+                      <div class="metric-label">Activities</div>
+                      <div class="metric-value">{{ activities|length }}</div>
+                    </div>
+                    <span class="teacher-summary-icon ts-green"><i class="bi bi-controller"></i></span>
+                  </div>
+                </div>
+              </div>
 
-          <!-- Delete Confirmation Modal -->
-          <div class="modal fade" id="deleteLesson{{ lesson.id }}" tabindex="-1">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title">Confirm Delete</h5></div>
-                <div class="modal-body">Are you sure you want to delete <strong>{{ lesson.title }}</strong>?</div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <a href="{{ url_for('teacher.delete_lesson', lesson_id=lesson.id) }}" class="btn btn-danger">Delete</a>
+              <!-- Cluster 3: Student Progress & Assignments -->
+              <div class="col-12 col-md-4">
+                <div class="d-flex gap-2 h-100">
+                  <div class="teacher-summary-card flex-fill">
+                    <div class="teacher-summary-text">
+                      <div class="metric-label">Average Progress</div>
+                      <div class="metric-value">{{ avg_progress }}%</div>
+                    </div>
+                    <span class="teacher-summary-icon ts-orange"><i class="bi bi-graph-up-arrow"></i></span>
+                  </div>
+                  <div class="teacher-summary-card flex-fill">
+                    <div class="teacher-summary-text">
+                      <div class="metric-label">Assignments</div>
+                      <div class="metric-value">{{ total_assignments }}</div>
+                    </div>
+                    <span class="teacher-summary-icon ts-purple" style="background-color: #e0e7ff; color: #4338ca;"><i class="bi bi-journal-check"></i></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 1: Live Classroom Pulse -->
+            <div class="mb-4">
+              <p class="teacher-eyebrow mb-2">Live</p>
+              <div class="row g-3">
+                <div class="col-lg-6">
+                  <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
+                    <div>
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0"><i class="bi bi-activity me-2 text-primary"></i>Recent Student Activity</h5>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Live Feed</span>
+                      </div>
+                      <p class="teacher-panel-note mb-3">Live stream of student submissions and feedback status.</p>
+                      <ul class="activity-status-list">
+                        {% if recent_activity %}
+                        {% for log, student_name, activity_type in recent_activity %}
+                        <li>
+                          <span class="status-label">{{ student_name }}</span> completed <strong>{{ activity_type }}</strong> with score <strong>{{ log.score }}</strong>.
+                          {% if log.feedback %}
+                          <span class="badge bg-success ms-1">Feedback Given</span>
+                          {% else %}
+                          <span class="badge bg-warning text-dark ms-1">Needs Feedback</span>
+                          {% endif %}
+                        </li>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                          <i class="bi bi-clock-history fs-3 d-block mb-1 opacity-50"></i>
+                          <span class="small">No recent activity recorded yet</span>
+                        </div>
+                        {% endif %}
+                      </ul>
+                    </div>
+                    <div class="pt-3 border-top mt-3 d-flex justify-content-end">
+                      <a href="{{ url_for('teacher.analytics') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        <span>View All Activity Logs</span>
+                        <i class="bi bi-arrow-right ms-1"></i>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+              <div class="col-lg-6">
+                <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
+                  <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <h5 class="mb-0"><i class="bi bi-broadcast me-2 text-success"></i>Currently Online Students</h5>
+                      <span class="badge bg-success rounded-pill online-count-badge">{{ online_students|length }} Online</span>
+                    </div>
+                    <p class="teacher-panel-note mb-3">Real-time status of active students logged in.</p>
+                    <div class="online-users-container">
+                      {% if online_students %}
+                      <div class="list-group list-group-flush">
+                        {% for student in online_students %}
+                        <div class="list-group-item d-flex align-items-center justify-content-between px-3 py-2 border-0 mb-1 rounded bg-light-subtle">
+                          <div class="d-flex align-items-center gap-2">
+                            <span class="position-relative d-inline-block">
+                              <i class="bi bi-mortarboard fs-5 text-secondary"></i>
+                              <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-light rounded-circle" style="transform: translate(25%, 25%);"></span>
+                            </span>
+                            <div>
+                              <div class="fw-semibold text-dark text-truncate" style="max-width: 180px;">{{ student.name }}</div>
+                              <small class="text-muted">@{{ student.username }}</small>
+                            </div>
+                          </div>
+                          <span class="badge bg-primary text-capitalize">Student</span>
+                        </div>
+                        {% endfor %}
+                      </div>
+                      {% else %}
+                      <div class="text-center text-muted py-4">
+                        <i class="bi bi-person-x fs-3 d-block mb-1 opacity-50"></i>
+                        <span class="small">No students currently online</span>
+                      </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="pt-3 border-top mt-3 d-flex justify-content-end">
+                    <a href="{{ url_for('teacher.assignments') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                      <span>Assign Activities</span>
+                      <i class="bi bi-journal-plus ms-1"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: Performance & Struggle Insights -->
+            <div class="mb-4">
+              <p class="teacher-eyebrow mb-2">Insights</p>
+              <div class="row g-3">
+                <!-- Card 1: Challenging / Most Missed Concepts (Tabbed) -->
+                <div class="col-lg-6">
+                <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
+                  <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Struggling Concepts</h5>
+                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">Top Misses</span>
+                    </div>
+                    <p class="teacher-panel-note mb-3">Items students found most difficult during lessons and games.</p>
+
+                    <ul class="nav nav-tabs nav-sm mb-3" id="missedTabs" role="tablist" style="font-size:0.84rem;">
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link active py-1 px-3 fw-semibold" id="dt-missed-lessons-tab" data-bs-toggle="tab" data-bs-target="#dt-missed-lessons" type="button" role="tab">
+                          <i class="bi bi-journal-x me-1"></i>Lessons
+                        </button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link py-1 px-3 fw-semibold" id="dt-missed-games-tab" data-bs-toggle="tab" data-bs-target="#dt-missed-games" type="button" role="tab">
+                          <i class="bi bi-controller me-1"></i>Games
+                        </button>
+                      </li>
+                    </ul>
+
+                    <div class="tab-content" id="missedTabContent">
+                      <!-- Lessons Missed Tab -->
+                      <div class="tab-pane fade show active" id="dt-missed-lessons" role="tabpanel">
+                        <ul class="activity-status-list">
+                          {% if most_missed_lessons %}
+                          {% for obj in most_missed_lessons[:3] %}
+                          <li>
+                            <span class="status-label fw-bold">{{ obj.name }}</span>
+                            <small class="text-muted">({{ obj.activity_type }})</small>
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle float-end fw-bold">{{ obj.misses }} misses</span>
+                          </li>
+                          {% endfor %}
+                          {% else %}
+                          <p class="text-muted small py-3 mb-0 text-center">No lesson misses recorded yet.</p>
+                          {% endif %}
+                        </ul>
+                      </div>
+
+                      <!-- Games Missed Tab -->
+                      <div class="tab-pane fade" id="dt-missed-games" role="tabpanel">
+                        <ul class="activity-status-list">
+                          {% if most_missed_activities %}
+                          {% for obj in most_missed_activities[:3] %}
+                          <li>
+                            <span class="status-label fw-bold">{{ obj.name }}</span>
+                            <small class="text-muted">({{ obj.activity_type }})</small>
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle float-end fw-bold">{{ obj.misses }} misses</span>
+                          </li>
+                          {% endfor %}
+                          {% else %}
+                          <p class="text-muted small py-3 mb-0 text-center">No game misses recorded yet.</p>
+                          {% endif %}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="pt-3 border-top mt-3 d-flex justify-content-end">
+                    <a href="{{ url_for('teacher.analytics') }}#missed-lessons-section" class="btn btn-sm btn-outline-warning text-dark rounded-pill px-3 fw-semibold">
+                      <i class="bi bi-bar-chart-line me-1"></i>
+                      <span>Full Struggle Breakdown</span>
+                      <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Leaderboard & Top Performers (Tabbed) -->
+              <div class="col-lg-6">
+                <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
+                  <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <h5 class="mb-0"><i class="bi bi-trophy-fill text-warning me-2"></i>Class Leaderboards</h5>
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Top Scores</span>
+                    </div>
+                    <p class="teacher-panel-note mb-3">Best saved scores and overall class champions.</p>
+
+                    <ul class="nav nav-tabs nav-sm mb-3" id="dashLbTabs" role="tablist" style="font-size:0.84rem;">
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link active py-1 px-3 fw-semibold" id="dt-overall-tab" data-bs-toggle="tab" data-bs-target="#dt-overall" type="button" role="tab"><i class="bi bi-trophy-fill text-warning me-1"></i>Overall</button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link py-1 px-3 fw-semibold" id="dt-claw-tab" data-bs-toggle="tab" data-bs-target="#dt-claw" type="button" role="tab"><i class="bi bi-controller text-primary me-1"></i>Claw</button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link py-1 px-3 fw-semibold" id="dt-animal-tab" data-bs-toggle="tab" data-bs-target="#dt-animal" type="button" role="tab"><i class="bi bi-person-arms-up text-success me-1"></i>Find Part</button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link py-1 px-3 fw-semibold" id="dt-plant-tab" data-bs-toggle="tab" data-bs-target="#dt-plant" type="button" role="tab"><i class="bi bi-flower1 text-warning me-1"></i>Streak</button>
+                      </li>
+                    </ul>
+
+                    <div class="tab-content" id="dashLbTabContent">
+                      <!-- Overall Top Students Tab -->
+                      <div class="tab-pane fade show active" id="dt-overall" role="tabpanel">
+                        <div class="list-group leaderboard-list">
+                          {% if top_students %}
+                            {% for student in top_students[:3] %}
+                              <a href="{{ url_for('teacher.student_performance', student_id=student.id) }}" class="list-group-item list-group-item-action leaderboard-entry d-flex justify-content-between align-items-center py-2">
+                                <div class="d-flex align-items-center gap-2">
+                                  <span class="leaderboard-rank">#{{ loop.index }}</span>
+                                  <div class="leaderboard-copy"><strong>{{ student.name }}</strong></div>
+                                </div>
+                                <span class="badge bg-warning text-dark">{{ student.total_score }} pts</span>
+                              </a>
+                            {% endfor %}
+                          {% else %}
+                            <p class="text-muted small mb-0 py-3 text-center">No student scores recorded yet</p>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <!-- Claw Machine Tab -->
+                      <div class="tab-pane fade" id="dt-claw" role="tabpanel">
+                        <div class="list-group leaderboard-list">
+                          {% if claw_leaderboard %}
+                            {% for student in claw_leaderboard[:3] %}
+                              <a href="{{ url_for('teacher.student_performance', student_id=student.id) }}" class="list-group-item list-group-item-action leaderboard-entry d-flex justify-content-between align-items-center py-2">
+                                <div class="d-flex align-items-center gap-2">
+                                  <span class="leaderboard-rank">#{{ loop.index }}</span>
+                                  <div class="leaderboard-copy">
+                                    <strong>{{ student.name }}</strong>
+                                    <span class="leaderboard-meta">{{ student.time_spent or 0 }}s best run</span>
+                                  </div>
+                                </div>
+                                <span class="badge bg-primary">{{ student.best_score }} pts</span>
+                              </a>
+                            {% endfor %}
+                          {% else %}
+                            <p class="text-muted small mb-0 py-3 text-center">No Claw Machine scores yet</p>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <!-- Find the Part Tab -->
+                      <div class="tab-pane fade" id="dt-animal" role="tabpanel">
+                        <div class="list-group leaderboard-list">
+                          {% if animal_leaderboard %}
+                            {% for student in animal_leaderboard[:3] %}
+                              <a href="{{ url_for('teacher.student_performance', student_id=student.id) }}" class="list-group-item list-group-item-action leaderboard-entry d-flex justify-content-between align-items-center py-2">
+                                <div class="d-flex align-items-center gap-2">
+                                  <span class="leaderboard-rank">#{{ loop.index }}</span>
+                                  <div class="leaderboard-copy"><strong>{{ student.name }}</strong></div>
+                                </div>
+                                <span class="badge bg-success">{{ student.best_score }} pts</span>
+                              </a>
+                            {% endfor %}
+                          {% else %}
+                            <p class="text-muted small mb-0 py-3 text-center">No Find the Part scores yet</p>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <!-- Streak Race Tab -->
+                      <div class="tab-pane fade" id="dt-plant" role="tabpanel">
+                        <div class="list-group leaderboard-list">
+                          {% if plant_leaderboard %}
+                            {% for student in plant_leaderboard[:3] %}
+                              <a href="{{ url_for('teacher.student_performance', student_id=student.id) }}" class="list-group-item list-group-item-action leaderboard-entry d-flex justify-content-between align-items-center py-2">
+                                <div class="d-flex align-items-center gap-2">
+                                  <span class="leaderboard-rank">#{{ loop.index }}</span>
+                                  <div class="leaderboard-copy"><strong>{{ student.name }}</strong></div>
+                                </div>
+                                <span class="badge bg-warning text-dark">{{ student.best_score }} pts</span>
+                              </a>
+                            {% endfor %}
+                          {% else %}
+                            <p class="text-muted small mb-0 py-3 text-center">No Streak Race scores yet</p>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="pt-3 border-top mt-3 d-flex justify-content-end">
+                    <a href="{{ url_for('teacher.analytics') }}#top-students-section" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
+                      <i class="bi bi-graph-up me-1"></i>
+                      <span>Full Rankings & Retries</span>
+                      <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          <!-- End #teacher-real-content -->
 
-  <h4>Activities</h4>
-  <table class="table table-bordered">
-    <thead>
-      <tr><th>ID</th><th>Lesson</th><th>Type</th><th>Points</th><th>Actions</th></tr>
-    </thead>
-    <tbody>
-      {% for activity in activities %}
-      <tr>
-        <td>{{ activity.id }}</td>
-        <td>{{ activity.lesson.title if activity.lesson else activity.lesson_id }}</td>
-        <td>{{ activity.type }}</td>
-        <td>{{ activity.points }}</td>
-        <td>
-          <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteActivity{{ activity.id }}">Delete</button>
-
-          <div class="modal fade" id="deleteActivity{{ activity.id }}" tabindex="-1">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title">Confirm Delete</h5></div>
-                <div class="modal-body">Are you sure you want to delete <strong>{{ activity.type }}</strong> from lesson <strong>{{ activity.lesson.title if activity.lesson else activity.lesson_id }}</strong>?</div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <a href="{{ url_for('teacher.delete_activity', activity_id=activity.id) }}" class="btn btn-danger">Delete</a>
-                </div>
-              </div>
-            </div>
           </div>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    </div>
+    </section>
+    </main>
+  </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/teacher.js', v='20260810') }}"></script>
+  <script src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 </body>
+
 </html>

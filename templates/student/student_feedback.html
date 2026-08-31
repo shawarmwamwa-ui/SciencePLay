@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Feedback & Teacher Notes — SciencePlay</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+  <style>
+    .activity-section-card {
+      background: #ffffff;
+      border: 3px solid #18181b;
+      box-shadow: 5px 5px 0 #18181b;
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .activity-section-header {
+      border-bottom: 2.5px solid #18181b;
+      padding-bottom: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .attempt-card-item {
+      background: #ffffff;
+      border: 2.5px solid #18181b;
+      box-shadow: 3px 3px 0 #18181b;
+      border-radius: 1rem;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      transition: transform 0.15s ease;
+    }
+    .attempt-card-item.outcome-correct {
+      border-left: 8px solid #22c55e;
+      background: #ffffff;
+    }
+    .attempt-card-item.outcome-good {
+      border-left: 8px solid #3b82f6;
+      background: #ffffff;
+    }
+    .attempt-card-item.outcome-incorrect {
+      border-left: 8px solid #ef4444;
+      background: #ffffff;
+    }
+    .callout-box {
+      border-radius: 0.85rem;
+      padding: 1rem;
+      margin-top: 0.75rem;
+    }
+    .callout-correct {
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+      color: #14532d;
+    }
+    .callout-good {
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      color: #1e3a8a;
+    }
+    .callout-incorrect {
+      background: #fef2f2;
+      border: 1.5px solid #fecaca;
+      color: #7f1d1d;
+    }
+    .teacher-note-callout {
+      background: #fffbeb;
+      border: 2px solid #f59e0b;
+      border-radius: 0.85rem;
+      padding: 1rem;
+      margin-top: 0.75rem;
+    }
+    .filter-pill-btn {
+      border: 2.5px solid #18181b;
+      box-shadow: 3px 3px 0 #18181b;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 0.5rem 1.25rem;
+      background: #ffffff;
+      color: #18181b;
+      cursor: pointer;
+      transition: all 0.1s ease;
+    }
+    .filter-pill-btn.active {
+      background: #fde047;
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 #18181b;
+    }
+    .older-attempts-container {
+      display: none;
+    }
+    .older-attempts-container.expanded {
+      display: block;
+    }
+    .toggle-older-btn {
+      border: 2px solid #18181b;
+      box-shadow: 2px 2px 0 #18181b;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+    .toggle-older-btn:hover {
+      background: #f1f5f9;
+      color: #18181b;
+    }
+  </style>
+</head>
+<body class="student-page container mt-3 mb-5">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="alerts-container mb-4">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show brutal-alert" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Top Window Header matching Leaderboard style -->
+  <div class="student-header brutal-window mb-4" style="background: #fef08a;">
+    <div class="brutal-window-header">
+      <div class="brutal-dots">
+        <span class="brutal-dot dot-red"></span>
+        <span class="brutal-dot dot-yellow"></span>
+        <span class="brutal-dot dot-green"></span>
+      </div>
+      <span class="brutal-window-title">FEEDBACK.EXE</span>
+    </div>
+    <div class="brutal-window-body d-flex justify-content-between align-items-center flex-wrap gap-3 py-3">
+      <div>
+        <h1 class="mb-0 text-dark fw-black display-5">
+          <i class="bi bi-chat-square-quote-fill text-primary me-2"></i>My Feedback & Teacher Notes
+        </h1>
+        <p class="mb-0 text-dark fw-bold small mt-1">Review personalized teacher messages, game evaluations, and lesson tips!</p>
+      </div>
+      <div>
+        <a href="{{ url_for('student.dashboard') }}" class="brutal-btn brutal-btn-primary text-decoration-none">
+          <i class="bi bi-arrow-left-circle-fill me-1"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Navigation Tabs -->
+  <div class="d-flex gap-2 flex-wrap mb-4" role="tablist">
+    <button type="button" class="filter-pill-btn active" data-filter="all">
+      <i class="bi bi-collection-fill me-1"></i> All Feedback ({{ total_feedback_count }})
+    </button>
+    <button type="button" class="filter-pill-btn" data-filter="teacher">
+      <i class="bi bi-mortarboard-fill me-1 text-warning"></i> Teacher Notes ({{ teacher_notes_count }})
+    </button>
+    <button type="button" class="filter-pill-btn" data-filter="system">
+      <i class="bi bi-cpu-fill me-1 text-primary"></i> System Evaluations ({{ system_evaluations_count }})
+    </button>
+  </div>
+
+  <!-- Grouped Feedback by Activity -->
+  {% if activity_groups %}
+    <div id="feedbackGroups">
+      {% for group in activity_groups %}
+        {% set group_idx = loop.index %}
+        <section class="activity-section-card activity-group-block" data-activity="{{ group.title }}">
+          
+          <!-- Activity Group Header -->
+          <div class="activity-section-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="fs-3"><i class="bi {{ group.icon }} {{ group.icon_color }}"></i></span>
+              <div>
+                <h2 class="fw-black text-dark fs-3 mb-0">{{ group.title }}</h2>
+                <small class="text-muted fw-bold">{{ group.attempts|length }} attempt(s) recorded</small>
+              </div>
+            </div>
+            <span class="brutal-badge {{ group.badge_bg }} fs-6">
+              {{ group.title }}
+            </span>
+          </div>
+
+          <!-- Attempts Feed inside this Activity -->
+          <div class="attempts-feed">
+            {% for item in group.attempts %}
+              {% set is_older = loop.index > 2 %}
+              {% if loop.index == 3 %}
+                <div class="older-attempts-container" id="older-attempts-{{ group_idx }}">
+              {% endif %}
+
+              <div class="attempt-card-item outcome-{{ item.outcome_type }} feedback-entry"
+                   data-has-teacher="{{ 'true' if item.has_teacher_note else 'false' }}"
+                   data-has-system="{{ 'true' if item.has_system_feedback else 'false' }}">
+                
+                <!-- Top Row: Points Earned & Outcome Badge (High Priority for Grade 3) -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="brutal-badge brutal-badge-blue fs-6 fw-black">
+                      Attempt #{{ item.attempt_number }}
+                    </span>
+
+                    <!-- Prominent Outcome Badge -->
+                    {% if item.outcome_type == 'correct' %}
+                      <span class="brutal-badge brutal-badge-green fs-6 fw-black">
+                        <i class="bi bi-check-circle-fill me-1"></i>{{ item.outcome_label }}
+                      </span>
+                    {% elif item.outcome_type == 'good' %}
+                      <span class="brutal-badge brutal-badge-blue fs-6 fw-black">
+                        <i class="bi bi-hand-thumbs-up-fill me-1"></i>{{ item.outcome_label }}
+                      </span>
+                    {% else %}
+                      <span class="brutal-badge brutal-badge-pink fs-6 fw-black">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ item.outcome_label }}
+                      </span>
+                    {% endif %}
+                  </div>
+
+                  <!-- Points Display (Only for scored game activities, hidden for ungraded slide checks) -->
+                  <div class="d-flex align-items-center gap-1">
+                    {% if not group.is_lesson_check and not item.is_lesson_check %}
+                      <span class="fs-4 fw-black text-dark">
+                        <i class="bi bi-star-fill text-warning me-1"></i>{{ item.score }} pts
+                      </span>
+                    {% endif %}
+                    {% if item.time_spent > 0 %}
+                      <span class="badge bg-light text-dark border ms-1"><i class="bi bi-clock me-1"></i>{{ item.time_spent }}s</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Teacher Note Callout (if present) -->
+                {% if item.has_teacher_note %}
+                  <div class="teacher-note-callout">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                      <span class="brutal-badge brutal-badge-yellow fs-6 fw-black">
+                        <i class="bi bi-pin-angle-fill me-1"></i>Teacher Note
+                      </span>
+                      <strong class="text-dark fs-6">Message from Teacher:</strong>
+                    </div>
+                    <p class="text-dark fw-black fs-5 mb-0" style="line-height: 1.5;">
+                      "{{ item.teacher_feedback }}"
+                    </p>
+                  </div>
+                {% endif %}
+
+                <!-- System Evaluation Callout (if present) -->
+                {% if item.has_system_feedback %}
+                  <div class="callout-box callout-{{ item.outcome_type }}">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                      {% if item.outcome_type == 'correct' %}
+                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                      {% elif item.outcome_type == 'good' %}
+                        <i class="bi bi-info-circle-fill text-primary fs-5"></i>
+                      {% else %}
+                        <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                      {% endif %}
+                      <strong class="fs-6">System Evaluation:</strong>
+                    </div>
+                    <p class="mb-0 fw-bold fs-6">{{ item.system_feedback }}</p>
+                  </div>
+                {% endif %}
+
+                <!-- Demoted Minor Info: Timestamp -->
+                <div class="text-muted small mt-2 d-flex align-items-center gap-1">
+                  <i class="bi bi-clock-history"></i>
+                  <span>Completed on {{ item.formatted_date }}</span>
+                </div>
+
+              </div>
+
+              {% if loop.last and group.attempts|length > 2 %}
+                </div><!-- end older-attempts-container -->
+              {% endif %}
+            {% endfor %}
+
+            <!-- Toggle Older Attempts Button (if more than 2 attempts) -->
+            {% if group.attempts|length > 2 %}
+              <div class="text-center mt-2">
+                <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1 toggle-older-btn"
+                        onclick="toggleOlder('{{ group_idx }}', this)">
+                  <i class="bi bi-chevron-down me-1"></i>
+                  <span>Show older attempts (+{{ group.attempts|length - 2 }})</span>
+                </button>
+              </div>
+            {% endif %}
+          </div>
+
+        </section>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="brutal-window text-center p-5" style="background: #ffffff;">
+      <i class="bi bi-chat-square-dots-fill text-primary display-2 d-block mb-3"></i>
+      <h3 class="fw-black text-dark fs-2 mb-2">No Feedback Recorded Yet</h3>
+      <p class="text-dark fw-bold fs-5 mb-3">Play games or complete quick checks in lessons to see your advice and teacher notes here!</p>
+      <a href="{{ url_for('student.activities') }}" class="brutal-btn brutal-btn-primary d-inline-flex text-decoration-none">
+        <i class="bi bi-controller me-1"></i>
+        <span>Explore Activities</span>
+      </a>
+    </div>
+  {% endif %}
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function toggleOlder(groupIndex, btn) {
+      const container = document.getElementById(`older-attempts-${groupIndex}`);
+      if (!container) return;
+
+      const isExpanded = container.classList.contains('expanded');
+      if (isExpanded) {
+        container.classList.remove('expanded');
+        btn.innerHTML = `<i class="bi bi-chevron-down me-1"></i><span>Show older attempts</span>`;
+      } else {
+        container.classList.add('expanded');
+        btn.innerHTML = `<i class="bi bi-chevron-up me-1"></i><span>Hide older attempts</span>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const filterBtns = document.querySelectorAll('.filter-pill-btn');
+      const entries = document.querySelectorAll('.feedback-entry');
+      const groups = document.querySelectorAll('.activity-group-block');
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          const filter = btn.getAttribute('data-filter');
+
+          groups.forEach(group => {
+            let visibleInGroup = 0;
+            const groupEntries = group.querySelectorAll('.feedback-entry');
+
+            groupEntries.forEach(entry => {
+              const hasTeacher = entry.getAttribute('data-has-teacher') === 'true';
+              const hasSystem = entry.getAttribute('data-has-system') === 'true';
+
+              let show = true;
+              if (filter === 'teacher') show = hasTeacher;
+              if (filter === 'system') show = hasSystem;
+
+              entry.style.display = show ? 'block' : 'none';
+              if (show) visibleInGroup += 1;
+            });
+
+            group.style.display = (visibleInGroup > 0) ? 'block' : 'none';
+          });
+        });
+      });
+    });
+  </script>
+  <script src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
+</body>
+</html>

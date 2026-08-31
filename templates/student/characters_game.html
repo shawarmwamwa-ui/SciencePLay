@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safari Quest — Characters of Living Things Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+  <style>
+    html { margin: 0; padding: 0; height: 100%; }
+    body {
+      margin: 0;
+      height: 100%;
+      min-height: 100vh;
+      max-height: 100vh;
+      padding: clamp(4px, 1vh, 10px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      background: linear-gradient(135deg, #fef3c7 0%, #dcfce7 100%);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .quest-page-container {
+      width: min(100%, 960px);
+      height: 100%;
+      max-height: calc(100vh - 10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: clamp(4px, 0.8vh, 8px);
+    }
+    .quest-hud-bar {
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+      border: 2px solid #fde68a;
+      padding: clamp(4px, 0.6vh, 8px) 14px;
+      flex-shrink: 0;
+    }
+    .quest-game-frame {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      padding: clamp(8px, 1.2vh, 16px) clamp(12px, 1.5vw, 20px);
+      border: 2px solid #e2e8f0;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: auto;
+    }
+
+    @media (orientation: portrait), (max-width: 600px) {
+      body { height: auto; min-height: 100vh; max-height: none; overflow-y: auto; align-items: flex-start; }
+      .quest-page-container { height: auto; max-height: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quest-page-container">
+    <!-- Navbar & HUD Bar -->
+    <div class="quest-hud-bar d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <a href="{{ url_for('student.activities') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 fw-semibold">
+        <i class="bi bi-arrow-left me-1"></i>Activities
+      </a>
+
+      <div class="d-flex align-items-center gap-3">
+        <div>
+          <small class="text-muted text-uppercase fw-bold d-block" style="font-size: 9px;">Score</small>
+          <span id="quest-score" class="fw-extrabold text-primary" style="font-size: 15px;">0</span>
+        </div>
+        <div>
+          <small class="text-muted text-uppercase fw-bold d-block" style="font-size: 9px;">Combo</small>
+          <span id="quest-combo" class="fw-extrabold text-warning" style="font-size: 15px;">1x</span>
+        </div>
+        <div>
+          <small class="text-muted text-uppercase fw-bold d-block" style="font-size: 9px;">Hearts</small>
+          <div id="quest-hearts" style="font-size: 14px;">❤️❤️❤️</div>
+        </div>
+      </div>
+
+      <button id="quest-tts-btn" class="btn btn-light btn-sm rounded-pill border px-2 py-1 shadow-sm">
+        <i class="bi bi-volume-up-fill me-1 text-primary"></i><span>Read Aloud</span>
+      </button>
+    </div>
+
+    <!-- Main Game Frame -->
+    <main class="quest-game-frame">
+      <div id="quest-game-container"></div>
+    </main>
+  </div>
+
+  <script>
+    window.safariQuestActivityId = {{ activity_id if activity_id else 2 }};
+  </script>
+  <script type="module">
+    import { initSafariQuest } from "{{ url_for('static', filename='js/charactersGame.js') }}";
+    document.addEventListener('DOMContentLoaded', initSafariQuest);
+  </script>
+</body>
+</html>

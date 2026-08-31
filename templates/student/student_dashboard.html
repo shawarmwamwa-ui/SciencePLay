@@ -2,19 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Student Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard — SciencePlay</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
 </head>
-<body class="student-page container mt-4">
+<body class="student-page container mt-3 mb-4">
 
   <!-- Alerts -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div class="alerts-container mb-4">
         {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
+          <div class="alert alert-{{ category }} alert-dismissible fade show brutal-alert" role="alert">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-info-circle-fill fs-4"></i>
+              <span>{{ message }}</span>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
         {% endfor %}
@@ -22,77 +27,252 @@
     {% endif %}
   {% endwith %}
 
-  <div class="student-header mb-4">
-    <div class="d-flex justify-content-between align-items-center flex-wrap">
+  <!-- Header Banner -->
+  <div class="student-header brutal-window mb-4" style="background: #fef08a;">
+    <div class="brutal-window-header">
+      <div class="brutal-dots">
+        <span class="brutal-dot dot-red"></span>
+        <span class="brutal-dot dot-yellow"></span>
+        <span class="brutal-dot dot-green"></span>
+      </div>
+      <span class="brutal-window-title">STUDENT_DASHBOARD</span>
+    </div>
+    <div class="brutal-window-body d-flex justify-content-between align-items-center flex-wrap gap-3 py-3">
       <div>
-        <h1>Student Dashboard</h1>
-        <p class="text-muted">Hello, {{ current_user.name if current_user else 'Student' }}. Track your lessons, complete activities, and earn points.</p>
+        <h1 class="mb-0 text-dark fw-black display-5">
+          <i class="bi bi-rocket-takeoff-fill text-danger me-2"></i>Welcome, {{ current_user.name if current_user else 'Explorer' }}!
+        </h1>
       </div>
-      <div class="mt-3 mt-sm-0">
-        <a href="{{ url_for('auth.logout') }}" class="btn btn-danger logout-button">Logout</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="row student-summary mb-4">
-    <div class="col-md-4 mb-3">
-      <div class="card p-4 stat-card stat-card-activities">
-        <div class="metric-value">{{ completed_activities }}</div>
-        <div>Activities Completed</div>
-      </div>
-    </div>
-    <div class="col-md-4 mb-3">
-      <div class="card p-4 stat-card stat-card-points">
-        <div class="metric-value">{{ total_score }}</div>
-        <div>Points Earned</div>
-      </div>
-    </div>
-    <div class="col-md-4 mb-3">
-      <div class="card p-4 stat-card stat-card-progress">
-        <div class="metric-value">{{ student_progress }}%</div>
-        <div>Overall Progress</div>
+      <div>
+        <a href="{{ url_for('auth.logout') }}" class="brutal-btn brutal-btn-danger text-decoration-none">
+          <i class="bi bi-box-arrow-right me-1"></i>
+          <span>Logout</span>
+        </a>
       </div>
     </div>
   </div>
 
-  <div class="row mb-4">
-    <div class="col-md-6 mb-3">
-      <a href="{{ url_for('student.lessons') }}" class="text-decoration-none">
-        <div class="card lesson-card p-4 h-100 clickable-card">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <h3>Lessons</h3>
-              <p class="text-muted mb-0">View all lessons and start the Living vs Non-Living activity.</p>
-            </div>
-            <span class="badge bg-primary">{{ lessons|length }}</span>
-          </div>
-          <div class="card-body p-0">
-            <div class="progress lesson-progress mb-3">
-              <div class="progress-bar" role="progressbar" style="width: {{ lesson_progress[0].percent if lesson_progress else 0 }}%;" aria-valuenow="{{ lesson_progress[0].percent if lesson_progress else 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <div class="fw-bold">Living vs Non-Living</div>
+  <!-- Stat Cards Grid (Big numbers, punchy headers) -->
+  <div class="row student-summary mb-4 g-3">
+    <div class="col-md-4">
+      <div class="brutal-card stat-card p-3 p-md-4 d-flex flex-column justify-content-between h-100" style="background: #bbf7d0;">
+        <div class="brutal-window-header mb-2" style="background: transparent; border: none; padding: 0;">
+          <div class="brutal-dots">
+            <span class="brutal-dot dot-red"></span>
+            <span class="brutal-dot dot-yellow"></span>
+            <span class="brutal-dot dot-green"></span>
           </div>
         </div>
-      </a>
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="metric-value text-dark fw-black">{{ completed_activities }}</div>
+          <span class="display-5 text-dark"><i class="bi bi-check-circle-fill"></i></span>
+        </div>
+        <div class="fw-black text-dark fs-4 mt-2">Activities Done</div>
+      </div>
     </div>
-    <div class="col-md-6 mb-3">
-      <a href="{{ url_for('student.activities') }}" class="text-decoration-none">
-        <div class="card activity-card p-4 h-100 clickable-card">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <h3>Activities</h3>
-              <p class="text-muted mb-0">See all available activities and complete them from one page.</p>
-            </div>
-            <span class="badge bg-primary">{{ activities|length }}</span>
-          </div>
-          <div class="card-body p-0">
-            <div class="fw-bold">Complete activities to earn points.</div>
+    <div class="col-md-4">
+      <div class="brutal-card stat-card p-3 p-md-4 d-flex flex-column justify-content-between h-100" style="background: #fef08a;">
+        <div class="brutal-window-header mb-2" style="background: transparent; border: none; padding: 0;">
+          <div class="brutal-dots">
+            <span class="brutal-dot dot-red"></span>
+            <span class="brutal-dot dot-yellow"></span>
+            <span class="brutal-dot dot-green"></span>
           </div>
         </div>
-      </a>
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="metric-value text-dark fw-black">{{ total_score }}</div>
+          <span class="display-5 text-dark"><i class="bi bi-star-fill"></i></span>
+        </div>
+        <div class="fw-black text-dark fs-4 mt-2">Total Points</div>
+      </div>
     </div>
+    <div class="col-md-4">
+      <div class="brutal-card stat-card p-3 p-md-4 d-flex flex-column justify-content-between h-100" style="background: #e9d5ff;">
+        <div class="brutal-window-header mb-2" style="background: transparent; border: none; padding: 0;">
+          <div class="brutal-dots">
+            <span class="brutal-dot dot-red"></span>
+            <span class="brutal-dot dot-yellow"></span>
+            <span class="brutal-dot dot-green"></span>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="metric-value text-dark fw-black">{{ student_progress }}%</div>
+          <span class="display-5 text-dark"><i class="bi bi-flag-fill"></i></span>
+        </div>
+        <div class="fw-black text-dark fs-4 mt-2">Overall Progress</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Combined Layout Row (2 Large Combined Containers) -->
+  <div class="row g-4 mb-4">
+
+    <!-- Combined Container 1: Learning Hub (Lessons + Activities Action Cards) -->
+    <div class="col-lg-6">
+      <div class="brutal-window h-100" style="background: #bae6fd;">
+        <div class="brutal-window-header">
+          <div class="brutal-dots">
+            <span class="brutal-dot dot-red"></span>
+            <span class="brutal-dot dot-yellow"></span>
+            <span class="brutal-dot dot-green"></span>
+          </div>
+          <span class="brutal-window-title">LEARNING_HUB.EXE</span>
+        </div>
+        <div class="brutal-window-body">
+          
+          <!-- Section A: Lessons Action Card -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-journal-bookmark-fill text-dark me-1"></i> Lessons
+            </h2>
+            <span class="brutal-badge brutal-badge-yellow fs-5">{{ lessons|length }}</span>
+          </div>
+
+          <a href="{{ url_for('student.lessons') }}" class="text-decoration-none d-block mb-4">
+            <div class="brutal-action-card d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-book-fill text-primary display-6"></i>
+                <div>
+                  <span class="fw-black text-dark fs-3 d-block mb-0">Lesson Adventure</span>
+                  <span class="fw-bold text-dark fs-6">Explore science topics &amp; interactive lessons</span>
+                </div>
+              </div>
+              <span class="brutal-circle-arrow"><i class="bi bi-arrow-right"></i></span>
+            </div>
+          </a>
+
+          <hr class="brutal-divider">
+
+          <!-- Section B: Activities Action Card -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-controller text-dark me-1"></i> Activities
+            </h2>
+            <span class="brutal-badge brutal-badge-yellow fs-5">{{ activities|length }}</span>
+          </div>
+
+          <a href="{{ url_for('student.activities') }}" class="text-decoration-none d-block">
+            <div class="brutal-action-card d-flex align-items-center justify-content-between" style="background: #bbf7d0;">
+              <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-joystick text-success display-6"></i>
+                <div>
+                  <span class="fw-black text-dark fs-3 d-block mb-0">Activity Playground</span>
+                  <span class="fw-bold text-dark fs-6">Play fun interactive games &amp; earn points</span>
+                </div>
+              </div>
+              <span class="brutal-circle-arrow"><i class="bi bi-arrow-right"></i></span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Combined Container 2: Community & Rewards (Leaderboard, Badges, Feedback) -->
+    <div class="col-lg-6">
+      <div class="brutal-window h-100" style="background: #fbcfe8;">
+        <div class="brutal-window-header">
+          <div class="brutal-dots">
+            <span class="brutal-dot dot-red"></span>
+            <span class="brutal-dot dot-yellow"></span>
+            <span class="brutal-dot dot-green"></span>
+          </div>
+          <span class="brutal-window-title">COMMUNITY_REWARDS.EXE</span>
+        </div>
+        <div class="brutal-window-body">
+
+          <!-- Section A: Dedicated Leaderboard Action Card -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-trophy-fill text-warning me-1"></i> Leaderboard
+            </h2>
+            <span class="brutal-badge brutal-badge-yellow fs-6">RANKINGS</span>
+          </div>
+
+          <a href="{{ url_for('student.leaderboard') }}" class="text-decoration-none d-block mb-4">
+            <div class="brutal-action-card d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-award-fill text-danger display-6"></i>
+                <div>
+                  <span class="fw-black text-dark fs-3 d-block mb-0">Class Leaderboard</span>
+                  <span class="fw-bold text-dark fs-6">View top student rankings &amp; medals</span>
+                </div>
+              </div>
+              <span class="brutal-circle-arrow"><i class="bi bi-arrow-right"></i></span>
+            </div>
+          </a>
+
+          <hr class="brutal-divider">
+
+          <!-- Section B: Dedicated Badges Action Card -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-patch-check-fill text-danger me-1"></i> Badges
+            </h2>
+            <span class="brutal-badge brutal-badge-yellow fs-5 px-3">
+              {% if badges %}{{ badges|length }}{% else %}0{% endif %}
+            </span>
+          </div>
+
+          <a href="{{ url_for('student.badges') }}" class="text-decoration-none d-block mb-4">
+            <div class="brutal-action-card d-flex align-items-center justify-content-between" style="background: #ffffff;">
+              <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-star-fill text-warning display-6"></i>
+                <div>
+                  <span class="fw-black text-dark fs-3 d-block mb-0">My Badges &amp; Rewards</span>
+                  <span class="fw-bold text-dark fs-6">View your earned stickers &amp; rewards</span>
+                </div>
+              </div>
+              <span class="brutal-circle-arrow"><i class="bi bi-arrow-right"></i></span>
+            </div>
+          </a>
+
+          <hr class="brutal-divider">
+
+          <!-- Section C: Feedback & Ratings -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-chat-square-quote-fill text-primary me-1"></i> Feedback
+            </h2>
+            <span class="brutal-badge brutal-badge-yellow fs-6">
+              {% if feedback_messages %}{{ feedback_messages|length }}{% else %}0{% endif %} NOTES
+            </span>
+          </div>
+
+          <a href="{{ url_for('student.feedback') }}" class="text-decoration-none d-block">
+            <div class="brutal-action-card d-flex align-items-center justify-content-between" style="background: #ffffff;">
+              <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-chat-square-quote-fill text-primary display-6"></i>
+                <div>
+                  <span class="fw-black text-dark fs-3 d-block mb-0">Feedback &amp; Notes</span>
+                  <span class="fw-bold text-dark fs-6">Teacher notes &amp; game evaluations</span>
+                </div>
+              </div>
+              <span class="brutal-circle-arrow"><i class="bi bi-arrow-right"></i></span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const alerts = document.querySelectorAll('.alerts-container .alert');
+      alerts.forEach((alertEl) => {
+        window.setTimeout(() => {
+          if (window.bootstrap && window.bootstrap.Alert) {
+            window.bootstrap.Alert.getOrCreateInstance(alertEl).close();
+          } else {
+            alertEl.remove();
+          }
+        }, 5000);
+      });
+    });
+  </script>
 </body>
 </html>

@@ -10,16 +10,15 @@ class BaseModel(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     deleted_at = db.Column(db.DateTime, nullable=True)
 
-    def soft_delete(self):
-        self.deleted_at = datetime.utcnow()
 
 class User(BaseModel):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
+    username = db.Column(db.String(100), unique=True, nullable=False)
     role = db.Column(db.String(20), nullable=False)  # admin, teacher, student
     password_hash = db.Column(db.String(128), nullable=False)
+    last_seen = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
         # enforce strong hashing method
@@ -33,14 +32,28 @@ class Lesson(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
+    prerequisite_lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=True)
 
 class Activity(BaseModel):
     __tablename__ = 'activity'
     id = db.Column(db.Integer, primary_key=True)
     lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'))
     type = db.Column(db.String(50))
+    engine = db.Column(db.String(50), nullable=True)
     points = db.Column(db.Integer)
+    config = db.Column(db.JSON, nullable=True)
     lesson = db.relationship('Lesson', backref='activities')
+
+
+class LessonContent(BaseModel):
+    __tablename__ = 'lesson_content'
+    id = db.Column(db.Integer, primary_key=True)
+    lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=False)
+    version = db.Column(db.Integer, default=1)
+    status = db.Column(db.String(20), default='draft')
+    payload = db.Column(db.Text, nullable=False)
+    lesson = db.relationship('Lesson', backref='content_versions')
+
 
 class ProgressLog(BaseModel):
     __tablename__ = 'progress_log'
@@ -58,28 +71,25 @@ class LessonProgress(BaseModel):
     progress_percent = db.Column(db.Integer, default=0)
     completed = db.Column(db.Boolean, default=False)
     current_slide = db.Column(db.Integer, default=0)
+    time_spent = db.Column(db.Integer, default=0)
+    initial_time_spent = db.Column(db.Integer, default=0)
+    total_time_spent = db.Column(db.Integer, default=0)
+    revisit_count = db.Column(db.Integer, default=0)
     lesson = db.relationship('Lesson', backref='progress_logs')
     student = db.relationship('User', backref='lesson_progress_entries')
 
 
-class ClassGroup(BaseModel):
-    __tablename__ = 'class_group'
+class LessonAttemptLog(BaseModel):
+    __tablename__ = 'lesson_attempt_log'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    teacher = db.relationship('User', backref='classes')
-
-
-class UserClass(BaseModel):
-    __tablename__ = 'user_class'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    class_group_id = db.Column(db.Integer, db.ForeignKey('class_group.id'), nullable=False)
-    role_in_class = db.Column(db.String(20), default='student')
-    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
-    user = db.relationship('User', backref='class_memberships')
-    class_group = db.relationship('ClassGroup', backref='members')
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=False)
+    attempt_number = db.Column(db.Integer, nullable=False, default=1)
+    time_spent = db.Column(db.Integer, default=0)
+    completed = db.Column(db.Boolean, default=False)
+    progress_percent = db.Column(db.Integer, default=0)
+    student = db.relationship('User', backref='lesson_attempt_logs')
+    lesson = db.relationship('Lesson', backref='lesson_attempt_logs')
 
 
 class LessonAssignment(BaseModel):
@@ -117,7 +127,6 @@ class Badge(BaseModel):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     icon = db.Column(db.String(255))
-    points = db.Column(db.Integer, default=0)
 
 
 class UserBadge(BaseModel):
@@ -138,20 +147,25 @@ class AttemptLog(BaseModel):
     attempt_number = db.Column(db.Integer, nullable=False)
     score = db.Column(db.Integer)
     result = db.Column(db.String(50))
+    rating = db.Column(db.String(50), nullable=True)
+    hints = db.Column(db.Text, nullable=True)
     feedback = db.Column(db.Text)
+    teacher_feedback = db.Column(db.Text, nullable=True)
     time_spent = db.Column(db.Integer, default=0)
     student = db.relationship('User', backref='attempt_logs')
     activity = db.relationship('Activity', backref='attempt_logs')
 
 
-class ActivityFeedback(BaseModel):
-    __tablename__ = 'activity_feedback'
+class AttemptObjectLog(db.Model):
+    __tablename__ = 'attempt_object_log'
     id = db.Column(db.Integer, primary_key=True)
-    progress_log_id = db.Column(db.Integer, db.ForeignKey('progress_log.id'), nullable=False)
-    rating = db.Column(db.String(50))
-    comments = db.Column(db.Text)
-    hints = db.Column(db.Text)
-    progress_log = db.relationship('ProgressLog', backref='feedback')
+    attempt_log_id = db.Column(db.Integer, db.ForeignKey('attempt_log.id', ondelete='CASCADE'), nullable=False)
+    object_id = db.Column(db.String(100), nullable=False)
+    was_correct = db.Column(db.Boolean, nullable=False)
+    attempt_number = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    attempt_log = db.relationship('AttemptLog', backref=db.backref('object_logs', lazy=True, cascade='all, delete-orphan'))
 
 
 class AccessLog(BaseModel):
@@ -160,6 +174,4 @@ class AccessLog(BaseModel):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     event_type = db.Column(db.String(50), nullable=False)
     event_details = db.Column(db.Text)
-    ip_address = db.Column(db.String(45))
-    user_agent = db.Column(db.String(255))
     user = db.relationship('User', backref='access_logs')

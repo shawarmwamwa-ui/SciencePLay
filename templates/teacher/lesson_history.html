@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ student.name }} — {{ lesson.title }} Visit History</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css') }}">
+  <style>
+    .metric-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      padding: 1.25rem;
+      box-shadow: 0 4px 12px rgba(15,23,42,0.03);
+      height: 100%;
+    }
+    .timeline-table th {
+      background: #0f172a !important;
+      color: #ffffff !important;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .visit-first-badge {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+    }
+    .visit-revisit-badge {
+      background: #f0fdf4;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body class="teacher-page teacher-dashboard-page">
+
+  <div class="teacher-layout container-fluid">
+    <div class="row g-3 g-lg-4">
+      
+      <!-- Sidebar Navigation -->
+      <aside class="col-12 col-lg-3 col-xl-2">
+        <nav class="teacher-sidebar">
+          <div>
+            <div class="teacher-brand-wrap">
+              <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
+              <div>
+                <h1 class="teacher-brand-title">SciencePlay</h1>
+                <p class="teacher-brand-subtitle">Teacher Portal</p>
+              </div>
+            </div>
+
+            <div class="teacher-menu-group mt-4">
+              <a class="teacher-menu-link" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="assignments" href="{{ url_for('teacher.assignments') }}">
+                <i class="bi bi-journal-plus"></i>
+                <span>Assignments</span>
+              </a>
+              <a class="teacher-menu-link active" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
+                <i class="bi bi-bar-chart"></i>
+                <span>Analytics</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
+                <i class="bi bi-chat-square-quote-fill"></i>
+                <span>Feedback</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
+                <i class="bi bi-book"></i>
+                <span>Lessons</span>
+              </a>
+            </div>
+          </div>
+
+          <a href="{{ url_for('auth.logout') }}" class="teacher-logout-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="col-12 col-lg-9 col-xl-10">
+        <section class="teacher-content">
+          <div class="teacher-center-wrap">
+
+            <!-- Breadcrumb & Action Header -->
+            <div class="mb-4">
+              <a href="{{ url_for('teacher.student_performance', student_id=student.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-semibold mb-2">
+                <i class="bi bi-arrow-left me-1"></i>Back to Student Performance
+              </a>
+              <h2 class="h3 fw-black text-dark mb-1 d-flex align-items-center gap-2">
+                <span>{{ student.name }}</span>
+                <span class="text-secondary fw-normal fs-5">·</span>
+                <span class="text-primary">{{ lesson.title }}</span>
+              </h2>
+              <p class="text-muted mb-0">Detailed chronological record of initial visit and all revisits.</p>
+            </div>
+
+            <!-- Summary KPI Cards -->
+            <div class="row g-3 mb-4">
+              <div class="col-12 col-sm-6 col-xl-3">
+                <div class="metric-card">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase">Total Visits</span>
+                    <span class="badge bg-primary-subtle text-primary rounded-circle p-2"><i class="bi bi-arrow-repeat fs-6"></i></span>
+                  </div>
+                  <h3 class="fw-black text-dark mb-1">{{ attempts|length }}</h3>
+                  <p class="small text-muted mb-0">1 Initial + {{ revisit_count }} Revisit{% if revisit_count != 1 %}s{% endif %}</p>
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-6 col-xl-3">
+                <div class="metric-card">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase">First Visit Time</span>
+                    <span class="badge bg-info-subtle text-info rounded-circle p-2"><i class="bi bi-flag fs-6"></i></span>
+                  </div>
+                  <h3 class="fw-black text-dark mb-1">
+                    {% if first_visit_time >= 60 %}
+                      {{ (first_visit_time // 60) }}m {{ (first_visit_time % 60) }}s
+                    {% else %}
+                      {{ first_visit_time }}s
+                    {% endif %}
+                  </h3>
+                  <p class="small text-muted mb-0">Initial baseline exploration</p>
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-6 col-xl-3">
+                <div class="metric-card">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase">Avg. Revisit Time</span>
+                    <span class="badge bg-warning-subtle text-warning rounded-circle p-2"><i class="bi bi-stopwatch fs-6"></i></span>
+                  </div>
+                  <h3 class="fw-black text-dark mb-1">
+                    {% if avg_revisit_time >= 60 %}
+                      {{ (avg_revisit_time // 60) }}m {{ (avg_revisit_time % 60) }}s
+                    {% else %}
+                      {{ avg_revisit_time }}s
+                    {% endif %}
+                  </h3>
+                  <p class="small text-muted mb-0">Average pace during review</p>
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-6 col-xl-3">
+                <div class="metric-card border-primary border-2" style="background: #f0f7ff;">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-primary small fw-bold text-uppercase">Total Overall Time</span>
+                    <span class="badge bg-primary text-white rounded-circle p-2"><i class="bi bi-hourglass-split fs-6"></i></span>
+                  </div>
+                  <h3 class="fw-black text-primary mb-1">
+                    {% if total_time_seconds >= 60 %}
+                      {{ (total_time_seconds // 60) }}m {{ (total_time_seconds % 60) }}s
+                    {% else %}
+                      {{ total_time_seconds }}s
+                    {% endif %}
+                  </h3>
+                  <p class="small text-primary mb-0">Cumulative all-time engagement</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detailed Visits Table -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+              <div class="card-header bg-white py-3 px-4 border-0 d-flex align-items-center justify-content-between">
+                <div>
+                  <h4 class="h5 fw-black text-dark mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>All Visits &amp; Revisits Timeline</h4>
+                  <p class="small text-muted mb-0">Complete session log from initial attempt to latest review</p>
+                </div>
+                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold">
+                  {{ attempts|length }} Total Attempt{% if attempts|length != 1 %}s{% endif %}
+                </span>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table timeline-table align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th class="ps-4">Visit / Revisit</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                        <th>Time Spent</th>
+                        <th>Date &amp; Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for att in attempts %}
+                        <tr>
+                          <td class="ps-4">
+                            {% if att.attempt_number == 1 %}
+                              <span class="visit-first-badge d-inline-flex align-items-center gap-1">
+                                <i class="bi bi-flag-fill text-primary"></i> First Visit (Initial)
+                              </span>
+                            {% else %}
+                              <span class="visit-revisit-badge d-inline-flex align-items-center gap-1">
+                                <i class="bi bi-arrow-repeat text-success"></i> Revisit #{{ att.attempt_number - 1 }}
+                              </span>
+                            {% endif %}
+                          </td>
+                          <td>
+                            {% if att.completed %}
+                              <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
+                                <i class="bi bi-check-circle-fill me-1"></i>Completed
+                              </span>
+                            {% else %}
+                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 rounded-pill fw-bold">
+                                <i class="bi bi-hourglass-split me-1"></i>In Progress
+                              </span>
+                            {% endif %}
+                          </td>
+                          <td>
+                            <strong class="text-dark">{{ att.progress_percent }}%</strong>
+                            <span class="small text-muted ms-1">(Slide {{ att.current_slide }}/{{ att.total_slides }})</span>
+                          </td>
+                          <td>
+                            <strong class="text-primary fs-6">
+                              {% if att.time_spent >= 60 %}
+                                {{ (att.time_spent // 60) }}m {{ (att.time_spent % 60) }}s
+                              {% else %}
+                                {{ att.time_spent }}s
+                              {% endif %}
+                            </strong>
+                          </td>
+                          <td>
+                            <small class="text-muted">
+                              {% if att.created_at %}
+                                {{ att.created_at.strftime('%b %d, %Y · %I:%M %p') }}
+                              {% else %}
+                                N/A
+                              {% endif %}
+                            </small>
+                          </td>
+                        </tr>
+                      {% else %}
+                        <tr>
+                          <td colspan="5" class="text-center text-muted py-5">
+                            <i class="bi bi-info-circle fs-3 d-block mb-2 text-secondary"></i>
+                            No visit attempts recorded for this student yet.
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+      </main>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/teacher.js') }}"></script>
+</body>
+</html>
