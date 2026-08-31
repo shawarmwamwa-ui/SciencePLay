@@ -29,13 +29,22 @@ if raw_db_uri.startswith('postgres://'):
 elif raw_db_uri.startswith('mysql://'):
     raw_db_uri = raw_db_uri.replace('mysql://', 'mysql+pymysql://', 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_uri
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+engine_options = {
     'pool_pre_ping': True,
     'pool_recycle': 280,
     'pool_timeout': 20,
 }
+
+# If connecting to Cloud MySQL (Aiven, TiDB, etc.), clean query string and enable SSL
+if 'aivencloud.com' in raw_db_uri or 'ssl-mode' in raw_db_uri:
+    import urllib.parse
+    parsed = urllib.parse.urlparse(raw_db_uri)
+    raw_db_uri = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+    engine_options['connect_args'] = {'ssl': {}}
+
+app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_uri
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
 # Initialize database
 db.init_app(app)
