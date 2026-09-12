@@ -250,7 +250,7 @@
                     <label class="form-label fw-bold small text-muted mb-1" for="assignStudentSelect">1. Student</label>
                     <select name="student_id" id="assignStudentSelect" class="form-select" required>
                       <option value="">Select Student...</option>
-                      <option value="all" class="fw-bold text-primary" style="background-color: #eff6ff;">&#9733; ALL STUDENTS (Whole Class &mdash; {{ students|length }} Students)</option>
+                      <option value="all" class="fw-semibold text-primary" style="background-color: #eff6ff;">All Students (Whole Class &mdash; {{ students|length }} Students)</option>
                       {% for student in students %}
                         <option value="{{ student.id }}">{{ student.name }} (@{{ student.username }})</option>
                       {% endfor %}
@@ -492,17 +492,10 @@
                                   {% endif %}
                                 </td>
                                 <td class="text-end">
-                                  <div class="d-inline-flex gap-2">
-                                    <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold quick-fill-lesson-btn"
-                                      data-lesson-id="{{ lesson.id }}" title="Pre-fill top assignment form with this lesson">
-                                      <i class="bi bi-pencil-square me-1"></i>Assign
-                                    </button>
-                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold open-assign-lesson-btn"
-                                      data-bs-toggle="modal" data-bs-target="#assignLessonModal"
-                                      data-lesson-id="{{ lesson.id }}" data-lesson-title="{{ lesson.title }}" title="Open assignment dialog for this lesson">
-                                      <i class="bi bi-box-arrow-up-right me-1"></i>Dialog
-                                    </button>
-                                  </div>
+                                  <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold quick-fill-lesson-btn"
+                                    data-lesson-id="{{ lesson.id }}" title="Pre-fill top assignment form with this lesson">
+                                    <i class="bi bi-pencil-square me-1"></i>Assign
+                                  </button>
                                 </td>
                               </tr>
                               {% endfor %}
@@ -532,7 +525,7 @@
                               <tr>
                                 <th>Game Activity</th>
                                 <th>Points</th>
-                                <th class="text-end">Actions</th>
+                                <th class="text-end">Engine</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -542,11 +535,7 @@
                                 <td><strong class="text-dark">{{ activity.type }}</strong></td>
                                 <td><span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">{{ activity.points }} pts</span></td>
                                 <td class="text-end">
-                                  <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold open-assign-activity-btn"
-                                    data-bs-toggle="modal" data-bs-target="#assignActivityModal"
-                                    data-activity-id="{{ activity.id }}" data-activity-title="{{ activity.type }}">
-                                    <i class="bi bi-controller me-1"></i>Assign to Class
-                                  </button>
+                                  <span class="badge bg-light text-secondary border rounded-pill px-2 py-1">{{ activity.engine.replace('_', ' ')|title }}</span>
                                 </td>
                               </tr>
                               {% endfor %}
@@ -569,90 +558,6 @@
 
           </div>
           <!-- End .dashboard-real-content -->
-
-          <!-- Modal: Assign Lesson Directly -->
-          <div class="modal fade" id="assignLessonModal" tabindex="-1" aria-labelledby="assignLessonModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content rounded-4 border-0 shadow-lg">
-                <form method="POST" action="{{ url_for('teacher.assign_lesson') }}">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <input type="hidden" name="lesson_id" id="modalLessonId">
-                  <div class="modal-header border-bottom-0 pb-0">
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="p-2 rounded-3 ts-blue"><i class="bi bi-journal-plus fs-5"></i></span>
-                      <h5 class="modal-title fw-bold text-dark" id="assignLessonModalLabel">Assign Lesson to Class</h5>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body pt-3">
-                    <div class="mb-3">
-                      <label class="form-label small fw-bold text-muted">Selected Lesson</label>
-                      <input type="text" class="form-control fw-bold bg-light" id="modalLessonTitle" readonly>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label small fw-bold text-muted" for="modalLessonStudent">Assign To</label>
-                      <select name="student_id" id="modalLessonStudent" class="form-select" required>
-                        <option value="all" class="fw-bold text-primary" style="background-color: #eff6ff;">&#9733; ALL STUDENTS (Whole Class &mdash; {{ students|length }} Students)</option>
-                        {% for st in students %}
-                        <option value="{{ st.id }}">{{ st.name }} (@{{ st.username }})</option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label small fw-bold text-muted" for="modalLessonDueDate">Due Date &amp; Time (Optional)</label>
-                      <input type="datetime-local" name="due_date" id="modalLessonDueDate" class="form-control">
-                    </div>
-                  </div>
-                  <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-sm btn-light border rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-4 fw-semibold">Confirm Assignment</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <!-- Modal: Assign Activity Directly -->
-          <div class="modal fade" id="assignActivityModal" tabindex="-1" aria-labelledby="assignActivityModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content rounded-4 border-0 shadow-lg">
-                <form method="POST" action="{{ url_for('teacher.assign_activity') }}">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <input type="hidden" name="activity_id" id="modalActivityId">
-                  <div class="modal-header border-bottom-0 pb-0">
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="p-2 rounded-3 ts-green"><i class="bi bi-controller fs-5"></i></span>
-                      <h5 class="modal-title fw-bold text-dark" id="assignActivityModalLabel">Assign Activity to Class</h5>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body pt-3">
-                    <div class="mb-3">
-                      <label class="form-label small fw-bold text-muted">Selected Game Activity</label>
-                      <input type="text" class="form-control fw-bold bg-light" id="modalActivityTitle" readonly>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label small fw-bold text-muted" for="modalActivityStudent">Assign To</label>
-                      <select name="student_id" id="modalActivityStudent" class="form-select" required>
-                        <option value="all" class="fw-bold text-primary" style="background-color: #eff6ff;">&#9733; ALL STUDENTS (Whole Class &mdash; {{ students|length }} Students)</option>
-                        {% for st in students %}
-                        <option value="{{ st.id }}">{{ st.name }} (@{{ st.username }})</option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label small fw-bold text-muted" for="modalActivityDueDate">Due Date &amp; Time (Optional)</label>
-                      <input type="datetime-local" name="due_date" id="modalActivityDueDate" class="form-control">
-                    </div>
-                  </div>
-                  <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-sm btn-light border rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-4 fw-semibold">Confirm Assignment</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
 
           </div>
         </section>
@@ -830,29 +735,6 @@
         }
       });
     });
-
-    // Modals population
-    const assignLessonModal = document.getElementById('assignLessonModal');
-    if (assignLessonModal) {
-      assignLessonModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        if (button) {
-          document.getElementById('modalLessonId').value = button.getAttribute('data-lesson-id') || '';
-          document.getElementById('modalLessonTitle').value = button.getAttribute('data-lesson-title') || '';
-        }
-      });
-    }
-
-    const assignActivityModal = document.getElementById('assignActivityModal');
-    if (assignActivityModal) {
-      assignActivityModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        if (button) {
-          document.getElementById('modalActivityId').value = button.getAttribute('data-activity-id') || '';
-          document.getElementById('modalActivityTitle').value = button.getAttribute('data-activity-title') || '';
-        }
-      });
-    }
 
     document.addEventListener('DOMContentLoaded', updateAssignmentFormState);
   </script>
