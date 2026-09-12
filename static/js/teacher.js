@@ -178,8 +178,19 @@ function initHashTabSwitching() {
       behavior: 'smooth'
     });
 
-    target.classList.add('section-anchor-highlight');
-    setTimeout(() => target.classList.remove('section-anchor-highlight'), 2500);
+    if (target.id === 'struggling-concepts-section') {
+      const lessonsEl = document.getElementById('missed-lessons-section');
+      const activitiesEl = document.getElementById('missed-activities-section');
+      if (lessonsEl) lessonsEl.classList.add('section-anchor-highlight');
+      if (activitiesEl) activitiesEl.classList.add('section-anchor-highlight');
+      setTimeout(() => {
+        if (lessonsEl) lessonsEl.classList.remove('section-anchor-highlight');
+        if (activitiesEl) activitiesEl.classList.remove('section-anchor-highlight');
+      }, 2500);
+    } else {
+      target.classList.add('section-anchor-highlight');
+      setTimeout(() => target.classList.remove('section-anchor-highlight'), 2500);
+    }
 
     // Re-verify after smooth scroll completes to prevent layout shift offset
     setTimeout(() => {

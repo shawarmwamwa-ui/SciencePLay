@@ -491,7 +491,9 @@ def dashboard():
 
     claw_leaderboard = get_teacher_game_leaderboard('Claw Machine')
     animal_leaderboard = get_teacher_game_leaderboard('Find the Part')
-    plant_leaderboard = get_teacher_game_leaderboard('Streak Race')
+    plant_leaderboard = get_teacher_game_leaderboard('Build a Plant')
+    metal_leaderboard = get_teacher_game_leaderboard('Metal Clue')
+    recycling_leaderboard = get_teacher_game_leaderboard('EcoSwipe')
 
     top_students = db.session.query(
         User.id.label('id'),
@@ -528,6 +530,8 @@ def dashboard():
         claw_leaderboard=claw_leaderboard,
         animal_leaderboard=animal_leaderboard,
         plant_leaderboard=plant_leaderboard,
+        metal_leaderboard=metal_leaderboard,
+        recycling_leaderboard=recycling_leaderboard,
         top_students=top_students,
         recent_activity=recent_activity,
         most_missed_lessons=most_missed_lessons,
