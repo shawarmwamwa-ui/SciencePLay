@@ -1619,4 +1619,34 @@
   margin-top: auto;
 }
 
+.section-anchor-highlight {
+  animation: sectionAnchorPulse 2.4s ease-out;
+  scroll-margin-top: 85px;
+}
+
+.teacher-table-shell,
+.teacher-panel,
+.dashboard-section,
+[id$="-section"] {
+  scroll-margin-top: 85px;
+}
+
+@keyframes sectionAnchorPulse {
+  0% {
+    outline: 3px solid #3b82f6;
+    outline-offset: 4px;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.45);
+  }
+  50% {
+    outline: 3px solid #3b82f6;
+    outline-offset: 4px;
+    box-shadow: 0 0 26px rgba(59, 130, 246, 0.55);
+  }
+  100% {
+    outline: 3px solid transparent;
+    outline-offset: 0;
+    box-shadow: none;
+  }
+}
+
 

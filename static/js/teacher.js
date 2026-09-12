@@ -16,17 +16,14 @@ function initTeacherNavigation() {
     if (currentPath.includes('/teacher/students') || currentPath.includes('/teacher/student')) {
       return 'students';
     }
-    if (currentPath.includes('/teacher/assignments')) {
-      return 'assignments';
+    if (currentPath.includes('/teacher/lessons') || currentPath.includes('/teacher/assignments')) {
+      return 'lessons';
     }
     if (currentPath.includes('/teacher/analytics')) {
       return 'analytics';
     }
     if (currentPath.includes('/teacher/feedback')) {
       return 'feedback';
-    }
-    if (currentPath.includes('/teacher/lessons')) {
-      return 'lessons';
     }
     if (currentPath.includes('/teacher/dashboard') || currentPath === '/teacher') {
       return 'dashboard';
@@ -61,10 +58,14 @@ function initAlertAutoDismiss() {
 function initDashboardSkeleton() {
   const skeleton = document.querySelector('.dashboard-skeleton-wrap');
   const realContent = document.querySelector('.dashboard-real-content');
-  if (!skeleton || !realContent) return;
+  if (!skeleton || !realContent) {
+    initHashTabSwitching();
+    return;
+  }
 
   setTimeout(() => {
     document.body.classList.add('dashboard-loaded');
+    setTimeout(initHashTabSwitching, 120);
   }, 650);
 }
 
@@ -159,28 +160,68 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
 }
 
 /**
- * Auto-switch tabs if window URL hash matches a tab trigger or element inside a tab pane
+ * Auto-switch tabs if window URL hash matches a tab trigger or element inside a tab pane,
+ * and smoothly scrolls directly down to the exact section with a comfortable offset.
  */
 function initHashTabSwitching() {
   const hash = window.location.hash;
-  if (!hash) return;
+  if (!hash || hash.length <= 1) return;
 
-  // Direct tab trigger ID or tab pane ID matching
+  function scrollToElement(target) {
+    if (!target) return;
+    const headerOffset = 85;
+    const elementPosition = target.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+    
+    window.scrollTo({
+      top: Math.max(0, offsetPosition),
+      behavior: 'smooth'
+    });
+
+    target.classList.add('section-anchor-highlight');
+    setTimeout(() => target.classList.remove('section-anchor-highlight'), 2500);
+
+    // Re-verify after smooth scroll completes to prevent layout shift offset
+    setTimeout(() => {
+      const recheckPos = target.getBoundingClientRect().top;
+      if (Math.abs(recheckPos - headerOffset) > 40) {
+        window.scrollTo({
+          top: Math.max(0, target.getBoundingClientRect().top + window.pageYOffset - headerOffset),
+          behavior: 'smooth'
+        });
+      }
+    }, 450);
+  }
+
+  // Check if hash matches a tab trigger directly
   const targetTrigger = document.querySelector(`button[data-bs-target="${hash}"], a[data-bs-target="${hash}"]`);
   if (targetTrigger && window.bootstrap && window.bootstrap.Tab) {
     new window.bootstrap.Tab(targetTrigger).show();
+    setTimeout(() => scrollToElement(targetTrigger), 180);
     return;
   }
 
-  const targetEl = document.querySelector(hash);
+  let targetEl = null;
+  try {
+    targetEl = document.querySelector(hash);
+  } catch (e) {
+    return;
+  }
+
   if (targetEl) {
     const parentPane = targetEl.closest('.tab-pane');
-    if (parentPane) {
+    if (parentPane && !parentPane.classList.contains('active')) {
       const tabTrigger = document.querySelector(`[data-bs-target="#${parentPane.id}"]`);
       if (tabTrigger && window.bootstrap && window.bootstrap.Tab) {
         new window.bootstrap.Tab(tabTrigger).show();
+        // Wait for Bootstrap fade tab transition to complete layout rendering
+        setTimeout(() => scrollToElement(targetEl), 250);
+        return;
       }
     }
+
+    // Target is already in visible pane or standalone section
+    setTimeout(() => scrollToElement(targetEl), 100);
   }
 }
 
@@ -188,7 +229,7 @@ function setupTeacherPortal() {
   initTeacherNavigation();
   initAlertAutoDismiss();
   initDashboardSkeleton();
-  initHashTabSwitching();
+  window.addEventListener('hashchange', initHashTabSwitching);
 }
 
 if (document.readyState === 'loading') {

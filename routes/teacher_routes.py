@@ -661,7 +661,7 @@ def lessons():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'teacher_lessons')
 
-    lessons = Lesson.query.order_by(Lesson.created_at.desc()).all()
+    lessons = Lesson.query.order_by(Lesson.id.asc()).all()
     activities = Activity.query.filter(
         ~Activity.engine.in_(['quick_check', 'lesson']),
         ~Activity.type.ilike('%Quick Check%'),
@@ -669,29 +669,10 @@ def lessons():
     ).order_by(Activity.created_at.desc()).all()
     students = User.query.filter_by(role='student').order_by(User.name.asc()).all()
 
-    return render_template(
-        'teacher/teacher_lessons.html',
-        current_user=current_user,
-        lessons=lessons,
-        activities=activities,
-        students=students,
-        game_presets=GAME_TYPE_PRESETS
-    )
-
-
-
-
-@teacher_bp.route('/assignments')
-@require_role('teacher')
-def assignments():
-    current_user = get_current_user()
-    log_access(current_user, 'page_view', 'teacher_assignments')
     lesson_assignments = LessonAssignment.query.order_by(LessonAssignment.created_at.desc()).all()
     activity_assignments = ActivityAssignment.query.order_by(ActivityAssignment.created_at.desc()).all()
-    lessons = Lesson.query.order_by(Lesson.id.asc()).all()
-    students = User.query.filter_by(role='student').order_by(User.name.asc()).all()
 
-    # Map each lesson to its primary paired game activity (e.g. Claw Machine, Safari Quest)
+    # Map each lesson to its primary paired game activity (e.g. Claw Machine, Streak Race)
     lesson_activity_map = {}
     for lesson in lessons:
         paired_act = Activity.query.filter_by(lesson_id=lesson.id).filter(
@@ -736,23 +717,30 @@ def assignments():
     except Exception:
         db.session.rollback()
 
-    # Pass active assignment lookups for real-time duplicate checking
     existing_assignments = {
-        'lessons': [{'student_id': a.student_id, 'lesson_id': a.lesson_id, 'status': a.status} for a in lesson_assignments],
-        'activities': [{'student_id': a.student_id, 'activity_id': a.activity_id, 'status': a.status, 'id': a.id} for a in activity_assignments]
+        'lessons': [{'student_id': la.student_id, 'lesson_id': la.lesson_id} for la in lesson_assignments],
+        'activities': [{'student_id': aa.student_id, 'activity_id': aa.activity_id, 'status': aa.status} for aa in activity_assignments]
     }
 
     return render_template(
-        'teacher/teacher_assignments.html',
+        'teacher/teacher_lessons.html',
         current_user=current_user,
+        lessons=lessons,
+        activities=activities,
+        students=students,
         lesson_assignments=lesson_assignments,
         activity_assignments=activity_assignments,
-        lessons=lessons,
-        students=students,
         lesson_activity_map=lesson_activity_map,
         existing_assignments=existing_assignments,
-        completed_lessons=completed_lessons
+        completed_lessons=completed_lessons,
+        game_presets=GAME_TYPE_PRESETS
     )
+
+
+@teacher_bp.route('/assignments')
+@require_role('teacher')
+def assignments():
+    return redirect(url_for('teacher.lessons'))
 
 
 @teacher_bp.route('/assign_lesson', methods=['POST'])
@@ -767,13 +755,13 @@ def assign_lesson():
 
     if not lesson_id or not student_id_raw:
         flash('Please select both a student and a lesson.', 'danger')
-        return redirect(request.referrer or url_for('teacher.assignments'))
+        return redirect(request.referrer or url_for('teacher.lessons'))
 
     try:
         lesson_id = int(lesson_id)
     except (ValueError, TypeError):
         flash('Invalid lesson selection.', 'danger')
-        return redirect(request.referrer or url_for('teacher.assignments'))
+        return redirect(request.referrer or url_for('teacher.lessons'))
 
     lesson = Lesson.query.get(lesson_id)
     lesson_title = lesson.title if lesson else f"Lesson #{lesson_id}"
@@ -817,7 +805,7 @@ def assign_lesson():
         all_students = User.query.filter_by(role='student').all()
         if not all_students:
             flash('No registered students found.', 'warning')
-            return redirect(request.referrer or url_for('teacher.assignments'))
+            return redirect(request.referrer or url_for('teacher.lessons'))
 
         assigned_count = 0
         for st in all_students:
@@ -848,14 +836,14 @@ def assign_lesson():
         log_access(current_user, 'assign_lesson_all', f'lesson_id={lesson_id}')
         act_info = f' and paired activity "{act_name}"' if act_id else ''
         flash(f'Successfully assigned "{lesson_title}"{act_info} to all {len(all_students)} students!', 'success')
-        return redirect(request.referrer or url_for('teacher.assignments'))
+        return redirect(request.referrer or url_for('teacher.lessons'))
 
     # Single student assignment flow
     try:
         student_id = int(student_id_raw)
     except (ValueError, TypeError):
         flash('Invalid student selection.', 'danger')
-        return redirect(request.referrer or url_for('teacher.assignments'))
+        return redirect(request.referrer or url_for('teacher.lessons'))
 
     existing_lesson_assign = LessonAssignment.query.filter_by(student_id=student_id, lesson_id=lesson_id).first()
     student = User.query.get(student_id)
@@ -869,7 +857,7 @@ def assign_lesson():
             flash(f'Both "{lesson_title}" and "{act_name}" are already actively assigned to {student_name}.', 'warning')
         else:
             flash(f'"{lesson_title}" is already assigned to {student_name}.', 'warning')
-        return redirect(request.referrer or url_for('teacher.assignments'))
+        return redirect(request.referrer or url_for('teacher.lessons'))
 
     # Case 2: Lesson is already assigned (or completed), and paired activity is requested and needs assigning/reassigning
     if existing_lesson_assign and act_id:
@@ -880,7 +868,7 @@ def assign_lesson():
             db.session.commit()
             log_access(current_user, 'reassign_activity', f'activity_id={act_id} student_id={student_id}')
             flash(f'Paired activity "{act_name}" reassigned successfully to {student_name} with 3 fresh attempts.', 'success')
-            return redirect(request.referrer or url_for('teacher.assignments'))
+            return redirect(request.referrer or url_for('teacher.lessons'))
         else:
             act_assign = ActivityAssignment(
                 activity_id=act_id,
@@ -892,7 +880,7 @@ def assign_lesson():
             db.session.commit()
             log_access(current_user, 'assign_activity', f'activity_id={act_id} student_id={student_id}')
             flash(f'Paired activity "{act_name}" assigned successfully to {student_name}.', 'success')
-            return redirect(request.referrer or url_for('teacher.assignments'))
+            return redirect(request.referrer or url_for('teacher.lessons'))
 
     # Case 3: Lesson is newly assigned (and optionally paired activity too)
     assignment = LessonAssignment(
@@ -936,13 +924,13 @@ def assign_activity():
 
     if not activity_id or not student_id_raw:
         flash('Please select both a student and an activity.', 'danger')
-        return redirect(request.referrer or url_for('teacher.assignments'))
+        return redirect(request.referrer or url_for('teacher.lessons'))
 
     try:
         activity_id = int(activity_id)
     except (ValueError, TypeError):
         flash('Invalid activity selection.', 'danger')
-        return redirect(request.referrer or url_for('teacher.assignments'))
+        return redirect(request.referrer or url_for('teacher.lessons'))
 
     activity = Activity.query.get(activity_id)
     act_name = activity.type if activity else f"Activity #{activity_id}"
@@ -959,7 +947,7 @@ def assign_activity():
         all_students = User.query.filter_by(role='student').all()
         if not all_students:
             flash('No registered students found.', 'warning')
-            return redirect(request.referrer or url_for('teacher.assignments'))
+            return redirect(request.referrer or url_for('teacher.lessons'))
 
         for st in all_students:
             existing = ActivityAssignment.query.filter_by(student_id=st.id, activity_id=activity_id).first()
@@ -978,13 +966,13 @@ def assign_activity():
         db.session.commit()
         log_access(current_user, 'assign_activity_all', f'activity_id={activity_id}')
         flash(f'Activity "{act_name}" assigned successfully to all {len(all_students)} students!', 'success')
-        return redirect(request.referrer or url_for('teacher.assignments'))
+        return redirect(request.referrer or url_for('teacher.lessons'))
 
     try:
         student_id = int(student_id_raw)
     except (ValueError, TypeError):
         flash('Invalid student selection.', 'danger')
-        return redirect(request.referrer or url_for('teacher.assignments'))
+        return redirect(request.referrer or url_for('teacher.lessons'))
 
     student = User.query.get(student_id)
     student_name = student.name if student else f"Student #{student_id}"
@@ -999,17 +987,17 @@ def assign_activity():
             db.session.commit()
             log_access(current_user, 'reassign_activity', f'activity_id={activity_id} student_id={student_id}')
             flash(f'Activity "{act_name}" reassigned successfully to {student_name} with 3 fresh attempts.', 'success')
-            return redirect(request.referrer or url_for('teacher.assignments'))
+            return redirect(request.referrer or url_for('teacher.lessons'))
         else:
             flash(f'"{act_name}" is already actively assigned to {student_name}.', 'warning')
-            return redirect(request.referrer or url_for('teacher.assignments'))
+            return redirect(request.referrer or url_for('teacher.lessons'))
 
     assignment = ActivityAssignment(activity_id=activity_id, student_id=student_id, assigned_by=current_user.id, due_date=due_date)
     db.session.add(assignment)
     db.session.commit()
     log_access(current_user, 'assign_activity', f'activity_id={activity_id} student_id={student_id}')
     flash(f'Activity "{act_name}" assigned successfully to {student_name}.', 'success')
-    return redirect(request.referrer or url_for('teacher.assignments'))
+    return redirect(request.referrer or url_for('teacher.lessons'))
 
 
 @teacher_bp.route('/reassign_activity/<int:assignment_id>', methods=['POST'])
@@ -1019,7 +1007,7 @@ def reassign_activity(assignment_id):
     assignment = ActivityAssignment.query.get(assignment_id)
     if not assignment:
         flash('Assignment not found.', 'danger')
-        return redirect(url_for('teacher.assignments'))
+        return redirect(request.referrer or url_for('teacher.lessons'))
 
     student = User.query.get(assignment.student_id)
     student_name = student.name if student else f"Student #{assignment.student_id}"
@@ -1032,7 +1020,7 @@ def reassign_activity(assignment_id):
 
     log_access(current_user, 'reassign_activity', f'activity_id={assignment.activity_id} student_id={assignment.student_id}')
     flash(f'Activity "{act_name}" reassigned to {student_name} with 3 fresh attempts.', 'success')
-    return redirect(url_for('teacher.assignments'))
+    return redirect(request.referrer or url_for('teacher.lessons'))
 
 
 @teacher_bp.route('/analytics')

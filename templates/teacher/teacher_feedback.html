@@ -41,24 +41,22 @@
                 <span>Students</span>
               </a>
 
-              <a class="teacher-menu-link" data-nav="assignments" href="{{ url_for('teacher.assignments') }}">
-                <i class="bi bi-journal-plus"></i>
-                <span>Assignments</span>
+              <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
+                <i class="bi bi-journal-bookmark"></i>
+                <span>Lessons &amp; Assignments</span>
               </a>
+
               <a class="teacher-menu-link" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
                 <i class="bi bi-bar-chart"></i>
                 <span>Analytics</span>
               </a>
+
               <a class="teacher-menu-link active" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
                 <i class="bi bi-chat-square-quote-fill"></i>
                 <span>Feedback</span>
                 {% if needs_feedback_count and needs_feedback_count > 0 %}
                   <span class="feedback-nav-badge">{{ needs_feedback_count }}</span>
                 {% endif %}
-              </a>
-              <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
-                <i class="bi bi-book"></i>
-                <span>Lessons</span>
               </a>
             </div>
           </div>
