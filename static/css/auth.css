@@ -10,7 +10,8 @@ body.login-page {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   padding: 1.5rem;
   background: #f1f5f9;
@@ -269,5 +270,32 @@ body.login-page {
   }
   .brutal-login-window {
     box-shadow: 5px 5px 0px #18181b;
+  }
+}
+
+@media (max-height: 650px) {
+  body.login-page {
+    align-items: flex-start;
+    padding-top: 0.75rem;
+    padding-bottom: 2rem;
+  }
+  .login-page .logo-title {
+    font-size: 34px !important;
+    margin-bottom: 0.25rem !important;
+  }
+  .tagline-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+  }
+  .brutal-window-body {
+    padding: 1rem 1.25rem !important;
+  }
+  .brutal-login-window {
+    margin-top: 0.5rem;
+    margin-bottom: 2rem;
+  }
+  .brutal-btn-login {
+    padding: 0.7rem 1.2rem;
+    font-size: 1rem;
   }
 }
