@@ -39,8 +39,12 @@
           <td class="ps-4">${badgeHtml}</td>
           <td>${statusHtml}</td>
           <td>
-            <strong class="text-dark">${att.progress_percent}%</strong>
-            <span class="small text-muted ms-1">(Slide ${att.current_slide}/${att.total_slides})</span>
+            <div class="d-flex align-items-center gap-2" style="min-width: 130px;" title="Slide ${att.current_slide} of ${att.total_slides} (${att.progress_percent}%)">
+              <div class="progress flex-grow-1" style="height: 8px; border-radius: 6px; background-color: #e2e8f0;">
+                <div class="progress-bar ${att.completed ? 'bg-success' : 'bg-primary'}" role="progressbar" style="width: ${att.progress_percent}%; border-radius: 6px;" aria-valuenow="${att.progress_percent}" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <span class="fw-bold ${att.completed ? 'text-success' : 'text-primary'} small" style="min-width: 38px;">${att.progress_percent}%</span>
+            </div>
           </td>
           <td>
             <strong class="text-primary fs-6">${att.time_spent_formatted}</strong>

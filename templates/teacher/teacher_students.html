@@ -133,7 +133,7 @@
               </li>
               <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-live-tracker" data-bs-toggle="pill" data-bs-target="#pane-live-tracker" type="button" role="tab" aria-controls="pane-live-tracker" aria-selected="false">
-                  <i class="bi bi-play-circle-fill me-2 text-success"></i>Live Student Lesson Progress &amp; Slide Tracker
+                  <i class="bi bi-play-circle-fill me-2 text-success"></i>Live Student Lesson Progress Tracker
                   <span class="badge bg-success-subtle text-success border border-success-subtle ms-1 rounded-pill">
                     <span class="status-pulse-dot me-1"></span>{{ live_lesson_tracker|length }} Active
                   </span>
@@ -245,7 +245,7 @@
                 <section class="table-shell teacher-table-shell mb-4" id="live-tracker-section">
                   <div class="table-header teacher-table-header d-flex justify-content-between align-items-center flex-wrap gap-3">
                     <div class="d-flex align-items-center gap-2">
-                      <h2 class="h5 mb-0"><i class="bi bi-play-btn me-2 text-primary"></i>Live Student Lesson Progress &amp; Slide Tracker</h2>
+                      <h2 class="h5 mb-0"><i class="bi bi-play-btn me-2 text-primary"></i>Live Student Lesson Progress Tracker</h2>
                       <span class="badge bg-primary rounded-pill">{{ live_lesson_tracker|length }} Active Students</span>
                     </div>
 
@@ -263,7 +263,7 @@
                           <th>Student</th>
                           <th>Lesson Title</th>
                           <th>Status</th>
-                          <th>Current Slide</th>
+                          <th>Progress</th>
                           <th>Time Spent</th>
                           <th>Revisit History</th>
                         </tr>
@@ -285,7 +285,7 @@
                             </td>
                             <td><span class="fw-semibold text-secondary">{{ tracker.lesson_title }}</span></td>
                             <td><span class="badge {{ tracker.status_badge_class }} px-3 py-2 rounded-pill">{{ tracker.status }}</span></td>
-                            <td><strong class="text-primary">{{ tracker.current_slide_display }}</strong></td>
+                            <td>{{ tracker.progress_bar_display|safe }}</td>
                             <td>{{ tracker.time_spent_display|safe }}</td>
                             <td>{{ tracker.revisit_display|safe }}</td>
                           </tr>

@@ -151,23 +151,58 @@ def build_live_lesson_tracker(online_students_set=None):
             if latest_attempt.attempt_number > 1:
                 is_revisit = True
                 revisit_num = latest_attempt.attempt_number - 1
+            curr_slide = (latest_attempt.current_slide or 0) + 1
+            if is_completed:
+                pct = 100
+            else:
+                att_pct = getattr(latest_attempt, 'progress_percent', None)
+                if att_pct is not None and 0 < att_pct < 100:
+                    pct = att_pct
+                else:
+                    pct = min(int(round((curr_slide / max(total_slides, 1)) * 100)), 99)
+                    pct = max(pct, 1 if curr_slide > 0 else 0)
         else:
             is_completed = bool(lp.completed)
             is_revisit = (revisit_count > 0)
             revisit_num = revisit_count
+            curr_slide = curr
+            if is_completed:
+                pct = 100
+            else:
+                if lp.progress_percent is not None and 0 < lp.progress_percent < 100:
+                    pct = lp.progress_percent
+                else:
+                    pct = min(int(round((curr_slide / max(total_slides, 1)) * 100)), 99)
+                    pct = max(pct, 1 if curr_slide > 0 else 0)
 
         if is_completed:
             status_text = 'Completed'
             status_badge_class = 'bg-success text-white'
-            slide_display = f"Completed (Slide {total_slides} / {total_slides})"
+            bar_color = 'bg-success'
+            text_color = 'text-success'
+            tooltip_title = f"Completed ({pct}%)"
         elif is_revisit:
             status_text = f'In Progress (Revisit #{revisit_num})'
             status_badge_class = 'bg-warning text-dark'
-            slide_display = f"Slide {curr} / {total_slides} ({lp.progress_percent or 0}%)"
+            bar_color = 'bg-primary'
+            text_color = 'text-primary'
+            tooltip_title = f"Revisit #{revisit_num} · Slide {curr_slide} of {total_slides} ({pct}%)"
         else:
             status_text = 'In Progress'
             status_badge_class = 'bg-warning text-dark'
-            slide_display = f"Slide {curr} / {total_slides} ({lp.progress_percent or 0}%)"
+            bar_color = 'bg-primary'
+            text_color = 'text-primary'
+            tooltip_title = f"Slide {curr_slide} of {total_slides} ({pct}%)"
+
+        progress_bar_display = (
+            f'<div class="d-flex align-items-center gap-2" style="min-width: 140px;" title="{tooltip_title}">'
+            f'  <div class="progress flex-grow-1" style="height: 8px; border-radius: 6px; background-color: #e2e8f0;">'
+            f'    <div class="progress-bar {bar_color}" role="progressbar" style="width: {pct}%; border-radius: 6px;" '
+            f'aria-valuenow="{pct}" aria-valuemin="0" aria-valuemax="100"></div>'
+            f'  </div>'
+            f'  <span class="fw-bold {text_color} small" style="min-width: 38px;">{pct}%</span>'
+            f'</div>'
+        )
 
         history_url = url_for('teacher.lesson_history', student_id=lp.student_id, lesson_id=lp.lesson_id)
         if revisit_count > 0 or len(attempts) > 1:
@@ -189,7 +224,9 @@ def build_live_lesson_tracker(online_students_set=None):
             'lesson_title': lp.lesson.title if lp.lesson else f'Lesson #{lp.lesson_id}',
             'status': status_text,
             'status_badge_class': status_badge_class,
-            'current_slide_display': slide_display,
+            'progress_percent': pct,
+            'current_slide_display': progress_bar_display,
+            'progress_bar_display': progress_bar_display,
             'time_spent_display': time_spent_display,
             'revisit_display': revisit_display
         })
