@@ -1328,36 +1328,65 @@
    Centralized Teacher Portal UI Components
    ══════════════════════════════════════════════════════════ */
 
-/* View Toggle Pills (Analytics, Students) */
+/* View Toggle Pills (Analytics, Students, Lessons) */
 .analytics-view-pills .nav-link,
 .students-view-pills .nav-link,
+.lessons-view-pills .nav-link,
+.teacher-analytics-pills .nav-link,
 .teacher-view-pills .nav-link {
   background: #ffffff;
   color: #475569;
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid #cbd5e1 !important;
   font-weight: 700;
   font-size: 0.92rem;
   padding: 0.65rem 1.4rem;
   border-radius: 999px;
   transition: all 0.2s ease-in-out;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: inline-flex;
+  align-items: center;
 }
 
 .analytics-view-pills .nav-link:hover,
 .students-view-pills .nav-link:hover,
+.lessons-view-pills .nav-link:hover,
+.teacher-analytics-pills .nav-link:hover,
 .teacher-view-pills .nav-link:hover {
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #0284c7;
-  border-color: #94a3b8;
+  border-color: #94a3b8 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .analytics-view-pills .nav-link.active,
 .students-view-pills .nav-link.active,
+.lessons-view-pills .nav-link.active,
+.teacher-analytics-pills .nav-link.active,
 .teacher-view-pills .nav-link.active {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  color: #ffffff;
-  border-color: #0369a1;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  border-color: #0369a1 !important;
   box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+}
+
+.analytics-view-pills .nav-link.active .badge,
+.students-view-pills .nav-link.active .badge,
+.lessons-view-pills .nav-link.active .badge,
+.teacher-analytics-pills .nav-link.active .badge,
+.teacher-view-pills .nav-link.active .badge {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+.analytics-view-pills .nav-link:not(.active) .badge,
+.students-view-pills .nav-link:not(.active) .badge,
+.lessons-view-pills .nav-link:not(.active) .badge,
+.teacher-analytics-pills .nav-link:not(.active) .badge,
+.teacher-view-pills .nav-link:not(.active) .badge {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
 }
 
 /* Smooth Pagination Controls */

@@ -320,17 +320,17 @@
             </div>
 
             <!-- Interactive View Tabs: Active Assignments vs Catalog Libraries -->
-            <ul class="nav nav-pills teacher-analytics-pills mb-4" id="lessonsViewTabs" role="tablist">
+            <ul class="nav nav-pills lessons-view-pills mb-4 gap-2" id="lessonsViewTabs" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tab-active-assignments" data-bs-toggle="pill" data-bs-target="#pane-active-assignments" type="button" role="tab" aria-controls="pane-active-assignments" aria-selected="true">
                   <i class="bi bi-list-check me-2"></i>Active Student Assignments
-                  <span class="badge bg-primary rounded-pill ms-2">{{ (lesson_assignments|length) + (activity_assignments|length) }}</span>
+                  <span class="badge rounded-pill ms-2">{{ (lesson_assignments|length) + (activity_assignments|length) }}</span>
                 </button>
               </li>
               <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-curriculum-library" data-bs-toggle="pill" data-bs-target="#pane-curriculum-library" type="button" role="tab" aria-controls="pane-curriculum-library" aria-selected="false">
                   <i class="bi bi-collection-play me-2"></i>Curriculum &amp; Activity Library
-                  <span class="badge bg-secondary rounded-pill ms-2">{{ lessons|length }} Lessons &bull; {{ activities|length }} Games</span>
+                  <span class="badge rounded-pill ms-2">{{ lessons|length }} Lessons &bull; {{ activities|length }} Games</span>
                 </button>
               </li>
             </ul>
