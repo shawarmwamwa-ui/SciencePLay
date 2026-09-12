@@ -36,7 +36,7 @@ engine_options = {
 }
 
 # If connecting to Cloud MySQL (Aiven, TiDB, etc.), clean query string and enable SSL
-if 'aivencloud.com' in raw_db_uri or 'ssl-mode' in raw_db_uri:
+if 'aivencloud.com' in raw_db_uri or 'tidbcloud.com' in raw_db_uri or 'ssl-mode' in raw_db_uri:
     import urllib.parse
     parsed = urllib.parse.urlparse(raw_db_uri)
     raw_db_uri = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
