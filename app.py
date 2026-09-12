@@ -240,6 +240,10 @@ app.register_blueprint(admin_bp)     # admin dashboard
 app.register_blueprint(teacher_bp)   # teacher dashboard
 app.register_blueprint(student_bp)   # student dashboard
 
+@app.route('/healthz')
+def healthz():
+    return "OK", 200
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True, threaded=True)
