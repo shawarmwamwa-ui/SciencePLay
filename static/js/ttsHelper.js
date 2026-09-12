@@ -108,3 +108,19 @@ export function speakText(text, opts = {}) {
     window.speechSynthesis.addEventListener('voiceschanged', applyVoiceAndSpeak, { once: true });
   }
 }
+
+// Ensure speech synthesis is instantly cancelled when navigating back or minimizing the app
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  window.addEventListener('pagehide', () => {
+    window.speechSynthesis.cancel();
+  });
+  window.addEventListener('beforeunload', () => {
+    window.speechSynthesis.cancel();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      window.speechSynthesis.cancel();
+    }
+  });
+}
+

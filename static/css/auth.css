@@ -273,54 +273,43 @@ body.login-page {
   }
 }
 
-/* Mobile Devices: Shift login card up when virtual keyboard opens */
-@media (max-width: 768px) {
-  body.login-page {
-    padding-bottom: 12rem;
-  }
+/* Tablets & Mobile Devices: Shift login card up when virtual keyboard opens */
+body.touch-device.username-focused .brutal-login-window,
+@media (pointer: coarse), (max-width: 1024px) {
   body.username-focused .brutal-login-window {
-    transform: translateY(-90px) !important;
+    transform: translateY(-80px) !important;
   }
   body.password-focused .brutal-login-window {
-    transform: translateY(-190px) !important;
+    transform: translateY(-180px) !important;
   }
 }
 
-@media (max-width: 768px) and (max-height: 650px) {
-  body.login-page {
-    align-items: flex-start;
-    padding-top: 0.75rem;
-    padding-bottom: 25rem;
-  }
-  .login-page .logo-title {
-    font-size: 34px !important;
-    margin-bottom: 0.25rem !important;
-  }
-  .tagline-badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.6rem;
-  }
-  .brutal-window-body {
-    padding: 1rem 1.25rem !important;
-  }
-  .brutal-login-window {
-    margin-top: 0.5rem;
-    margin-bottom: 2rem;
-  }
-  .brutal-btn-login {
-    padding: 0.7rem 1.2rem;
-    font-size: 1rem;
-  }
-  body.username-focused .brutal-login-window {
+body.touch-device.username-focused .brutal-login-window {
+  transform: translateY(-80px) !important;
+}
+
+body.touch-device.password-focused .brutal-login-window {
+  transform: translateY(-180px) !important;
+}
+
+/* Compact screens / Landscape tablets when virtual keyboard takes screen height */
+@media (max-height: 650px) {
+  body.touch-device.username-focused .brutal-login-window,
+  body.touch-device.password-focused .brutal-login-window {
     transform: translateY(-110px) !important;
   }
-  body.password-focused .brutal-login-window {
-    transform: translateY(-220px) !important;
+  body.touch-device.password-focused .brutal-login-window {
+    transform: translateY(-210px) !important;
   }
 }
 
-/* PC / Desktop: Default layout, never shift window up on input focus */
-@media (min-width: 769px) {
+/* PC / Desktop (Mouse/Trackpad, Non-touch): Strictly default layout, never shift window up */
+body.desktop-device.username-focused .brutal-login-window,
+body.desktop-device.password-focused .brutal-login-window {
+  transform: none !important;
+}
+
+@media (pointer: fine) and (min-width: 1025px) {
   body.username-focused .brutal-login-window,
   body.password-focused .brutal-login-window {
     transform: none !important;

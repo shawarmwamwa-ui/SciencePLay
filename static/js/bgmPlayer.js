@@ -1,5 +1,5 @@
 // bgmPlayer.js
-// Handles permanent ambient background music playback with autoplay fallback.
+// Handles permanent ambient background music playback with autoplay fallback and lifecycle management.
 
 export function initBgmPlayer(audioElementId, options = {}) {
   const audio = document.getElementById(audioElementId);
@@ -44,5 +44,27 @@ export function initBgmPlayer(audioElementId, options = {}) {
   if (existingBtn) {
     existingBtn.remove();
   }
-}
 
+  // Ensure audio is silenced when user navigates back, leaves page, or minimizes WebView
+  window.addEventListener('pagehide', () => {
+    audio.pause();
+    document.querySelectorAll('audio, video').forEach(m => m.pause());
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+  });
+
+  window.addEventListener('beforeunload', () => {
+    audio.pause();
+    document.querySelectorAll('audio, video').forEach(m => m.pause());
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      audio.pause();
+      document.querySelectorAll('audio, video').forEach(m => m.pause());
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+    } else if (document.visibilityState === 'visible') {
+      audio.play().catch(() => {});
+    }
+  });
+}

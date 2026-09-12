@@ -42,6 +42,21 @@ function initLoginMusic() {
     document.addEventListener('keydown', resumeAudio, { once: true });
     document.addEventListener('touchstart', resumeAudio, { once: true });
   }
+
+  // Silence audio when navigating away or minimizing the app
+  window.addEventListener('pagehide', () => {
+    audio.pause();
+  });
+  window.addEventListener('beforeunload', () => {
+    audio.pause();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      audio.pause();
+    } else if (document.visibilityState === 'visible') {
+      audio.play().catch(() => {});
+    }
+  });
 }
 
 function initAuthToasts() {
@@ -70,18 +85,26 @@ function initAuthToasts() {
   });
 }
 
-const isMobileDevice = () => (window.innerWidth <= 768 || window.matchMedia('(pointer: coarse)').matches);
+// Accurately detect Touch Devices (Tablets, iPads, Android WebViews, Phones) vs PC Desktop
+const isTabletOrMobileDevice = () => {
+  return (
+    'ontouchstart' in window ||
+    navigator.maxTouchPoints > 0 ||
+    window.matchMedia('(pointer: coarse)').matches ||
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Tablet/i.test(navigator.userAgent)
+  );
+};
 
 function initInputAutoScroll() {
+  // Only auto-scroll on tablet/mobile touchscreens where virtual keyboard obstructs view
+  if (!isTabletOrMobileDevice()) return;
+
   const inputs = document.querySelectorAll('.login-page input');
   inputs.forEach(input => {
     input.addEventListener('focus', () => {
-      // Only auto-scroll on mobile devices where virtual keyboard takes up screen height
-      if (isMobileDevice()) {
-        setTimeout(() => {
-          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 350);
-      }
+      setTimeout(() => {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 350);
     });
   });
 }
@@ -91,9 +114,21 @@ function initInputElevate() {
   const passwordInput = document.getElementById('password');
   const body = document.body;
 
+  // Tag device type on body for explicit CSS matching
+  if (isTabletOrMobileDevice()) {
+    body.classList.add('touch-device');
+  } else {
+    body.classList.add('desktop-device');
+  }
+
+  // On PC / Desktop with mouse: do NOT elevate the card
+  if (!isTabletOrMobileDevice()) {
+    return;
+  }
+
+  // On Tablets and Mobile: elevate card so the on-screen virtual keyboard never blocks password or login button
   if (usernameInput) {
     usernameInput.addEventListener('focus', () => {
-      if (!isMobileDevice()) return;
       body.classList.remove('password-focused');
       body.classList.add('username-focused');
     });
@@ -108,7 +143,6 @@ function initInputElevate() {
 
   if (passwordInput) {
     passwordInput.addEventListener('focus', () => {
-      if (!isMobileDevice()) return;
       body.classList.remove('username-focused');
       body.classList.add('password-focused');
     });
@@ -134,4 +168,3 @@ document.addEventListener('DOMContentLoaded', () => {
   initInputAutoScroll();
   initInputElevate();
 });
-
