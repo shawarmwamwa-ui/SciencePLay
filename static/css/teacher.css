@@ -504,6 +504,36 @@
   box-shadow: 0 6px 16px rgba(16, 47, 93, 0.06);
 }
 
+.kpi-clickable-card {
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  cursor: pointer;
+}
+
+.kpi-clickable-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(16, 47, 93, 0.12);
+  border-color: #93c5fd;
+  text-decoration: none;
+  color: inherit;
+}
+
+.kpi-clickable-card .card-action-hint {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #2563eb;
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.kpi-clickable-card:hover .card-action-hint {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
 .teacher-summary-card .metric-label {
   margin: 0;
   color: #475569;
