@@ -602,6 +602,57 @@
               </div>
             </div>
 
+            <!-- Section: Visual Classroom Graphs & Mastery -->
+            <div class="mb-4" id="dashboard-visual-charts-section">
+              <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <p class="teacher-eyebrow mb-0">Visual Overview</p>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-semibold">
+                  <i class="bi bi-bar-chart-fill me-1"></i>Curriculum & Activity Charts
+                </span>
+              </div>
+              <div class="row g-3">
+                <!-- Chart 1: Lesson Completion & Average Scores -->
+                <div class="col-lg-6">
+                  <div class="dashboard-section teacher-panel h-100 p-4 d-flex flex-column justify-content-between">
+                    <div>
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2 class="h5 mb-0 fw-bold text-dark"><i class="bi bi-mortarboard-fill text-primary me-2"></i>Lesson Mastery & Quiz Averages</h2>
+                        <span class="badge bg-primary rounded-pill">5 Lessons</span>
+                      </div>
+                      <p class="teacher-panel-note mb-3">Comparing class completion rates vs. average quiz performance across lessons.</p>
+                      <div class="chart-wrapper position-relative" style="height: 230px; width: 100%;">
+                        <canvas id="lessonMasteryChart"></canvas>
+                      </div>
+                    </div>
+                    <div class="pt-3 border-top mt-3 d-flex justify-content-between align-items-center text-muted small">
+                      <span><i class="bi bi-circle-fill text-success me-1"></i>Green: Completion %</span>
+                      <span><i class="bi bi-circle-fill text-primary me-1"></i>Blue: Quiz Score %</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chart 2: Activity Engagement & Plays -->
+                <div class="col-lg-6">
+                  <div class="dashboard-section teacher-panel h-100 p-4 d-flex flex-column justify-content-between">
+                    <div>
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2 class="h5 mb-0 fw-bold text-dark"><i class="bi bi-controller text-info me-2"></i>Activity Engagement & Scores</h2>
+                        <span class="badge bg-info rounded-pill">Playable Games</span>
+                      </div>
+                      <p class="teacher-panel-note mb-3">Total student attempts and average score points earned across mini-games.</p>
+                      <div class="chart-wrapper position-relative" style="height: 230px; width: 100%;">
+                        <canvas id="activityEngagementChart"></canvas>
+                      </div>
+                    </div>
+                    <div class="pt-3 border-top mt-3 d-flex justify-content-between align-items-center text-muted small">
+                      <span><i class="bi bi-circle-fill me-1" style="color:#8b5cf6;"></i>Purple: Total Plays</span>
+                      <span><i class="bi bi-circle-fill text-warning me-1"></i>Amber: Avg Score</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Section 2: Performance & Struggle Insights -->
             <div class="mb-4">
               <p class="teacher-eyebrow mb-2">Insights</p>
@@ -635,10 +686,22 @@
                         <ul class="activity-status-list">
                           {% if most_missed_lessons %}
                           {% for obj in most_missed_lessons[:3] %}
-                          <li>
-                            <span class="status-label fw-bold">{{ obj.name }}</span>
-                            <small class="text-muted">({{ obj.activity_type }})</small>
-                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle float-end fw-bold">{{ obj.misses }} misses</span>
+                          <li class="py-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                              <div>
+                                <span class="status-label fw-bold text-dark">{{ obj.name }}</span>
+                                <small class="text-muted d-block">({{ obj.activity_type }})</small>
+                              </div>
+                              <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">{{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}</span>
+                            </div>
+                            {% if obj.students %}
+                            <div class="d-flex align-items-center gap-1 flex-wrap mt-1">
+                              <small class="text-muted" style="font-size: 0.76rem;"><i class="bi bi-people me-1"></i>Students:</small>
+                              {% for st in obj.students %}
+                              <span class="badge bg-light text-dark border px-2 py-0" style="font-size: 0.74rem;">{{ st }}</span>
+                              {% endfor %}
+                            </div>
+                            {% endif %}
                           </li>
                           {% endfor %}
                           {% else %}
@@ -652,10 +715,22 @@
                         <ul class="activity-status-list">
                           {% if most_missed_activities %}
                           {% for obj in most_missed_activities[:3] %}
-                          <li>
-                            <span class="status-label fw-bold">{{ obj.name }}</span>
-                            <small class="text-muted">({{ obj.activity_type }})</small>
-                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle float-end fw-bold">{{ obj.misses }} misses</span>
+                          <li class="py-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                              <div>
+                                <span class="status-label fw-bold text-dark">{{ obj.name }}</span>
+                                <small class="text-muted d-block">({{ obj.activity_type }})</small>
+                              </div>
+                              <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">{{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}</span>
+                            </div>
+                            {% if obj.students %}
+                            <div class="d-flex align-items-center gap-1 flex-wrap mt-1">
+                              <small class="text-muted" style="font-size: 0.76rem;"><i class="bi bi-people me-1"></i>Students:</small>
+                              {% for st in obj.students %}
+                              <span class="badge bg-light text-dark border px-2 py-0" style="font-size: 0.74rem;">{{ st }}</span>
+                              {% endfor %}
+                            </div>
+                            {% endif %}
                           </li>
                           {% endfor %}
                           {% else %}
@@ -981,6 +1056,146 @@
           chartInstance.resize();
         }
       }, 750);
+    });
+  </script>
+  {% endif %}
+
+  {% if dashboard_charts %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const chartsData = {{ dashboard_charts|tojson }};
+      
+      // Chart 1: Lesson Mastery Chart
+      const lessonCanvas = document.getElementById('lessonMasteryChart');
+      if (lessonCanvas && chartsData.lesson_labels && chartsData.lesson_labels.length) {
+        new Chart(lessonCanvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: chartsData.lesson_labels.map(l => l.length > 20 ? l.substring(0, 18) + '…' : l),
+            datasets: [
+              {
+                label: 'Completion (%)',
+                data: chartsData.lesson_completion_rates,
+                backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                borderColor: '#10b981',
+                borderWidth: 1.5,
+                borderRadius: 5
+              },
+              {
+                label: 'Quiz Avg (%)',
+                data: chartsData.lesson_avg_scores,
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderColor: '#3b82f6',
+                borderWidth: 1.5,
+                borderRadius: 5
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' } }
+              },
+              tooltip: {
+                backgroundColor: '#1f2937',
+                titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' },
+                bodyFont: { family: 'Plus Jakarta Sans', size: 11 }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                  callback: function(v) { return v + '%'; },
+                  font: { family: 'Plus Jakarta Sans', size: 10 }
+                }
+              },
+              x: {
+                ticks: {
+                  font: { family: 'Plus Jakarta Sans', size: 10, weight: '600' }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // Chart 2: Activity Engagement Chart
+      const actCanvas = document.getElementById('activityEngagementChart');
+      if (actCanvas && chartsData.act_labels && chartsData.act_labels.length) {
+        new Chart(actCanvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: chartsData.act_labels,
+            datasets: [
+              {
+                label: 'Total Plays',
+                data: chartsData.act_attempts_count,
+                backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                borderColor: '#8b5cf6',
+                borderWidth: 1.5,
+                borderRadius: 5,
+                yAxisID: 'y'
+              },
+              {
+                label: 'Avg Points',
+                data: chartsData.act_avg_scores,
+                backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                borderColor: '#f59e0b',
+                borderWidth: 1.5,
+                borderRadius: 5,
+                yAxisID: 'y1'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' } }
+              },
+              tooltip: {
+                backgroundColor: '#1f2937',
+                titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' },
+                bodyFont: { family: 'Plus Jakarta Sans', size: 11 }
+              }
+            },
+            scales: {
+              y: {
+                type: 'linear',
+                position: 'left',
+                beginAtZero: true,
+                ticks: {
+                  precision: 0,
+                  callback: function(v) { return v + ' plays'; },
+                  font: { family: 'Plus Jakarta Sans', size: 10 }
+                }
+              },
+              y1: {
+                type: 'linear',
+                position: 'right',
+                beginAtZero: true,
+                grid: { drawOnChartArea: false },
+                ticks: {
+                  callback: function(v) { return v + ' pts'; },
+                  font: { family: 'Plus Jakarta Sans', size: 10 }
+                }
+              },
+              x: {
+                ticks: {
+                  font: { family: 'Plus Jakarta Sans', size: 10, weight: '600' }
+                }
+              }
+            }
+          }
+        });
+      }
     });
   </script>
   {% endif %}

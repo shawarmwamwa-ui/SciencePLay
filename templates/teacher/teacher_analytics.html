@@ -201,35 +201,44 @@
     </div>
   </div>
 
-  <!-- 5 Manuscript Analytics Summary Cards -->
+  <!-- 5 Manuscript Analytics Summary Cards (Clickable for Mathematical Calculation Breakdown) -->
   <div class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-3 mb-4">
     <!-- 1. Participation Rate (Manuscript §2.f) -->
     <div class="col">
-      <div class="teacher-summary-card">
+      <div class="teacher-summary-card h-100" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-participation" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" title="Click to view calculation breakdown">
         <div class="teacher-summary-text">
-          <div class="metric-label">Participation Rate</div>
-          <div class="metric-value text-success">{{ analytics_stats.overall_completion_rate }}%</div>
-          <small class="text-muted">{{ analytics_stats.lesson_completion_rate }}% lessons &bull; {{ analytics_stats.activity_completion_rate }}% activities</small>
+          <div class="metric-label d-flex justify-content-between align-items-center">
+            <span>Participation Rate</span>
+            <i class="bi bi-info-circle text-muted" style="font-size: 0.85rem;"></i>
+          </div>
+          <div class="metric-value text-success">{{ analytics_stats.participation_rate }}%</div>
+          <small class="text-muted">{{ analytics_stats.active_students_count }} of {{ analytics_stats.total_students }} active students</small>
         </div>
         <span class="teacher-summary-icon" style="background-color: #dcfce7; color: #16a34a;"><i class="bi bi-graph-up-arrow"></i></span>
       </div>
     </div>
     <!-- 2. Activity Completion -->
     <div class="col">
-      <div class="teacher-summary-card">
+      <div class="teacher-summary-card h-100" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-activity" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" title="Click to view calculation breakdown">
         <div class="teacher-summary-text">
-          <div class="metric-label">Activity Completion</div>
+          <div class="metric-label d-flex justify-content-between align-items-center">
+            <span>Activity Completion</span>
+            <i class="bi bi-info-circle text-muted" style="font-size: 0.85rem;"></i>
+          </div>
           <div class="metric-value text-primary">{{ analytics_stats.activity_completion_rate }}%</div>
-          <small class="text-muted">{{ analytics_stats.avg_score }} pts avg score</small>
+          <small class="text-muted">{{ analytics_stats.activity_comp_count }} of {{ analytics_stats.total_activity_assignments }} assigned</small>
         </div>
         <span class="teacher-summary-icon ts-blue"><i class="bi bi-controller"></i></span>
       </div>
     </div>
     <!-- 3. Time on Task -->
     <div class="col">
-      <div class="teacher-summary-card">
+      <div class="teacher-summary-card h-100" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-time" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" title="Click to view calculation breakdown">
         <div class="teacher-summary-text">
-          <div class="metric-label">Time on Task</div>
+          <div class="metric-label d-flex justify-content-between align-items-center">
+            <span>Time on Task</span>
+            <i class="bi bi-info-circle text-muted" style="font-size: 0.85rem;"></i>
+          </div>
           <div class="metric-value text-warning-emphasis">{{ analytics_stats.total_time_formatted }}</div>
           <small class="text-muted">1st visit avg: {{ analytics_stats.avg_first_time }}</small>
         </div>
@@ -238,25 +247,31 @@
     </div>
     <!-- 4. Replay Rates (Manuscript §2.d) -->
     <div class="col">
-      <div class="teacher-summary-card">
+      <div class="teacher-summary-card h-100" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-replay" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" title="Click to view calculation breakdown">
         <div class="teacher-summary-text">
-          <div class="metric-label">Game Replay Rate</div>
+          <div class="metric-label d-flex justify-content-between align-items-center">
+            <span>Game Replay Rate</span>
+            <i class="bi bi-info-circle text-muted" style="font-size: 0.85rem;"></i>
+          </div>
           <div class="metric-value text-info">{{ analytics_stats.replay_rate }}%</div>
-          <small class="text-muted">{{ analytics_stats.replay_active_players }} of {{ analytics_stats.replay_distinct_players }} active player{% if analytics_stats.replay_distinct_players != 1 %}s{% endif %} ({{ analytics_stats.class_replay_rate }}% of class)</small>
+          <small class="text-muted">{{ analytics_stats.replay_active_players }} of {{ analytics_stats.replay_distinct_players }} replayers ({{ analytics_stats.class_replay_rate }}% class)</small>
         </div>
         <span class="teacher-summary-icon" style="background-color: #e0f2fe; color: #0284c7;"><i class="bi bi-arrow-repeat"></i></span>
       </div>
     </div>
     <!-- 5. Real-Time Online Student Status -->
     <div class="col">
-      <div class="teacher-summary-card">
+      <div class="teacher-summary-card h-100" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-online" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" title="Click to view calculation breakdown">
         <div class="teacher-summary-text">
-          <div class="metric-label">Online Students</div>
+          <div class="metric-label d-flex justify-content-between align-items-center">
+            <span>Online Students</span>
+            <i class="bi bi-info-circle text-muted" style="font-size: 0.85rem;"></i>
+          </div>
           <div class="metric-value text-success d-flex align-items-center gap-1">
             <span class="spinner-grow spinner-grow-sm text-success" style="width: 10px; height: 10px;" role="status"></span>
             {{ analytics_stats.online_count }}
           </div>
-          <small class="text-muted">of {{ analytics_stats.total_students }} active students</small>
+          <small class="text-muted">of {{ analytics_stats.total_students }} active students ({{ analytics_stats.online_rate }}%)</small>
         </div>
         <span class="teacher-summary-icon" style="background-color: #dcfce7; color: #16a34a;"><i class="bi bi-broadcast"></i></span>
       </div>
@@ -349,6 +364,7 @@
                     <tr>
                       <th>Item / Question</th>
                       <th>Lesson / Context</th>
+                      <th>Students Who Struggled</th>
                       <th class="text-end">Total Misses</th>
                     </tr>
                   </thead>
@@ -357,11 +373,24 @@
                       <tr>
                         <td><strong class="text-dark">{{ obj.name }}</strong></td>
                         <td><span class="small fw-semibold text-secondary">{{ obj.activity_type }}</span></td>
-                        <td class="text-end"><span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">{{ obj.misses }} misses</span></td>
+                        <td>
+                          {% if obj.students %}
+                            <div class="d-flex align-items-center gap-1 flex-wrap">
+                              {% for st in obj.students %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-1 px-2" style="font-size: 0.76rem;">
+                                  <i class="bi bi-person-fill me-1"></i>{{ st }}
+                                </span>
+                              {% endfor %}
+                            </div>
+                          {% else %}
+                            <span class="text-muted small">—</span>
+                          {% endif %}
+                        </td>
+                        <td class="text-end"><span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">{{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}</span></td>
                       </tr>
                     {% else %}
                       <tr>
-                        <td colspan="3" class="text-center text-muted py-4">No lesson quick-check misses recorded yet.</td>
+                        <td colspan="4" class="text-center text-muted py-4">No lesson quick-check misses recorded yet.</td>
                       </tr>
                     {% endfor %}
                   </tbody>
@@ -388,6 +417,7 @@
                     <tr>
                       <th>Game Object / Target</th>
                       <th>Activity Type</th>
+                      <th>Students Who Struggled</th>
                       <th class="text-end">Total Misses</th>
                     </tr>
                   </thead>
@@ -396,11 +426,24 @@
                       <tr>
                         <td><strong class="text-dark">{{ obj.name }}</strong></td>
                         <td><span class="small fw-semibold text-secondary">{{ obj.activity_type }}</span></td>
-                        <td class="text-end"><span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">{{ obj.misses }} misses</span></td>
+                        <td>
+                          {% if obj.students %}
+                            <div class="d-flex align-items-center gap-1 flex-wrap">
+                              {% for st in obj.students %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-1 px-2" style="font-size: 0.76rem;">
+                                  <i class="bi bi-person-fill me-1"></i>{{ st }}
+                                </span>
+                              {% endfor %}
+                            </div>
+                          {% else %}
+                            <span class="text-muted small">—</span>
+                          {% endif %}
+                        </td>
+                        <td class="text-end"><span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">{{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}</span></td>
                       </tr>
                     {% else %}
                       <tr>
-                        <td colspan="3" class="text-center text-muted py-4">No activity misses recorded yet.</td>
+                        <td colspan="4" class="text-center text-muted py-4">No activity misses recorded yet.</td>
                       </tr>
                     {% endfor %}
                   </tbody>
@@ -648,9 +691,291 @@
       </div>
     </div>
 
-  </div><!-- end tab-content -->
   </div>
   <!-- End .dashboard-real-content -->
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- 5 KPI Mathematical Breakdown Modals                                  -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+
+  <!-- Modal 1: Participation Rate -->
+  <div class="modal fade" id="modal-kpi-participation" tabindex="-1" aria-labelledby="modalParticipationLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-bottom-0 pb-0">
+          <div class="d-flex align-items-center gap-2">
+            <span class="p-2 rounded-3" style="background-color: #dcfce7; color: #16a34a;"><i class="bi bi-graph-up-arrow fs-5"></i></span>
+            <h5 class="modal-title fw-bold text-dark" id="modalParticipationLabel">Participation Rate Calculation</h5>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-3">
+          <div class="p-3 bg-light rounded-3 mb-3 border">
+            <h6 class="fw-bold text-dark mb-1"><i class="bi bi-book-half me-1 text-success"></i>Definition</h6>
+            <p class="small text-secondary mb-0">
+              Measures classroom adoption and engagement across the SciencePlay platform. It represents the proportion of enrolled students who have actively interacted with at least one lesson or game activity.
+            </p>
+          </div>
+
+          <div class="p-3 rounded-3 mb-3 text-center border" style="background-color: #f0fdf4; border-color: #bbf7d0 !important;">
+            <div class="small fw-bold text-success mb-1 text-uppercase tracking-wider">Mathematical Formula</div>
+            <div class="fs-6 fw-bold font-monospace text-dark py-1">
+              Participation Rate = ( Active Students / Total Enrolled Students ) &times; 100%
+            </div>
+          </div>
+
+          <div class="border rounded-3 p-3">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-calculator me-1 text-success"></i>Current Class Breakdown</h6>
+            <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+              <li class="d-flex justify-content-between border-bottom pb-1">
+                <span class="text-muted">Active Students (with &ge; 1 attempt):</span>
+                <span class="fw-bold text-dark">{{ analytics_stats.active_students_count }} students</span>
+              </li>
+              <li class="d-flex justify-content-between border-bottom pb-1">
+                <span class="text-muted">Total Enrolled Students:</span>
+                <span class="fw-bold text-dark">{{ analytics_stats.total_students }} students</span>
+              </li>
+              <li class="d-flex justify-content-between border-bottom pb-1 bg-light px-2 py-1 rounded">
+                <span class="fw-bold text-success">Calculated Rate:</span>
+                <span class="fw-bold text-success">({{ analytics_stats.active_students_count }} / {{ analytics_stats.total_students }}) &times; 100 = {{ analytics_stats.participation_rate }}%</span>
+              </li>
+              <li class="d-flex justify-content-between pt-1">
+                <span class="text-muted">Overall Assignment Completion:</span>
+                <span class="fw-semibold text-secondary">{{ analytics_stats.completed_count }} of {{ analytics_stats.total_assignments }} tasks ({{ analytics_stats.overall_completion_rate }}%)</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Activity Completion -->
+  <div class="modal fade" id="modal-kpi-activity" tabindex="-1" aria-labelledby="modalActivityLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-bottom-0 pb-0">
+          <div class="d-flex align-items-center gap-2">
+            <span class="p-2 rounded-3 ts-blue"><i class="bi bi-controller fs-5"></i></span>
+            <h5 class="modal-title fw-bold text-dark" id="modalActivityLabel">Activity Completion Calculation</h5>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-3">
+          <div class="p-3 bg-light rounded-3 mb-3 border">
+            <h6 class="fw-bold text-dark mb-1"><i class="bi bi-book-half me-1 text-primary"></i>Definition</h6>
+            <p class="small text-secondary mb-0">
+              Evaluates student follow-through on assigned interactive tasks. It calculates the percentage of teacher-assigned mini-games that students completed through to the end.
+            </p>
+          </div>
+
+          <div class="p-3 rounded-3 mb-3 text-center border" style="background-color: #eff6ff; border-color: #bfdbfe !important;">
+            <div class="small fw-bold text-primary mb-1 text-uppercase tracking-wider">Mathematical Formula</div>
+            <div class="fs-6 fw-bold font-monospace text-dark py-1">
+              Activity Completion Rate = ( Completed Activities / Total Assigned Activities ) &times; 100%
+            </div>
+          </div>
+
+          <div class="border rounded-3 p-3">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-calculator me-1 text-primary"></i>Current Class Breakdown</h6>
+            <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+              <li class="d-flex justify-content-between border-bottom pb-1">
+                <span class="text-muted">Completed Activity Assignments:</span>
+                <span class="fw-bold text-dark">{{ analytics_stats.activity_comp_count }} tasks</span>
+              </li>
+              <li class="d-flex justify-content-between border-bottom pb-1">
+                <span class="text-muted">Total Activity Assignments:</span>
+                <span class="fw-bold text-dark">{{ analytics_stats.total_activity_assignments }} tasks</span>
+              </li>
+              <li class="d-flex justify-content-between border-bottom pb-1 bg-light px-2 py-1 rounded">
+                <span class="fw-bold text-primary">Calculated Rate:</span>
+                <span class="fw-bold text-primary">({{ analytics_stats.activity_comp_count }} / {{ analytics_stats.total_activity_assignments }}) &times; 100 = {{ analytics_stats.activity_completion_rate }}%</span>
+              </li>
+              <li class="d-flex justify-content-between pt-1">
+                <span class="text-muted">Class Average Game Score:</span>
+                <span class="fw-semibold text-secondary">{{ analytics_stats.avg_score }} pts across {{ analytics_stats.total_attempts }} attempts</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Time on Task -->
+  <div class="modal fade" id="modal-kpi-time" tabindex="-1" aria-labelledby="modalTimeLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-bottom-0 pb-0">
+          <div class="d-flex align-items-center gap-2">
+            <span class="p-2 rounded-3 ts-orange"><i class="bi bi-hourglass-split fs-5"></i></span>
+            <h5 class="modal-title fw-bold text-dark" id="modalTimeLabel">Time on Task Calculation</h5>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-3">
+          <div class="p-3 bg-light rounded-3 mb-3 border">
+            <h6 class="fw-bold text-dark mb-1"><i class="bi bi-book-half me-1 text-warning"></i>Definition</h6>
+            <p class="small text-secondary mb-0">
+              Measures cumulative instructional engagement duration. Tracks the exact time (in seconds and minutes) students spent actively viewing slides and answering embedded checkpoint questions.
+            </p>
+          </div>
+
+          <div class="p-3 rounded-3 mb-3 text-center border" style="background-color: #fffbeb; border-color: #fde68a !important;">
+            <div class="small fw-bold text-warning-emphasis mb-1 text-uppercase tracking-wider">Mathematical Formula</div>
+            <div class="fs-6 fw-bold font-monospace text-dark py-1">
+              Total Time = &sum; Duration(Attempt_i)<br>
+              <small class="text-muted fw-normal">Average Visit = &sum; Duration / Total Visits</small>
+            </div>
+          </div>
+
+          <div class="border rounded-3 p-3">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-calculator me-1 text-warning"></i>Current Class Breakdown</h6>
+            <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+              <li class="d-flex justify-content-between border-bottom pb-1">
+                <span class="text-muted">Total Cumulative Time on Task:</span>
+                <span class="fw-bold text-dark">{{ analytics_stats.total_time_formatted }} ({{ analytics_stats.total_time_seconds }}s)</span>
+              </li>
+              <li class="d-flex justify-content-between border-bottom pb-1">
+                <span class="text-muted">Average 1st Visit (Baseline):</span>
+                <span class="fw-bold text-dark">{{ analytics_stats.avg_first_time }} ({{ analytics_stats.first_attempts_count }} visits)</span>
+              </li>
+              <li class="d-flex justify-content-between border-bottom pb-1">
+                <span class="text-muted">Average Revisit / Review Time:</span>
+                <span class="fw-bold text-dark">{{ analytics_stats.avg_revisit_time }} ({{ analytics_stats.revisit_attempts_count }} reviews)</span>
+              </li>
+              <li class="d-flex justify-content-between pt-1 bg-light px-2 py-1 rounded">
+                <span class="fw-bold text-dark">Interpretation:</span>
+                <span class="fw-semibold text-secondary">First visits are exploratory; revisits show review efficiency.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Game Replay Rate -->
+  <div class="modal fade" id="modal-kpi-replay" tabindex="-1" aria-labelledby="modalReplayLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-bottom-0 pb-0">
+          <div class="d-flex align-items-center gap-2">
+            <span class="p-2 rounded-3" style="background-color: #e0f2fe; color: #0284c7;"><i class="bi bi-arrow-repeat fs-5"></i></span>
+            <h5 class="modal-title fw-bold text-dark" id="modalReplayLabel">Game Replay Rate Calculation</h5>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-3">
+          <div class="p-3 bg-light rounded-3 mb-3 border">
+            <h6 class="fw-bold text-dark mb-1"><i class="bi bi-book-half me-1 text-info"></i>Definition (Thesis &sect;2.d)</h6>
+            <p class="small text-secondary mb-0">
+              Evaluates gamification replayability and self-directed mastery. It represents the percentage of active game players who voluntarily replayed an educational game multiple times (&ge; 2 attempts) to improve their score.
+            </p>
+          </div>
+
+          <div class="p-3 rounded-3 mb-3 text-center border" style="background-color: #f0f9ff; border-color: #bae6fd !important;">
+            <div class="small fw-bold text-info mb-1 text-uppercase tracking-wider">Mathematical Formula</div>
+            <div class="fs-6 fw-bold font-monospace text-dark py-1">
+              Replay Rate = ( Players with &ge; 2 attempts on same game / Total Active Players ) &times; 100%
+            </div>
+          </div>
+
+          <div class="border rounded-3 p-3">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-calculator me-1 text-info"></i>Current Class Breakdown</h6>
+            <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+              <li class="d-flex justify-content-between border-bottom pb-1">
+                <span class="text-muted">Replaying Players (&ge; 2 attempts):</span>
+                <span class="fw-bold text-dark">{{ analytics_stats.replay_active_players }} students</span>
+              </li>
+              <li class="d-flex justify-content-between border-bottom pb-1">
+                <span class="text-muted">Total Distinct Game Players:</span>
+                <span class="fw-bold text-dark">{{ analytics_stats.replay_distinct_players }} students</span>
+              </li>
+              <li class="d-flex justify-content-between border-bottom pb-1 bg-light px-2 py-1 rounded">
+                <span class="fw-bold text-info">Player Replay Rate:</span>
+                <span class="fw-bold text-info">({{ analytics_stats.replay_active_players }} / {{ analytics_stats.replay_distinct_players }}) &times; 100 = {{ analytics_stats.replay_rate }}%</span>
+              </li>
+              <li class="d-flex justify-content-between pt-1">
+                <span class="text-muted">Whole Class Proportion:</span>
+                <span class="fw-semibold text-secondary">{{ analytics_stats.class_replay_rate }}% of all {{ analytics_stats.total_students }} enrolled students</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Online Students -->
+  <div class="modal fade" id="modal-kpi-online" tabindex="-1" aria-labelledby="modalOnlineLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-bottom-0 pb-0">
+          <div class="d-flex align-items-center gap-2">
+            <span class="p-2 rounded-3" style="background-color: #dcfce7; color: #16a34a;"><i class="bi bi-broadcast fs-5"></i></span>
+            <h5 class="modal-title fw-bold text-dark" id="modalOnlineLabel">Real-Time Online Students Status</h5>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-3">
+          <div class="p-3 bg-light rounded-3 mb-3 border">
+            <h6 class="fw-bold text-dark mb-1"><i class="bi bi-book-half me-1 text-success"></i>Definition (Thesis &sect;5)</h6>
+            <p class="small text-secondary mb-0">
+              Live telemetry tracking student presence in the classroom portal. A student is flagged as actively online if their tablet or browser transmitted a heartbeat ping within the past 3 minutes.
+            </p>
+          </div>
+
+          <div class="p-3 rounded-3 mb-3 text-center border" style="background-color: #f0fdf4; border-color: #bbf7d0 !important;">
+            <div class="small fw-bold text-success mb-1 text-uppercase tracking-wider">Determination Criterion</div>
+            <div class="fs-6 fw-bold font-monospace text-dark py-1">
+              Online Condition: last_seen &ge; Current Time &minus; 3 minutes
+            </div>
+          </div>
+
+          <div class="border rounded-3 p-3">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-calculator me-1 text-success"></i>Current Class Breakdown</h6>
+            <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+              <li class="d-flex justify-content-between border-bottom pb-1">
+                <span class="text-muted">Students Online Right Now:</span>
+                <span class="fw-bold text-success d-flex align-items-center gap-1">
+                  <span class="spinner-grow spinner-grow-sm text-success" style="width: 8px; height: 8px;"></span>
+                  {{ analytics_stats.online_count }} student{% if analytics_stats.online_count != 1 %}s{% endif %}
+                </span>
+              </li>
+              <li class="d-flex justify-content-between border-bottom pb-1">
+                <span class="text-muted">Total Enrolled Students:</span>
+                <span class="fw-bold text-dark">{{ analytics_stats.total_students }} students</span>
+              </li>
+              <li class="d-flex justify-content-between border-bottom pb-1 bg-light px-2 py-1 rounded">
+                <span class="fw-bold text-success">Online Share:</span>
+                <span class="fw-bold text-success">{{ analytics_stats.online_rate }}% of class active</span>
+              </li>
+              <li class="d-flex justify-content-between pt-1">
+                <span class="text-muted">Telemetry Heartbeat Interval:</span>
+                <span class="fw-semibold text-secondary">Every 30 seconds via online_tracker.js</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
           </div>
         </section>
