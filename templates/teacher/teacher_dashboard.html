@@ -421,18 +421,18 @@
               </div>
             </div>
 
-            <!-- Section 1: Live Classroom Pulse -->
+            <!-- Section 1: Recent Activity & Class Presence -->
             <div class="mb-4">
-              <p class="teacher-eyebrow mb-2">Live</p>
+              <p class="teacher-eyebrow mb-2">Activity &amp; Presence</p>
               <div class="row g-3">
                 <div class="col-lg-6">
                   <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
                     <div>
                       <div class="d-flex justify-content-between align-items-center mb-2">
                         <h2 class="h5 mb-0"><i class="bi bi-activity me-2 text-primary"></i>Recent Student Activity</h2>
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Live Feed</span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Latest Submissions</span>
                       </div>
-                      <p class="teacher-panel-note mb-3">Live stream of student submissions and feedback status.</p>
+                      <p class="teacher-panel-note mb-3">Latest game completions and teacher feedback status.</p>
                       <ul class="activity-status-list">
                         {% if recent_activity %}
                         {% for log, student_name, activity_type in recent_activity %}
@@ -454,7 +454,7 @@
                       </ul>
                     </div>
                     <div class="pt-3 border-top mt-3 d-flex justify-content-end">
-                      <a href="{{ url_for('teacher.analytics') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                      <a href="{{ url_for('teacher.analytics') }}#attempts-section" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                         <span>View All Activity Logs</span>
                         <i class="bi bi-arrow-right ms-1"></i>
                       </a>
