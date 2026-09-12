@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260910_1') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260913_2') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
   <style>
     .kpi-clickable-card {
@@ -382,7 +382,80 @@
         </div>
       </section>
 
-      <!-- Full Missed Items Row: Lessons & Activities -->
+      <!-- Student Retry Improvement Tracker (Right after Top Student Rankings) -->
+      <section class="table-shell teacher-table-shell mb-4" id="retry-improvement-section">
+        <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+          <h2 class="h5 mb-0">
+            <i class="bi bi-graph-up-arrow me-2 text-success"></i>
+            Student Retry Improvement — Does replaying help?
+          </h2>
+        </div>
+        <p class="px-3 pt-2 pb-0 text-muted small mb-0">Tracks attempt-by-attempt progression across student game plays. Multi-try replays sorted by highest score growth.</p>
+        <div class="table-responsive">
+          <table id="retry-table" class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Game</th>
+                <th>Tries</th>
+                <th>1st Score</th>
+                <th>Best Score</th>
+                <th>Latest</th>
+                <th>Improvement</th>
+                <th>Each Attempt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in retry_progression %}
+                <tr>
+                  <td>
+                    <a href="{{ url_for('teacher.student_performance', student_id=row.student_id) }}" class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
+                      <i class="bi bi-person-fill text-primary"></i> {{ row.student_name }}
+                    </a>
+                  </td>
+                  <td><span class="small fw-semibold text-secondary">{{ row.activity_name }}</span></td>
+                  <td><span class="badge bg-light text-dark border">{{ row.attempt_count }}x</span></td>
+                  <td><span class="badge bg-secondary">{{ row.first_score }} pts</span></td>
+                  <td><span class="badge bg-primary">{{ row.best_score }} pts</span></td>
+                  <td><span class="badge bg-info text-dark">{{ row.latest_score }} pts</span></td>
+                  <td>
+                    {% if row.attempt_count == 1 %}
+                      <span class="badge bg-light text-primary border"><i class="bi bi-flag-fill me-1"></i>1st Try (Baseline)</span>
+                    {% elif row.improvement > 0 %}
+                      <span class="badge bg-success">▲ +{{ row.improvement }} pts improved</span>
+                    {% elif row.improvement < 0 %}
+                      <span class="badge bg-danger">▼ {{ row.improvement }} pts dropped</span>
+                    {% else %}
+                      <span class="badge bg-light text-dark border">= No change</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1 flex-wrap">
+                      {% for a in row.attempts %}
+                        <span class="badge {% if loop.index == 1 %}bg-secondary{% elif a.score >= row.best_score %}bg-primary{% else %}bg-light text-dark border{% endif %}" title="Attempt #{{ a.num }}{% if a.date %} on {{ a.date }}{% endif %}: {{ a.score }} pts, {{ a.time }}s">
+                          #{{ a.num }}: {{ a.score }}{% if a.date %} <span class="opacity-75" style="font-size:0.75rem;">({{ a.date }})</span>{% endif %}
+                        </span>
+                      {% endfor %}
+                    </div>
+                  </td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="8" class="text-center text-muted py-4">
+                    No students have replayed a game yet. Retry data will appear here once students play more than once.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div id="retry-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+          <small id="retry-page-info" class="text-muted fw-semibold">Showing entries</small>
+          <nav><ul id="retry-pagination-nav" class="pagination pagination-smooth mb-0"></ul></nav>
+        </div>
+      </section>
+
+      <!-- Full Missed Items Row: Lessons & Activities (Struggle Breakdown) -->
       <div class="row gy-4 mb-4">
         <div class="col-lg-6">
           <section class="table-shell teacher-table-shell h-100 d-flex flex-column justify-content-between" id="missed-lessons-section">
@@ -490,79 +563,6 @@
           </section>
         </div>
       </div>
-
-      <!-- Student Retry Improvement Tracker -->
-      <section class="table-shell teacher-table-shell mb-4" id="retry-improvement-section">
-        <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
-          <h2 class="h5 mb-0">
-            <i class="bi bi-graph-up-arrow me-2 text-success"></i>
-            Student Retry Improvement — Does replaying help?
-          </h2>
-        </div>
-        <p class="px-3 pt-2 pb-0 text-muted small mb-0">Tracks attempt-by-attempt progression across student game plays. Multi-try replays sorted by highest score growth.</p>
-        <div class="table-responsive">
-          <table id="retry-table" class="table align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>Game</th>
-                <th>Tries</th>
-                <th>1st Score</th>
-                <th>Best Score</th>
-                <th>Latest</th>
-                <th>Improvement</th>
-                <th>Each Attempt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in retry_progression %}
-                <tr>
-                  <td>
-                    <a href="{{ url_for('teacher.student_performance', student_id=row.student_id) }}" class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
-                      <i class="bi bi-person-fill text-primary"></i> {{ row.student_name }}
-                    </a>
-                  </td>
-                  <td><span class="small fw-semibold text-secondary">{{ row.activity_name }}</span></td>
-                  <td><span class="badge bg-light text-dark border">{{ row.attempt_count }}x</span></td>
-                  <td><span class="badge bg-secondary">{{ row.first_score }} pts</span></td>
-                  <td><span class="badge bg-primary">{{ row.best_score }} pts</span></td>
-                  <td><span class="badge bg-info text-dark">{{ row.latest_score }} pts</span></td>
-                  <td>
-                    {% if row.attempt_count == 1 %}
-                      <span class="badge bg-light text-primary border"><i class="bi bi-flag-fill me-1"></i>1st Try (Baseline)</span>
-                    {% elif row.improvement > 0 %}
-                      <span class="badge bg-success">▲ +{{ row.improvement }} pts improved</span>
-                    {% elif row.improvement < 0 %}
-                      <span class="badge bg-danger">▼ {{ row.improvement }} pts dropped</span>
-                    {% else %}
-                      <span class="badge bg-light text-dark border">= No change</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    <div class="d-flex gap-1 flex-wrap">
-                      {% for a in row.attempts %}
-                        <span class="badge {% if loop.index == 1 %}bg-secondary{% elif a.score >= row.best_score %}bg-primary{% else %}bg-light text-dark border{% endif %}" title="Attempt #{{ a.num }}{% if a.date %} on {{ a.date }}{% endif %}: {{ a.score }} pts, {{ a.time }}s">
-                          #{{ a.num }}: {{ a.score }}{% if a.date %} <span class="opacity-75" style="font-size:0.75rem;">({{ a.date }})</span>{% endif %}
-                        </span>
-                      {% endfor %}
-                    </div>
-                  </td>
-                </tr>
-              {% else %}
-                <tr>
-                  <td colspan="8" class="text-center text-muted py-4">
-                    No students have replayed a game yet. Retry data will appear here once students play more than once.
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <div id="retry-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
-          <small id="retry-page-info" class="text-muted fw-semibold">Showing entries</small>
-          <nav><ul id="retry-pagination-nav" class="pagination pagination-smooth mb-0"></ul></nav>
-        </div>
-      </section>
     </div>
 
     <!-- TAB 2: Live Progress & Attempt Logs -->

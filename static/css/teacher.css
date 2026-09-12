@@ -1649,4 +1649,68 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════ */
+/* High Contrast Button Outline Hover Styles                              */
+/* ══════════════════════════════════════════════════════════════════════ */
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active,
+a.btn-outline-primary:hover,
+a.btn-outline-primary:focus,
+a.btn-outline-primary:active {
+  color: #ffffff !important;
+  background-color: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+.btn-outline-primary:hover *,
+.btn-outline-primary:focus *,
+.btn-outline-primary:active *,
+a.btn-outline-primary:hover *,
+a.btn-outline-primary:focus *,
+a.btn-outline-primary:active * {
+  color: #ffffff !important;
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus,
+.btn-outline-success:active,
+a.btn-outline-success:hover,
+a.btn-outline-success:focus,
+a.btn-outline-success:active {
+  color: #ffffff !important;
+  background-color: #16a34a !important;
+  border-color: #16a34a !important;
+}
+
+.btn-outline-success:hover *,
+.btn-outline-success:focus *,
+.btn-outline-success:active *,
+a.btn-outline-success:hover *,
+a.btn-outline-success:focus *,
+a.btn-outline-success:active * {
+  color: #ffffff !important;
+}
+
+.btn-outline-warning:hover,
+.btn-outline-warning:focus,
+.btn-outline-warning:active,
+a.btn-outline-warning:hover,
+a.btn-outline-warning:focus,
+a.btn-outline-warning:active {
+  color: #15233b !important;
+  background-color: #f59e0b !important;
+  border-color: #f59e0b !important;
+}
+
+.btn-outline-warning:hover *,
+.btn-outline-warning:focus *,
+.btn-outline-warning:active *,
+a.btn-outline-warning:hover *,
+a.btn-outline-warning:focus *,
+a.btn-outline-warning:active * {
+  color: #15233b !important;
+}
+
+
 
