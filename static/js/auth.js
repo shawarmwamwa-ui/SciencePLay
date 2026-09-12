@@ -70,14 +70,18 @@ function initAuthToasts() {
   });
 }
 
+const isMobileDevice = () => (window.innerWidth <= 768 || window.matchMedia('(pointer: coarse)').matches);
+
 function initInputAutoScroll() {
   const inputs = document.querySelectorAll('.login-page input');
   inputs.forEach(input => {
     input.addEventListener('focus', () => {
-      // Delay slightly for virtual keyboard animation
-      setTimeout(() => {
-        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 350);
+      // Only auto-scroll on mobile devices where virtual keyboard takes up screen height
+      if (isMobileDevice()) {
+        setTimeout(() => {
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 350);
+      }
     });
   });
 }
@@ -89,6 +93,7 @@ function initInputElevate() {
 
   if (usernameInput) {
     usernameInput.addEventListener('focus', () => {
+      if (!isMobileDevice()) return;
       body.classList.remove('password-focused');
       body.classList.add('username-focused');
     });
@@ -103,6 +108,7 @@ function initInputElevate() {
 
   if (passwordInput) {
     passwordInput.addEventListener('focus', () => {
+      if (!isMobileDevice()) return;
       body.classList.remove('username-focused');
       body.classList.add('password-focused');
     });
@@ -123,7 +129,9 @@ window.initInputAutoScroll = initInputAutoScroll;
 window.initInputElevate = initInputElevate;
 
 document.addEventListener('DOMContentLoaded', () => {
+  initLoginMusic();
   initAuthToasts();
   initInputAutoScroll();
   initInputElevate();
 });
+

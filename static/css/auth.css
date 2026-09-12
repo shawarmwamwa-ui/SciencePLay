@@ -48,14 +48,6 @@ body.login-page {
   z-index: 10;
 }
 
-body.username-focused .brutal-login-window {
-  transform: translateY(-90px) !important;
-}
-
-body.password-focused .brutal-login-window {
-  transform: translateY(-210px) !important;
-}
-
 .brutal-login-window:hover {
   transform: translate(-2px, -2px);
   box-shadow: 10px 10px 0px #18181b;
@@ -281,7 +273,20 @@ body.password-focused .brutal-login-window {
   }
 }
 
-@media (max-height: 650px) {
+/* Mobile Devices: Shift login card up when virtual keyboard opens */
+@media (max-width: 768px) {
+  body.login-page {
+    padding-bottom: 12rem;
+  }
+  body.username-focused .brutal-login-window {
+    transform: translateY(-90px) !important;
+  }
+  body.password-focused .brutal-login-window {
+    transform: translateY(-190px) !important;
+  }
+}
+
+@media (max-width: 768px) and (max-height: 650px) {
   body.login-page {
     align-items: flex-start;
     padding-top: 0.75rem;
@@ -311,5 +316,13 @@ body.password-focused .brutal-login-window {
   }
   body.password-focused .brutal-login-window {
     transform: translateY(-220px) !important;
+  }
+}
+
+/* PC / Desktop: Default layout, never shift window up on input focus */
+@media (min-width: 769px) {
+  body.username-focused .brutal-login-window,
+  body.password-focused .brutal-login-window {
+    transform: none !important;
   }
 }
