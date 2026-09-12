@@ -14,6 +14,31 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260910_1') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
+  <style>
+    .kpi-clickable-card {
+      cursor: pointer !important;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
+    }
+    .kpi-clickable-card:hover {
+      transform: translateY(-3px) !important;
+      box-shadow: 0 10px 24px rgba(16, 47, 93, 0.12) !important;
+      border-color: #93c5fd !important;
+    }
+    .kpi-info-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #64748b;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      transition: color 0.15s ease, transform 0.15s ease;
+    }
+    .kpi-info-btn:hover {
+      color: #2563eb !important;
+      transform: scale(1.2);
+    }
+  </style>
 </head>
 <body class="teacher-page teacher-dashboard-page">
 
@@ -205,11 +230,13 @@
   <div class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-3 mb-4">
     <!-- 1. Participation Rate (Manuscript §2.f) -->
     <div class="col">
-      <div class="teacher-summary-card h-100" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-participation" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" title="Click to view calculation breakdown">
-        <div class="teacher-summary-text">
-          <div class="metric-label d-flex justify-content-between align-items-center">
+      <div class="teacher-summary-card h-100 kpi-clickable-card" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-participation" title="Click to view calculation breakdown">
+        <div class="teacher-summary-text w-100">
+          <div class="metric-label d-flex justify-content-between align-items-center mb-1">
             <span>Participation Rate</span>
-            <i class="bi bi-info-circle text-muted" style="font-size: 0.85rem;"></i>
+            <button type="button" class="kpi-info-btn" data-bs-toggle="modal" data-bs-target="#modal-kpi-participation" aria-label="Participation calculation details" title="View calculation details">
+              <i class="bi bi-info-circle-fill text-success" style="font-size: 0.95rem;"></i>
+            </button>
           </div>
           <div class="metric-value text-success">{{ analytics_stats.participation_rate }}%</div>
           <small class="text-muted">{{ analytics_stats.active_students_count }} of {{ analytics_stats.total_students }} active students</small>
@@ -219,11 +246,13 @@
     </div>
     <!-- 2. Activity Completion -->
     <div class="col">
-      <div class="teacher-summary-card h-100" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-activity" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" title="Click to view calculation breakdown">
-        <div class="teacher-summary-text">
-          <div class="metric-label d-flex justify-content-between align-items-center">
+      <div class="teacher-summary-card h-100 kpi-clickable-card" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-activity" title="Click to view calculation breakdown">
+        <div class="teacher-summary-text w-100">
+          <div class="metric-label d-flex justify-content-between align-items-center mb-1">
             <span>Activity Completion</span>
-            <i class="bi bi-info-circle text-muted" style="font-size: 0.85rem;"></i>
+            <button type="button" class="kpi-info-btn" data-bs-toggle="modal" data-bs-target="#modal-kpi-activity" aria-label="Activity completion calculation details" title="View calculation details">
+              <i class="bi bi-info-circle-fill text-primary" style="font-size: 0.95rem;"></i>
+            </button>
           </div>
           <div class="metric-value text-primary">{{ analytics_stats.activity_completion_rate }}%</div>
           <small class="text-muted">{{ analytics_stats.activity_comp_count }} of {{ analytics_stats.total_activity_assignments }} assigned</small>
@@ -233,11 +262,13 @@
     </div>
     <!-- 3. Time on Task -->
     <div class="col">
-      <div class="teacher-summary-card h-100" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-time" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" title="Click to view calculation breakdown">
-        <div class="teacher-summary-text">
-          <div class="metric-label d-flex justify-content-between align-items-center">
+      <div class="teacher-summary-card h-100 kpi-clickable-card" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-time" title="Click to view calculation breakdown">
+        <div class="teacher-summary-text w-100">
+          <div class="metric-label d-flex justify-content-between align-items-center mb-1">
             <span>Time on Task</span>
-            <i class="bi bi-info-circle text-muted" style="font-size: 0.85rem;"></i>
+            <button type="button" class="kpi-info-btn" data-bs-toggle="modal" data-bs-target="#modal-kpi-time" aria-label="Time on task calculation details" title="View calculation details">
+              <i class="bi bi-info-circle-fill text-warning" style="font-size: 0.95rem;"></i>
+            </button>
           </div>
           <div class="metric-value text-warning-emphasis">{{ analytics_stats.total_time_formatted }}</div>
           <small class="text-muted">1st visit avg: {{ analytics_stats.avg_first_time }}</small>
@@ -247,11 +278,13 @@
     </div>
     <!-- 4. Replay Rates (Manuscript §2.d) -->
     <div class="col">
-      <div class="teacher-summary-card h-100" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-replay" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" title="Click to view calculation breakdown">
-        <div class="teacher-summary-text">
-          <div class="metric-label d-flex justify-content-between align-items-center">
+      <div class="teacher-summary-card h-100 kpi-clickable-card" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-replay" title="Click to view calculation breakdown">
+        <div class="teacher-summary-text w-100">
+          <div class="metric-label d-flex justify-content-between align-items-center mb-1">
             <span>Game Replay Rate</span>
-            <i class="bi bi-info-circle text-muted" style="font-size: 0.85rem;"></i>
+            <button type="button" class="kpi-info-btn" data-bs-toggle="modal" data-bs-target="#modal-kpi-replay" aria-label="Game replay rate calculation details" title="View calculation details">
+              <i class="bi bi-info-circle-fill text-info" style="font-size: 0.95rem;"></i>
+            </button>
           </div>
           <div class="metric-value text-info">{{ analytics_stats.replay_rate }}%</div>
           <small class="text-muted">{{ analytics_stats.replay_active_players }} of {{ analytics_stats.replay_distinct_players }} replayers ({{ analytics_stats.class_replay_rate }}% class)</small>
@@ -261,11 +294,13 @@
     </div>
     <!-- 5. Real-Time Online Student Status -->
     <div class="col">
-      <div class="teacher-summary-card h-100" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-online" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" title="Click to view calculation breakdown">
-        <div class="teacher-summary-text">
-          <div class="metric-label d-flex justify-content-between align-items-center">
+      <div class="teacher-summary-card h-100 kpi-clickable-card" role="button" data-bs-toggle="modal" data-bs-target="#modal-kpi-online" title="Click to view calculation breakdown">
+        <div class="teacher-summary-text w-100">
+          <div class="metric-label d-flex justify-content-between align-items-center mb-1">
             <span>Online Students</span>
-            <i class="bi bi-info-circle text-muted" style="font-size: 0.85rem;"></i>
+            <button type="button" class="kpi-info-btn" data-bs-toggle="modal" data-bs-target="#modal-kpi-online" aria-label="Online students calculation details" title="View calculation details">
+              <i class="bi bi-info-circle-fill text-success" style="font-size: 0.95rem;"></i>
+            </button>
           </div>
           <div class="metric-value text-success d-flex align-items-center gap-1">
             <span class="spinner-grow spinner-grow-sm text-success" style="width: 10px; height: 10px;" role="status"></span>
@@ -694,8 +729,15 @@
   </div>
   <!-- End .dashboard-real-content -->
 
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <!-- End .teacher-layout -->
+
   <!-- ══════════════════════════════════════════════════════════════════════ -->
-  <!-- 5 KPI Mathematical Breakdown Modals                                  -->
+  <!-- 5 KPI Mathematical Breakdown Modals (Top-level under body)            -->
   <!-- ══════════════════════════════════════════════════════════════════════ -->
 
   <!-- Modal 1: Participation Rate -->
@@ -977,16 +1019,46 @@
     </div>
   </div>
 
-          </div>
-        </section>
-      </main>
-    </div>
-  </div>
-
-  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="{{ url_for('static', filename='js/teacher.js', v='20260910_1') }}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Direct robust click handler for KPI cards and info buttons
+      function openKpiModal(targetId) {
+        if (!targetId) return;
+        const modalElem = document.querySelector(targetId);
+        if (!modalElem) return;
+        if (window.bootstrap && window.bootstrap.Modal) {
+          const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElem);
+          modalInstance.show();
+        } else {
+          modalElem.classList.add('show');
+          modalElem.style.display = 'block';
+          document.body.classList.add('modal-open');
+        }
+      }
+
+      document.querySelectorAll('.kpi-clickable-card').forEach(card => {
+        card.addEventListener('click', function (e) {
+          const target = this.getAttribute('data-bs-target');
+          if (target) {
+            e.preventDefault();
+            openKpiModal(target);
+          }
+        });
+      });
+
+      document.querySelectorAll('.kpi-info-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const target = this.getAttribute('data-bs-target');
+          if (target) {
+            openKpiModal(target);
+          }
+        });
+      });
+
       // Initialize pagination for all tables across both tabs using centralized teacher.js helper
       setupTablePagination('#top-students-table', '#top-students-pagination-wrap', '#top-students-page-info', '#top-students-pagination-nav', 5);
       setupTablePagination('#missed-lessons-table', '#missed-lessons-pagination-wrap', '#missed-lessons-page-info', '#missed-lessons-pagination-nav', 5);
