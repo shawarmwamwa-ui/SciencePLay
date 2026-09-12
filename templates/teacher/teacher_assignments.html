@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teacher Assignments — SciencePlay</title>
+  <meta name="description" content="SciencePlay Teacher Assignments: Create, assign, track, and reassign science lessons and interactive activities.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260903_3') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
 </head>
 <body class="teacher-page teacher-dashboard-page">
@@ -22,7 +25,7 @@
             <div class="teacher-brand-wrap">
               <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
               <div>
-                <h1 class="teacher-brand-title">SciencePlay</h1>
+                <div class="teacher-brand-title">SciencePlay</div>
                 <p class="teacher-brand-subtitle">Teacher Portal</p>
               </div>
             </div>
@@ -31,6 +34,11 @@
               <a class="teacher-menu-link" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
                 <i class="bi bi-grid"></i>
                 <span>Dashboard</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="students" href="{{ url_for('teacher.students') }}">
+                <i class="bi bi-people"></i>
+                <span>Students</span>
               </a>
 
               <a class="teacher-menu-link active" data-nav="assignments" href="{{ url_for('teacher.assignments') }}">
@@ -44,6 +52,9 @@
               <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
                 <i class="bi bi-chat-square-quote-fill"></i>
                 <span>Feedback</span>
+                {% if needs_feedback_count and needs_feedback_count > 0 %}
+                  <span class="feedback-nav-badge">{{ needs_feedback_count }}</span>
+                {% endif %}
               </a>
               <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
                 <i class="bi bi-book"></i>
@@ -165,7 +176,7 @@
   <div class="dashboard-section teacher-panel mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div>
-        <h4 class="mb-1"><i class="bi bi-journal-plus me-2 text-primary"></i>Assign Lesson & Paired Activity</h4>
+        <h2 class="h4 mb-1"><i class="bi bi-journal-plus me-2 text-primary"></i>Assign Lesson & Paired Activity</h2>
         <p class="teacher-panel-note mb-0">Select a student and lesson. The paired game activity is automatically included.</p>
       </div>
     </div>
@@ -229,6 +240,14 @@
             </span>
           </div>
 
+          <!-- No Paired Activity Notice -->
+          <div id="noPairedActivityNote" class="d-none align-items-center justify-content-between flex-wrap gap-2 py-1 text-muted small fw-semibold">
+            <span><i class="bi bi-stars text-warning me-1"></i>This lesson has built-in interactive slide experiments &amp; formative assessments. No separate mini-game required.</span>
+            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2 py-1">
+              <i class="bi bi-info-circle me-1"></i>All-in-One Lesson
+            </span>
+          </div>
+
           <!-- Duplicate Warning Banner -->
           <div id="duplicateWarning" class="alert alert-warning d-flex align-items-center py-2 px-3 mb-0 mt-1" style="display: none !important;">
             <i class="bi bi-exclamation-triangle-fill me-2 fs-5 text-warning"></i>
@@ -245,7 +264,7 @@
     <div class="col-md-6">
       <section class="table-shell teacher-table-shell">
         <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0"><i class="bi bi-book me-2"></i>Lesson Assignments</h5>
+          <h2 class="h5 mb-0"><i class="bi bi-book me-2"></i>Lesson Assignments</h2>
           <span class="badge bg-secondary rounded-pill">{{ lesson_assignments|length }} Total</span>
         </div>
         <div class="table-responsive">
@@ -286,12 +305,20 @@
     <div class="col-md-6">
       <section class="table-shell teacher-table-shell">
         <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0"><i class="bi bi-controller me-2"></i>Activity Assignments</h5>
+          <h2 class="h5 mb-0"><i class="bi bi-controller me-2"></i>Activity Assignments</h2>
           <span class="badge bg-secondary rounded-pill">{{ activity_assignments|length }} Total</span>
         </div>
         <div class="table-responsive">
           <table class="table align-middle mb-0">
-            <thead><tr><th>Activity</th><th>Student</th><th>Status</th><th>Due</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Activity</th>
+                <th>Student</th>
+                <th>Status</th>
+                <th>Due</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
             <tbody>
               {% for assignment in activity_assignments %}
                 <tr>
@@ -299,9 +326,11 @@
                   <td>{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
                   <td>
                     {% if assignment.status == 'completed' %}
-                      <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
+                      <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
+                    {% elif assignment.status == 'attempts_exhausted' %}
+                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill fw-semibold"><i class="bi bi-slash-circle me-1"></i>Attempts Exhausted (3/3)</span>
                     {% else %}
-                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-hourglass-split me-1"></i>Assigned</span>
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold"><i class="bi bi-hourglass-split me-1"></i>In Progress</span>
                     {% endif %}
                   </td>
                   <td>
@@ -313,10 +342,22 @@
                       {% endif %}
                     </small>
                   </td>
+                  <td class="text-end">
+                    {% if assignment.status in ['attempts_exhausted', 'completed'] %}
+                      <form method="POST" action="{{ url_for('teacher.reassign_activity', assignment_id=assignment.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold shadow-sm" title="Reassign this activity with 3 fresh attempts">
+                          <i class="bi bi-arrow-repeat me-1"></i>Reassign
+                        </button>
+                      </form>
+                    {% else %}
+                      <span class="badge bg-light text-secondary border rounded-pill px-2 py-1">Active</span>
+                    {% endif %}
+                  </td>
                 </tr>
               {% else %}
                 <tr>
-                  <td colspan="4" class="text-center text-muted py-4">No activity assignments found.</td>
+                  <td colspan="5" class="text-center text-muted py-4">No activity assignments found.</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -335,16 +376,18 @@
   </div>
 
   <!-- Assignment Validation & Pairing Script -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='js/teacher.js') }}"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher.js') }}"></script>
   <script>
     const lessonActivityMap = {{ lesson_activity_map|tojson }};
     const existingAssignments = {{ existing_assignments|tojson }};
+    const completedLessons = {{ completed_lessons|tojson if completed_lessons is defined else '[]' }};
 
     const studentSelect = document.getElementById('assignStudentSelect');
     const lessonSelect = document.getElementById('assignLessonSelect');
     const detailsArea = document.getElementById('assignmentDetailsArea');
     const pairedRow = document.getElementById('pairedActivityRow');
+    const noPairedNote = document.getElementById('noPairedActivityNote');
     const pairedNameText = document.getElementById('pairedActivityNameText');
     const pairedIdInput = document.getElementById('pairedActivityIdInput');
     const includeActivityCheck = document.getElementById('includeActivityCheck');
@@ -370,12 +413,26 @@
       const pairedData = lessonActivityMap[lessonId];
 
       if (pairedData) {
-        pairedRow.style.display = 'flex';
+        pairedRow.classList.remove('d-none');
+        pairedRow.classList.add('d-flex');
+        if (noPairedNote) {
+          noPairedNote.classList.remove('d-flex');
+          noPairedNote.classList.add('d-none');
+        }
         pairedNameText.textContent = pairedData.name;
         pairedIdInput.value = pairedData.id;
+        includeActivityCheck.disabled = false;
       } else {
-        pairedRow.style.display = 'none';
+        pairedRow.classList.remove('d-flex');
+        pairedRow.classList.add('d-none');
+        if (noPairedNote) {
+          noPairedNote.classList.remove('d-none');
+          noPairedNote.classList.add('d-flex');
+        }
+        pairedNameText.textContent = '';
         pairedIdInput.value = '';
+        includeActivityCheck.checked = false;
+        includeActivityCheck.disabled = true;
       }
 
       if (!studentId) {
@@ -386,29 +443,42 @@
         return;
       }
 
-      // Check if student already has this lesson assigned
       const isLessonAssigned = existingAssignments.lessons.some(
         a => a.student_id === studentId && a.lesson_id === parseInt(lessonId, 10)
       );
 
-      // Check if student already has the paired activity assigned
-      const isActivityAssigned = pairedData ? existingAssignments.activities.some(
+      const isLessonCompleted = completedLessons.some(
+        cl => cl.student_id === studentId && cl.lesson_id === parseInt(lessonId, 10)
+      );
+
+      const existingActObj = pairedData ? existingAssignments.activities.find(
         a => a.student_id === studentId && a.activity_id === pairedData.id
-      ) : false;
+      ) : null;
+
+      const isActivityActive = existingActObj ? (existingActObj.status === 'assigned') : false;
+      const isActivityExhausted = existingActObj ? (existingActObj.status === 'attempts_exhausted' || existingActObj.status === 'completed') : false;
 
       const studentName = studentSelect.options[studentSelect.selectedIndex].text.split('(')[0].trim();
       const lessonTitle = lessonSelect.options[lessonSelect.selectedIndex].text.trim();
 
-      if (isLessonAssigned && isActivityAssigned) {
-        // Both already assigned
+      if (pairedData && isActivityExhausted && includeActivityCheck.checked) {
+        // Paired activity attempts were exhausted or completed -> allow reassigning!
+        duplicateWarning.className = 'alert alert-info d-flex align-items-center py-2 px-3 mb-0 mt-1';
+        duplicateWarning.style.setProperty('display', 'flex', 'important');
+        duplicateWarningText.innerHTML = `<i class="bi bi-arrow-repeat me-2 text-primary fs-5"></i><span><strong>${studentName}</strong> has used attempts on "<strong>${pairedData.name}</strong>". Click below to reassign it with 3 fresh attempts.</span>`;
+        submitBtn.disabled = false;
+        submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';
+        btnText.textContent = 'Reassign Paired Activity';
+      } else if (isLessonAssigned && isActivityActive) {
+        // Both already actively assigned
         duplicateWarning.className = 'alert alert-warning d-flex align-items-center py-2 px-3 mb-0 mt-1';
         duplicateWarning.style.setProperty('display', 'flex', 'important');
-        duplicateWarningText.textContent = `Both "${lessonTitle}" and "${pairedData.name}" are already assigned to ${studentName}.`;
+        duplicateWarningText.textContent = `Both "${lessonTitle}" and "${pairedData.name}" are currently actively assigned to ${studentName}.`;
         submitBtn.disabled = true;
         submitBtn.className = 'btn btn-secondary w-100 py-2 fw-semibold';
-        btnText.textContent = 'Already Assigned';
-      } else if (isLessonAssigned && pairedData && !isActivityAssigned) {
-        // Lesson is already assigned, but the paired activity can be assigned!
+        btnText.textContent = 'Already Actively Assigned';
+      } else if (isLessonAssigned && pairedData && !existingActObj) {
+        // Lesson is assigned, activity is not yet assigned
         if (includeActivityCheck.checked) {
           duplicateWarning.className = 'alert alert-info d-flex align-items-center py-2 px-3 mb-0 mt-1';
           duplicateWarning.style.setProperty('display', 'flex', 'important');
@@ -425,23 +495,20 @@
           btnText.textContent = 'Lesson Already Assigned';
         }
       } else if (isLessonAssigned && !pairedData) {
-        // Lesson assigned and no paired activity exists
         duplicateWarning.className = 'alert alert-warning d-flex align-items-center py-2 px-3 mb-0 mt-1';
         duplicateWarning.style.setProperty('display', 'flex', 'important');
         duplicateWarningText.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2 text-warning fs-5"></i><span>"${lessonTitle}" is already assigned to ${studentName}.</span>`;
         submitBtn.disabled = true;
         submitBtn.className = 'btn btn-secondary w-100 py-2 fw-semibold';
         btnText.textContent = 'Already Assigned';
-      } else if (!isLessonAssigned && pairedData && isActivityAssigned && includeActivityCheck.checked) {
-        // Lesson not assigned, but paired activity already is
+      } else if (!isLessonAssigned && pairedData && isActivityActive && includeActivityCheck.checked) {
         duplicateWarning.className = 'alert alert-info d-flex align-items-center py-2 px-3 mb-0 mt-1';
         duplicateWarning.style.setProperty('display', 'flex', 'important');
-        duplicateWarningText.innerHTML = `<i class="bi bi-info-circle-fill me-2 text-info fs-5"></i><span>Note: Paired activity "<em>${pairedData.name}</em>" is already assigned to ${studentName}. Only the lesson will be newly assigned.</span>`;
+        duplicateWarningText.innerHTML = `<i class="bi bi-info-circle-fill me-2 text-info fs-5"></i><span>Note: Paired activity "<em>${pairedData.name}</em>" is already active for ${studentName}. Only the lesson will be newly assigned.</span>`;
         submitBtn.disabled = false;
         submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';
         btnText.textContent = 'Assign Lesson';
       } else {
-        // Clean to assign
         duplicateWarning.style.setProperty('display', 'none', 'important');
         submitBtn.disabled = false;
         submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';

@@ -1,8 +1,5 @@
 /* bodyPartsLesson.css
-   Shared stylesheet for Lesson 2A (Animal Body Parts) and Lesson 2B (Plant Parts).
-   Neubrutalist static 100vh single-screen responsive slide presentation. */
-
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap');
+   Shared stylesheet for Lesson 2A (Animal Body Parts) and Lesson 2B (Plant Parts). */
 
 :root {
   --bpl-dark:     #18181b;
@@ -15,6 +12,32 @@
   --bpl-shadow:   4px 4px 0px #18181b;
 }
 
+/* ── Lightweight Utility Helpers ─────────────────────────────────────────── */
+.d-flex { display: flex !important; }
+.align-items-center { align-items: center !important; }
+.justify-content-center { justify-content: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.gap-2 { gap: 0.5rem !important; }
+.gap-3 { gap: 1rem !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.me-1 { margin-right: 0.25rem !important; }
+.me-2 { margin-right: 0.5rem !important; }
+.text-primary { color: var(--bpl-accent) !important; }
+.text-success { color: #16a34a !important; }
+.text-warning { color: #ca8a04 !important; }
+.text-center { text-align: center !important; }
+
+/* Custom Leaf Icon (Bootstrap Icons does not have a native bi-leaf) */
+.bi-leaf {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23000' d='M1.5 1.5A.5.5 0 0 1 2 1c4.5 0 10 2 12.5 7.5a.5.5 0 0 1-.4.7A10.5 10.5 0 0 1 7 8a11 11 0 0 1-5.5 4.5.5.5 0 0 1-.7-.7C2.5 8 5 4.5 7 3.5 4.5 4 2 5.5 1.6 5.9a.5.5 0 0 1-.8-.5C1 3.5 1.2 2.2 1.5 1.5z'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23000' d='M1.5 1.5A.5.5 0 0 1 2 1c4.5 0 10 2 12.5 7.5a.5.5 0 0 1-.4.7A10.5 10.5 0 0 1 7 8a11 11 0 0 1-5.5 4.5.5.5 0 0 1-.7-.7C2.5 8 5 4.5 7 3.5 4.5 4 2 5.5 1.6 5.9a.5.5 0 0 1-.8-.5C1 3.5 1.2 2.2 1.5 1.5z'/%3E%3C/svg%3E") no-repeat center / contain;
+  vertical-align: -0.15em;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
@@ -25,39 +48,29 @@ html {
 }
 
 body {
-  height: 100%;
   min-height: 100vh;
-  max-height: 100vh;
   margin: 0;
-  padding: clamp(4px, 1vh, 10px);
+  padding: clamp(8px, 1.5vh, 16px) 12px;
   display: flex;
   justify-content: center;
-  align-items: center;
-  overflow: hidden;
+  align-items: flex-start;
+  overflow-y: auto;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--bpl-dark);
   background: linear-gradient(135deg, #fef9c3 0%, #bbf7d0 40%, #bfdbfe 70%, #e9d5ff 100%);
-  background-size: 200% 200%;
-  animation: bplGradient 18s ease infinite;
-}
-
-@keyframes bplGradient {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  background-attachment: fixed;
 }
 
 /* ── Page Layout ─────────────────────────────────────────────────────────── */
 
 .bpl-page {
   width: min(100%, 960px);
-  height: 100%;
-  max-height: calc(100vh - 10px);
+  min-height: calc(100vh - 24px);
   margin: 0 auto;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   justify-content: flex-start;
 }
 
@@ -347,6 +360,36 @@ body {
   padding: 3px 12px;
   box-shadow: 2px 2px 0 #18181b;
   display: inline-block;
+}
+
+/* ── Image & Diagram Presentation ────────────────────────────────────────── */
+
+.bpl-media-wrap {
+  border: 2.5px solid var(--bpl-border);
+  border-radius: 16px;
+  padding: clamp(6px, 1.2vh, 12px);
+  margin-bottom: clamp(6px, 1.2vh, 12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3.5px 3.5px 0 #18181b;
+  background: #fefce8;
+  max-width: 580px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.bpl-media-img {
+  max-width: 100%;
+  max-height: clamp(170px, 32vh, 280px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 2px solid var(--bpl-border);
+  box-shadow: 2px 2px 0 #18181b;
+  display: block;
 }
 
 /* ── Info / Hook / Reflect / Discuss Slides ──────────────────────────────── */

@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leaderboard — SciencePlay</title>
+  <meta name="description" content="SciencePlay Leaderboard: See class rankings, top streaks, and total science points.">
+  
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
@@ -18,7 +22,6 @@
         <span class="brutal-dot dot-yellow"></span>
         <span class="brutal-dot dot-green"></span>
       </div>
-      <span class="brutal-window-title">LEADERBOARD.EXE</span>
     </div>
     <div class="brutal-window-body d-flex justify-content-between align-items-center flex-wrap gap-3 py-3">
       <div>
@@ -37,11 +40,12 @@
   </div>
 
   <!-- Tabs -->
-  <ul class="nav nav-tabs mb-4 fw-bold" id="lbTabs" role="tablist">
+  <ul class="nav brutal-nav-tabs mb-4 fw-bold" id="lbTabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="overall-tab" data-bs-toggle="tab" data-bs-target="#overall" type="button" role="tab">
         <i class="bi bi-trophy-fill text-warning me-1"></i> Overall
       </button>
+    </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="claw-tab" data-bs-toggle="tab" data-bs-target="#claw" type="button" role="tab">
         <i class="bi bi-controller text-primary me-1"></i> Claw Machine
@@ -457,7 +461,7 @@
 
   </div><!-- end tab-content -->
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 </body>
 </html>

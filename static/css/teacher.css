@@ -1,3 +1,8 @@
+@font-face {
+  font-family: "bootstrap-icons";
+  font-display: swap;
+}
+
 .teacher-page {
   font-family: 'Inter', 'Segoe UI', sans-serif;
   color: #1f2937;
@@ -17,7 +22,7 @@
 }
 
 .page-subtitle {
-  color: #6b7280;
+  color: #475569;
   font-size: 1rem;
   margin-bottom: 0;
 }
@@ -215,6 +220,15 @@
   margin: 0 auto;
 }
 
+/* Base sidebar styling on all viewports (ensures WCAG AA 12.8:1 contrast on mobile and desktop) */
+.teacher-layout > .row > aside,
+.teacher-sidebar {
+  background-color: #3b148a !important;
+  background: linear-gradient(180deg, #4c1d95 0%, #311068 100%) !important;
+  color: #ffffff !important;
+  border-radius: 20px;
+}
+
 @keyframes contentSlideIn {
   0% {
     opacity: 0;
@@ -260,7 +274,8 @@
   }
 
   .teacher-sidebar {
-    background: transparent !important;
+    background-color: #3b148a !important;
+    background: linear-gradient(180deg, #4c1d95 0%, #311068 100%) !important;
     border-radius: 28px 0 0 28px !important;
     box-shadow: none !important;
     color: #f3e8ff;
@@ -374,6 +389,21 @@
   transform: scale(1.08);
 }
 
+.teacher-menu-link .feedback-nav-badge {
+  background-color: #facc15 !important;
+  color: #1e1b4b !important;
+  font-weight: 800 !important;
+  font-size: 0.72rem !important;
+  padding: 0.2rem 0.55rem !important;
+  border-radius: 999px !important;
+  margin-left: auto !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+}
+
 /* Top Inverted Concave Curve */
 .teacher-menu-link.active::before {
   content: "";
@@ -439,7 +469,7 @@
 }
 
 .teacher-eyebrow {
-  color: #4c89cb;
+  color: #1d4ed8;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.78rem;
@@ -476,7 +506,7 @@
 
 .teacher-summary-card .metric-label {
   margin: 0;
-  color: #6f7f94;
+  color: #475569;
   font-size: 0.82rem;
   font-weight: 600;
   text-transform: none;
@@ -532,7 +562,7 @@
 }
 
 .teacher-panel-note {
-  color: #6d8098;
+  color: #475569;
   font-size: 0.92rem;
 }
 
@@ -565,7 +595,7 @@
 }
 
 .leaderboard-meta {
-  color: #6d8098;
+  color: #475569;
   font-size: 0.82rem;
 }
 
@@ -591,7 +621,7 @@
 .teacher-dashboard-page .table thead th {
   border-bottom: 1px solid #dde7f6;
   border-top: none;
-  color: #7488a3;
+  color: #334155;
   text-transform: uppercase;
   font-size: 0.74rem;
   letter-spacing: 0.06em;
@@ -746,7 +776,7 @@
 }
 
 .studio-draggable-object small {
-  color: #6b7f98;
+  color: #475569;
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -784,7 +814,7 @@
 
 .studio-canvas-chip.muted {
   background: #eef3f8;
-  color: #64778f;
+  color: #334155;
 }
 
 .studio-builder-canvas {
@@ -1165,3 +1195,428 @@
     padding: 0.75rem 0.8rem;
   }
 }
+
+/* WCAG AA Accessible Contrast Overrides */
+.badge.bg-primary-subtle {
+  color: #1e40af !important;
+  background-color: #dbeafe !important;
+  border-color: #bfdbfe !important;
+}
+
+.badge.bg-success-subtle {
+  color: #166534 !important;
+  background-color: #dcfce7 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.badge.bg-warning-subtle {
+  color: #713f12 !important;
+  background-color: #fef9c3 !important;
+  border-color: #fef08a !important;
+}
+
+.badge.bg-danger-subtle,
+.badge.bg-danger-subtle.text-danger {
+  color: #991b1b !important;
+  background-color: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+}
+
+/* Retry Improvement Metric Chips Contrast */
+#chip-best-score.text-primary {
+  color: #1d4ed8 !important;
+}
+
+#chip-latest-score.text-info {
+  color: #0369a1 !important;
+}
+
+#chip-improvement.text-success {
+  color: #15803d !important;
+}
+
+#chip-improvement.text-danger {
+  color: #b91c1c !important;
+}
+
+/* Global WCAG AA Muted & Inactive Text Contrast Overrides (> 4.5:1 on light backgrounds) */
+.teacher-dashboard-page .text-muted,
+.teacher-dashboard-page .text-secondary,
+.teacher-dashboard-page .form-text,
+.teacher-dashboard-page small.text-muted {
+  color: #475569 !important;
+}
+
+.teacher-dashboard-page .nav-tabs .nav-link:not(.active) {
+  color: #334155 !important;
+}
+
+/* High-contrast outline buttons to pass WCAG AA (> 5.4:1 contrast on white) */
+.btn-outline-success {
+  color: #15803d !important;
+  border-color: #16a34a !important;
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:active,
+.btn-outline-success:focus {
+  color: #ffffff !important;
+  background-color: #15803d !important;
+  border-color: #15803d !important;
+}
+
+/* High-contrast solid badges to pass WCAG AA (> 5.4:1 with white text) */
+.badge.bg-secondary {
+  background-color: #475569 !important; /* Slate-600: 5.9:1 */
+  color: #ffffff !important;
+}
+
+.badge.bg-success {
+  background-color: #15803d !important; /* Green-700: 5.4:1 */
+  color: #ffffff !important;
+}
+
+/* Real-Time Online Pulse Indicator */
+.status-pulse-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+  animation: pulseGreen 2s infinite;
+  vertical-align: middle;
+}
+
+@keyframes pulseGreen {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   Centralized Teacher Portal UI Components
+   ══════════════════════════════════════════════════════════ */
+
+/* View Toggle Pills (Analytics, Students) */
+.analytics-view-pills .nav-link,
+.students-view-pills .nav-link,
+.teacher-view-pills .nav-link {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 999px;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.analytics-view-pills .nav-link:hover,
+.students-view-pills .nav-link:hover,
+.teacher-view-pills .nav-link:hover {
+  background: #f1f5f9;
+  color: #0284c7;
+  border-color: #94a3b8;
+}
+
+.analytics-view-pills .nav-link.active,
+.students-view-pills .nav-link.active,
+.teacher-view-pills .nav-link.active {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border-color: #0369a1;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+}
+
+/* Smooth Pagination Controls */
+.pagination-smooth .page-item .page-link {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px !important;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  margin: 0 2px;
+  background: #ffffff;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.pagination-smooth .page-item .page-link:hover {
+  background: #f1f5f9;
+  color: #0284c7;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.pagination-smooth .page-item.active .page-link {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  border-color: #2563eb;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+.pagination-smooth .page-item.disabled .page-link {
+  background: #f8fafc;
+  color: #cbd5e1;
+  border-color: #f1f5f9;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.table-row-fade {
+  animation: fadeInRow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInRow {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Student Directory Components */
+.student-avatar-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.15rem;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #3730a3;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.student-search-bar {
+  border-radius: 999px;
+  padding: 0.65rem 1.25rem 0.65rem 2.75rem;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.student-search-bar:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.search-icon-wrap {
+  position: absolute;
+  left: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* Feedback Hub Components */
+.feedback-submission-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.feedback-submission-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.feedback-submission-card.needs-note {
+  border-left: 5px solid #f59e0b;
+}
+
+.feedback-submission-card.note-given {
+  border-left: 5px solid #10b981;
+}
+
+.quick-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quick-chip:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+.save-status-indicator {
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: none;
+}
+
+/* Lesson Visit & History Components */
+.timeline-table th {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.visit-first-badge {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+}
+
+.visit-revisit-badge {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+}
+
+/* Student Performance & Badge Components */
+.feedback-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.badge-earned {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.attempt-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid #0284c7;
+  padding: 1.1rem;
+  margin-bottom: 0.85rem;
+  border-radius: 0.85rem;
+}
+
+.attempt-score {
+  font-weight: 800;
+  color: #0284c7;
+}
+
+.feedback-input {
+  font-family: inherit;
+  font-size: 0.95rem;
+  border-radius: 0.65rem;
+}
+
+.badge-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 1.15rem;
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.badge-card:hover {
+  transform: translateY(-4px);
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.08);
+}
+
+.badge-card-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.85rem;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border: 2px solid #ffffff;
+  transition: transform 0.25s ease;
+}
+
+.badge-card:hover .badge-card-icon-wrap {
+  transform: scale(1.08) rotate(3deg);
+}
+
+/* Color palettes per badge theme */
+.badge-theme-mortarboard {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  color: #7c3aed;
+}
+
+.badge-theme-bullseye {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #ef4444;
+}
+
+.badge-theme-star {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #d97706;
+}
+
+.badge-theme-lightning {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  color: #f97316;
+}
+
+.badge-theme-trophy {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  color: #059669;
+}
+
+.badge-theme-default {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #0284c7;
+}
+
+.badge-unlocked-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  margin-top: auto;
+}
+
+

@@ -4,12 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Activity Playground — SciencePlay</title>
+  <meta name="description" content="SciencePlay Student Activities: Explore science mini-games, claw machines, and safari adventures.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap">
+  </noscript>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  </noscript>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css', v='20260903_7') }}">
 </head>
 <body class="student-page container mt-3 mb-4">
-  <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 page-top-banner">
+  <header class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 page-top-banner">
     <div>
       <h1 class="fw-black display-5 mb-1">Activity Playground</h1>
       <p class="text-dark fw-bold fs-5 mb-0">Finish a lesson, unlock a game, and collect points!</p>
@@ -18,11 +32,11 @@
       <i class="bi bi-arrow-left-circle-fill me-1"></i>
       <span>Back to Dashboard</span>
     </a>
-  </div>
+  </header>
 
   <div id="locked-notice" class="alert alert-warning brutal-alert d-none" role="alert"></div>
 
-  <div class="row g-4 activities-grid">
+  <main id="main-content" class="row g-4 activities-grid">
     {% for activity in activities %}
       {% set completed = activity.id in completed_by_activity %}
       {% set unlocked = unlocked_by_activity.get(activity.id, false) %}
@@ -33,7 +47,13 @@
       {% elif activity.engine == 'find_the_part' %}
         {% set activity_url = url_for('student.find_the_part_game') %}
       {% elif activity.engine == 'streak_race' %}
-        {% set activity_url = url_for('student.streak_race_game') %}
+        {% set activity_url = url_for('student.build_a_plant_game') %}
+      {% elif activity.engine == 'build_a_plant' %}
+        {% set activity_url = url_for('student.build_a_plant_game') %}
+      {% elif activity.engine == 'metal_logic' %}
+        {% set activity_url = url_for('student.materials_game') %}
+      {% elif activity.engine == 'recycle_sorter' %}
+        {% set activity_url = url_for('student.recycling_game') %}
       {% else %}
         {% set activity_url = url_for('student.activities') %}
       {% endif %}
@@ -42,7 +62,7 @@
           <div>
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div>
-                <h3 class="fw-black text-dark fs-3 mb-1">{{ activity.type }}</h3>
+                <h2 class="fw-black text-dark fs-3 mb-1">{{ activity.type }}</h2>
                 <p class="fw-extrabold text-dark fs-6 mb-2">{{ lesson.title if lesson else 'Unassigned' }} • {{ activity.points }} pts</p>
               </div>
               <span class="brutal-badge {{ 'brutal-badge-green' if completed else 'brutal-badge-yellow' if unlocked else 'brutal-badge-pink' }}">
@@ -57,6 +77,12 @@
                 <p class="text-dark fw-bold fs-6 mb-2">Tap a label from the word bank and match it to the correct body zone on each animal.</p>
               {% elif activity.engine == 'streak_race' %}
                 <p class="text-dark fw-bold fs-6 mb-2">Answer plant-parts questions correctly to advance your character to the finish line!</p>
+              {% elif activity.engine == 'build_a_plant' %}
+                <p class="text-dark fw-bold fs-6 mb-2">Drag each plant part onto the glowing spot to build a complete flowering plant — watch out for tricky decoys!</p>
+              {% elif activity.engine == 'metal_logic' %}
+                <p class="text-dark fw-bold fs-6 mb-2">Follow the science clues and deduce which metal matches each mystery sample in this logic grid puzzle!</p>
+              {% elif activity.engine == 'recycle_sorter' %}
+                <p class="text-dark fw-bold fs-6 mb-2">Swipe left for compost and right for recyclable! Test your sorting speed and keep recyclables clean!</p>
               {% else %}
                 <p class="text-dark fw-bold fs-6 mb-2">Complete this activity to earn points.</p>
               {% endif %}
@@ -69,7 +95,7 @@
             {% if used_attempts >= 3 %}
               <div class="d-flex justify-content-between align-items-center">
                 <span class="fw-black text-dark fs-5">Score: {{ completed_by_activity[activity.id].score or 0 if completed else 0 }}</span>
-                <button type="button" class="btn btn-secondary disabled fw-bold" style="border-radius: 10px; border: 2.5px solid #18181b; cursor: not-allowed;" disabled>
+                <button type="button" class="btn fw-bold" style="border-radius: 10px; border: 2.5px solid #18181b; background-color: #334155; color: #ffffff; cursor: not-allowed;" disabled>
                   <i class="bi bi-lock-fill me-1"></i>Limit Reached (3/3)
                 </button>
               </div>
@@ -81,7 +107,7 @@
             {% elif locked %}
               <div class="d-flex justify-content-between align-items-center">
                 <span class="fw-black text-dark fs-6">Locked</span>
-                <button type="button" class="btn btn-secondary disabled locked-activity-trigger fw-bold" style="border-radius: 10px; border: 2.5px solid #18181b;">Lesson Required</button>
+                <button type="button" class="btn fw-bold locked-activity-trigger" style="border-radius: 10px; border: 2.5px solid #18181b; background-color: #334155; color: #ffffff;">Lesson Required</button>
               </div>
             {% else %}
               <div class="d-flex justify-content-between align-items-center">
@@ -93,9 +119,9 @@
         </div>
       </div>
     {% endfor %}
-  </div>
+  </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     function showLockedActivityNotice() {
       const notice = document.querySelector('#locked-notice');
@@ -109,6 +135,6 @@
       button.addEventListener('click', showLockedActivityNotice);
     });
   </script>
-  <script src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 </body>
 </html>

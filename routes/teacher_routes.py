@@ -7,6 +7,31 @@ from database.models import db, Lesson, Activity, User, ProgressLog, LessonAssig
 from routes.utils import get_current_user, require_role, log_access, csrf
 
 teacher_bp = Blueprint('teacher', __name__, url_prefix='/teacher')
+
+
+@teacher_bp.context_processor
+def inject_teacher_nav_globals():
+    """Provides needs_feedback_count globally across all teacher template sidebars"""
+    current_user = get_current_user()
+    if current_user and current_user.role == 'teacher':
+        try:
+            needs_count = db.session.query(AttemptLog).join(
+                Activity, Activity.id == AttemptLog.activity_id
+            ).join(
+                User, User.id == AttemptLog.student_id
+            ).filter(
+                User.role == 'student',
+                ~Activity.engine.in_(['quick_check', 'lesson']),
+                ~Activity.type.ilike('%Quick Check%'),
+                ~Activity.type.ilike('%Slide Questions%'),
+                db.or_(AttemptLog.teacher_feedback == None, AttemptLog.teacher_feedback == '')
+            ).count()
+            return {'needs_feedback_count': needs_count}
+        except Exception:
+            return {'needs_feedback_count': 0}
+    return {'needs_feedback_count': 0}
+
+
 GAME_TYPE_PRESETS = [
     {
         'value': 'Living vs Non-Living Claw Machine',
@@ -39,6 +64,138 @@ def get_lesson_total_slides(lesson):
     if 'Animal Body Parts' in title or 'Plant Parts' in title:
         return 12
     return 7
+
+
+def format_time_duration(seconds):
+    if not seconds:
+        return "0s"
+    mins, secs = divmod(int(seconds), 60)
+    return f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
+
+
+def build_live_lesson_tracker(online_students_set=None):
+    if online_students_set is None:
+        online_threshold = datetime.utcnow() - timedelta(minutes=3)
+        online_students_set = set(u.id for u in User.query.filter(User.role == 'student', User.last_seen >= online_threshold).all())
+
+    lesson_progress_records = LessonProgress.query.join(
+        User, User.id == LessonProgress.student_id
+    ).filter(
+        User.role == 'student'
+    ).order_by(LessonProgress.updated_at.desc()).all()
+
+    live_lesson_tracker = []
+    for lp in lesson_progress_records:
+        attempts = LessonAttemptLog.query.filter_by(
+            student_id=lp.student_id, lesson_id=lp.lesson_id
+        ).order_by(LessonAttemptLog.attempt_number.asc()).all()
+
+        total_slides = get_lesson_total_slides(lp.lesson)
+        curr = (lp.current_slide or 0) + 1
+        revisit_count = lp.revisit_count or 0
+
+        if attempts:
+            first_att = attempts[0]
+            first_time_str = format_time_duration(first_att.time_spent)
+            latest_att = attempts[-1]
+            latest_time_str = format_time_duration(latest_att.time_spent)
+            tot_sec = sum((att.time_spent or 0) for att in attempts)
+            tot_str = format_time_duration(tot_sec)
+
+            if len(attempts) > 1:
+                time_spent_display = (
+                    f'<div class="d-flex flex-column gap-1">'
+                    f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
+                    f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" title="First Visit (Initial)"><i class="bi bi-flag-fill me-1"></i>First: {first_time_str}</span>'
+                    f'    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1" title="Latest Revisit"><i class="bi bi-arrow-repeat me-1"></i>R{len(attempts)-1}: {latest_time_str}</span>'
+                    f'  </div>'
+                    f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: {tot_str}</div>'
+                    f'</div>'
+                )
+            else:
+                time_spent_display = (
+                    f'<div class="d-flex flex-column gap-1">'
+                    f'  <span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-clock me-1 text-primary"></i>First: {first_time_str}</span>'
+                    f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: {tot_str}</div>'
+                    f'</div>'
+                )
+        else:
+            sec = lp.time_spent or 0
+            init_sec = lp.initial_time_spent or sec
+            tot_sec = lp.total_time_spent or (init_sec + (sec if revisit_count > 0 else 0))
+            if revisit_count > 0:
+                time_spent_display = (
+                    f'<div class="d-flex flex-column gap-1">'
+                    f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
+                    f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-flag-fill me-1"></i>First: {format_time_duration(init_sec)}</span>'
+                    f'    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-arrow-repeat me-1"></i>Current: {format_time_duration(sec)}</span>'
+                    f'  </div>'
+                    f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: {format_time_duration(tot_sec)}</div>'
+                    f'</div>'
+                )
+            else:
+                time_spent_display = (
+                    f'<div class="d-flex flex-column gap-1">'
+                    f'  <span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-clock me-1 text-primary"></i>First: {format_time_duration(sec)}</span>'
+                    f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: {format_time_duration(sec)}</div>'
+                    f'</div>'
+                )
+
+        is_completed = False
+        is_revisit = False
+        revisit_num = 0
+
+        if attempts:
+            latest_attempt = attempts[-1]
+            is_completed = bool(latest_attempt.completed)
+            if latest_attempt.attempt_number > 1:
+                is_revisit = True
+                revisit_num = latest_attempt.attempt_number - 1
+        else:
+            is_completed = bool(lp.completed)
+            is_revisit = (revisit_count > 0)
+            revisit_num = revisit_count
+
+        if is_completed:
+            status_text = 'Completed'
+            status_badge_class = 'bg-success text-white'
+            slide_display = f"Completed (Slide {total_slides} / {total_slides})"
+        elif is_revisit:
+            status_text = f'In Progress (Revisit #{revisit_num})'
+            status_badge_class = 'bg-warning text-dark'
+            slide_display = f"Slide {curr} / {total_slides} ({lp.progress_percent or 0}%)"
+        else:
+            status_text = 'In Progress'
+            status_badge_class = 'bg-warning text-dark'
+            slide_display = f"Slide {curr} / {total_slides} ({lp.progress_percent or 0}%)"
+
+        history_url = url_for('teacher.lesson_history', student_id=lp.student_id, lesson_id=lp.lesson_id)
+        if revisit_count > 0 or len(attempts) > 1:
+            revisit_display = (
+                f'<a href="{history_url}" class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold text-nowrap">'
+                f'<i class="bi bi-arrow-repeat me-1"></i>View History ({max(revisit_count, len(attempts)-1)}x) <i class="bi bi-chevron-right ms-1"></i></a>'
+            )
+        else:
+            revisit_display = (
+                f'<a href="{history_url}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-semibold text-nowrap">'
+                f'<i class="bi bi-clock-history me-1"></i>First Visit <i class="bi bi-chevron-right ms-1"></i></a>'
+            )
+
+        live_lesson_tracker.append({
+            'student_id': lp.student_id,
+            'student_name': lp.student.name if lp.student else f'Student #{lp.student_id}',
+            'student_username': lp.student.username if lp.student else '',
+            'is_online': lp.student_id in online_students_set,
+            'lesson_title': lp.lesson.title if lp.lesson else f'Lesson #{lp.lesson_id}',
+            'status': status_text,
+            'status_badge_class': status_badge_class,
+            'current_slide_display': slide_display,
+            'time_spent_display': time_spent_display,
+            'revisit_display': revisit_display
+        })
+
+    return live_lesson_tracker
+
 
 
 
@@ -87,6 +244,62 @@ def save_lesson_content(lesson_id, payload, status='draft'):
     db.session.add(content)
     db.session.commit()
     return content
+
+
+def get_student_retry_progression():
+    """Query all game attempts by students and calculate progression across retries."""
+    all_game_attempts = AttemptLog.query.join(
+        Activity, Activity.id == AttemptLog.activity_id
+    ).join(
+        User, User.id == AttemptLog.student_id
+    ).filter(
+        User.role == 'student',
+        ~Activity.engine.in_(['quick_check', 'lesson']),
+        ~Activity.type.ilike('%Quick Check%'),
+        ~Activity.type.ilike('%Slide Questions%')
+    ).order_by(AttemptLog.student_id, AttemptLog.activity_id, AttemptLog.created_at.asc(), AttemptLog.id.asc()).all()
+
+    from collections import defaultdict
+    retry_groups = defaultdict(list)
+    for a in all_game_attempts:
+        key = (a.student_id, a.activity_id)
+        retry_groups[key].append(a)
+
+    retry_progression = []
+    for (student_id, activity_id), attempts in retry_groups.items():
+        if len(attempts) < 1:
+            continue  # Needs at least 1 attempt to show performance
+        first_score = attempts[0].score or 0
+        best_score = max(a.score or 0 for a in attempts)
+        latest_score = attempts[-1].score or 0
+        improvement = best_score - first_score
+        student_name = attempts[0].student.name if attempts[0].student else f'Student #{student_id}'
+        activity_name = attempts[0].activity.type if attempts[0].activity else f'Activity #{activity_id}'
+        retry_progression.append({
+            'student_name': student_name,
+            'student_id': student_id,
+            'activity_id': activity_id,
+            'activity_name': activity_name,
+            'attempt_count': len(attempts),
+            'first_score': first_score,
+            'best_score': best_score,
+            'latest_score': latest_score,
+            'improvement': improvement,
+            'improved': improvement > 0,
+            'attempts': [
+                {
+                    'num': idx + 1,
+                    'score': a.score or 0,
+                    'time': a.time_spent or 0,
+                    'date': a.created_at.strftime('%b %d') if a.created_at else '',
+                    'date_full': a.created_at.strftime('%b %d, %Y %I:%M %p') if a.created_at else ''
+                }
+                for idx, a in enumerate(attempts)
+            ]
+        })
+
+    retry_progression.sort(key=lambda x: (x['attempt_count'] > 1, x['improvement'], x['attempt_count']), reverse=True)
+    return retry_progression
 
 
 @teacher_bp.route('/dashboard')
@@ -277,7 +490,125 @@ def dashboard():
         recent_activity=recent_activity,
         most_missed_lessons=most_missed_lessons,
         most_missed_activities=most_missed_activities,
+        retry_progression=get_student_retry_progression(),
         current_user=current_user
+    )
+
+
+@teacher_bp.route('/students')
+@require_role('teacher')
+def students():
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', 'teacher_students')
+
+    search_query = request.args.get('search', '').strip()
+    online_threshold = datetime.utcnow() - timedelta(minutes=3)
+
+    query = User.query.filter(User.role == 'student')
+    if search_query:
+        query = query.filter(
+            (User.name.ilike(f'%{search_query}%')) |
+            (User.username.ilike(f'%{search_query}%'))
+        )
+    student_users = query.order_by(User.name.asc()).all()
+
+    # Pre-fetch all progress and assignment records to compute metrics efficiently
+    all_lp = LessonProgress.query.all()
+    all_progress = ProgressLog.query.all()
+    all_attempts = AttemptLog.query.all()
+    all_badges = UserBadge.query.all()
+    all_lesson_assignments = LessonAssignment.query.all()
+    all_activity_assignments = ActivityAssignment.query.all()
+
+    lp_by_student = {}
+    for lp in all_lp:
+        lp_by_student.setdefault(lp.student_id, []).append(lp)
+
+    progress_by_student = {}
+    for p in all_progress:
+        progress_by_student.setdefault(p.student_id, []).append(p)
+
+    attempts_by_student = {}
+    for a in all_attempts:
+        attempts_by_student.setdefault(a.student_id, []).append(a)
+
+    badges_by_student = {}
+    for b in all_badges:
+        badges_by_student.setdefault(b.user_id, []).append(b)
+
+    la_by_student = {}
+    for la in all_lesson_assignments:
+        la_by_student.setdefault(la.student_id, []).append(la)
+
+    aa_by_student = {}
+    for aa in all_activity_assignments:
+        aa_by_student.setdefault(aa.student_id, []).append(aa)
+
+    students_data = []
+    online_count = 0
+    total_class_progress = 0
+
+    for s in student_users:
+        is_online = bool(s.last_seen and s.last_seen >= online_threshold)
+        if is_online:
+            online_count += 1
+
+        s_lps = lp_by_student.get(s.id, [])
+        completed_lessons = sum(1 for lp in s_lps if lp.completed or (lp.progress_percent or 0) >= 100 or (lp.revisit_count or 0) > 0)
+
+        s_las = la_by_student.get(s.id, [])
+        s_aas = aa_by_student.get(s.id, [])
+        assigned_lessons = len(s_las)
+        assigned_activities = len(s_aas)
+        total_tasks = assigned_lessons + assigned_activities
+
+        s_progs = progress_by_student.get(s.id, [])
+        completed_activities = len(s_progs)
+
+        if total_tasks > 0:
+            overall_pct = min(100, round(((completed_lessons + completed_activities) / total_tasks) * 100))
+        elif (completed_lessons + completed_activities) > 0:
+            overall_pct = 100
+        else:
+            overall_pct = 0
+        total_class_progress += overall_pct
+
+        total_points = sum((p.score or 0) for p in s_progs)
+        badge_count = len(badges_by_student.get(s.id, []))
+
+        s_attempts = attempts_by_student.get(s.id, [])
+        latest_attempt_date = max((a.created_at for a in s_attempts if a.created_at), default=None)
+        latest_active = latest_attempt_date or s.last_seen or s.created_at
+
+        students_data.append({
+            'id': s.id,
+            'name': s.name,
+            'username': s.username,
+            'is_online': is_online,
+            'last_seen': s.last_seen,
+            'latest_active': latest_active,
+            'completed_lessons': completed_lessons,
+            'assigned_lessons': assigned_lessons,
+            'completed_activities': completed_activities,
+            'assigned_activities': assigned_activities,
+            'overall_progress': overall_pct,
+            'total_points': total_points,
+            'badge_count': badge_count
+        })
+
+    avg_class_progress = round(total_class_progress / len(students_data)) if students_data else 0
+    online_students_set = set(s.id for s in student_users if s.last_seen and s.last_seen >= online_threshold)
+    live_lesson_tracker = build_live_lesson_tracker(online_students_set)
+
+    return render_template(
+        'teacher/teacher_students.html',
+        current_user=current_user,
+        students=students_data,
+        live_lesson_tracker=live_lesson_tracker,
+        total_students=len(students_data),
+        online_count=online_count,
+        avg_class_progress=avg_class_progress,
+        search_query=search_query
     )
 
 
@@ -321,12 +652,10 @@ def assignments():
     lesson_activity_map = {}
     for lesson in lessons:
         paired_act = Activity.query.filter_by(lesson_id=lesson.id).filter(
-            ~Activity.engine.in_(['quick_check', 'lesson']),
+            Activity.engine.in_(['claw_machine', 'find_the_part', 'build_a_plant', 'streak_race', 'metal_logic', 'recycle_sorter']),
             ~Activity.type.ilike('%Quick Check%'),
             ~Activity.type.ilike('%Slide Questions%')
         ).first()
-        if not paired_act:
-            paired_act = Activity.query.filter_by(lesson_id=lesson.id).first()
 
         if paired_act:
             lesson_activity_map[str(lesson.id)] = {
@@ -335,10 +664,39 @@ def assignments():
                 'engine': paired_act.engine
             }
 
+    completed_lessons = [
+        {'student_id': lp.student_id, 'lesson_id': lp.lesson_id}
+        for lp in LessonProgress.query.filter(
+            (LessonProgress.completed_at.isnot(None)) | 
+            (LessonProgress.completed == True) | 
+            (LessonProgress.revisit_count > 0)
+        ).all()
+    ]
+
+    # Synchronize activity assignment statuses based on attempts logged after assigned_at
+    for aa in activity_assignments:
+        if aa.status == 'assigned':
+            has_attempt = False
+            if aa.assigned_at:
+                has_attempt = AttemptLog.query.filter(
+                    AttemptLog.student_id == aa.student_id,
+                    AttemptLog.activity_id == aa.activity_id,
+                    AttemptLog.created_at >= aa.assigned_at
+                ).first() is not None
+            else:
+                has_attempt = AttemptLog.query.filter_by(student_id=aa.student_id, activity_id=aa.activity_id).first() is not None
+            if has_attempt:
+                aa.status = 'completed'
+                db.session.add(aa)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
     # Pass active assignment lookups for real-time duplicate checking
     existing_assignments = {
         'lessons': [{'student_id': a.student_id, 'lesson_id': a.lesson_id, 'status': a.status} for a in lesson_assignments],
-        'activities': [{'student_id': a.student_id, 'activity_id': a.activity_id, 'status': a.status} for a in activity_assignments]
+        'activities': [{'student_id': a.student_id, 'activity_id': a.activity_id, 'status': a.status, 'id': a.id} for a in activity_assignments]
     }
 
     return render_template(
@@ -349,7 +707,8 @@ def assignments():
         lessons=lessons,
         students=students,
         lesson_activity_map=lesson_activity_map,
-        existing_assignments=existing_assignments
+        existing_assignments=existing_assignments,
+        completed_lessons=completed_lessons
     )
 
 
@@ -388,19 +747,22 @@ def assign_lesson():
     lesson = Lesson.query.get(lesson_id)
     lesson_title = lesson.title if lesson else f"Lesson #{lesson_id}"
 
-    # Resolve paired activity id if requested
+    # Determine paired activity if requested
     act_id = None
-    act_name = "game activity"
+    act_name = ""
     if include_activity:
         if paired_activity_id:
             try:
-                act_id = int(paired_activity_id)
+                candidate_id = int(paired_activity_id)
+                candidate_act = Activity.query.get(candidate_id)
+                if candidate_act and candidate_act.engine in ['claw_machine', 'find_the_part', 'build_a_plant', 'streak_race', 'metal_logic', 'recycle_sorter']:
+                    act_id = candidate_id
             except (ValueError, TypeError):
                 act_id = None
 
         if not act_id:
             paired_act = Activity.query.filter_by(lesson_id=lesson_id).filter(
-                ~Activity.engine.in_(['quick_check', 'lesson']),
+                Activity.engine.in_(['claw_machine', 'find_the_part', 'build_a_plant', 'streak_race', 'metal_logic', 'recycle_sorter']),
                 ~Activity.type.ilike('%Quick Check%'),
                 ~Activity.type.ilike('%Slide Questions%')
             ).first()
@@ -414,27 +776,36 @@ def assign_lesson():
 
     existing_act_assign = ActivityAssignment.query.filter_by(student_id=student_id, activity_id=act_id).first() if act_id else None
 
-    # Case 1: Both already assigned (or lesson assigned and no activity requested)
-    if existing_lesson_assign and (not act_id or existing_act_assign):
-        if existing_act_assign:
-            flash(f'Both "{lesson_title}" and "{act_name}" are already assigned to {student_name}.', 'warning')
+    # Case 1: Lesson already assigned and activity already actively assigned (or no activity requested)
+    if existing_lesson_assign and (not act_id or (existing_act_assign and existing_act_assign.status == 'assigned')):
+        if existing_act_assign and existing_act_assign.status == 'assigned':
+            flash(f'Both "{lesson_title}" and "{act_name}" are already actively assigned to {student_name}.', 'warning')
         else:
             flash(f'"{lesson_title}" is already assigned to {student_name}.', 'warning')
         return redirect(url_for('teacher.assignments'))
 
-    # Case 2: Lesson is already assigned, but assigning the Paired Activity
-    if existing_lesson_assign and act_id and not existing_act_assign:
-        act_assign = ActivityAssignment(
-            activity_id=act_id,
-            student_id=student_id,
-            assigned_by=current_user.id,
-            due_date=due_date
-        )
-        db.session.add(act_assign)
-        db.session.commit()
-        log_access(current_user, 'assign_activity', f'activity_id={act_id} student_id={student_id}')
-        flash(f'Paired activity "{act_name}" assigned successfully to {student_name}.', 'success')
-        return redirect(url_for('teacher.assignments'))
+    # Case 2: Lesson is already assigned (or completed), and paired activity is requested and needs assigning/reassigning
+    if existing_lesson_assign and act_id:
+        if existing_act_assign:
+            existing_act_assign.status = 'assigned'
+            existing_act_assign.assigned_at = datetime.utcnow()
+            existing_act_assign.due_date = due_date
+            db.session.commit()
+            log_access(current_user, 'reassign_activity', f'activity_id={act_id} student_id={student_id}')
+            flash(f'Paired activity "{act_name}" reassigned successfully to {student_name} with 3 fresh attempts.', 'success')
+            return redirect(url_for('teacher.assignments'))
+        else:
+            act_assign = ActivityAssignment(
+                activity_id=act_id,
+                student_id=student_id,
+                assigned_by=current_user.id,
+                due_date=due_date
+            )
+            db.session.add(act_assign)
+            db.session.commit()
+            log_access(current_user, 'assign_activity', f'activity_id={act_id} student_id={student_id}')
+            flash(f'Paired activity "{act_name}" assigned successfully to {student_name}.', 'success')
+            return redirect(url_for('teacher.assignments'))
 
     # Case 3: Lesson is newly assigned (and optionally paired activity too)
     assignment = LessonAssignment(
@@ -446,15 +817,21 @@ def assign_lesson():
     db.session.add(assignment)
 
     activity_msg = ""
-    if act_id and not existing_act_assign:
-        act_assign = ActivityAssignment(
-            activity_id=act_id,
-            student_id=student_id,
-            assigned_by=current_user.id,
-            due_date=due_date
-        )
-        db.session.add(act_assign)
-        activity_msg = f' and paired activity "{act_name}"'
+    if act_id:
+        if existing_act_assign:
+            existing_act_assign.status = 'assigned'
+            existing_act_assign.assigned_at = datetime.utcnow()
+            existing_act_assign.due_date = due_date
+            activity_msg = f' and paired activity "{act_name}" reassigned'
+        else:
+            act_assign = ActivityAssignment(
+                activity_id=act_id,
+                student_id=student_id,
+                assigned_by=current_user.id,
+                due_date=due_date
+            )
+            db.session.add(act_assign)
+            activity_msg = f' and paired activity "{act_name}"'
 
     db.session.commit()
     log_access(current_user, 'assign_lesson', f'lesson_id={lesson_id} student_id={student_id} include_activity={include_activity}')
@@ -481,15 +858,10 @@ def assign_activity():
         flash('Invalid activity or student selection.', 'danger')
         return redirect(url_for('teacher.assignments'))
 
-    # Check for duplicate activity assignment
-    existing = ActivityAssignment.query.filter_by(student_id=student_id, activity_id=activity_id).first()
-    if existing:
-        student = User.query.get(student_id)
-        student_name = student.name if student else f"Student #{student_id}"
-        activity = Activity.query.get(activity_id)
-        act_name = activity.type if activity else f"Activity #{activity_id}"
-        flash(f'"{act_name}" is already assigned to {student_name}.', 'warning')
-        return redirect(url_for('teacher.assignments'))
+    student = User.query.get(student_id)
+    student_name = student.name if student else f"Student #{student_id}"
+    activity = Activity.query.get(activity_id)
+    act_name = activity.type if activity else f"Activity #{activity_id}"
 
     due_date = None
     if due_date_raw:
@@ -498,11 +870,49 @@ def assign_activity():
         except Exception:
             due_date = None
 
+    # Check for existing activity assignment
+    existing = ActivityAssignment.query.filter_by(student_id=student_id, activity_id=activity_id).first()
+    if existing:
+        if existing.status in ('attempts_exhausted', 'completed'):
+            existing.status = 'assigned'
+            existing.assigned_at = datetime.utcnow()
+            existing.due_date = due_date
+            db.session.commit()
+            log_access(current_user, 'reassign_activity', f'activity_id={activity_id} student_id={student_id}')
+            flash(f'Activity "{act_name}" reassigned successfully to {student_name} with 3 fresh attempts.', 'success')
+            return redirect(url_for('teacher.assignments'))
+        else:
+            flash(f'"{act_name}" is already actively assigned to {student_name}.', 'warning')
+            return redirect(url_for('teacher.assignments'))
+
     assignment = ActivityAssignment(activity_id=activity_id, student_id=student_id, assigned_by=current_user.id, due_date=due_date)
     db.session.add(assignment)
     db.session.commit()
     log_access(current_user, 'assign_activity', f'activity_id={activity_id} student_id={student_id}')
-    flash('Activity assigned successfully.', 'success')
+    flash(f'Activity "{act_name}" assigned successfully to {student_name}.', 'success')
+    return redirect(url_for('teacher.assignments'))
+
+
+@teacher_bp.route('/reassign_activity/<int:assignment_id>', methods=['POST'])
+@require_role('teacher')
+def reassign_activity(assignment_id):
+    current_user = get_current_user()
+    assignment = ActivityAssignment.query.get(assignment_id)
+    if not assignment:
+        flash('Assignment not found.', 'danger')
+        return redirect(url_for('teacher.assignments'))
+
+    student = User.query.get(assignment.student_id)
+    student_name = student.name if student else f"Student #{assignment.student_id}"
+    activity = Activity.query.get(assignment.activity_id)
+    act_name = activity.type if activity else f"Activity #{assignment.activity_id}"
+
+    assignment.status = 'assigned'
+    assignment.assigned_at = datetime.utcnow()
+    db.session.commit()
+
+    log_access(current_user, 'reassign_activity', f'activity_id={assignment.activity_id} student_id={assignment.student_id}')
+    flash(f'Activity "{act_name}" reassigned to {student_name} with 3 fresh attempts.', 'success')
     return redirect(url_for('teacher.assignments'))
 
 
@@ -561,13 +971,27 @@ def analytics():
 
     activity_comp_count = 0
     for aa in activity_assignments:
-        has_attempt = (aa.student_id, aa.activity_id) in ap_map
-        is_comp = (aa.status == 'completed') or has_attempt
-        status = 'completed' if is_comp else (aa.status or 'assigned')
-
-        if is_comp and aa.status != 'completed':
-            aa.status = 'completed'
-            db.session.add(aa)
+        status = aa.status or 'assigned'
+        if status in ('completed', 'attempts_exhausted'):
+            is_comp = True
+        else:
+            has_attempt = False
+            if aa.assigned_at:
+                has_attempt = AttemptLog.query.filter(
+                    AttemptLog.student_id == aa.student_id,
+                    AttemptLog.activity_id == aa.activity_id,
+                    AttemptLog.created_at >= aa.assigned_at
+                ).first() is not None
+            else:
+                has_attempt = (aa.student_id, aa.activity_id) in ap_map
+            
+            if has_attempt:
+                status = 'completed'
+                aa.status = 'completed'
+                db.session.add(aa)
+                is_comp = True
+            else:
+                is_comp = False
 
         if is_comp:
             activity_comp_count += 1
@@ -591,7 +1015,7 @@ def analytics():
     all_assignments.sort(key=lambda x: x['assigned_at'] or datetime.min, reverse=True)
 
     total_assignments = len(all_assignments)
-    completed_count = sum(1 for a in all_assignments if a['status'] == 'completed')
+    completed_count = sum(1 for a in all_assignments if a['status'] in ('completed', 'attempts_exhausted'))
     overall_completion_rate = round((completed_count / total_assignments * 100)) if total_assignments > 0 else 0
     lesson_completion_rate = round((lesson_comp_count / len(lesson_assignments) * 100)) if lesson_assignments else 0
     activity_completion_rate = round((activity_comp_count / len(activity_assignments) * 100)) if activity_assignments else 0
@@ -620,169 +1044,26 @@ def analytics():
     replaying_players = set(s_id for (s_id, act_id), count in student_activity_counts.items() if count > 1)
     replay_rate = round((len(replaying_players) / len(distinct_players) * 100)) if distinct_players else 0
 
-    # Live Lesson Slide & Progress Tracker
-    lesson_progress_records = LessonProgress.query.join(
-        User, User.id == LessonProgress.student_id
-    ).filter(
-        User.role == 'student'
-    ).order_by(LessonProgress.updated_at.desc()).all()
-    def format_time_duration(seconds):
-        if not seconds:
-            return "0s"
-        mins, secs = divmod(int(seconds), 60)
-        return f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
+    # Online student presence tracking (Manuscript §5: Real-Time Online Student status)
+    online_threshold = datetime.utcnow() - timedelta(minutes=3)
+    online_students_set = set(u.id for u in User.query.filter(User.role == 'student', User.last_seen >= online_threshold).all())
+    online_students_count = len(online_students_set)
+    total_students_count = User.query.filter_by(role='student').count()
 
-    live_lesson_tracker = []
-    for lp in lesson_progress_records:
-        attempts = LessonAttemptLog.query.filter_by(
-            student_id=lp.student_id, lesson_id=lp.lesson_id
-        ).order_by(LessonAttemptLog.attempt_number.asc()).all()
+    # Time on task tracking (Manuscript §3: Time on task)
+    all_lesson_attempts = LessonAttemptLog.query.all()
+    first_lesson_attempts = [a for a in all_lesson_attempts if a.attempt_number == 1]
+    revisit_lesson_attempts = [a for a in all_lesson_attempts if a.attempt_number > 1]
+    avg_first_time = round(sum((a.time_spent or 0) for a in first_lesson_attempts) / len(first_lesson_attempts)) if first_lesson_attempts else 0
+    avg_revisit_time = round(sum((a.time_spent or 0) for a in revisit_lesson_attempts) / len(revisit_lesson_attempts)) if revisit_lesson_attempts else 0
+    total_time_task_seconds = sum((a.time_spent or 0) for a in all_lesson_attempts)
 
-        total_slides = get_lesson_total_slides(lp.lesson)
-        curr = (lp.current_slide or 0) + 1
-        revisit_count = lp.revisit_count or 0
+    # Live Lesson Slide & Progress Tracker (Manuscript §1: Monitor Student progress)
+    live_lesson_tracker = build_live_lesson_tracker(online_students_set)
 
-        if attempts:
-            first_att = attempts[0]
-            first_time_str = format_time_duration(first_att.time_spent)
-            latest_att = attempts[-1]
-            latest_time_str = format_time_duration(latest_att.time_spent)
-            tot_sec = sum((att.time_spent or 0) for att in attempts)
-            tot_str = format_time_duration(tot_sec)
-
-            if len(attempts) > 1:
-                time_spent_display = (
-                    f'<div class="d-flex flex-column gap-1">'
-                    f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
-                    f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" title="First Visit (Initial)"><i class="bi bi-flag-fill me-1"></i>First: {first_time_str}</span>'
-                    f'    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1" title="Latest Revisit"><i class="bi bi-arrow-repeat me-1"></i>R{len(attempts)-1}: {latest_time_str}</span>'
-                    f'  </div>'
-                    f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: {tot_str}</div>'
-                    f'</div>'
-                )
-            else:
-                time_spent_display = (
-                    f'<div class="d-flex flex-column gap-1">'
-                    f'  <span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-clock me-1 text-primary"></i>First: {first_time_str}</span>'
-                    f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: {tot_str}</div>'
-                    f'</div>'
-                )
-        else:
-            sec = lp.time_spent or 0
-            init_sec = lp.initial_time_spent or sec
-            tot_sec = lp.total_time_spent or (init_sec + (sec if revisit_count > 0 else 0))
-            if revisit_count > 0:
-                time_spent_display = (
-                    f'<div class="d-flex flex-column gap-1">'
-                    f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
-                    f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-flag-fill me-1"></i>First: {format_time_duration(init_sec)}</span>'
-                    f'    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-arrow-repeat me-1"></i>Current: {format_time_duration(sec)}</span>'
-                    f'  </div>'
-                    f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: {format_time_duration(tot_sec)}</div>'
-                    f'</div>'
-                )
-            else:
-                time_spent_display = (
-                    f'<div class="d-flex flex-column gap-1">'
-                    f'  <span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-clock me-1 text-primary"></i>First: {format_time_duration(sec)}</span>'
-                    f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: {format_time_duration(sec)}</div>'
-                    f'</div>'
-                )
-
-        is_completed = False
-        is_revisit = False
-        revisit_num = 0
-
-        if attempts:
-            latest_attempt = attempts[-1]
-            is_completed = bool(latest_attempt.completed)
-            if latest_attempt.attempt_number > 1:
-                is_revisit = True
-                revisit_num = latest_attempt.attempt_number - 1
-        else:
-            is_completed = bool(lp.completed)
-            is_revisit = (revisit_count > 0)
-            revisit_num = revisit_count
-
-        if is_completed:
-            status_text = 'Completed'
-            status_badge_class = 'bg-success text-white'
-            slide_display = f"Completed (Slide {total_slides} / {total_slides})"
-        elif is_revisit:
-            status_text = f'In Progress (Revisit #{revisit_num})'
-            status_badge_class = 'bg-warning text-dark'
-            slide_display = f"Slide {curr} / {total_slides} ({lp.progress_percent or 0}%)"
-        else:
-            status_text = 'In Progress'
-            status_badge_class = 'bg-warning text-dark'
-            slide_display = f"Slide {curr} / {total_slides} ({lp.progress_percent or 0}%)"
-
-        history_url = url_for('teacher.lesson_history', student_id=lp.student_id, lesson_id=lp.lesson_id)
-        if revisit_count > 0 or len(attempts) > 1:
-            revisit_display = (
-                f'<a href="{history_url}" class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold text-nowrap">'
-                f'<i class="bi bi-arrow-repeat me-1"></i>View History ({max(revisit_count, len(attempts)-1)}x) <i class="bi bi-chevron-right ms-1"></i></a>'
-            )
-        else:
-            revisit_display = (
-                f'<a href="{history_url}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-semibold text-nowrap">'
-                f'<i class="bi bi-clock-history me-1"></i>First Visit <i class="bi bi-chevron-right ms-1"></i></a>'
-            )
-
-        live_lesson_tracker.append({
-            'student_id': lp.student_id,
-            'student_name': lp.student.name if lp.student else f'Student #{lp.student_id}',
-            'lesson_title': lp.lesson.title if lp.lesson else f'Lesson #{lp.lesson_id}',
-            'status': status_text,
-            'status_badge_class': status_badge_class,
-            'current_slide_display': slide_display,
-            'time_spent_display': time_spent_display,
-            'revisit_display': revisit_display
-        })
 
     # --- Per-student retry progression (teacher-only: does replaying improve scores?) ---
-    all_game_attempts = AttemptLog.query.join(
-        Activity, Activity.id == AttemptLog.activity_id
-    ).join(
-        User, User.id == AttemptLog.student_id
-    ).filter(
-        User.role == 'student',
-        ~Activity.engine.in_(['quick_check', 'lesson']),
-        ~Activity.type.ilike('%Quick Check%'),
-        ~Activity.type.ilike('%Slide Questions%')
-    ).order_by(AttemptLog.student_id, AttemptLog.activity_id, AttemptLog.attempt_number.asc()).all()
-
-    # Group by student + activity
-    from collections import defaultdict
-    retry_groups = defaultdict(list)
-    for a in all_game_attempts:
-        key = (a.student_id, a.activity_id)
-        retry_groups[key].append(a)
-
-    retry_progression = []
-    for (student_id, activity_id), attempts in retry_groups.items():
-        if len(attempts) < 2:
-            continue  # Only show students who actually retried
-        first_score = attempts[0].score or 0
-        best_score = max(a.score or 0 for a in attempts)
-        latest_score = attempts[-1].score or 0
-        improvement = best_score - first_score
-        student_name = attempts[0].student.name if attempts[0].student else f'Student #{student_id}'
-        activity_name = attempts[0].activity.type if attempts[0].activity else f'Activity #{activity_id}'
-        retry_progression.append({
-            'student_name': student_name,
-            'student_id': student_id,
-            'activity_name': activity_name,
-            'attempt_count': len(attempts),
-            'first_score': first_score,
-            'best_score': best_score,
-            'latest_score': latest_score,
-            'improvement': improvement,
-            'improved': improvement > 0,
-            'attempts': [{'num': a.attempt_number, 'score': a.score or 0, 'time': a.time_spent or 0} for a in attempts]
-        })
-
-    retry_progression.sort(key=lambda x: x['improvement'], reverse=True)
+    retry_progression = get_student_retry_progression()
 
     # --- Full Ranked Top Students Performance ---
     all_top_students_raw = db.session.query(
@@ -900,8 +1181,17 @@ def analytics():
         'lesson_completion_rate': lesson_completion_rate,
         'activity_completion_rate': activity_completion_rate,
         'replay_rate': replay_rate,
+        'replay_active_players': len(replaying_players),
+        'replay_distinct_players': len(distinct_players),
+        'class_replay_rate': round((len(replaying_players) / total_students_count * 100)) if total_students_count else 0,
         'total_attempts': total_attempts,
-        'avg_score': avg_score
+        'avg_score': avg_score,
+        'online_count': online_students_count,
+        'total_students': total_students_count,
+        'avg_first_time': format_time_duration(avg_first_time),
+        'avg_revisit_time': format_time_duration(avg_revisit_time),
+        'total_time_formatted': format_time_duration(total_time_task_seconds),
+        'total_time_seconds': total_time_task_seconds
     }
 
     return render_template(
@@ -1120,36 +1410,43 @@ def student_performance(student_id):
     )
 
 
-@teacher_bp.route('/lesson_history/<int:student_id>/<int:lesson_id>')
-@require_role('teacher')
-def lesson_history(student_id, lesson_id):
-    """Detailed timeline of a student's initial visit and all revisits for a lesson"""
-    current_user = get_current_user()
-    log_access(current_user, 'page_view', f'lesson_history_{student_id}_{lesson_id}')
+def _build_lesson_history_data(student_id, lesson_id):
+    student = User.query.get(student_id)
+    lesson = Lesson.query.get(lesson_id)
+    if not student or not lesson:
+        return None
 
-    student = User.query.get_or_404(student_id)
-    lesson = Lesson.query.get_or_404(lesson_id)
     log = LessonProgress.query.filter_by(student_id=student_id, lesson_id=lesson_id).first()
-
     attempts = LessonAttemptLog.query.filter_by(
         student_id=student_id, lesson_id=lesson_id
     ).order_by(LessonAttemptLog.attempt_number.asc()).all()
 
     total_slides = get_lesson_total_slides(lesson)
 
+    def format_time_str(secs):
+        if not secs:
+            return "0s"
+        secs = int(secs)
+        if secs >= 60:
+            return f"{secs // 60}m {secs % 60}s"
+        return f"{secs}s"
+
     if not attempts and log:
         first_time = log.initial_time_spent or log.time_spent or 0
         pct = log.progress_percent or (100 if log.completed else 0)
         curr_slide = total_slides if log.completed else max(1, min(total_slides, round((pct / 100) * total_slides)))
+        created_str = log.created_at.strftime('%b %d, %Y · %I:%M %p') if log.created_at else 'N/A'
         attempts_list = [{
             'attempt_number': 1,
             'visit_title': 'First Visit (Initial)',
             'time_spent': first_time,
-            'completed': log.completed,
+            'time_spent_formatted': format_time_str(first_time),
+            'completed': bool(log.completed),
             'progress_percent': pct,
             'current_slide': curr_slide,
             'total_slides': total_slides,
-            'created_at': log.created_at
+            'created_at': log.created_at,
+            'created_at_formatted': created_str
         }]
     else:
         attempts_list = []
@@ -1157,15 +1454,18 @@ def lesson_history(student_id, lesson_id):
             title = 'First Visit (Initial)' if a.attempt_number == 1 else f'Revisit #{a.attempt_number - 1}'
             pct = a.progress_percent or (100 if a.completed else 0)
             curr_slide = total_slides if a.completed else max(1, min(total_slides, round((pct / 100) * total_slides)))
+            created_str = a.created_at.strftime('%b %d, %Y · %I:%M %p') if a.created_at else 'N/A'
             attempts_list.append({
                 'attempt_number': a.attempt_number,
                 'visit_title': title,
                 'time_spent': a.time_spent or 0,
-                'completed': a.completed,
+                'time_spent_formatted': format_time_str(a.time_spent or 0),
+                'completed': bool(a.completed),
                 'progress_percent': pct,
                 'current_slide': curr_slide,
                 'total_slides': total_slides,
-                'created_at': a.created_at
+                'created_at': a.created_at,
+                'created_at_formatted': created_str
             })
 
     total_time_seconds = sum(item['time_spent'] for item in attempts_list) if attempts_list else (log.total_time_spent if log else 0)
@@ -1173,15 +1473,76 @@ def lesson_history(student_id, lesson_id):
     revisit_attempts = attempts_list[1:] if len(attempts_list) > 1 else []
     avg_revisit_time = round(sum(r['time_spent'] for r in revisit_attempts) / len(revisit_attempts)) if revisit_attempts else 0
 
+    return {
+        'student': student,
+        'lesson': lesson,
+        'log': log,
+        'attempts': attempts_list,
+        'total_time_seconds': total_time_seconds,
+        'first_visit_time': first_visit_time,
+        'avg_revisit_time': avg_revisit_time,
+        'revisit_count': len(revisit_attempts),
+        'kpis': {
+            'total_attempts': len(attempts_list),
+            'revisit_count': len(revisit_attempts),
+            'first_visit_time_formatted': format_time_str(first_visit_time),
+            'avg_revisit_time_formatted': format_time_str(avg_revisit_time),
+            'total_time_formatted': format_time_str(total_time_seconds)
+        }
+    }
+
+
+@teacher_bp.route('/lesson_history/<int:student_id>/<int:lesson_id>')
+@require_role('teacher')
+def lesson_history(student_id, lesson_id):
+    """Detailed timeline of a student's initial visit and all revisits for a lesson"""
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', f'lesson_history_{student_id}_{lesson_id}')
+
+    data = _build_lesson_history_data(student_id, lesson_id)
+    if not data:
+        flash('Student or lesson not found.', 'danger')
+        return redirect(url_for('teacher.analytics'))
+
     return render_template(
         'teacher/lesson_history.html',
-        student=student,
-        lesson=lesson,
-        log=log,
-        attempts=attempts_list,
-        total_time_seconds=total_time_seconds,
-        first_visit_time=first_visit_time,
-        avg_revisit_time=avg_revisit_time,
-        revisit_count=len(revisit_attempts),
+        student=data['student'],
+        lesson=data['lesson'],
+        log=data['log'],
+        attempts=data['attempts'],
+        total_time_seconds=data['total_time_seconds'],
+        first_visit_time=data['first_visit_time'],
+        avg_revisit_time=data['avg_revisit_time'],
+        revisit_count=data['revisit_count'],
         current_user=current_user
     )
+
+
+@teacher_bp.route('/api/lesson_history/<int:student_id>/<int:lesson_id>')
+@require_role('teacher')
+def api_lesson_history(student_id, lesson_id):
+    """Real-time JSON endpoint for live polling student lesson history"""
+    data = _build_lesson_history_data(student_id, lesson_id)
+    if not data:
+        return jsonify({'success': False, 'error': 'Not found'}), 404
+
+    serialized_attempts = []
+    for att in data['attempts']:
+        serialized_attempts.append({
+            'attempt_number': att['attempt_number'],
+            'visit_title': att['visit_title'],
+            'is_first': (att['attempt_number'] == 1),
+            'time_spent': att['time_spent'],
+            'time_spent_formatted': att['time_spent_formatted'],
+            'completed': att['completed'],
+            'progress_percent': att['progress_percent'],
+            'current_slide': att['current_slide'],
+            'total_slides': att['total_slides'],
+            'created_at_formatted': att['created_at_formatted']
+        })
+
+    return jsonify({
+        'success': True,
+        'attempts': serialized_attempts,
+        'kpis': data['kpis']
+    })

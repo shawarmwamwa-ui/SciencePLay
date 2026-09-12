@@ -1,0 +1,758 @@
+/* week10Lessons.css
+   Dedicated styling for Week 10 Lessons: Properties of Metals and Recycling
+   Includes interactive reveal cards, globe tap-reveal, wire conductor toggle, flashlight shine effect, and tap-to-sort game. */
+
+/* ── Generic Icon Grid Showcase ─────────────────────────────────────────── */
+.w10-icon-grid {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: clamp(12px, 2vw, 24px);
+  flex-wrap: wrap;
+  padding: clamp(12px, 2vh, 20px);
+  border-radius: 16px;
+  border: 2.5px solid var(--bpl-border, #18181b);
+  box-shadow: 3.5px 3.5px 0 #18181b;
+  margin-bottom: clamp(10px, 1.5vh, 16px);
+}
+
+.w10-icon-item {
+  flex: 1 1 120px;
+  max-width: 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #ffffff;
+  border: 2.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px 10px 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.w10-icon-item:hover {
+  transform: translateY(-4px);
+  border-color: #3b82f6;
+  box-shadow: 0 6px 14px rgba(59, 130, 246, 0.15);
+}
+
+.w10-icon-item.active {
+  border-color: #2563eb;
+  background: #f0f7ff;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+  transform: translateY(-4px) scale(1.03);
+}
+
+.w10-icon-active-pill {
+  position: absolute;
+  top: -9px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.w10-icon-img {
+  width: clamp(54px, 8vw, 76px);
+  height: clamp(54px, 8vw, 76px);
+  object-fit: contain;
+  margin-bottom: 8px;
+  transition: transform 0.2s ease;
+}
+
+.w10-icon-item:hover .w10-icon-img,
+.w10-icon-item.active .w10-icon-img {
+  transform: scale(1.08);
+}
+
+.w10-icon-label {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.w10-icon-item.active .w10-icon-label {
+  color: #1d4ed8;
+}
+
+/* ── Interactive Item Explanation Callout Card ── */
+.w10-item-explanation-card {
+  background: #ffffff;
+  border: 2.5px solid #2563eb;
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-bottom: clamp(12px, 1.8vh, 18px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  animation: w10PopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes w10PopIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.w10-explanation-icon-preview {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  flex-shrink: 0;
+  padding: 6px;
+  background: #eff6ff;
+  border-radius: 12px;
+  border: 1.5px solid #bfdbfe;
+}
+
+.w10-explanation-content {
+  flex: 1;
+}
+
+.w10-explanation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.w10-explanation-item-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1e3a8a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.w10-explanation-listen-btn {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  color: #1d4ed8;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.w10-explanation-listen-btn:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.w10-explanation-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.w10-icon-tap-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  border-radius: 8px;
+  padding: 4px 12px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+/* ── Interactive Property Reveal Card ────────────────────────────────────── */
+.w10-reveal-card-wrap {
+  perspective: 1000px;
+  max-width: 440px;
+  margin: 0 auto clamp(12px, 1.8vh, 18px);
+  cursor: pointer;
+}
+
+.w10-reveal-card {
+  border: 3px solid #18181b;
+  border-radius: 20px;
+  padding: clamp(16px, 2.5vh, 24px);
+  text-align: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 5px 5px 0 #18181b;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.w10-reveal-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 #18181b;
+}
+
+.w10-reveal-card.revealed {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #166534;
+}
+
+.w10-card-front-icon {
+  font-size: 3.5rem;
+  color: #3b82f6;
+  margin-bottom: 8px;
+  display: inline-block;
+  animation: bounceSlow 2.5s infinite;
+}
+
+.w10-card-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.w10-tap-hint {
+  font-size: 13px;
+  font-weight: 800;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1.5px solid #cbd5e1;
+  display: inline-block;
+}
+
+.w10-revealed-content {
+  display: none;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.w10-reveal-card.revealed .w10-unrevealed-content {
+  display: none;
+}
+
+.w10-reveal-card.revealed .w10-revealed-content {
+  display: block;
+}
+
+/* ── Interactive Globe Tap-Reveal (Slide 3) ──────────────────────────────── */
+.w10-globe-stage {
+  border: 2.5px solid #18181b;
+  border-radius: 20px;
+  padding: clamp(14px, 2vh, 20px);
+  background: radial-gradient(circle at center, #eff6ff 0%, #dbeafe 100%);
+  box-shadow: 4px 4px 0 #18181b;
+  margin-bottom: clamp(10px, 1.5vh, 16px);
+  text-align: center;
+}
+
+.w10-globe-interactive {
+  display: inline-block;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.25s ease;
+}
+
+.w10-globe-interactive:hover {
+  transform: scale(1.05);
+}
+
+.w10-globe-img {
+  width: clamp(110px, 18vw, 150px);
+  height: clamp(110px, 18vw, 150px);
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(37, 99, 235, 0.2));
+  animation: rotateGently 12s linear infinite;
+}
+
+.w10-globe-metals-grid {
+  display: none;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.w10-globe-metals-grid.active {
+  display: grid;
+}
+
+.w10-metal-pill-card {
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 10px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.w10-metal-pill-card.highlight {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.w10-metal-pill-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* ── Interactive Wire Toggle (Copper) ────────────────────────────────────── */
+.w10-wire-stage {
+  border: 2.5px solid #18181b;
+  border-radius: 20px;
+  padding: clamp(14px, 2vh, 22px);
+  background: #fff7ed;
+  box-shadow: 4px 4px 0 #18181b;
+  margin-bottom: clamp(10px, 1.5vh, 16px);
+  text-align: center;
+}
+
+.w10-wire-switch-btn {
+  border: 2.5px solid #18181b;
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  background: #f97316;
+  color: #ffffff;
+  box-shadow: 3px 3px 0 #18181b;
+  transition: all 0.15s ease;
+  margin-bottom: 14px;
+}
+
+.w10-wire-switch-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #18181b;
+}
+
+.w10-wire-visual-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  min-height: 120px;
+}
+
+.w10-wire-box {
+  background: #ffffff;
+  border: 2px solid #fed7aa;
+  border-radius: 16px;
+  padding: 14px 20px;
+  max-width: 320px;
+  text-align: center;
+}
+
+.w10-wire-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+/* ── Interactive Flashlight Shine (Gold & Silver) ────────────────────────── */
+.w10-flashlight-stage {
+  border: 2.5px solid #18181b;
+  border-radius: 20px;
+  padding: clamp(14px, 2vh, 22px);
+  background: #0f172a;
+  box-shadow: 4px 4px 0 #18181b;
+  margin-bottom: clamp(10px, 1.5vh, 16px);
+  text-align: center;
+  color: #ffffff;
+}
+
+.w10-flashlight-btn {
+  border: 2px solid #fde047;
+  border-radius: 999px;
+  padding: 6px 18px;
+  font-size: 14px;
+  font-weight: 800;
+  background: #1e293b;
+  color: #fde047;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(253, 224, 71, 0.3);
+  transition: all 0.2s ease;
+  margin-bottom: 16px;
+}
+
+.w10-flashlight-btn.on {
+  background: #fde047;
+  color: #0f172a;
+  box-shadow: 0 0 20px rgba(253, 224, 71, 0.7);
+}
+
+.w10-swatches-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.w10-swatch-card {
+  background: #1e293b;
+  border: 2px solid #334155;
+  border-radius: 16px;
+  padding: 14px 18px;
+  width: 140px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.w10-swatch-card.glowing {
+  border-color: #fde047;
+  background: radial-gradient(circle at center, #334155 0%, #1e293b 100%);
+  box-shadow: 0 0 24px rgba(253, 224, 71, 0.45);
+  transform: translateY(-4px);
+}
+
+.w10-swatch-card.dull {
+  opacity: 0.6;
+}
+
+.w10-glint-sparkle {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 18px;
+  color: #fde047;
+  animation: sparkleTwinkle 1s infinite alternate;
+  display: none;
+}
+
+.w10-swatch-card.glowing .w10-glint-sparkle {
+  display: block;
+}
+
+/* ── Interactive Recycling Tap-to-Sort Game ──────────────────────────────── */
+.w10-recycle-stage {
+  border: 2.5px solid #18181b;
+  border-radius: 20px;
+  padding: clamp(12px, 1.8vh, 18px);
+  background: #ecfdf5;
+  box-shadow: 4px 4px 0 #18181b;
+  margin-bottom: clamp(10px, 1.5vh, 16px);
+}
+
+.w10-recycle-items-tray {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.w10-sort-card {
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 10px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  width: 130px;
+}
+
+.w10-sort-card:hover {
+  transform: translateY(-3px);
+  border-color: #10b981;
+}
+
+.w10-sort-card.correct {
+  border-color: #16a34a;
+  background: #dcfce7;
+}
+
+.w10-sort-card.wrong {
+  border-color: #dc2626;
+  background: #fee2e2;
+  animation: gentleShake 0.4s ease;
+}
+
+.w10-sort-img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  margin-bottom: 6px;
+}
+
+.w10-recycle-bin-target {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  background: #ffffff;
+  border: 2.5px dashed #059669;
+  border-radius: 18px;
+  padding: 12px 20px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.w10-bin-img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+/* ── Keyframe Animations ─────────────────────────────────────────────────── */
+@keyframes bounceSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rotateGently {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sparkleTwinkle {
+  from { transform: scale(0.8) rotate(0deg); opacity: 0.6; }
+  to { transform: scale(1.2) rotate(45deg); opacity: 1; }
+}
+
+@keyframes gentleShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* ── Large, High-Legibility Question & Assessment UI (Week 10) ───────────── */
+.w10-question-container {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 2.5px solid #18181b;
+  border-radius: 18px;
+  padding: clamp(14px, 2vh, 20px) clamp(16px, 2.5vw, 24px);
+  margin-bottom: clamp(14px, 2vh, 20px);
+  box-shadow: 4px 4px 0 #18181b;
+}
+
+.w10-question-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.w10-question-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.w10-question-hint-pill {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Prompt Heading */
+.bpl-quickcheck-slide .bpl-prompt,
+.bpl-assess-slide .bpl-prompt {
+  font-size: clamp(21px, 2.8vh, 26px) !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  letter-spacing: -0.2px;
+}
+
+/* Options Stack */
+.bpl-quickcheck-slide .bpl-options,
+.bpl-assess-slide .bpl-options {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: clamp(10px, 1.4vh, 14px) !important;
+  margin-bottom: clamp(14px, 2vh, 18px) !important;
+}
+
+/* Option Buttons */
+.bpl-quickcheck-slide .bpl-option,
+.bpl-assess-slide .bpl-assess-opt {
+  display: flex !important;
+  align-items: center !important;
+  gap: clamp(14px, 1.8vw, 18px) !important;
+  padding: clamp(14px, 2vh, 18px) clamp(16px, 2.2vw, 24px) !important;
+  border: 2.5px solid #18181b !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: clamp(18px, 2.3vh, 21px) !important;
+  line-height: 1.35 !important;
+  cursor: pointer !important;
+  box-shadow: 3.5px 3.5px 0 #18181b !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  text-align: left !important;
+  width: 100% !important;
+  min-height: clamp(58px, 8vh, 68px) !important;
+}
+
+.bpl-quickcheck-slide .bpl-option:hover:not(:disabled),
+.bpl-assess-slide .bpl-assess-opt:hover:not(:disabled) {
+  background: #f0f7ff !important;
+  border-color: #2563eb !important;
+  transform: translate(-2px, -2px) scale(1.008) !important;
+  box-shadow: 5px 5px 0 #18181b !important;
+}
+
+/* Icon / Letter Badges inside Options */
+.w10-opt-icon-circle {
+  width: clamp(38px, 5vh, 44px);
+  height: clamp(38px, 5vh, 44px);
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.2rem, 2.2vh, 1.45rem);
+  color: #334155;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+}
+
+.bpl-option:hover:not(:disabled) .w10-opt-icon-circle {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.bpl-assess-slide .bpl-assess-letter {
+  width: clamp(38px, 5vh, 44px) !important;
+  height: clamp(38px, 5vh, 44px) !important;
+  border-radius: 12px !important;
+  font-size: clamp(16px, 2vh, 18px) !important;
+  font-weight: 900 !important;
+  background: #f1f5f9 !important;
+  border: 2px solid #cbd5e1 !important;
+  color: #1e293b !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: all 0.18s ease;
+}
+
+.bpl-assess-opt:hover:not(:disabled) .bpl-assess-letter {
+  background: #dbeafe !important;
+  border-color: #2563eb !important;
+  color: #1d4ed8 !important;
+}
+
+/* Correct Answer State */
+.bpl-option.bpl-opt-correct,
+.bpl-assess-opt.bpl-opt-correct {
+  background: #ecfdf5 !important;
+  border-color: #16a34a !important;
+  box-shadow: 3.5px 3.5px 0 #16a34a !important;
+  color: #14532d !important;
+}
+
+.bpl-option.bpl-opt-correct .w10-opt-icon-circle,
+.bpl-assess-opt.bpl-opt-correct .bpl-assess-letter {
+  background: #86efac !important;
+  border-color: #16a34a !important;
+  color: #14532d !important;
+}
+
+/* Wrong Answer State */
+.bpl-option.bpl-opt-wrong,
+.bpl-assess-opt.bpl-opt-wrong {
+  background: #fef2f2 !important;
+  border-color: #dc2626 !important;
+  box-shadow: 3.5px 3.5px 0 #dc2626 !important;
+  color: #991b1b !important;
+}
+
+.bpl-option.bpl-opt-wrong .w10-opt-icon-circle,
+.bpl-assess-opt.bpl-opt-wrong .bpl-assess-letter {
+  background: #fca5a5 !important;
+  border-color: #dc2626 !important;
+  color: #7f1d1d !important;
+}
+
+/* Feedback Box */
+.bpl-feedback {
+  font-size: clamp(16px, 2vh, 18px) !important;
+  font-weight: 700 !important;
+  line-height: 1.5 !important;
+  padding: clamp(14px, 1.8vh, 18px) clamp(18px, 2vw, 24px) !important;
+  border-radius: 16px !important;
+  border: 2.5px solid !important;
+  margin-top: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.bpl-feedback-ok {
+  background: #f0fdf4 !important;
+  border-color: #16a34a !important;
+  color: #14532d !important;
+  box-shadow: 3px 3px 0 #16a34a !important;
+}
+
+.bpl-feedback-err {
+  background: #fef2f2 !important;
+  border-color: #dc2626 !important;
+  color: #991b1b !important;
+  box-shadow: 3px 3px 0 #dc2626 !important;
+}
+

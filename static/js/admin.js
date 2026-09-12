@@ -93,11 +93,99 @@ function initAdminDashboardSkeleton() {
   }, 650);
 }
 
+function initActionSummaryFilters() {
+  const pills = document.querySelectorAll('.event-type-filter-pill');
+  if (!pills.length) return;
+
+  pills.forEach((pill) => {
+    pill.addEventListener('click', (e) => {
+      e.preventDefault();
+      const userId = pill.getAttribute('data-user-id');
+      const targetEventType = pill.getAttribute('data-event-type');
+      const card = pill.closest('.compiled-user-card');
+      if (!card) return;
+
+      const allPills = card.querySelectorAll('.event-type-filter-pill');
+      const collapseEl = document.getElementById(`userLogs${userId}`);
+      const table = card.querySelector(`.user-logs-table[data-user-id="${userId}"]`);
+      const statusBadge = card.querySelector('.user-logs-status-badge');
+      if (!table) return;
+
+      const isCurrentlyActive = pill.classList.contains('active');
+
+      // Determine active event type (if clicking already-active filter, toggle back to 'all')
+      let activeType = targetEventType;
+      if (isCurrentlyActive && targetEventType !== 'all') {
+        activeType = 'all';
+      }
+
+      // Update active state visual style across pills in this user card
+      allPills.forEach((p) => {
+        const pType = p.getAttribute('data-event-type');
+        if (pType === activeType) {
+          p.classList.add('active');
+          p.setAttribute('aria-pressed', 'true');
+        } else {
+          p.classList.remove('active');
+          p.setAttribute('aria-pressed', 'false');
+        }
+      });
+
+      // Filter rows in this user's Action History table
+      const rows = table.querySelectorAll('tbody tr:not(.no-matching-logs-row)');
+      let matchingCount = 0;
+
+      rows.forEach((row) => {
+        const rowEventType = row.getAttribute('data-event-type');
+        if (activeType === 'all' || rowEventType === activeType) {
+          row.style.display = '';
+          matchingCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      // Empty state row if no records match
+      let emptyRow = table.querySelector('.no-matching-logs-row');
+      if (matchingCount === 0) {
+        if (!emptyRow) {
+          emptyRow = document.createElement('tr');
+          emptyRow.className = 'no-matching-logs-row';
+          emptyRow.innerHTML = `<td colspan="3" class="text-center text-muted py-4"><i class="bi bi-funnel me-1"></i>No logs found for action: <strong>${activeType}</strong></td>`;
+          const tbody = table.querySelector('tbody');
+          if (tbody) tbody.appendChild(emptyRow);
+        }
+        emptyRow.style.display = '';
+      } else if (emptyRow) {
+        emptyRow.style.display = 'none';
+      }
+
+      // Update badge label in collapsible header
+      if (statusBadge) {
+        if (activeType === 'all') {
+          statusBadge.textContent = `Showing all ${matchingCount} logs`;
+          statusBadge.className = 'badge bg-secondary user-logs-status-badge';
+        } else {
+          statusBadge.textContent = `Filtered: ${matchingCount} '${activeType}' logs`;
+          statusBadge.className = 'badge bg-primary user-logs-status-badge';
+        }
+      }
+
+      // Automatically open the Action History accordion/collapse if closed
+      if (collapseEl && window.bootstrap && window.bootstrap.Collapse) {
+        const bsCollapse = window.bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+        bsCollapse.show();
+      }
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initAdminDashboardSkeleton();
   initAdminToasts();
   normalizeAdminPageScroll();
   updateAdminNavState();
+  initActionSummaryFilters();
 
   const navLinks = document.querySelectorAll('.admin-sidebar .menu-link[data-nav]');
   navLinks.forEach((link) => {

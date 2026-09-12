@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Students Roster — SciencePlay</title>
+  <meta name="description" content="SciencePlay Class Roster: Monitor individual student progress, real-time presence, and performance profiles.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260910_1') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
+</head>
+<body class="teacher-page teacher-dashboard-page">
+
+  <div class="teacher-layout container-fluid">
+    <div class="row g-3 g-lg-4">
+      
+      <!-- Sidebar Navigation -->
+      <aside class="col-12 col-lg-3 col-xl-2">
+        <nav class="teacher-sidebar h-100">
+          <div>
+            <div class="teacher-brand-wrap">
+              <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
+              <div>
+                <div class="teacher-brand-title">SciencePlay</div>
+                <p class="teacher-brand-subtitle">Teacher Portal</p>
+              </div>
+            </div>
+
+            <div class="teacher-menu-group mt-4">
+              <a class="teacher-menu-link" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a class="teacher-menu-link active" data-nav="students" href="{{ url_for('teacher.students') }}">
+                <i class="bi bi-people"></i>
+                <span>Students</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="assignments" href="{{ url_for('teacher.assignments') }}">
+                <i class="bi bi-journal-plus"></i>
+                <span>Assignments</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
+                <i class="bi bi-bar-chart"></i>
+                <span>Analytics</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
+                <i class="bi bi-chat-square-quote-fill"></i>
+                <span>Feedback</span>
+                {% if needs_feedback_count and needs_feedback_count > 0 %}
+                  <span class="feedback-nav-badge">{{ needs_feedback_count }}</span>
+                {% endif %}
+              </a>
+
+              <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
+                <i class="bi bi-book"></i>
+                <span>Lessons</span>
+              </a>
+            </div>
+          </div>
+
+          <a href="{{ url_for('auth.logout') }}" class="teacher-logout-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="col-12 col-lg-9 col-xl-10">
+        <section class="teacher-content">
+          <div class="teacher-center-wrap">
+
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap teacher-head-row">
+              <div>
+                <p class="teacher-eyebrow mb-2">Classroom Roster</p>
+                <h1 class="page-title">Students</h1>
+                <p class="page-subtitle">Access individual student profiles, progress tracking, and revisit history.</p>
+              </div>
+              <div class="d-flex gap-2 align-items-center">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fs-6 fw-bold">
+                  <i class="bi bi-people-fill me-1"></i> {{ total_students }} Students
+                </span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fs-6 fw-bold">
+                  <span class="status-pulse-dot me-1"></span> {{ online_count }} Online Now
+                </span>
+              </div>
+            </div>
+
+            <!-- KPI Row -->
+            <div class="row row-cols-1 row-cols-md-3 g-3 mb-4">
+              <div class="col">
+                <div class="teacher-summary-card">
+                  <div class="teacher-summary-text">
+                    <div class="metric-label">Total Enrolled</div>
+                    <div class="metric-value text-primary">{{ total_students }}</div>
+                  </div>
+                  <span class="teacher-summary-icon ts-blue"><i class="bi bi-mortarboard-fill"></i></span>
+                </div>
+              </div>
+              <div class="col">
+                <div class="teacher-summary-card">
+                  <div class="teacher-summary-text">
+                    <div class="metric-label">Active Presence</div>
+                    <div class="metric-value text-success">{{ online_count }} Online</div>
+                  </div>
+                  <span class="teacher-summary-icon" style="background-color: #dcfce7; color: #16a34a;"><i class="bi bi-broadcast"></i></span>
+                </div>
+              </div>
+              <div class="col">
+                <div class="teacher-summary-card">
+                  <div class="teacher-summary-text">
+                    <div class="metric-label">Avg Class Progress</div>
+                    <div class="metric-value text-warning-emphasis">{{ avg_class_progress }}%</div>
+                  </div>
+                  <span class="teacher-summary-icon ts-orange"><i class="bi bi-graph-up-arrow"></i></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ══════ View Toggle Tabs (Image 3 Style) ══════ -->
+            <ul class="nav nav-pills students-view-pills mb-4 gap-2" id="studentsViewTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-roster" data-bs-toggle="pill" data-bs-target="#pane-roster" type="button" role="tab" aria-controls="pane-roster" aria-selected="true">
+                  <i class="bi bi-person-lines-fill me-2"></i>Classroom Roster
+                  <span class="badge bg-light text-dark border ms-1 rounded-pill">{{ students|length }}</span>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-live-tracker" data-bs-toggle="pill" data-bs-target="#pane-live-tracker" type="button" role="tab" aria-controls="pane-live-tracker" aria-selected="false">
+                  <i class="bi bi-play-circle-fill me-2 text-success"></i>Live Student Lesson Progress &amp; Slide Tracker
+                  <span class="badge bg-success-subtle text-success border border-success-subtle ms-1 rounded-pill">
+                    <span class="status-pulse-dot me-1"></span>{{ live_lesson_tracker|length }} Active
+                  </span>
+                </button>
+              </li>
+            </ul>
+
+            <!-- ══════ Tab Panes ══════ -->
+            <div class="tab-content" id="studentsViewTabContent">
+
+              <!-- TAB 1: Classroom Roster -->
+              <div class="tab-pane fade show active" id="pane-roster" role="tabpanel" aria-labelledby="tab-roster">
+                <section class="table-shell teacher-table-shell mb-4">
+                  <div class="table-header teacher-table-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                      <h2 class="h5 mb-0"><i class="bi bi-person-lines-fill me-2 text-primary"></i>Student Directory</h2>
+                      <span class="badge bg-light text-dark border rounded-pill">{{ students|length }} listed</span>
+                    </div>
+
+                    <!-- Live Search Box -->
+                    <div class="position-relative" style="min-width: 280px; max-width: 400px; flex: 1;">
+                      <i class="bi bi-search search-icon-wrap"></i>
+                      <input type="text" id="studentRosterSearch" class="form-control student-search-bar" placeholder="Search by student name or username..." value="{{ search_query }}" aria-label="Search students by name or username">
+                    </div>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0" id="rosterTable">
+                      <thead>
+                        <tr>
+                          <th style="width: 260px;">Student</th>
+                          <th>Status</th>
+                          <th style="min-width: 170px;">Coursework Progress</th>
+                          <th>Lessons Done</th>
+                          <th>Activities Done</th>
+                          <th>Total Score</th>
+                          <th class="text-end" style="width: 200px;">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for s in students %}
+                          <tr class="student-roster-row" data-name="{{ s.name|lower }}" data-username="{{ s.username|lower }}">
+                            <td>
+                              <div class="d-flex align-items-center gap-2">
+                                <span class="student-avatar-circle">{{ s.name[0]|upper if s.name else 'S' }}</span>
+                                <div>
+                                  <strong class="text-dark d-block fs-6">{{ s.name }}</strong>
+                                  <span class="text-muted small">@{{ s.username }}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              {% if s.is_online %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-bold">
+                                  <span class="status-pulse-dot me-1"></span> Online Now
+                                </span>
+                              {% else %}
+                                <span class="badge bg-light text-muted border px-2 py-1 rounded-pill">
+                                  <i class="bi bi-clock me-1"></i> Offline
+                                </span>
+                              {% endif %}
+                            </td>
+                            <td>
+                              <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height: 8px; border-radius: 999px; background-color: #e2e8f0;">
+                                  <div class="progress-bar {% if s.overall_progress >= 100 %}bg-success{% elif s.overall_progress >= 50 %}bg-primary{% else %}bg-warning{% endif %}" role="progressbar" style="width: {{ s.overall_progress }}%;" aria-valuenow="{{ s.overall_progress }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ s.name }} coursework progress: {{ s.overall_progress }}%"></div>
+                                </div>
+                                <span class="fw-bold small text-dark">{{ s.overall_progress }}%</span>
+                              </div>
+                            </td>
+                            <td>
+                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill">
+                                <i class="bi bi-book me-1"></i>{{ s.completed_lessons }} Lessons
+                              </span>
+                            </td>
+                            <td>
+                              <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 rounded-pill">
+                                <i class="bi bi-controller me-1"></i>{{ s.completed_activities }} Completed
+                              </span>
+                            </td>
+                            <td>
+                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1 rounded-pill fw-bold fs-6">
+                                ⭐ {{ s.total_points }} pts
+                              </span>
+                            </td>
+                            <td class="text-end">
+                              <a href="{{ url_for('teacher.student_performance', student_id=s.id) }}" class="btn btn-sm btn-primary rounded-pill px-3 py-1 fw-bold shadow-sm d-inline-flex align-items-center gap-1">
+                                <span>View Profile</span>
+                                <i class="bi bi-arrow-right-short fs-6"></i>
+                              </a>
+                            </td>
+                          </tr>
+                        {% else %}
+                          <tr>
+                            <td colspan="7" class="text-center text-muted py-5">
+                              <i class="bi bi-person-x fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                              <p class="mb-0 fw-semibold">No students found matching your criteria.</p>
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+
+              <!-- TAB 2: Live Progress & Slide Tracker (Image 3) -->
+              <div class="tab-pane fade" id="pane-live-tracker" role="tabpanel" aria-labelledby="tab-live-tracker">
+                <section class="table-shell teacher-table-shell mb-4" id="live-tracker-section">
+                  <div class="table-header teacher-table-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                      <h2 class="h5 mb-0"><i class="bi bi-play-btn me-2 text-primary"></i>Live Student Lesson Progress &amp; Slide Tracker</h2>
+                      <span class="badge bg-primary rounded-pill">{{ live_lesson_tracker|length }} Active Students</span>
+                    </div>
+
+                    <!-- Live Tracker Search Box -->
+                    <div class="position-relative" style="min-width: 260px; max-width: 380px; flex: 1;">
+                      <i class="bi bi-search search-icon-wrap"></i>
+                      <input type="text" id="liveTrackerSearch" class="form-control student-search-bar" placeholder="Filter by student or lesson title..." aria-label="Filter live tracker by student or lesson title">
+                    </div>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table id="tracker-table" class="table align-middle mb-0">
+                      <thead>
+                        <tr>
+                          <th>Student</th>
+                          <th>Lesson Title</th>
+                          <th>Status</th>
+                          <th>Current Slide</th>
+                          <th>Time Spent</th>
+                          <th>Revisit History</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for tracker in live_lesson_tracker %}
+                          <tr class="live-tracker-row" data-student="{{ tracker.student_name|lower }}" data-lesson="{{ tracker.lesson_title|lower }}">
+                            <td>
+                              <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <a href="{{ url_for('teacher.student_performance', student_id=tracker.student_id) }}" class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
+                                  <i class="bi bi-person-fill text-primary"></i> {{ tracker.student_name }}
+                                </a>
+                                {% if tracker.is_online %}
+                                  <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size: 0.74rem;" title="Active online now">
+                                    <span class="status-pulse-dot me-1"></span>Online
+                                  </span>
+                                {% endif %}
+                              </div>
+                            </td>
+                            <td><span class="fw-semibold text-secondary">{{ tracker.lesson_title }}</span></td>
+                            <td><span class="badge {{ tracker.status_badge_class }} px-3 py-2 rounded-pill">{{ tracker.status }}</span></td>
+                            <td><strong class="text-primary">{{ tracker.current_slide_display }}</strong></td>
+                            <td>{{ tracker.time_spent_display|safe }}</td>
+                            <td>{{ tracker.revisit_display|safe }}</td>
+                          </tr>
+                        {% else %}
+                          <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No student lesson progress recorded yet.</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div id="tracker-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+                    <small id="tracker-page-info" class="text-muted fw-semibold">Showing 1 to 5 entries</small>
+                    <nav>
+                      <ul id="tracker-pagination-nav" class="pagination pagination-smooth mb-0"></ul>
+                    </nav>
+                  </div>
+                </section>
+              </div>
+
+            </div><!-- end tab-content -->
+
+          </div>
+        </section>
+      </main>
+
+    </div>
+  </div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher.js', v='20260910_1') }}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // 1. Setup Pagination for Live Tracker using centralized teacher.js helper
+      setupTablePagination('#tracker-table', '#tracker-pagination-wrap', '#tracker-page-info', '#tracker-pagination-nav', 5);
+
+      // 2. Roster Search Filtering
+      const rosterSearch = document.getElementById('studentRosterSearch');
+      if (rosterSearch) {
+        rosterSearch.addEventListener('input', function () {
+          const query = this.value.trim().toLowerCase();
+          const rows = document.querySelectorAll('.student-roster-row');
+          rows.forEach(row => {
+            const name = row.getAttribute('data-name') || '';
+            const username = row.getAttribute('data-username') || '';
+            row.style.display = (!query || name.includes(query) || username.includes(query)) ? '' : 'none';
+          });
+        });
+      }
+
+      // 3. Live Tracker Search Filtering
+      const trackerSearch = document.getElementById('liveTrackerSearch');
+      if (trackerSearch) {
+        trackerSearch.addEventListener('input', function () {
+          const query = this.value.trim().toLowerCase();
+          const rows = document.querySelectorAll('.live-tracker-row');
+          const paginationWrap = document.getElementById('tracker-pagination-wrap');
+          
+          if (!query) {
+            setupTablePagination('#tracker-table', '#tracker-pagination-wrap', '#tracker-page-info', '#tracker-pagination-nav', 5);
+            return;
+          }
+
+          if (paginationWrap) paginationWrap.style.display = 'none';
+          rows.forEach(row => {
+            const student = row.getAttribute('data-student') || '';
+            const lesson = row.getAttribute('data-lesson') || '';
+            row.style.display = (student.includes(query) || lesson.includes(query)) ? '' : 'none';
+          });
+        });
+      }
+    });
+  </script>
+</body>
+</html>

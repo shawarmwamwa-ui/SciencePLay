@@ -80,7 +80,9 @@ let lessonFinished = false;
 function initLesson() {
   console.log('Initializing lesson...');
   console.log('LESSON_SLIDES available:', LESSON_SLIDES ? LESSON_SLIDES.length + ' slides' : 'NOT LOADED');
-  lessonState.currentIndex = 0;
+  const startIdx = typeof window.initialSlideIndex === 'number' ? Number(window.initialSlideIndex) : (Number(window.initial_slide) || 0);
+  const slides = getActiveLessonSlides();
+  lessonState.currentIndex = Math.min(Math.max(0, startIdx), slides.length - 1);
   lessonState.log = [];
   lessonState.slideStates = {};
   lessonState.slideStartTime = Date.now();
@@ -652,6 +654,7 @@ function saveLessonProgress(completed = false) {
       'Content-Type': 'application/json'
     },
     credentials: 'same-origin',
+    keepalive: true,
     body: JSON.stringify(payload)
   }).then(response => {
     if (!response.ok) {

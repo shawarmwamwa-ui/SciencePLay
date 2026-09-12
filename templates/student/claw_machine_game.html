@@ -2,10 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Living vs Non-Living Claw Machine</title>
+  <meta name="description" content="SciencePlay Claw Machine Game: Practice classifying living and non-living objects in an arcade-style interactive science game.">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/clawMachineGame.css', v='20260810') }}">
 </head>
 <body class="arcade-page">
@@ -143,9 +147,19 @@
     </aside>
   </div>
 
+  <audio id="game-bgm" loop preload="none">
+    <source src="{{ url_for('static', filename='audio/Piki - Happy Walking (freetouse.com).mp3') }}" type="audio/mpeg">
+  </audio>
+
   <script>window.clawMachineActivityId = {{ activity_id|tojson }};</script>
 
   <script type="module" src="{{ url_for('static', filename='js/clawMachineGame.js') }}"></script>
+  <script type="module">
+    import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
+    window.addEventListener('DOMContentLoaded', () => {
+      initBgmPlayer('game-bgm', { volume: 0.20, storageKey: 'scienceplay_game_bgm_muted' });
+    });
+  </script>
   <script>
     window.addEventListener('DOMContentLoaded', () => {
       if (window.initClawMachineGame) {
@@ -153,5 +167,6 @@
       }
     });
   </script>
+  <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 </body>
 </html>

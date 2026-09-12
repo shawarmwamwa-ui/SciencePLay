@@ -4,22 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ student.name }} - Performance Report</title>
+  <meta name="description" content="SciencePlay Student Performance Report: View individual student scores, attempt histories, and teacher notes.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css') }}">
-  <style>
-    .feedback-badge { display: inline-block; padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.82rem; font-weight: 700; }
-    .badge-earned { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-    .badge-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-    .attempt-card { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 5px solid #0284c7; padding: 1.1rem; margin-bottom: 0.85rem; border-radius: 0.85rem; }
-    .attempt-score { font-weight: 800; color: #0284c7; }
-    .feedback-input { font-family: inherit; font-size: 0.95rem; border-radius: 0.65rem; }
-    .badge-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.25rem; text-align: center; box-shadow: 0 4px 12px rgba(15,23,42,0.03); transition: transform 0.18s ease; }
-    .badge-card:hover { transform: translateY(-3px); }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260903_3') }}">
 </head>
 <body class="teacher-page teacher-dashboard-page">
 
@@ -33,7 +26,7 @@
             <div class="teacher-brand-wrap">
               <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
               <div>
-                <h1 class="teacher-brand-title">SciencePlay</h1>
+                <div class="teacher-brand-title">SciencePlay</div>
                 <p class="teacher-brand-subtitle">Teacher Portal</p>
               </div>
             </div>
@@ -43,17 +36,26 @@
                 <i class="bi bi-grid"></i>
                 <span>Dashboard</span>
               </a>
+
+              <a class="teacher-menu-link active" data-nav="students" href="{{ url_for('teacher.students') }}">
+                <i class="bi bi-people"></i>
+                <span>Students</span>
+              </a>
+
               <a class="teacher-menu-link" data-nav="assignments" href="{{ url_for('teacher.assignments') }}">
                 <i class="bi bi-journal-plus"></i>
                 <span>Assignments</span>
               </a>
-              <a class="teacher-menu-link active" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
+              <a class="teacher-menu-link" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
                 <i class="bi bi-bar-chart"></i>
                 <span>Analytics</span>
               </a>
               <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
                 <i class="bi bi-chat-square-quote-fill"></i>
                 <span>Feedback</span>
+                {% if needs_feedback_count and needs_feedback_count > 0 %}
+                  <span class="feedback-nav-badge">{{ needs_feedback_count }}</span>
+                {% endif %}
               </a>
               <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
                 <i class="bi bi-book"></i>
@@ -79,12 +81,12 @@
               <div>
                 <p class="teacher-eyebrow mb-2">Student Performance Report</p>
                 <h1 class="page-title">{{ student.name }}</h1>
-                <p class="page-subtitle">Detailed progress, attempts, and feedback management.</p>
+                <p class="page-subtitle">Individual coursework mastery, revisit timelines, and feedback history.</p>
               </div>
               <div class="dashboard-actions d-flex gap-2 flex-wrap align-items-center teacher-actions">
-                <a href="{{ url_for('teacher.analytics') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-semibold">
+                <a href="{{ url_for('teacher.students') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-semibold">
                   <i class="bi bi-arrow-left me-1"></i>
-                  <span>Back to Analytics</span>
+                  <span>Back to Students</span>
                 </a>
               </div>
             </div>
@@ -127,7 +129,7 @@
               <div class="col-lg-6">
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                   <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-journal-text me-2 text-primary"></i>Curriculum Lessons</h5>
+                    <h2 class="h5 mb-0 fw-bold text-dark"><i class="bi bi-journal-text me-2 text-primary"></i>Curriculum Lessons</h2>
                     <span class="badge bg-secondary rounded-pill">{{ lesson_progress|length }} Lessons</span>
                   </div>
                   <div class="card-body">
@@ -182,7 +184,7 @@
               <div class="col-lg-6">
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                   <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-controller me-2 text-primary"></i>Activity Performance</h5>
+                    <h2 class="h5 mb-0 fw-bold text-dark"><i class="bi bi-controller me-2 text-primary"></i>Activity Performance</h2>
                     <span class="badge bg-secondary rounded-pill">{{ progress_logs|length }} Activities</span>
                   </div>
                   <div class="card-body">
@@ -206,54 +208,62 @@
                   </div>
                 </div>
               </div>
-            </div>
-
-            <!-- Recent Attempts & Feedback -->
+            </div>            <!-- Feedback & Notes History (Clean, Read-Only with link to Feedback Hub) -->
             <div class="card border-0 shadow-sm rounded-4 mb-4">
-              <div class="card-header bg-white py-3 border-0">
-                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Attempts & Feedback</h5>
+              <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                  <h2 class="h5 mb-0 fw-bold text-dark"><i class="bi bi-chat-square-quote me-2 text-primary"></i>Feedback & Teacher Notes</h2>
+                  <p class="text-muted small mb-0">Evaluations and personalized notes recorded for {{ student.name }}.</p>
+                </div>
+                <a href="{{ url_for('teacher.feedback') }}" class="btn btn-sm btn-primary rounded-pill px-3 py-1 fw-bold shadow-sm d-inline-flex align-items-center gap-1">
+                  <i class="bi bi-chat-dots-fill"></i>
+                  <span>Give Feedback in Feedback Hub</span>
+                  <i class="bi bi-arrow-right-short"></i>
+                </a>
               </div>
               <div class="card-body">
+                {% set has_any_feedback = false %}
                 {% if attempts %}
-                  {% for attempt, activity in attempts %}
-                  <div class="attempt-card">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                      <div>
-                        <strong class="text-dark fs-6">{{ activity.type }}</strong>
-                        <div class="small text-muted">
-                          Attempt #{{ attempt.attempt_number }}{% if 'Slide' not in activity.type and 'Check' not in activity.type and 'Question' not in activity.type %} — Score: <span class="attempt-score">{{ attempt.score }} pts</span>{% endif %}
+                  <div class="row g-3">
+                    {% for attempt, activity in attempts %}
+                      {% if attempt.feedback or attempt.teacher_feedback %}
+                        {% set has_any_feedback = true %}
+                        <div class="col-12">
+                          <div class="p-3 rounded-4 border bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                              <div>
+                                <strong class="text-dark">{{ activity.type }}</strong>
+                                <span class="text-muted small ms-2">Attempt #{{ attempt.attempt_number }}{% if attempt.score and 'Slide' not in activity.type %} • Score: <strong class="text-primary">{{ attempt.score }} pts</strong>{% endif %}</span>
+                              </div>
+                              <span class="text-muted small">{{ attempt.created_at.strftime('%b %d, %Y at %I:%M %p') if attempt.created_at else '' }}</span>
+                            </div>
+
+                            {% if attempt.feedback %}
+                              <div class="mb-2">
+                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 rounded-pill small me-1">System Evaluation</span>
+                                <span class="text-dark small">{{ attempt.feedback }}</span>
+                              </div>
+                            {% endif %}
+
+                            {% if attempt.teacher_feedback %}
+                              <div class="p-2 px-3 rounded-3 bg-white border border-primary-subtle text-dark">
+                                <div class="d-flex align-items-center gap-1 text-primary fw-bold small mb-1">
+                                  <i class="bi bi-person-badge-fill"></i> Teacher Note:
+                                </div>
+                                <div class="fst-italic small">{{ attempt.teacher_feedback }}</div>
+                              </div>
+                            {% endif %}
+                          </div>
                         </div>
-                      </div>
-                      <div>
-                        {% if attempt.feedback %}
-                          <span class="feedback-badge badge-earned"><i class="bi bi-check-circle me-1"></i>Feedback Given</span>
-                        {% else %}
-                          <span class="feedback-badge badge-pending"><i class="bi bi-hourglass-split me-1"></i>Needs Feedback</span>
-                        {% endif %}
-                      </div>
-                    </div>
-
-                    <!-- Feedback Section -->
-                    <div class="mt-3">
-                      <div class="mb-3">
-                        <label class="form-label small text-muted fw-bold">System Feedback:</label>
-                        {% if attempt.feedback %}
-                          <div class="bg-white p-3 rounded-3 border mb-0 text-dark">{{ attempt.feedback }}</div>
-                        {% else %}
-                          <div class="bg-light p-3 rounded-3 border text-muted mb-0">No automatic feedback has been generated yet.</div>
-                        {% endif %}
-                      </div>
-
-                      <div>
-                        <label class="form-label small text-muted fw-bold">Teacher P.S. Note:</label>
-                        <textarea class="form-control feedback-input" id="teacher-feedback-text-{{ attempt.id }}" rows="3" placeholder="Add a personalized note or next-step instruction...">{{ attempt.teacher_feedback or '' }}</textarea>
-                        <button class="btn btn-sm btn-primary mt-2" onclick="saveFeedback({{ attempt.id }})"><i class="bi bi-send me-1"></i>Save P.S. Note</button>
-                      </div>
-                    </div>
+                      {% endif %}
+                    {% endfor %}
                   </div>
-                  {% endfor %}
-                {% else %}
-                  <p class="text-muted mb-0">No attempts recorded yet</p>
+                {% endif %}
+                {% if not attempts or not has_any_feedback %}
+                  <div class="text-center text-muted py-4">
+                    <i class="bi bi-chat-left-dots fs-2 d-block mb-1 opacity-50"></i>
+                    <p class="mb-0">No feedback notes recorded yet for this student.</p>
+                  </div>
                 {% endif %}
               </div>
             </div>
@@ -261,7 +271,7 @@
             <!-- Badges & Achievements -->
             <div class="card border-0 shadow-sm rounded-4 mb-4">
               <div class="card-header bg-white py-3 border-0">
-                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-award me-2 text-primary"></i>Badges & Achievements</h5>
+                <h2 class="h5 mb-0 fw-bold text-dark"><i class="bi bi-award me-2 text-primary"></i>Badges & Achievements</h2>
               </div>
               <div class="card-body">
                 {% if badges %}
@@ -269,10 +279,36 @@
                     {% for user_badge, badge in badges %}
                     <div class="col-md-4 col-sm-6">
                       <div class="badge-card">
-                        <div class="display-5 mb-2">{{ badge.icon }}</div>
-                        <h6 class="fw-bold mb-1 text-dark">{{ badge.name }}</h6>
-                        <p class="small text-muted mb-2">{{ badge.description }}</p>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill">+{{ badge.points }} pts</span>
+                        {% if 'Lesson Master' in badge.name %}
+                          <div class="badge-card-icon-wrap badge-theme-mortarboard">
+                            <i class="bi bi-mortarboard-fill"></i>
+                          </div>
+                        {% elif 'First Success' in badge.name %}
+                          <div class="badge-card-icon-wrap badge-theme-bullseye">
+                            <i class="bi bi-bullseye"></i>
+                          </div>
+                        {% elif 'Perfect Score' in badge.name %}
+                          <div class="badge-card-icon-wrap badge-theme-star">
+                            <i class="bi bi-star-fill"></i>
+                          </div>
+                        {% elif 'Speedster' in badge.name %}
+                          <div class="badge-card-icon-wrap badge-theme-lightning">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                          </div>
+                        {% elif 'Lesson Complete' in badge.name or 'Trophy' in badge.name %}
+                          <div class="badge-card-icon-wrap badge-theme-trophy">
+                            <i class="bi bi-trophy-fill"></i>
+                          </div>
+                        {% else %}
+                          <div class="badge-card-icon-wrap badge-theme-default">
+                            <i class="bi bi-award-fill"></i>
+                          </div>
+                        {% endif %}
+                        <h3 class="h6 fw-bold mb-1 text-dark">{{ badge.name }}</h3>
+                        <p class="small text-muted mb-3">{{ badge.description or 'Achievement unlocked!' }}</p>
+                        <span class="badge-unlocked-pill">
+                          <i class="bi bi-patch-check-fill"></i>Unlocked
+                        </span>
                       </div>
                     </div>
                     {% endfor %}
@@ -289,37 +325,7 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    function saveFeedback(attemptId) {
-      const feedbackText = document.querySelector(`#teacher-feedback-text-${attemptId}`).value;
-      if (!feedbackText.trim()) {
-        alert('Please enter a P.S. note');
-        return;
-      }
-
-      fetch('{{ url_for("teacher.add_feedback") }}', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          attempt_id: attemptId,
-          teacher_feedback: feedbackText
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.error) {
-          alert('Error: ' + data.error);
-        } else {
-          alert('Feedback saved successfully!');
-          location.reload();
-        }
-      })
-      .catch(error => console.error('Error:', error));
-    }
-  </script>
-  <script src="{{ url_for('static', filename='js/teacher.js') }}"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher.js') }}"></script>
 </body>
 </html>

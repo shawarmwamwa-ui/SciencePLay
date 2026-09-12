@@ -4,57 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teacher Feedback Hub — SciencePlay</title>
+  <meta name="description" content="SciencePlay Teacher Feedback: Review student answers, send personalized feedback, and track submission notes.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260903_3') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
-  <style>
-    .feedback-submission-card {
-      background: #ffffff;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 1rem;
-      padding: 1.25rem;
-      transition: all 0.2s ease;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .feedback-submission-card:hover {
-      border-color: #cbd5e1;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-    .feedback-submission-card.needs-note {
-      border-left: 5px solid #f59e0b;
-    }
-    .feedback-submission-card.note-given {
-      border-left: 5px solid #10b981;
-    }
-    .quick-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-size: 0.78rem;
-      font-weight: 600;
-      padding: 0.3rem 0.65rem;
-      border-radius: 999px;
-      border: 1px solid #e2e8f0;
-      background: #f8fafc;
-      color: #475569;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .quick-chip:hover {
-      background: #e2e8f0;
-      color: #1e293b;
-      border-color: #cbd5e1;
-    }
-    .save-status-indicator {
-      font-size: 0.82rem;
-      font-weight: 600;
-      display: none;
-    }
-  </style>
 </head>
 <body class="teacher-page teacher-dashboard-page">
 
@@ -66,7 +25,7 @@
             <div class="teacher-brand-wrap">
               <span class="teacher-brand-icon"><i class="bi bi-chat-heart-fill"></i></span>
               <div>
-                <h1 class="teacher-brand-title">SciencePlay</h1>
+                <div class="teacher-brand-title">SciencePlay</div>
                 <p class="teacher-brand-subtitle">Teacher Portal</p>
               </div>
             </div>
@@ -75,6 +34,11 @@
               <a class="teacher-menu-link" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
                 <i class="bi bi-grid"></i>
                 <span>Dashboard</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="students" href="{{ url_for('teacher.students') }}">
+                <i class="bi bi-people"></i>
+                <span>Students</span>
               </a>
 
               <a class="teacher-menu-link" data-nav="assignments" href="{{ url_for('teacher.assignments') }}">
@@ -88,8 +52,8 @@
               <a class="teacher-menu-link active" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
                 <i class="bi bi-chat-square-quote-fill"></i>
                 <span>Feedback</span>
-                {% if needs_feedback_count > 0 %}
-                  <span class="badge bg-warning text-dark rounded-pill ms-auto small">{{ needs_feedback_count }}</span>
+                {% if needs_feedback_count and needs_feedback_count > 0 %}
+                  <span class="feedback-nav-badge">{{ needs_feedback_count }}</span>
                 {% endif %}
               </a>
               <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
@@ -193,21 +157,21 @@
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">
                   <div class="metric-label">Total Submissions</div>
-                  <div class="metric-value">{{ total_submissions }}</div>
+                  <div id="kpi-total-submissions" class="metric-value">{{ total_submissions }}</div>
                 </div>
                 <span class="teacher-summary-icon ts-blue"><i class="bi bi-controller"></i></span>
               </div>
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">
                   <div class="metric-label">Needs Teacher Note</div>
-                  <div class="metric-value">{{ needs_feedback_count }}</div>
+                  <div id="kpi-needs-feedback" class="metric-value">{{ needs_feedback_count }}</div>
                 </div>
                 <span class="teacher-summary-icon ts-amber"><i class="bi bi-hourglass-split"></i></span>
               </div>
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">
                   <div class="metric-label">Feedback Given</div>
-                  <div class="metric-value">{{ feedback_given_count }}</div>
+                  <div id="kpi-feedback-given" class="metric-value">{{ feedback_given_count }}</div>
                 </div>
                 <span class="teacher-summary-icon ts-green"><i class="bi bi-check-circle-fill"></i></span>
               </div>
@@ -218,30 +182,24 @@
               <div class="row g-3 align-items-center">
                 <!-- Status Tab Pills -->
                 <div class="col-12 col-md-6 col-lg-5">
-                  <ul class="nav nav-pills nav-fill bg-light p-1 rounded-pill" id="feedbackTabs" role="tablist">
-                    <li class="nav-item">
-                      <button class="nav-link active rounded-pill py-1 px-3 fw-bold small filter-tab-btn" data-filter="all" type="button">
-                        All ({{ total_submissions }})
-                      </button>
-                    </li>
-                    <li class="nav-item">
-                      <button class="nav-link rounded-pill py-1 px-3 fw-bold small filter-tab-btn" data-filter="pending" type="button">
-                        <i class="bi bi-hourglass-split me-1 text-warning"></i>Needs Note ({{ needs_feedback_count }})
-                      </button>
-                    </li>
-                    <li class="nav-item">
-                      <button class="nav-link rounded-pill py-1 px-3 fw-bold small filter-tab-btn" data-filter="completed" type="button">
-                        <i class="bi bi-check-circle-fill me-1 text-success"></i>Given ({{ feedback_given_count }})
-                      </button>
-                    </li>
-                  </ul>
+                  <div class="nav nav-pills nav-fill bg-light p-1 rounded-pill" id="feedbackTabs">
+                    <button id="tab-btn-all" class="nav-link active rounded-pill py-1 px-3 fw-bold small filter-tab-btn" data-filter="all" type="button">
+                      All ({{ total_submissions }})
+                    </button>
+                    <button id="tab-btn-pending" class="nav-link rounded-pill py-1 px-3 fw-bold small filter-tab-btn" data-filter="pending" type="button">
+                      <i class="bi bi-hourglass-split me-1 text-warning"></i>Needs Note ({{ needs_feedback_count }})
+                    </button>
+                    <button id="tab-btn-completed" class="nav-link rounded-pill py-1 px-3 fw-bold small filter-tab-btn" data-filter="completed" type="button">
+                      <i class="bi bi-check-circle-fill me-1 text-success"></i>Given ({{ feedback_given_count }})
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Student Dropdown Filter -->
                 <div class="col-12 col-sm-6 col-md-3 col-lg-3">
                   <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
-                    <select id="studentFilter" class="form-select border-start-0 bg-light">
+                    <select id="studentFilter" class="form-select border-start-0 bg-light" aria-label="Filter submissions by student">
                       <option value="">All Students</option>
                       {% for s in students %}
                         <option value="{{ s.id }}">{{ s.name }}</option>
@@ -254,7 +212,7 @@
                 <div class="col-12 col-sm-6 col-md-3 col-lg-4">
                   <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" id="searchInput" class="form-control border-start-0 bg-light" placeholder="Search student or activity...">
+                    <input type="text" id="searchInput" class="form-control border-start-0 bg-light" placeholder="Search student or activity..." aria-label="Search student or activity">
                   </div>
                 </div>
               </div>
@@ -280,13 +238,13 @@
                           <span>{{ stu.name }}</span>
                           <i class="bi bi-arrow-right-short text-muted"></i>
                         </a>
-                        <span class="badge {% if item.has_feedback %}bg-success-subtle text-success border border-success-subtle{% else %}bg-warning-subtle text-warning-emphasis border border-warning-subtle{% endif %} px-2 py-1 rounded-pill">
+                        <span id="status-badge-{{ att.id }}" class="badge submission-status-badge {% if item.has_feedback %}bg-success-subtle text-success border border-success-subtle{% else %}bg-warning-subtle text-warning-emphasis border border-warning-subtle{% endif %} px-2 py-1 rounded-pill">
                           <i class="bi {% if item.has_feedback %}bi-check-circle-fill{% else %}bi-hourglass-split{% endif %} me-1"></i>
-                          {{ 'Feedback Given' if item.has_feedback else 'Needs Note' }}
+                          <span>{{ 'Feedback Given' if item.has_feedback else 'Needs Note' }}</span>
                         </span>
                       </div>
 
-                      <h5 class="fw-bold text-dark mb-1 fs-6">{{ act.type }}</h5>
+                      <h2 class="h5 fw-bold text-dark mb-1 fs-6">{{ act.type }}</h2>
                       <div class="d-flex flex-wrap gap-2 align-items-center small text-muted mb-2">
                         <span class="badge bg-light text-dark border">Attempt #{{ att.attempt_number }}</span>
                         {% if 'Slide' not in act.type and 'Check' not in act.type and 'Question' not in act.type %}
@@ -339,14 +297,14 @@
               {% else %}
                 <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
                   <i class="bi bi-chat-square-dots text-muted opacity-50 display-4 mb-3"></i>
-                  <h4 class="fw-bold text-dark">No Submissions Found</h4>
+                  <h3 class="h4 fw-bold text-dark">No Submissions Found</h3>
                   <p class="text-muted mb-0">Student activity attempts will appear here automatically when they play games.</p>
                 </div>
               {% endfor %}
 
               <div id="noResultsNotice" class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white d-none">
                 <i class="bi bi-funnel text-muted opacity-50 display-4 mb-3"></i>
-                <h4 class="fw-bold text-dark">No Matching Submissions</h4>
+                <h3 class="h4 fw-bold text-dark">No Matching Submissions</h3>
                 <p class="text-muted mb-0">Try changing your filter tabs or search keywords.</p>
               </div>
             </div>
@@ -359,8 +317,8 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='js/teacher.js') }}"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher.js') }}"></script>
   <script>
     // Quick preset insertion
     function applyPreset(attemptId, text) {
@@ -372,6 +330,44 @@
         textarea.value = text;
       }
       textarea.focus();
+    }
+
+    // Dynamic UI counters & badges updater
+    function updateCounters() {
+      const allCards = document.querySelectorAll('.feedback-submission-card');
+      const pendingCards = document.querySelectorAll('.feedback-submission-card[data-status="pending"]');
+      const completedCards = document.querySelectorAll('.feedback-submission-card[data-status="completed"]');
+
+      const total = allCards.length;
+      const pending = pendingCards.length;
+      const completed = completedCards.length;
+
+      const kpiTotal = document.getElementById('kpi-total-submissions');
+      const kpiNeeds = document.getElementById('kpi-needs-feedback');
+      const kpiGiven = document.getElementById('kpi-feedback-given');
+
+      if (kpiTotal) kpiTotal.textContent = total;
+      if (kpiNeeds) kpiNeeds.textContent = pending;
+      if (kpiGiven) kpiGiven.textContent = completed;
+
+      const tabAll = document.getElementById('tab-btn-all');
+      const tabPending = document.getElementById('tab-btn-pending');
+      const tabCompleted = document.getElementById('tab-btn-completed');
+
+      if (tabAll) tabAll.innerHTML = `All (${total})`;
+      if (tabPending) tabPending.innerHTML = `<i class="bi bi-hourglass-split me-1 text-warning"></i>Needs Note (${pending})`;
+      if (tabCompleted) tabCompleted.innerHTML = `<i class="bi bi-check-circle-fill me-1 text-success"></i>Given (${completed})`;
+
+      // Update sidebar notification badges
+      const sidebarBadges = document.querySelectorAll('.feedback-nav-badge');
+      sidebarBadges.forEach(b => {
+        if (pending > 0) {
+          b.textContent = pending;
+          b.style.display = 'inline-flex';
+        } else {
+          b.style.display = 'none';
+        }
+      });
     }
 
     // Ajax Save Feedback
@@ -409,18 +405,38 @@
             setTimeout(() => { indicator.style.display = 'none'; }, 3000);
           }
 
-          // Update card class and data-status
+          // Instantly update card badge and state
           const card = textarea.closest('.feedback-submission-card');
+          const badge = document.getElementById(`status-badge-${attemptId}`) || (card ? card.querySelector('.submission-status-badge') : null);
+
           if (card) {
             if (text.length > 0) {
               card.classList.remove('needs-note');
               card.classList.add('note-given');
               card.setAttribute('data-status', 'completed');
+
+              if (badge) {
+                badge.className = 'badge submission-status-badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill';
+                badge.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i><span>Feedback Given</span>';
+              }
             } else {
               card.classList.add('needs-note');
               card.classList.remove('note-given');
               card.setAttribute('data-status', 'pending');
+
+              if (badge) {
+                badge.className = 'badge submission-status-badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill';
+                badge.innerHTML = '<i class="bi bi-hourglass-split me-1"></i><span>Needs Note</span>';
+              }
             }
+          }
+
+          // Update metric cards, tab counts, and sidebar badge immediately
+          updateCounters();
+
+          // Re-apply current active filters smoothly
+          if (window.applyFeedbackFilters) {
+            window.applyFeedbackFilters();
           }
         } else {
           throw new Error('Failed to save');
@@ -443,7 +459,7 @@
 
       let currentStatusFilter = 'all';
 
-      function applyFilters() {
+      window.applyFeedbackFilters = function() {
         const selectedStudent = studentFilter ? studentFilter.value : '';
         const searchKeyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
         let visibleCount = 0;
@@ -468,21 +484,20 @@
         if (noResults) {
           noResults.classList.toggle('d-none', visibleCount > 0);
         }
-      }
+      };
 
       filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
           filterBtns.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           currentStatusFilter = btn.getAttribute('data-filter');
-          applyFilters();
+          window.applyFeedbackFilters();
         });
       });
 
-      if (studentFilter) studentFilter.addEventListener('change', applyFilters);
-      if (searchInput) searchInput.addEventListener('input', applyFilters);
+      if (studentFilter) studentFilter.addEventListener('change', window.applyFeedbackFilters);
+      if (searchInput) searchInput.addEventListener('input', window.applyFeedbackFilters);
     });
   </script>
-  <script src="{{ url_for('static', filename='js/teacher.js') }}"></script>
 </body>
 </html>

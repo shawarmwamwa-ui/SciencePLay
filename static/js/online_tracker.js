@@ -6,7 +6,8 @@
 (function () {
   'use strict';
 
-  const HEARTBEAT_INTERVAL_MS = 30000; // 30 seconds
+  const HEARTBEAT_INTERVAL_MS = 10000; // 10 seconds heartbeat ping
+  const REFRESH_INTERVAL_MS = 4000;   // 4 seconds live refresh on dashboards
 
   // Send periodic heartbeat ping
   function sendHeartbeat() {
@@ -40,7 +41,11 @@
     // Update count badges
     const countBadges = document.querySelectorAll('.online-count-badge');
     countBadges.forEach(function (badge) {
-      badge.textContent = count;
+      if (badge.tagName === 'SPAN' && badge.classList.contains('rounded-pill')) {
+        badge.textContent = count + ' Online';
+      } else {
+        badge.textContent = count;
+      }
     });
 
     // Update list container if present
@@ -49,7 +54,7 @@
 
     if (!users || users.length === 0) {
       container.innerHTML = `
-        <div class="text-center text-muted py-3">
+        <div class="text-center text-muted py-4">
           <i class="bi bi-person-x fs-3 d-block mb-1 opacity-50"></i>
           <span class="small">No users currently online</span>
         </div>
@@ -121,16 +126,36 @@
     // Universal 5-second alert auto-dismissal
     initAutoDismissAlerts();
 
-    // Send heartbeat immediately on page load
-    sendHeartbeat();
+    // Delay initial heartbeat and online user polling slightly (1.5s)
+    // so critical rendering and LCP paint complete without network contention
+    setTimeout(function () {
+      sendHeartbeat();
 
-    // If page has online users container or count badge, fetch initial data
-    if (document.querySelector('.online-users-container') || document.querySelector('.online-count-badge')) {
-      refreshOnlineUsers();
-      setInterval(refreshOnlineUsers, HEARTBEAT_INTERVAL_MS);
-    }
+      // If page has online users container or count badge, fetch initial data and poll
+      if (document.querySelector('.online-users-container') || document.querySelector('.online-count-badge')) {
+        refreshOnlineUsers();
+        setInterval(refreshOnlineUsers, REFRESH_INTERVAL_MS);
+      }
 
-    // Schedule periodic heartbeat
-    setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
+      // Schedule periodic heartbeat
+      setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
+    }, 1500);
+
+    // Immediate ping on tab focus/visibility change (important for mobile/tablet devices)
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') {
+        sendHeartbeat();
+        if (document.querySelector('.online-users-container') || document.querySelector('.online-count-badge')) {
+          refreshOnlineUsers();
+        }
+      }
+    });
+
+    window.addEventListener('focus', function () {
+      sendHeartbeat();
+      if (document.querySelector('.online-users-container') || document.querySelector('.online-count-badge')) {
+        refreshOnlineUsers();
+      }
+    });
   });
 })();

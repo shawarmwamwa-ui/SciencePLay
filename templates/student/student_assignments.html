@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Learning Tasks — Student Portal</title>
+  <meta name="description" content="SciencePlay Student Assignments: View active assigned lessons, playable activities, and completed tasks.">
+  
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
@@ -122,8 +126,9 @@
                       {% set target_url = url_for('student.living_non_living_lesson') if 'Living vs Non-Living' in lesson_title
                              else url_for('student.parts_lesson') if 'Parts of an Animal' in lesson_title
                              else url_for('student.lessons') %}
-                      <a href="{{ target_url }}" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="text-decoration:none;">
-                        <i class="bi bi-play-fill"></i> Start
+                      <a href="{{ target_url }}" class="btn btn-sm {% if assignment.status == 'completed' %}btn-outline-primary{% else %}btn-primary{% endif %} rounded-pill px-3 fw-bold" style="text-decoration:none;">
+                        <i class="bi {% if assignment.status == 'completed' %}bi-arrow-clockwise{% else %}bi-play-fill{% endif %} me-1"></i>
+                        {% if assignment.status == 'completed' %}Review{% else %}Start{% endif %}
                       </a>
                     </td>
                   </tr>
@@ -168,6 +173,8 @@
                     <td>
                       {% if assignment.status == 'completed' %}
                         <span class="status-badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i>Done</span>
+                      {% elif assignment.status == 'attempts_exhausted' %}
+                        <span class="status-badge bg-warning-subtle text-warning-emphasis border border-warning-subtle"><i class="bi bi-slash-circle me-1"></i>Attempts Used</span>
                       {% else %}
                         <span class="status-badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-hourglass-split me-1"></i>Assigned</span>
                       {% endif %}
@@ -187,10 +194,10 @@
                       {% set act_engine = assignment.activity.engine if assignment.activity else '' %}
                       {% set target_url = url_for('student.claw_machine') if ('Claw Machine' in act_type or act_engine == 'claw_machine')
                              else url_for('student.find_the_part_game') if ('Find the Part' in act_type or act_engine == 'find_the_part')
-                             else url_for('student.streak_race_game') if ('Streak Race' in act_type or act_engine == 'streak_race')
+                             else url_for('student.build_a_plant_game') if ('Streak Race' in act_type or act_engine == 'streak_race' or 'Build a Plant' in act_type or act_engine == 'build_a_plant')
                              else url_for('student.activities') %}
                       {% if is_unlocked %}
-                        <a href="{{ target_url }}" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold text-dark" style="text-decoration:none;">
+                        <a href="{{ target_url }}" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold text-dark shadow-sm" style="text-decoration:none;">
                           <i class="bi bi-controller me-1"></i> Play
                         </a>
                       {% else %}
@@ -210,11 +217,30 @@
             <p class="mb-0 text-muted fw-bold">All caught up! No active activity assignments.</p>
           </div>
         {% endif %}
+
+        {% if exhausted_activity_assignments %}
+          <div class="mt-3 p-3 bg-light rounded-3 border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold mb-0 text-muted small"><i class="bi bi-clock-history me-1"></i>Completed Activities</h6>
+              <span class="badge bg-secondary rounded-pill">{{ exhausted_activity_assignments|length }}</span>
+            </div>
+            <div class="d-flex flex-column gap-2">
+              {% for ea in exhausted_activity_assignments %}
+                <div class="d-flex justify-content-between align-items-center small py-1 border-bottom border-light">
+                  <span class="text-dark fw-semibold">{{ ea.activity.type if ea.activity else ('Activity #' ~ ea.activity_id) }}</span>
+                  <span class="badge bg-secondary-subtle text-secondary border rounded-pill px-2 py-1">
+                    <i class="bi bi-check2-circle me-1"></i>3/3 Attempts Used
+                  </span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 </body>
 </html>

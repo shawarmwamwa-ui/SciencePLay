@@ -93,7 +93,7 @@ def ensure_default_curriculum():
             get_or_create_animal_body_parts_lesson,
             get_or_create_find_the_part_activity,
             get_or_create_plant_parts_lesson,
-            get_or_create_streak_race_activity
+            get_or_create_build_a_plant_activity
         )
         try:
             get_or_create_default_lesson()
@@ -101,7 +101,7 @@ def ensure_default_curriculum():
             get_or_create_animal_body_parts_lesson()
             get_or_create_find_the_part_activity()
             get_or_create_plant_parts_lesson()
-            get_or_create_streak_race_activity()
+            get_or_create_build_a_plant_activity()
         except Exception as e:
             print("Curriculum auto-seed notice:", e)
 
@@ -128,8 +128,8 @@ def update_last_seen():
         user = User.query.get(user_id)
         if user:
             now = datetime.utcnow()
-            # Throttle DB updates to once every 30 seconds
-            if not user.last_seen or (now - user.last_seen).total_seconds() > 30:
+            # Throttle DB updates to once every 10 seconds
+            if not user.last_seen or (now - user.last_seen).total_seconds() > 10:
                 user.last_seen = now
                 try:
                     db.session.commit()
@@ -152,10 +152,18 @@ def index():
     return redirect(url_for('auth.login'))
 
 @app.route('/api/heartbeat', methods=['POST', 'GET'])
+@csrf.exempt
 def heartbeat():
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'status': 'unauthorized'}), 401
+    user = User.query.get(user_id)
+    if user:
+        user.last_seen = datetime.utcnow()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
     return jsonify({'status': 'ok'})
 
 @app.route('/api/online_users', methods=['GET'])
@@ -193,6 +201,38 @@ def get_online_users():
         'count': len(users_data),
         'online_users': users_data
     })
+
+import gzip
+from io import BytesIO
+from flask import request
+
+@app.after_request
+def compress_response(response):
+    accept_encoding = request.headers.get('Accept-Encoding', '')
+    if (
+        response.direct_passthrough
+        or request.path.startswith('/static/')
+        or 'gzip' not in accept_encoding.lower()
+        or response.status_code < 200
+        or response.status_code >= 300
+        or 'Content-Encoding' in response.headers
+        or not response.content_type
+        or not any(response.content_type.startswith(t) for t in ('text/html', 'application/json'))
+    ):
+        return response
+
+    response_data = response.get_data()
+    if len(response_data) < 500:
+        return response
+
+    gzip_buffer = BytesIO()
+    with gzip.GzipFile(mode='wb', fileobj=gzip_buffer, compresslevel=6) as gzip_file:
+        gzip_file.write(response_data)
+
+    response.set_data(gzip_buffer.getvalue())
+    response.headers['Content-Encoding'] = 'gzip'
+    response.headers['Content-Length'] = len(response.get_data())
+    return response
 
 # Register blueprints
 app.register_blueprint(auth_bp)      # login/logout routes

@@ -10,18 +10,18 @@ student_bp = Blueprint('student', __name__, url_prefix='/student')
 
 
 DEFAULT_SORTING_OBJECTS = [
-    {"id": 1, "label": "Tree", "categoryId": "living", "explanation": "Watch a tree over time: it grows, needs water and sunlight.", "image": "/static/images/tree.png", "icon": "/static/images/tree.png"},
-    {"id": 2, "label": "Rock", "categoryId": "non-living", "explanation": "A rock sits outside, but it never breathes, eats, or grows.", "image": "/static/images/rock.png", "icon": "/static/images/rock.png"},
-    {"id": 3, "label": "Bird", "categoryId": "living", "explanation": "A bird flies around, looks for food, and breathes on its own.", "image": "/static/images/bird.png", "icon": "/static/images/bird.png"},
-    {"id": 4, "label": "Bicycle", "categoryId": "non-living", "explanation": "Bicycles only move when someone rides them.", "image": "/static/images/bicycle.png", "icon": "/static/images/bicycle.png"},
-    {"id": 5, "label": "Fish", "categoryId": "living", "explanation": "A fish breathes through gills and swims by itself.", "image": "/static/images/fish.png", "icon": "/static/images/fish.png"},
-    {"id": 6, "label": "Ball", "categoryId": "non-living", "explanation": "A ball rolls only after a person kicks or throws it.", "image": "/static/images/ball.png", "icon": "/static/images/ball.png"},
-    {"id": 7, "label": "Plant", "categoryId": "living", "explanation": "A plant grows and needs sunlight and water to stay healthy.", "image": "/static/images/plant.png", "icon": "/static/images/plant.png"},
-    {"id": 8, "label": "Chair", "categoryId": "non-living", "explanation": "A chair is non-living. It does not breathe, eat, or grow.", "image": "/static/images/chair.png", "icon": "/static/images/chair.png"},
-    {"id": 9, "label": "Cat", "categoryId": "living", "explanation": "A cat grows from a kitten, breathes, eats, and moves.", "image": "/static/images/cat.png", "icon": "/static/images/cat.png"},
-    {"id": 10, "label": "Flower", "categoryId": "living", "explanation": "A flower blooms and needs water to stay alive.", "image": "/static/images/flower.png", "icon": "/static/images/flower.png"},
-    {"id": 11, "label": "Butterfly", "categoryId": "living", "explanation": "A butterfly flutters around, breathes, and eats.", "image": "/static/images/butterfly.png", "icon": "/static/images/butterfly.png"},
-    {"id": 12, "label": "Puddle", "categoryId": "non-living", "explanation": "A puddle is water on the ground. It does not breathe or eat.", "image": "/static/images/puddle.png", "icon": "/static/images/puddle.png"}
+    {"id": 1, "label": "Tree", "categoryId": "living", "explanation": "Watch a tree over time: it grows, needs water and sunlight.", "image": "/static/images/tree.webp", "icon": "/static/images/tree.webp"},
+    {"id": 2, "label": "Rock", "categoryId": "non-living", "explanation": "A rock sits outside, but it never breathes, eats, or grows.", "image": "/static/images/rock.webp", "icon": "/static/images/rock.webp"},
+    {"id": 3, "label": "Bird", "categoryId": "living", "explanation": "A bird flies around, looks for food, and breathes on its own.", "image": "/static/images/bird.webp", "icon": "/static/images/bird.webp"},
+    {"id": 4, "label": "Bicycle", "categoryId": "non-living", "explanation": "Bicycles only move when someone rides them.", "image": "/static/images/bicycle.webp", "icon": "/static/images/bicycle.webp"},
+    {"id": 5, "label": "Fish", "categoryId": "living", "explanation": "A fish breathes through gills and swims by itself.", "image": "/static/images/fish.webp", "icon": "/static/images/fish.webp"},
+    {"id": 6, "label": "Ball", "categoryId": "non-living", "explanation": "A ball rolls only after a person kicks or throws it.", "image": "/static/images/ball.webp", "icon": "/static/images/ball.webp"},
+    {"id": 7, "label": "Plant", "categoryId": "living", "explanation": "A plant grows and needs sunlight and water to stay healthy.", "image": "/static/images/plant.webp", "icon": "/static/images/plant.webp"},
+    {"id": 8, "label": "Chair", "categoryId": "non-living", "explanation": "A chair is non-living. It does not breathe, eat, or grow.", "image": "/static/images/chair.webp", "icon": "/static/images/chair.webp"},
+    {"id": 9, "label": "Cat", "categoryId": "living", "explanation": "A cat grows from a kitten, breathes, eats, and moves.", "image": "/static/images/cat.webp", "icon": "/static/images/cat.webp"},
+    {"id": 10, "label": "Flower", "categoryId": "living", "explanation": "A flower blooms and needs water to stay alive.", "image": "/static/images/flower.webp", "icon": "/static/images/flower.webp"},
+    {"id": 11, "label": "Butterfly", "categoryId": "living", "explanation": "A butterfly flutters around, breathes, and eats.", "image": "/static/images/butterfly.webp", "icon": "/static/images/butterfly.webp"},
+    {"id": 12, "label": "Puddle", "categoryId": "non-living", "explanation": "A puddle is water on the ground. It does not breathe or eat.", "image": "/static/images/puddle.webp", "icon": "/static/images/puddle.webp"}
 ]
 
 def load_sorting_activity_config(activity_id):
@@ -81,22 +81,14 @@ RATING_HINTS = {
 
 
 def compute_rating(score, correct_first_try):
-    """Return a 4-tier rating string from claw-machine scoring data.
-
-    Formula (derived from scoring rules: correct-first-try = 15 pts, retry = 10 pts):
-        objects_sorted = (score - 5 * correct_first_try) / 10
-    This gives the total number of objects sorted regardless of attempt mix.
-    Accuracy = correct_first_try / objects_sorted.
-    """
+    """Return a 4-tier rating string from activity scoring data (100-point scale)."""
     if score <= 0:
         return 'Needs Improvement'
-    objects_sorted = max(1, (score - 5 * max(0, correct_first_try)) // 10)
-    pct = (correct_first_try / objects_sorted) * 100
-    if pct >= 90:
+    if score >= 90:
         return 'Excellent'
-    if pct >= 75:
+    if score >= 75:
         return 'Very Good'
-    if pct >= 50:
+    if score >= 50:
         return 'Good'
     return 'Needs Improvement'
 
@@ -182,7 +174,7 @@ def get_or_create_claw_machine_activity():
     activity = Activity(
         lesson_id=lesson.id,
         type='Living vs Non-Living Claw Machine',
-        points=20
+        points=100
     )
     db.session.add(activity)
     db.session.commit()
@@ -210,13 +202,40 @@ def get_or_create_quick_check_activity():
 
 
 
+def has_student_completed_lesson(user_id, lesson_id):
+    """Check if the student has ever completed this lesson."""
+    if not user_id or not lesson_id:
+        return False
+    lp = LessonProgress.query.filter_by(student_id=user_id, lesson_id=lesson_id).first()
+    if lp and (lp.completed_at is not None or lp.completed or (lp.revisit_count or 0) > 0):
+        return True
+    attempt = LessonAttemptLog.query.filter_by(student_id=user_id, lesson_id=lesson_id, completed=True).first()
+    if attempt:
+        return True
+    return False
+
+
 def get_attempts_today(student_id, activity_id):
     today_start = datetime.combine(datetime.utcnow().date(), time.min)
     today_end = datetime.combine(datetime.utcnow().date(), time.max)
+    
+    # Check if there is an active assignment for this student & activity
+    assignment = ActivityAssignment.query.filter_by(
+        student_id=student_id,
+        activity_id=activity_id,
+        status='assigned'
+    ).order_by(ActivityAssignment.assigned_at.desc()).first()
+
+    # If the assignment was assigned recently, count attempts since this assignment began
+    if assignment and assignment.assigned_at:
+        since_time = max(today_start, assignment.assigned_at)
+    else:
+        since_time = today_start
+
     return AttemptLog.query.filter(
         AttemptLog.student_id == student_id,
         AttemptLog.activity_id == activity_id,
-        AttemptLog.created_at >= today_start,
+        AttemptLog.created_at >= since_time,
         AttemptLog.created_at <= today_end
     ).count()
 
@@ -225,15 +244,13 @@ def is_activity_unlocked(user_id, activity):
     if not activity or activity.id is None:
         return False
 
-    # If the activity is linked to a lesson, the lesson MUST be completed first
+    # If the activity is linked to a lesson, student must have completed the lesson
     if activity.lesson_id:
-        lesson_progress = LessonProgress.query.filter_by(student_id=user_id, lesson_id=activity.lesson_id).first()
-        if not lesson_progress or (not lesson_progress.completed and (lesson_progress.revisit_count or 0) == 0):
-            return False
-        return True
+        return has_student_completed_lesson(user_id, activity.lesson_id)
 
     # Standalone activity with no lesson requirement
     return True
+
 
 @student_bp.route('/dashboard')
 @require_role('student')
@@ -253,7 +270,9 @@ def dashboard():
     activity_assignment_rows = db.session.query(ActivityAssignment, Activity).join(
         Activity, Activity.id == ActivityAssignment.activity_id
     ).filter(
-        ActivityAssignment.student_id == user_id
+        ActivityAssignment.student_id == user_id,
+        ActivityAssignment.status == 'assigned',
+        Activity.engine.in_(['claw_machine', 'find_the_part', 'build_a_plant', 'streak_race', 'metal_logic', 'recycle_sorter'])
     ).all()
     activities = [activity for _, activity in activity_assignment_rows]
     activity_due_dates = {activity.id: assignment.due_date for assignment, activity in activity_assignment_rows}
@@ -267,7 +286,6 @@ def dashboard():
 
     completed_activities = len(completed_by_activity)
     total_activities = len(activities)
-    student_progress = round((completed_activities / total_activities) * 100) if total_activities else 0
     total_score = sum((log.score or 0) for log in progress_logs)
 
     lesson_progress = []
@@ -292,6 +310,16 @@ def dashboard():
                 'total': len(lesson_activities),
                 'percent': percent
             })
+
+    # Overall Progress = (Completed Lessons + Completed Activities) / (Total Assigned Lessons + Total Assigned Activities)
+    completed_lessons_count = sum(1 for lp in lesson_progress if bool(lp.get('completed')) or lp.get('percent', 0) >= 100)
+    total_lessons_count = len(lessons)
+    assigned_activity_ids = {a.id for a in activities}
+    completed_activities_count = sum(1 for aid in completed_by_activity if aid in assigned_activity_ids) if assigned_activity_ids else completed_activities
+
+    total_tasks_count = total_lessons_count + total_activities
+    completed_tasks_count = completed_lessons_count + completed_activities_count
+    student_progress = round((completed_tasks_count / total_tasks_count) * 100) if total_tasks_count else 0
 
     # Get student's badges and recent feedback
     user_badges = db.session.query(UserBadge, Badge).join(
@@ -370,7 +398,14 @@ def dashboard():
     assigned_tasks = []
     for assignment, lesson in lesson_assignment_rows:
         due_str = assignment.due_date.strftime('%b %d, %Y at %I:%M %p') if (assignment.due_date and hasattr(assignment.due_date, 'strftime')) else (str(assignment.due_date) if assignment.due_date else 'No due date')
-        lesson_url = url_for('student.characters_lesson') if ('Characters of Living Things' in lesson.title or 'Parts of an Animal' in lesson.title) else url_for('student.living_non_living_lesson')
+        title = lesson.title or ''
+        if 'Animal Body Parts' in title or 'Parts of an Animal' in title:
+            lesson_url = url_for('student.animal_body_parts_lesson')
+        elif 'Plant Parts' in title:
+            lesson_url = url_for('student.plant_parts_lesson')
+        else:
+            lesson_url = url_for('student.living_non_living_lesson')
+
         assigned_tasks.append({
             'type': 'Lesson',
             'title': lesson.title,
@@ -381,7 +416,19 @@ def dashboard():
         })
     for assignment, activity in activity_assignment_rows:
         due_str = assignment.due_date.strftime('%b %d, %Y at %I:%M %p') if (assignment.due_date and hasattr(assignment.due_date, 'strftime')) else (str(assignment.due_date) if assignment.due_date else 'No due date')
-        act_url = url_for('student.characters_game') if ('Safari Quest' in activity.type or 'safari_quest' in (activity.engine or '')) else url_for('student.claw_machine')
+        act_type = activity.type or ''
+        act_engine = activity.engine or ''
+        if 'find_the_part' in act_engine or 'Find the Part' in act_type:
+            act_url = url_for('student.find_the_part_game')
+        elif 'build_a_plant' in act_engine or 'Build a Plant' in act_type or 'streak_race' in act_engine:
+            act_url = url_for('student.build_a_plant_game')
+        elif 'metal_logic' in act_engine or 'Metal' in act_type:
+            act_url = url_for('student.materials_game')
+        elif 'recycle_sorter' in act_engine or 'EcoSwipe' in act_type or 'Recycl' in act_type:
+            act_url = url_for('student.recycling_game')
+        else:
+            act_url = url_for('student.claw_machine')
+
         assigned_tasks.append({
             'type': 'Activity',
             'title': activity.type,
@@ -704,12 +751,14 @@ def lesson_progress_api():
         return jsonify({'error': 'Lesson not found'}), 404
 
     attempt, log = get_active_lesson_attempt(user_id, lesson_id)
-    if completed:
+    if completed or progress_percent >= 100:
         attempt.completed = True
         attempt.progress_percent = 100
         if log:
             log.completed = True
             log.progress_percent = 100
+            if not log.completed_at:
+                log.completed_at = datetime.utcnow()
     elif not attempt.completed:
         attempt.progress_percent = progress_percent
         if log:
@@ -767,17 +816,29 @@ def lesson_question_attempt():
         db.session.add(activity)
         db.session.commit()
 
-    attempts_count = AttemptLog.query.filter_by(student_id=user_id, activity_id=activity.id).count()
-    attempt = AttemptLog(
-        student_id=user_id,
-        activity_id=activity.id,
-        attempt_number=attempts_count + 1,
-        score=0,
-        result='completed',
-        feedback=f"Slide Check: '{question}' — {'Correct' if was_correct else 'Incorrect'}"
-    )
-    db.session.add(attempt)
-    db.session.flush()
+    current_lesson_attempt = LessonAttemptLog.query.filter_by(
+        student_id=user_id, lesson_id=lesson.id
+    ).order_by(LessonAttemptLog.attempt_number.desc()).first()
+    
+    lesson_att_num = current_lesson_attempt.attempt_number if current_lesson_attempt else 1
+
+    attempt = AttemptLog.query.filter_by(
+        student_id=user_id, 
+        activity_id=activity.id, 
+        attempt_number=lesson_att_num
+    ).first()
+
+    if not attempt:
+        attempt = AttemptLog(
+            student_id=user_id,
+            activity_id=activity.id,
+            attempt_number=lesson_att_num,
+            score=0,
+            result='completed',
+            feedback=f"Slide Checks for {lesson.title}"
+        )
+        db.session.add(attempt)
+        db.session.flush()
 
     obj_log = AttemptObjectLog(
         attempt_log_id=attempt.id,
@@ -796,8 +857,12 @@ def activities():
     current_user = get_current_user()
     user_id = current_user.id
     claw_machine_activity = get_or_create_claw_machine_activity()
-    assigned_activity_ids = [a.activity_id for a in ActivityAssignment.query.filter_by(student_id=user_id).all()]
-    activities = Activity.query.filter(Activity.id.in_(assigned_activity_ids)).all() if assigned_activity_ids else []
+    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'streak_race', 'metal_logic', 'recycle_sorter']
+    assigned_activity_ids = [a.activity_id for a in ActivityAssignment.query.filter_by(student_id=user_id, status='assigned').all()]
+    activities = Activity.query.filter(
+        Activity.id.in_(assigned_activity_ids),
+        Activity.engine.in_(playable_engines)
+    ).all() if assigned_activity_ids else []
     progress_logs = []
     completed_by_activity = {}
 
@@ -918,7 +983,7 @@ def get_or_create_find_the_part_activity():
         lesson_id=lesson.id,
         type='Animal Body Parts — Find the Part',
         engine='find_the_part',
-        points=20,
+        points=100,
     )
     db.session.add(activity)
     db.session.commit()
@@ -956,7 +1021,7 @@ def find_the_part_game():
         return redirect(url_for('student.activities'))
 
     log_access(current_user, 'page_view', f'find_the_part activity_id={activity.id}')
-    return render_template('student/find_the_part_game.html', activity_id=activity.id)
+    return render_template('student/find_the_part_game.html', activity_id=activity.id, attempts_today=used_today)
 
 
 # ── Lesson 2B — Plant Parts ───────────────────────────────────────────────────
@@ -979,22 +1044,9 @@ def get_or_create_plant_parts_lesson():
 
 
 def get_or_create_streak_race_activity():
-    lesson = get_or_create_plant_parts_lesson()
-    activity = Activity.query.filter_by(
-        lesson_id=lesson.id,
-        engine='streak_race',
-    ).first()
-    if activity:
-        return activity
-    activity = Activity(
-        lesson_id=lesson.id,
-        type='Plant Parts — Streak Race',
-        engine='streak_race',
-        points=20,
-    )
-    db.session.add(activity)
-    db.session.commit()
-    return activity
+    # Streak Race has been replaced by Build a Plant.
+    # Delegate to the build_a_plant helper to keep existing code paths working.
+    return get_or_create_build_a_plant_activity()
 
 
 @student_bp.route('/lesson/plant-parts')
@@ -1014,12 +1066,40 @@ def plant_parts_lesson():
 @student_bp.route('/streak_race')
 @require_role('student')
 def streak_race_game():
+    # Streak Race has been replaced by Build a Plant — redirect transparently.
+    return redirect(url_for('student.build_a_plant_game'))
+
+
+# ── Plant Parts — Build a Plant ───────────────────────────────────────────────
+
+def get_or_create_build_a_plant_activity():
+    lesson = get_or_create_plant_parts_lesson()
+    activity = Activity.query.filter_by(
+        lesson_id=lesson.id,
+        engine='build_a_plant',
+    ).first()
+    if activity:
+        return activity
+    activity = Activity(
+        lesson_id=lesson.id,
+        type='Plant Parts — Build a Plant',
+        engine='build_a_plant',
+        points=100,
+    )
+    db.session.add(activity)
+    db.session.commit()
+    return activity
+
+
+@student_bp.route('/build_a_plant')
+@require_role('student')
+def build_a_plant_game():
     current_user = get_current_user()
-    activity = get_or_create_streak_race_activity()
+    activity = get_or_create_build_a_plant_activity()
 
     if not is_activity_unlocked(current_user.id, activity):
         lesson_title = activity.lesson.title if activity.lesson else 'lesson'
-        flash(f'Please complete the "{lesson_title}" lesson before playing Streak Race.', 'warning')
+        flash(f'Please complete the "{lesson_title}" lesson before playing Build a Plant.', 'warning')
         return redirect(url_for('student.lessons'))
 
     used_today = get_attempts_today(current_user.id, activity.id)
@@ -1027,8 +1107,156 @@ def streak_race_game():
         flash('You have already used all 3 attempts for today on this activity. Check back tomorrow!', 'warning')
         return redirect(url_for('student.activities'))
 
-    log_access(current_user, 'page_view', f'streak_race activity_id={activity.id}')
-    return render_template('student/streak_race_game.html', activity_id=activity.id)
+    log_access(current_user, 'page_view', f'build_a_plant activity_id={activity.id}')
+    return render_template('student/build_a_plant_game.html', activity_id=activity.id, attempts_today=used_today)
+
+
+# ── Week 10, Lesson 1 — Properties of Metals ─────────────────────────────────
+
+def get_or_create_properties_of_metals_lesson():
+    lesson = Lesson.query.filter_by(title='Properties of Metals').first()
+    if lesson:
+        if lesson.prerequisite_lesson_id is not None:
+            lesson.prerequisite_lesson_id = None
+            db.session.commit()
+        return lesson
+    lesson = Lesson(
+        title='Properties of Metals',
+        description='Explore the properties of Iron, Copper, Gold, and Silver through interactive experiments.',
+        prerequisite_lesson_id=None,
+    )
+    db.session.add(lesson)
+    db.session.commit()
+    return lesson
+
+
+@student_bp.route('/lesson/properties-of-metals')
+@require_role('student')
+def properties_of_metals_lesson():
+    current_user = get_current_user()
+    lesson = get_or_create_properties_of_metals_lesson()
+    attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
+    initial_slide = log.current_slide if log else 0
+    return render_template(
+        'student/properties_of_metals_lesson.html',
+        lesson=lesson,
+        initial_slide=initial_slide,
+    )
+
+
+# ── Week 10, Lesson 2 — Recycling ───────────────────────────────────────────
+
+def get_or_create_recycling_lesson():
+    lesson = Lesson.query.filter_by(title='Recycling').first()
+    if lesson:
+        if lesson.prerequisite_lesson_id is not None:
+            lesson.prerequisite_lesson_id = None
+            db.session.commit()
+        return lesson
+    lesson = Lesson(
+        title='Recycling',
+        description='Discover the recycling process and practice sorting recyclable materials from food waste.',
+        prerequisite_lesson_id=None,
+    )
+    db.session.add(lesson)
+    db.session.commit()
+    return lesson
+
+
+@student_bp.route('/lesson/recycling')
+@require_role('student')
+def recycling_lesson():
+    current_user = get_current_user()
+    lesson = get_or_create_recycling_lesson()
+    attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
+    initial_slide = log.current_slide if log else 0
+    return render_template(
+        'student/recycling_lesson.html',
+        lesson=lesson,
+        initial_slide=initial_slide,
+    )
+
+
+def get_or_create_metals_game_activity():
+    lesson = get_or_create_properties_of_metals_lesson()
+    activity = Activity.query.filter_by(
+        lesson_id=lesson.id,
+        engine='metal_logic'
+    ).first()
+    if activity:
+        return activity
+    activity = Activity(
+        lesson_id=lesson.id,
+        type='Properties of Metals — Metal Clue Detective',
+        engine='metal_logic',
+        points=100
+    )
+    db.session.add(activity)
+    db.session.commit()
+    return activity
+
+
+@student_bp.route('/materials_game')
+@require_role('student')
+def materials_game():
+    current_user = get_current_user()
+    activity = get_or_create_metals_game_activity()
+    if not activity:
+        flash('Metal Clue Detective activity is not available.', 'danger')
+        return redirect(url_for('student.activities'))
+
+    if not is_activity_unlocked(current_user.id, activity):
+        flash('Please complete the "Properties of Metals" lesson before playing Metal Clue Detective.', 'warning')
+        return redirect(url_for('student.lessons'))
+
+    used_today = get_attempts_today(current_user.id, activity.id)
+    if used_today >= 3:
+        flash('You have already used all 3 attempts for today on this activity. Check back tomorrow!', 'warning')
+        return redirect(url_for('student.activities'))
+
+    log_access(current_user, 'page_view', f'materials_game activity_id={activity.id}')
+    return render_template('student/materials_game.html', activity_id=activity.id, attempts_today=used_today)
+
+
+def get_or_create_recycling_game_activity():
+    lesson = get_or_create_recycling_lesson()
+    activity = Activity.query.filter_by(
+        lesson_id=lesson.id,
+        engine='recycle_sorter'
+    ).first()
+    if activity:
+        return activity
+    activity = Activity(
+        lesson_id=lesson.id,
+        type='Recycling — EcoSwipe Sorter',
+        engine='recycle_sorter',
+        points=100
+    )
+    db.session.add(activity)
+    db.session.commit()
+    return activity
+
+
+@student_bp.route('/recycling_game')
+@require_role('student')
+def recycling_game():
+    current_user = get_current_user()
+    activity = get_or_create_recycling_game_activity()
+    if not activity:
+        flash('EcoSwipe activity is not available.', 'danger')
+        return redirect(url_for('student.activities'))
+
+    if not is_activity_unlocked(current_user.id, activity):
+        flash('Please complete the "Recycling" lesson before playing EcoSwipe.', 'warning')
+        return redirect(url_for('student.lessons'))
+
+    used_today = get_attempts_today(current_user.id, activity.id)
+    if used_today >= 3:
+        flash('You have already used all 3 attempts for today on this activity. Check back tomorrow!', 'warning')
+        return redirect(url_for('student.activities'))
+
+    log_access(current_user, 'page_view', f'recycling_game activity_id={activity.id}')
+    return render_template('student/recycling_game.html', activity_id=activity.id, attempts_today=used_today)
 
 
 @student_bp.route('/sorting_activity_config/<int:activity_id>')
@@ -1113,10 +1341,15 @@ def activity_progress():
         )
         db.session.add(progress_log)
 
+    total_attempts = AttemptLog.query.filter_by(
+        student_id=current_user.id,
+        activity_id=activity.id
+    ).count()
+
     attempt = AttemptLog(
         student_id=current_user.id,
         activity_id=activity.id,
-        attempt_number=attempts_today + 1,
+        attempt_number=total_attempts + 1,
         score=score,
         result='completed',
         feedback=f'Correct on first try: {correct_first_try}; object attempts: {attempts}',
@@ -1154,14 +1387,27 @@ def activity_progress():
     # Check for badge achievements
     check_and_award_badges(current_user.id)
 
+    # Transition assignment to completed (or attempts_exhausted if 3 attempts reached today)
+    attempts_used = attempts_today + 1
+    new_status = 'attempts_exhausted' if attempts_used >= 3 else 'completed'
+    act_assignments = ActivityAssignment.query.filter(
+        ActivityAssignment.student_id == current_user.id,
+        ActivityAssignment.activity_id == activity.id,
+        ActivityAssignment.status.in_(['assigned', 'completed'])
+    ).all()
+    for aa in act_assignments:
+        aa.status = new_status
+    db.session.commit()
+
     return jsonify({
         'status': 'ok',
         'score': score,
         'best_score': progress_log.score,
         'rating': rating,
         'hint': hint,
-        'attempts_today': attempt.attempt_number,
+        'attempts_today': attempts_used,
         'attempts_limit': 3,
+        'attempts_exhausted': attempts_used >= 3
     })
 
 
@@ -1171,10 +1417,17 @@ def assignments():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'student_assignments')
     lesson_assignments = LessonAssignment.query.filter_by(student_id=current_user.id).all()
-    activity_assignments = ActivityAssignment.query.filter_by(student_id=current_user.id).all()
+    active_activity_assignments = ActivityAssignment.query.filter_by(
+        student_id=current_user.id,
+        status='assigned'
+    ).all()
+    exhausted_activity_assignments = ActivityAssignment.query.filter(
+        ActivityAssignment.student_id == current_user.id,
+        ActivityAssignment.status.in_(['attempts_exhausted', 'completed'])
+    ).all()
 
     unlocked_by_activity = {}
-    for aa in activity_assignments:
+    for aa in active_activity_assignments + exhausted_activity_assignments:
         if aa.activity:
             unlocked_by_activity[aa.activity_id] = is_activity_unlocked(current_user.id, aa.activity)
         else:
@@ -1184,7 +1437,8 @@ def assignments():
         'student/student_assignments.html',
         current_user=current_user,
         lesson_assignments=lesson_assignments,
-        activity_assignments=activity_assignments,
+        activity_assignments=active_activity_assignments,
+        exhausted_activity_assignments=exhausted_activity_assignments,
         unlocked_by_activity=unlocked_by_activity
     )
 

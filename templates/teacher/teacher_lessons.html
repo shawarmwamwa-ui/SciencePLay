@@ -5,13 +5,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teacher Lessons & Activities — SciencePlay</title>
+  <meta name="description" content="SciencePlay Teacher Lessons: Browse curriculum modules, science topics, and interactive paired activities.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260903_3') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
 </head>
 
@@ -27,7 +30,7 @@
             <div class="teacher-brand-wrap">
               <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
               <div>
-                <h1 class="teacher-brand-title">SciencePlay</h1>
+                <div class="teacher-brand-title">SciencePlay</div>
                 <p class="teacher-brand-subtitle">Teacher Portal</p>
               </div>
             </div>
@@ -36,6 +39,10 @@
               <a class="teacher-menu-link" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
                 <i class="bi bi-grid"></i>
                 <span>Dashboard</span>
+              </a>
+              <a class="teacher-menu-link" data-nav="students" href="{{ url_for('teacher.students') }}">
+                <i class="bi bi-people"></i>
+                <span>Students</span>
               </a>
               <a class="teacher-menu-link" data-nav="assignments" href="{{ url_for('teacher.assignments') }}">
                 <i class="bi bi-journal-plus"></i>
@@ -48,6 +55,9 @@
               <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
                 <i class="bi bi-chat-square-quote-fill"></i>
                 <span>Feedback</span>
+                {% if needs_feedback_count and needs_feedback_count > 0 %}
+                  <span class="feedback-nav-badge">{{ needs_feedback_count }}</span>
+                {% endif %}
               </a>
               <a class="teacher-menu-link active" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
                 <i class="bi bi-book"></i>
@@ -201,7 +211,7 @@
               <div class="col-lg-6">
                 <section class="table-shell teacher-table-shell h-100">
                   <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-collection-play me-2"></i>Lesson Library</h5>
+                    <h2 class="h5 mb-0"><i class="bi bi-collection-play me-2"></i>Lesson Library</h2>
                   </div>
                   <div class="table-responsive">
                     <table class="table align-middle mb-0">
@@ -244,7 +254,7 @@
               <div class="col-lg-6">
                 <section class="table-shell teacher-table-shell h-100">
                   <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-joystick me-2"></i>Activity Library</h5>
+                    <h2 class="h5 mb-0"><i class="bi bi-joystick me-2"></i>Activity Library</h2>
                   </div>
                   <div class="table-responsive">
                     <table class="table align-middle mb-0">
@@ -288,8 +298,8 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='js/teacher.js', v='20260810') }}"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher.js', v='20260810') }}"></script>
 </body>
 
 </html>

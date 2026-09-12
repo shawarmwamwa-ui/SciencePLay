@@ -1,5 +1,5 @@
 // findThePartGame.js
-// "Find the Part" — Hotspot tap-to-label game for Animal Body Parts (Lesson 2A)
+// "Find the Part" — Hotspot Callout Leader Pin labeling game for Animal Body Parts
 // Game 2A: Grade 3 Science, Week 3-4
 
 import { speakText } from './ttsHelper.js';
@@ -23,96 +23,91 @@ function playTone(freq, dur = 0.18) {
   } catch (_) {}
 }
 
-// ── GAME DATA ────────────────────────────────────────────────────────────────
-// Each round: one animal with 3-4 labeled body-zone regions + a word bank.
-// Zones are expressed as % (left, top) offsets on the placeholder illustration.
-// Placeholder: a structured colored rectangle split into named regions.
-//
-// When real illustrations are available, swap the `illustrationSrc` image
-// and adjust x/y hotspot coordinates — the label/snap logic stays identical.
+// ── GAME DATA: 3 Rounds with Callout Pins & Slots ─────────────────────────────
 
 const ROUNDS = [
   {
     id: 'bird',
     title: 'Round 1 — Label the Bird',
-    subtitle: 'Tap a label from the word bank, then tap the matching body zone on the bird.',
-    illustrationLabel: 'BIRD (placeholder)',
-    illustrationBg: '#bfdbfe',  // light blue sky background
-    // Zones: positioned as fractions of the illustration box
+    subtitle: 'Match each body part label to the correct pointer pin on the bird.',
+    illustrationSrc: '/static/images/ftp_bird.webp',
+    illustrationAlt: 'Bird Diagram',
+    illustrationBg: '#e0f2fe',
     zones: [
-      { id: 'beak',   label: 'Beak',   x: 82, y: 38, w: 16, h: 14, color: '#fde047', borderColor: '#ca8a04', icon: 'bi-arrow-right' },
-      { id: 'wings',  label: 'Wings',  x: 22, y: 30, w: 30, h: 30, color: '#dbeafe', borderColor: '#3b82f6', icon: 'bi-feather'     },
-      { id: 'legs',   label: 'Legs',   x: 44, y: 72, w: 16, h: 20, color: '#dcfce7', borderColor: '#16a34a', icon: 'bi-arrows-move' },
-      { id: 'claws',  label: 'Claws',  x: 44, y: 88, w: 16, h: 10, color: '#fce7f3', borderColor: '#db2777', icon: 'bi-lightning-fill' },
+      { id: 'beak',   label: 'Beak',   number: 1, pinX: 74, pinY: 30, slotX: 84, slotY: 18, color: '#fef08a' },
+      { id: 'wings',  label: 'Wings',  number: 2, pinX: 46, pinY: 48, slotX: 16, slotY: 36, color: '#dbeafe' },
+      { id: 'legs',   label: 'Legs',   number: 3, pinX: 50, pinY: 72, slotX: 18, slotY: 76, color: '#dcfce7' },
+      { id: 'claws',  label: 'Claws',  number: 4, pinX: 58, pinY: 82, slotX: 80, slotY: 84, color: '#fce7f3' },
     ],
-    // Word bank = correct labels + 1-2 decoys
     wordBank: [
       { id: 'beak',  label: 'Beak',  isDecoy: false },
       { id: 'wings', label: 'Wings', isDecoy: false },
       { id: 'legs',  label: 'Legs',  isDecoy: false },
       { id: 'claws', label: 'Claws', isDecoy: false },
-      { id: 'fin',   label: 'Fin',   isDecoy: true  },  // fish decoy
-      { id: 'tail',  label: 'Tail',  isDecoy: true  },  // generic decoy
+      { id: 'fin',   label: 'Fin',   isDecoy: true  },
+      { id: 'tail',  label: 'Tail',  isDecoy: true  },
     ],
     facts: {
-      beak:  'Beaks help birds pick up seeds, berries, and prey for food.',
-      wings: 'Wings let the bird fly to reach food in trees and escape danger.',
-      legs:  'Legs help the bird perch, hop along the ground, and land safely.',
-      claws: 'Claws grip branches tightly so the bird does not fall while resting.',
+      beak:  'Beaks help birds pick up seeds, berries, and insects to eat.',
+      wings: 'Wings let the bird fly into the air to travel and escape danger.',
+      legs:  'Legs help the bird hop along the ground and perch securely.',
+      claws: 'Claws grip tree branches tightly so the bird stays balanced while resting.',
     },
   },
   {
     id: 'lion',
     title: 'Round 2 — Label the Lion',
-    subtitle: 'Tap a label, then tap the correct body region on the lion.',
-    illustrationLabel: 'LION (placeholder)',
-    illustrationBg: '#fef9c3',  // savanna yellow background
+    subtitle: 'Match each body part label to the correct pointer pin on the lion.',
+    illustrationSrc: '/static/images/ftp_lion.webp',
+    illustrationAlt: 'Lion Diagram',
+    illustrationBg: '#fef9c3',
     zones: [
-      { id: 'eyes',  label: 'Eyes',  x: 60, y: 12, w: 28, h: 16, color: '#fde68a', borderColor: '#b45309', icon: 'bi-eye-fill'      },
-      { id: 'mouth', label: 'Mouth', x: 62, y: 28, w: 26, h: 14, color: '#fee2e2', borderColor: '#dc2626', icon: 'bi-emoji-frown'   },
-      { id: 'paws',  label: 'Paws',  x: 28, y: 70, w: 44, h: 20, color: '#fce7f3', borderColor: '#db2777', icon: 'bi-lightning-fill' },
-      { id: 'legs',  label: 'Legs',  x: 28, y: 50, w: 44, h: 22, color: '#dcfce7', borderColor: '#16a34a', icon: 'bi-arrows-move'  },
+      { id: 'eyes',  label: 'Eyes',  number: 1, pinX: 76, pinY: 30, slotX: 84, slotY: 16, color: '#fde68a' },
+      { id: 'mouth', label: 'Mouth', number: 2, pinX: 82, pinY: 41, slotX: 84, slotY: 52, color: '#fee2e2' },
+      { id: 'legs',  label: 'Legs',  number: 3, pinX: 56, pinY: 66, slotX: 34, slotY: 84, color: '#dcfce7' },
+      { id: 'paws',  label: 'Paws',  number: 4, pinX: 62, pinY: 86, slotX: 82, slotY: 84, color: '#fce7f3' },
     ],
     wordBank: [
       { id: 'eyes',   label: 'Eyes',   isDecoy: false },
       { id: 'mouth',  label: 'Mouth',  isDecoy: false },
       { id: 'paws',   label: 'Paws',   isDecoy: false },
       { id: 'legs',   label: 'Legs',   isDecoy: false },
-      { id: 'wings',  label: 'Wings',  isDecoy: true  },  // bird decoy
-      { id: 'beak',   label: 'Beak',   isDecoy: true  },  // bird decoy
+      { id: 'wings',  label: 'Wings',  isDecoy: true  },
+      { id: 'beak',   label: 'Beak',   isDecoy: true  },
     ],
     facts: {
-      eyes:  'Lions have forward-facing eyes to judge distances when stalking prey.',
-      mouth: 'A lion\'s powerful jaws and sharp teeth help it grip and eat large prey.',
-      paws:  'Wide, padded paws let lions walk silently and swipe at prey.',
-      legs:  'Strong hind legs give the lion explosive speed to chase down prey.',
+      eyes:  'Forward-facing eyes help lions spot prey and judge leaping distances.',
+      mouth: 'Powerful jaws and teeth help the lion bite, grip, and chew food.',
+      paws:  'Wide, padded paws let the lion walk quietly without making noise.',
+      legs:  'Muscular legs give the lion explosive speed to run fast.',
     },
   },
   {
     id: 'fish',
     title: 'Round 3 — Label the Fish',
-    subtitle: 'Tap a label, then tap the correct body region on the fish.',
-    illustrationLabel: 'FISH (placeholder)',
-    illustrationBg: '#e0f2fe',  // water blue background
+    subtitle: 'Match each body part label to the correct pointer pin on the fish.',
+    illustrationSrc: '/static/images/ftp_fish.webp',
+    illustrationAlt: 'Fish Diagram',
+    illustrationBg: '#e0f2fe',
     zones: [
-      { id: 'eye',         label: 'Eye',          x: 72, y: 28, w: 14, h: 14, color: '#fde68a', borderColor: '#b45309', icon: 'bi-eye-fill'      },
-      { id: 'mouth',       label: 'Mouth',         x: 84, y: 42, w: 12, h: 12, color: '#fee2e2', borderColor: '#dc2626', icon: 'bi-emoji-frown'   },
-      { id: 'dorsal_fin',  label: 'Dorsal Fin',   x: 35, y: 6,  w: 22, h: 24, color: '#dbeafe', borderColor: '#3b82f6', icon: 'bi-triangle'      },
-      { id: 'tail_fin',    label: 'Tail Fin',      x: 6,  y: 28, w: 22, h: 34, color: '#e9d5ff', borderColor: '#7c3aed', icon: 'bi-chevron-left'  },
+      { id: 'dorsal_fin',  label: 'Dorsal Fin', number: 1, pinX: 52, pinY: 22, slotX: 50, slotY: 10, color: '#dbeafe' },
+      { id: 'eye',         label: 'Eye',        number: 2, pinX: 73, pinY: 45, slotX: 84, slotY: 28, color: '#fde68a' },
+      { id: 'mouth',       label: 'Mouth',       number: 3, pinX: 82, pinY: 53, slotX: 84, slotY: 66, color: '#fee2e2' },
+      { id: 'tail_fin',    label: 'Tail Fin',    number: 4, pinX: 24, pinY: 48, slotX: 14, slotY: 48, color: '#e9d5ff' },
     ],
     wordBank: [
       { id: 'eye',        label: 'Eye',         isDecoy: false },
       { id: 'mouth',      label: 'Mouth',       isDecoy: false },
       { id: 'dorsal_fin', label: 'Dorsal Fin',  isDecoy: false },
       { id: 'tail_fin',   label: 'Tail Fin',    isDecoy: false },
-      { id: 'wings',      label: 'Wings',       isDecoy: true  },  // bird decoy
-      { id: 'claws',      label: 'Claws',       isDecoy: true  },  // lion decoy
+      { id: 'wings',      label: 'Wings',       isDecoy: true  },
+      { id: 'claws',      label: 'Claws',       isDecoy: true  },
     ],
     facts: {
-      eye:        'Fish eyes help them spot food and predators in the water.',
-      mouth:      'The mouth opens wide to catch small fish and other food in the water.',
-      dorsal_fin: 'The dorsal fin on the back keeps the fish stable while swimming.',
-      tail_fin:   'The tail fin pushes the fish forward through the water like a paddle.',
+      eye:        'Large fish eyes help them spot food and steer safely underwater.',
+      mouth:      'The mouth opens to swallow water and catch tiny plants and prey.',
+      dorsal_fin: 'The dorsal fin along the fish’s back keeps it upright and stable in water.',
+      tail_fin:   'The tail fin swishes side to side to propel the fish forward.',
     },
   },
 ];
@@ -126,12 +121,15 @@ const state = {
   correctFirstTry: 0,
   startTime: 0,
   completed: false,
+  attemptsToday: typeof window.initialAttemptsToday !== 'undefined' ? Number(window.initialAttemptsToday) : 0,
+  attemptsLimit: 3,
 
   // per-round
-  selectedLabel: null,    // id from word bank currently tapped
-  matched: new Set(),     // zone ids that have been successfully labeled
-  attempts: {},           // { zoneId: attemptCount }
-  objectLogs: [],         // for analytics
+  selectedLabel: null,    // ID of label from word bank currently tapped
+  selectedSlot: null,     // ID of slot currently selected
+  matched: new Set(),     // set of matched zone IDs
+  attempts: {},           // { zoneId: count }
+  objectLogs: [],         // analytics
 };
 
 // ── UTILITIES ─────────────────────────────────────────────────────────────────
@@ -147,43 +145,110 @@ function shuffle(arr) {
 
 function updateHUD() {
   const el = document.getElementById('ftp-score');
-  if (el) el.textContent = state.score;
+  const maxScore = 100;
+  if (el) el.textContent = `${state.score} / ${maxScore}`;
 }
 
 // ── SAVE RESULT ───────────────────────────────────────────────────────────────
 
-function saveResult() {
+async function saveResult() {
   if (state.completed) return;
   state.completed = true;
+
+  // Bonus for perfect run (all first try): +1 pt to make exactly 100 pts
+  const totalZones = ROUNDS.reduce((acc, r) => acc + r.zones.length, 0);
+  if (state.correctFirstTry >= totalZones) {
+    state.score = 100;
+  }
+  state.score = Math.min(100, Math.max(20, state.score));
 
   const timeSpent = Math.max(1, Math.round((performance.now() - state.startTime) / 1000));
   const actId = window.findThePartActivityId || state.activityId;
 
-  fetch('/student/activity_progress', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      activity_id: actId,
-      score: state.score,
-      time_spent: timeSpent,
-      correct_first_try: state.correctFirstTry,
-      object_logs: state.objectLogs,
-    }),
-  }).catch(() => {});
+  let responseData = null;
+  try {
+    const res = await fetch('/student/activity_progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        activity_id: actId,
+        score: state.score,
+        time_spent: timeSpent,
+        correct_first_try: state.correctFirstTry,
+        object_logs: state.objectLogs,
+      }),
+      keepalive: true,
+    });
+    if (res.ok) {
+      responseData = await res.json();
+      if (responseData.attempts_today !== undefined) {
+        state.attemptsToday = Number(responseData.attempts_today);
+      }
+      if (responseData.attempts_limit !== undefined) {
+        state.attemptsLimit = Number(responseData.attempts_limit);
+      }
+    }
+  } catch (err) {
+    console.warn('Could not save activity progress:', err);
+  }
 
-  showSummary();
+  showSummary(responseData);
 }
 
 // ── SUMMARY SCREEN ────────────────────────────────────────────────────────────
 
-function showSummary() {
+function showSummary(data) {
   const container = document.getElementById('ftp-container');
   if (!container) return;
 
-  const total = ROUNDS.reduce((acc, r) => acc + r.zones.length, 0);
-  const pct = Math.round((state.correctFirstTry / total) * 100);
+  const maxScore = 100;
+  const pct = Math.round(state.score);
 
-  speakText(`Game complete! You scored ${state.score} points.`);
+  const attemptsUsed = state.attemptsToday || (data && data.attempts_today) || 1;
+  const limit = state.attemptsLimit || 3;
+  const exhausted = attemptsUsed >= limit;
+
+  let attemptBadge = '';
+  let restartBtnHtml = '';
+  let coachHintHtml = '';
+
+  if (exhausted) {
+    attemptBadge = `
+      <div class="ftp-stat-box ftp-stat-box-warn">
+        <span class="ftp-stat-val text-danger"><i class="bi bi-lock-fill me-1"></i>${attemptsUsed}/${limit}</span>
+        <span class="ftp-stat-lbl">Daily Limit Reached</span>
+      </div>`;
+    restartBtnHtml = `
+      <button class="ftp-btn ftp-btn-disabled" disabled title="You have reached your 3 daily attempts. Check back tomorrow for more practice!">
+        <i class="bi bi-lock-fill me-1"></i>Daily Limit Reached (3/3)
+      </button>`;
+    coachHintHtml = `
+      <div class="ftp-hint-box ftp-hint-box-exhausted">
+        <i class="bi bi-info-circle-fill me-2 text-warning"></i>
+        <span>You've completed all <strong>3 daily attempts</strong> for today! Awesome work. Check back tomorrow or explore other activities!</span>
+      </div>`;
+  } else {
+    const left = limit - attemptsUsed;
+    attemptBadge = `
+      <div class="ftp-stat-box">
+        <span class="ftp-stat-val text-success">${attemptsUsed}/${limit}</span>
+        <span class="ftp-stat-lbl">${left} Attempt${left === 1 ? '' : 's'} Left Today</span>
+      </div>`;
+    restartBtnHtml = `
+      <button id="ftp-restart" class="ftp-btn ftp-btn-primary">
+        <i class="bi bi-arrow-clockwise me-1"></i>Play Again (${left} left)
+      </button>`;
+  }
+
+  if (data && data.hint && !exhausted) {
+    coachHintHtml = `
+      <div class="ftp-hint-box">
+        <i class="bi bi-lightbulb-fill me-2 text-warning"></i>
+        <span><strong>Coach Tip:</strong> ${data.hint}</span>
+      </div>`;
+  }
+
+  speakText(`Game complete! You scored ${state.score} out of ${maxScore} points. Daily attempts: ${attemptsUsed} of ${limit}.`);
 
   container.innerHTML = `
     <div class="ftp-summary text-center">
@@ -191,11 +256,12 @@ function showSummary() {
         <i class="bi bi-trophy-fill"></i>
       </div>
       <h2 class="ftp-summary-title">Find the Part — Complete!</h2>
-      <p class="ftp-summary-sub">You labelled all three animals' body parts.</p>
+      <p class="ftp-summary-sub">You labeled all animal body parts. Great effort!</p>
+      
       <div class="ftp-stats-row">
         <div class="ftp-stat-box">
-          <span class="ftp-stat-val">${state.score}</span>
-          <span class="ftp-stat-lbl">Score</span>
+          <span class="ftp-stat-val">${state.score} / ${maxScore}</span>
+          <span class="ftp-stat-lbl">Final Score</span>
         </div>
         <div class="ftp-stat-box">
           <span class="ftp-stat-val">${state.correctFirstTry}/${total}</span>
@@ -203,20 +269,24 @@ function showSummary() {
         </div>
         <div class="ftp-stat-box">
           <span class="ftp-stat-val">${pct}%</span>
-          <span class="ftp-stat-lbl">Accuracy</span>
+          <span class="ftp-stat-lbl">Score Accuracy</span>
         </div>
+        ${attemptBadge}
       </div>
+
+      ${coachHintHtml}
+
       <div class="ftp-summary-btns">
-        <a href="/student/activities" class="ftp-btn ftp-btn-secondary">
+        <a href="/student/activities" class="ftp-btn ${exhausted ? 'ftp-btn-primary' : 'ftp-btn-secondary'}">
           <i class="bi bi-grid-fill me-1"></i>Back to Activities
         </a>
-        <button id="ftp-restart" class="ftp-btn ftp-btn-primary">
-          <i class="bi bi-arrow-clockwise me-1"></i>Play Again
-        </button>
+        ${restartBtnHtml}
       </div>
     </div>`;
 
-  document.getElementById('ftp-restart')?.addEventListener('click', () => initFindThePart());
+  if (!exhausted) {
+    document.getElementById('ftp-restart')?.addEventListener('click', () => initFindThePart());
+  }
 }
 
 // ── ROUND RENDERER ────────────────────────────────────────────────────────────
@@ -229,6 +299,7 @@ function renderRound(roundIdx) {
 
   state.currentRound = roundIdx;
   state.selectedLabel = null;
+  state.selectedSlot = null;
   state.matched = new Set();
   state.attempts = {};
 
@@ -238,46 +309,64 @@ function renderRound(roundIdx) {
 
   const shuffledBank = shuffle(round.wordBank);
 
-  // ── Build zone overlays HTML ───────────────────────────────────────────────
-  const zonesHtml = round.zones.map(z => `
-    <div class="ftp-zone ftp-zone-unlabeled"
-         data-zone-id="${z.id}"
-         style="left:${z.x}%;top:${z.y}%;width:${z.w}%;height:${z.h}%;
-                background:${z.color};border-color:${z.borderColor};"
-         role="button" aria-label="Body zone: ${z.label}">
-      <i class="bi ${z.icon} ftp-zone-icon"></i>
-      <span class="ftp-zone-label-text"></span>
-    </div>`).join('');
+  // SVG Leader lines connecting pins to slots
+  const svgLinesHtml = round.zones.map(z => `
+    <line class="ftp-leader-line" data-line-id="${z.id}"
+          x1="${z.pinX}" y1="${z.pinY}" x2="${z.slotX}" y2="${z.slotY}" />
+    <circle class="ftp-pin-halo" data-halo-id="${z.id}"
+            cx="${z.pinX}" cy="${z.pinY}" r="3.2" />
+    <circle class="ftp-pin-dot" data-pin-id="${z.id}"
+            cx="${z.pinX}" cy="${z.pinY}" r="1.8" fill="${z.color}" />
+  `).join('');
 
-  // ── Build word bank chips HTML ─────────────────────────────────────────────
+  // Callout Slots HTML
+  const slotsHtml = round.zones.map(z => `
+    <div class="ftp-slot ftp-slot-empty"
+         data-zone-id="${z.id}"
+         style="left:${z.slotX}%;top:${z.slotY}%;"
+         role="button"
+         tabindex="0"
+         aria-label="Slot for ${z.label}">
+      <span class="ftp-slot-badge">${z.number}</span>
+      <span class="ftp-slot-label"><i class="bi bi-plus me-1"></i>Drop / Tap</span>
+    </div>
+  `).join('');
+
+  // Word bank chips HTML (draggable)
   const bankHtml = shuffledBank.map(w => `
-    <button class="ftp-chip" data-label-id="${w.id}" data-is-decoy="${w.isDecoy}">
+    <button class="ftp-chip"
+            draggable="true"
+            data-label-id="${w.id}"
+            data-is-decoy="${w.isDecoy}">
       ${w.label}
-    </button>`).join('');
+    </button>
+  `).join('');
 
   container.innerHTML = `
     <div class="ftp-round">
       <!-- Round header -->
       <div class="ftp-round-header">
         <span class="ftp-round-badge">Round ${roundIdx + 1} / ${ROUNDS.length}</span>
-        <h3 class="ftp-round-title">${round.title}</h3>
+        <h2 class="ftp-round-title">${round.title}</h2>
         <p class="ftp-round-sub">${round.subtitle}</p>
       </div>
 
       <!-- Instruction banner -->
       <div id="ftp-banner" class="ftp-banner ftp-banner-info">
         <i class="bi bi-hand-index-thumb-fill me-2"></i>
-        Step 1: Tap a label from the word bank below.
+        <span>Drag or tap a label from the word bank, then match it to a numbered pin slot!</span>
       </div>
 
-      <!-- Illustration with hotspot zones -->
+      <!-- Illustration with Callout Leader Pins & Slots -->
       <div class="ftp-illustration-wrap">
         <div class="ftp-illustration"
              style="background:${round.illustrationBg};"
-             aria-label="${round.illustrationLabel}">
-          <div class="ftp-illus-placeholder-label">${round.illustrationLabel}</div>
-          <!-- Zones overlaid -->
-          ${zonesHtml}
+             aria-label="${round.illustrationAlt}">
+          <img src="${round.illustrationSrc}" alt="${round.illustrationAlt}" class="ftp-animal-img" fetchpriority="high" width="800" height="600">
+          <svg class="ftp-leader-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+            ${svgLinesHtml}
+          </svg>
+          ${slotsHtml}
         </div>
       </div>
 
@@ -286,7 +375,7 @@ function renderRound(roundIdx) {
 
       <!-- Word bank -->
       <div class="ftp-bank-header">
-        <i class="bi bi-card-text me-1"></i>Word Bank
+        <i class="bi bi-card-text me-1"></i>Word Bank (Drag or Tap)
       </div>
       <div id="ftp-word-bank" class="ftp-word-bank">
         ${bankHtml}
@@ -297,21 +386,178 @@ function renderRound(roundIdx) {
   updateHUD();
 }
 
+// ── MATCH HANDLER (Shared by Tap & Drag) ──────────────────────────────────────
+
+function processMatch(zoneId, labelId, round) {
+  const banner = document.getElementById('ftp-banner');
+  const factPanel = document.getElementById('ftp-fact');
+  const slotEl = document.querySelector(`.ftp-slot[data-zone-id="${zoneId}"]`);
+  const chipEl = document.querySelector(`.ftp-chip[data-label-id="${labelId}"]`);
+  const isDecoy = chipEl?.dataset.isDecoy === 'true';
+  const isMatch = labelId === zoneId && !isDecoy;
+
+  state.attempts[zoneId] = (state.attempts[zoneId] || 0) + 1;
+  const tries = state.attempts[zoneId];
+
+  if (isMatch) {
+    const zone = round.zones.find(z => z.id === zoneId);
+    const fact = round.facts[zoneId];
+    const firstTry = tries === 1;
+
+    // Diminishing point return (9 parts total -> 9 * 11 = 99 + 1 perfect bonus = 100 pts max):
+    // 1st try: 11 pts | 2nd try: 6 pts | 3rd try: 3 pts | 4+ tries: 1 pt
+    let pts = 1;
+    let ptsBadge = '+1 pt (Review needed)';
+    if (tries === 1) {
+      pts = 11;
+      ptsBadge = '+11 pts (First Try!)';
+      state.correctFirstTry += 1;
+    } else if (tries === 2) {
+      pts = 6;
+      ptsBadge = '+6 pts';
+    } else if (tries === 3) {
+      pts = 3;
+      ptsBadge = '+3 pts';
+    }
+
+    state.matched.add(zoneId);
+    state.score += pts;
+
+    state.objectLogs.push({
+      object_id: `${round.id}_${zoneId}`,
+      was_correct: true,
+      attempt_number: tries,
+    });
+
+    // Update Slot appearance
+    if (slotEl) {
+      slotEl.className = 'ftp-slot ftp-slot-matched';
+      slotEl.innerHTML = `
+        <span class="ftp-slot-badge"><i class="bi bi-check-lg"></i></span>
+        <span class="ftp-slot-label">${zone.label}</span>
+      `;
+    }
+
+    // Update SVG Leader Line & Pin
+    const line = document.querySelector(`.ftp-leader-line[data-line-id="${zoneId}"]`);
+    if (line) line.classList.add('ftp-leader-matched');
+    const halo = document.querySelector(`.ftp-pin-halo[data-halo-id="${zoneId}"]`);
+    if (halo) halo.classList.add('ftp-pin-halo-matched');
+    const dot = document.querySelector(`.ftp-pin-dot[data-pin-id="${zoneId}"]`);
+    if (dot) dot.classList.add('ftp-pin-dot-matched');
+
+    // Update Word Chip
+    if (chipEl) {
+      chipEl.classList.remove('ftp-chip-selected');
+      chipEl.classList.add('ftp-chip-used');
+      chipEl.disabled = true;
+      chipEl.draggable = false;
+    }
+
+    state.selectedLabel = null;
+    state.selectedSlot = null;
+
+    // Show fact callout
+    if (factPanel && fact) {
+      factPanel.style.display = 'flex';
+      factPanel.innerHTML = `<i class="bi bi-check-circle-fill me-2 text-success"></i>${fact}`;
+    }
+
+    if (banner) {
+      banner.className = 'ftp-banner ftp-banner-success';
+      banner.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>
+        Correct! <strong>${zone.label}</strong> labeled! <strong>${ptsBadge}</strong>`;
+    }
+
+    playTone(660, 0.22);
+    speakText(`Correct! ${zone.label}. ${fact}`);
+    updateHUD();
+
+    // Check if round complete
+    if (state.matched.size === round.zones.length) {
+      setTimeout(() => renderRound(state.currentRound + 1), 1600);
+    }
+  } else {
+    // Wrong match
+    state.objectLogs.push({
+      object_id: `${round.id}_${zoneId}`,
+      was_correct: false,
+      attempt_number: tries,
+    });
+
+    // Calculate remaining potential points for this slot
+    let nextPotential = 1;
+    if (tries === 1) nextPotential = 6;
+    else if (tries === 2) nextPotential = 3;
+    else nextPotential = 1;
+
+    const labelName = chipEl ? chipEl.textContent.trim() : labelId;
+    if (banner) {
+      banner.className = 'ftp-banner ftp-banner-danger';
+      banner.innerHTML = `<i class="bi bi-x-circle-fill me-2"></i>
+        Not quite! <strong>${labelName}</strong> does not go there. (Points for this part lessened to <strong>+${nextPotential} pts</strong>)`;
+    }
+    playTone(220, 0.2);
+
+    if (slotEl) {
+      slotEl.classList.add('ftp-slot-error');
+      setTimeout(() => slotEl.classList.remove('ftp-slot-error'), 600);
+    }
+
+    // Shake the wrong chip for clear tactile feedback
+    if (chipEl) {
+      chipEl.classList.add('ftp-chip-wrong-shake');
+      setTimeout(() => chipEl.classList.remove('ftp-chip-wrong-shake'), 500);
+    }
+
+    // Reset BOTH slot and label selections to prevent unintended follow-up triggers
+    state.selectedSlot = null;
+    state.selectedLabel = null;
+    document.querySelectorAll('.ftp-slot').forEach(s => {
+      if (!state.matched.has(s.dataset.zoneId)) s.classList.remove('ftp-slot-selected');
+    });
+    document.querySelectorAll('.ftp-chip').forEach(c => {
+      if (!c.classList.contains('ftp-chip-used')) c.classList.remove('ftp-chip-selected');
+    });
+  }
+}
+
 // ── EVENT BINDING ─────────────────────────────────────────────────────────────
 
 function bindRoundEvents(round) {
   const banner = document.getElementById('ftp-banner');
-  const factPanel = document.getElementById('ftp-fact');
 
-  // Word bank chips
+  // Word bank chips: Tap and Drag
   document.querySelectorAll('.ftp-chip').forEach(chip => {
+    // Drag Start
+    chip.addEventListener('dragstart', (e) => {
+      if (chip.classList.contains('ftp-chip-used')) {
+        e.preventDefault();
+        return;
+      }
+      e.dataTransfer.setData('text/plain', chip.dataset.labelId);
+      chip.classList.add('ftp-chip-selected');
+      state.selectedLabel = chip.dataset.labelId;
+    });
+
+    chip.addEventListener('dragend', () => {
+      if (!state.selectedSlot) {
+        chip.classList.remove('ftp-chip-selected');
+      }
+    });
+
+    // Tap
     chip.addEventListener('click', () => {
-      // Deselect previous
+      if (chip.classList.contains('ftp-chip-used')) return;
+
+      // If a slot is already selected, try to match directly!
+      if (state.selectedSlot) {
+        processMatch(state.selectedSlot, chip.dataset.labelId, round);
+        return;
+      }
+
+      // Otherwise, select this chip
       document.querySelectorAll('.ftp-chip').forEach(c => c.classList.remove('ftp-chip-selected'));
-
-      // If already used/matched, ignore
-      if (chip.classList.contains('ftp-chip-used') || chip.classList.contains('ftp-chip-wrong')) return;
-
       chip.classList.add('ftp-chip-selected');
       state.selectedLabel = chip.dataset.labelId;
       playTone(480, 0.08);
@@ -319,20 +565,45 @@ function bindRoundEvents(round) {
       if (banner) {
         banner.className = 'ftp-banner ftp-banner-primary';
         banner.innerHTML = `<i class="bi bi-hand-index-thumb-fill me-2"></i>
-          Label selected: <strong>${chip.textContent.trim()}</strong>. Now tap the matching zone on the animal!`;
+          Word chosen: <strong>${chip.textContent.trim()}</strong>. Now tap the matching numbered pin slot!`;
       }
-      speakText(`Label selected: ${chip.textContent.trim()}. Now tap its matching zone.`);
+      speakText(`Word chosen: ${chip.textContent.trim()}. Tap the matching pin slot.`);
     });
   });
 
-  // Zone hotspots
-  document.querySelectorAll('.ftp-zone').forEach(zoneEl => {
-    zoneEl.addEventListener('click', () => {
-      const zoneId = zoneEl.dataset.zoneId;
+  // Callout Slots: Tap and Drop
+  document.querySelectorAll('.ftp-slot').forEach(slotEl => {
+    const zoneId = slotEl.dataset.zoneId;
 
+    // Drag Over & Leave
+    slotEl.addEventListener('dragover', (e) => {
+      if (state.matched.has(zoneId)) return;
+      e.preventDefault();
+      slotEl.classList.add('ftp-slot-dragover');
+    });
+
+    slotEl.addEventListener('dragleave', () => {
+      slotEl.classList.remove('ftp-slot-dragover');
+    });
+
+    // Drop
+    slotEl.addEventListener('drop', (e) => {
+      e.preventDefault();
+      slotEl.classList.remove('ftp-slot-dragover');
+      if (state.matched.has(zoneId)) return;
+
+      const labelId = e.dataTransfer.getData('text/plain') || state.selectedLabel;
+      if (labelId) {
+        processMatch(zoneId, labelId, round);
+      }
+    });
+
+    // Tap
+    slotEl.addEventListener('click', () => {
       // Already matched
       if (state.matched.has(zoneId)) {
         const fact = round.facts[zoneId];
+        const factPanel = document.getElementById('ftp-fact');
         if (factPanel && fact) {
           factPanel.style.display = 'flex';
           factPanel.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i>${fact}`;
@@ -340,89 +611,26 @@ function bindRoundEvents(round) {
         return;
       }
 
-      // No label selected yet
-      if (!state.selectedLabel) {
-        if (banner) {
-          banner.className = 'ftp-banner ftp-banner-warn';
-          banner.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>
-            Please tap a label from the word bank first!`;
-        }
-        playTone(220, 0.1);
+      // If a word is already selected, evaluate match!
+      if (state.selectedLabel) {
+        processMatch(zoneId, state.selectedLabel, round);
         return;
       }
 
-      // Check correctness
-      state.attempts[zoneId] = (state.attempts[zoneId] || 0) + 1;
-      const isDecoy = document.querySelector(`.ftp-chip[data-label-id="${state.selectedLabel}"]`)
-                               ?.dataset.isDecoy === 'true';
-      const isMatch = state.selectedLabel === zoneId && !isDecoy;
+      // Otherwise, select this slot first (Slot -> Word flow)
+      document.querySelectorAll('.ftp-slot').forEach(s => {
+        if (!state.matched.has(s.dataset.zoneId)) s.classList.remove('ftp-slot-selected');
+      });
 
-      if (isMatch) {
-        // Correct match
-        const zone = round.zones.find(z => z.id === zoneId);
-        const fact = round.facts[zoneId];
-        const firstTry = state.attempts[zoneId] === 1;
+      slotEl.classList.add('ftp-slot-selected');
+      state.selectedSlot = zoneId;
+      playTone(480, 0.08);
 
-        state.matched.add(zoneId);
-        const pts = firstTry ? 20 : 10;
-        state.score += pts;
-        if (firstTry) state.correctFirstTry += 1;
-
-        state.objectLogs.push({
-          object_id: `${round.id}_${zoneId}`,
-          was_correct: true,
-          attempt_number: state.attempts[zoneId],
-        });
-
-        // Update zone appearance
-        zoneEl.classList.remove('ftp-zone-unlabeled');
-        zoneEl.classList.add('ftp-zone-labeled');
-        zoneEl.querySelector('.ftp-zone-label-text').textContent = zone.label;
-
-        // Mark chip used
-        const chip = document.querySelector(`.ftp-chip[data-label-id="${state.selectedLabel}"]`);
-        if (chip) { chip.classList.remove('ftp-chip-selected'); chip.classList.add('ftp-chip-used'); chip.disabled = true; }
-
-        state.selectedLabel = null;
-
-        // Show fact
-        if (factPanel && fact) {
-          factPanel.style.display = 'flex';
-          factPanel.innerHTML = `<i class="bi bi-check-circle-fill me-2 text-success"></i>${fact}`;
-        }
-
-        if (banner) {
-          banner.className = 'ftp-banner ftp-banner-success';
-          banner.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>
-            Correct! <strong>${zone.label}</strong> matched! ${firstTry ? '+20 pts' : '+10 pts'}`;
-        }
-        playTone(660, 0.22);
-        speakText(`Correct! ${zone.label}. ${fact}`);
-        updateHUD();
-
-        // Check if all zones matched → next round
-        if (state.matched.size === round.zones.length) {
-          setTimeout(() => renderRound(state.currentRound + 1), 1500);
-        }
-      } else {
-        // Wrong match
-        state.objectLogs.push({
-          object_id: `${round.id}_${zoneId}`,
-          was_correct: false,
-          attempt_number: state.attempts[zoneId],
-        });
-
-        if (banner) {
-          banner.className = 'ftp-banner ftp-banner-danger';
-          banner.innerHTML = `<i class="bi bi-x-circle-fill me-2"></i>
-            Not quite! <strong>${document.querySelector(`.ftp-chip[data-label-id="${state.selectedLabel}"]`)?.textContent.trim()}</strong>
-            does not go there. Try another zone or a different label.`;
-        }
-        playTone(220, 0.2);
-
-        // Flash zone red briefly
-        zoneEl.classList.add('ftp-zone-error');
-        setTimeout(() => zoneEl.classList.remove('ftp-zone-error'), 600);
+      const zone = round.zones.find(z => z.id === zoneId);
+      if (banner) {
+        banner.className = 'ftp-banner ftp-banner-primary';
+        banner.innerHTML = `<i class="bi bi-pin-map-fill me-2"></i>
+          Pin Slot <strong>#${zone?.number}</strong> selected! Now tap its matching name in the Word Bank below.`;
       }
     });
   });
@@ -437,6 +645,14 @@ export function initFindThePart() {
   state.completed = false;
   state.startTime = performance.now();
   state.objectLogs = [];
+  state.selectedLabel = null;
+  state.selectedSlot = null;
+  state.matched = new Set();
+  state.attempts = {};
+
+  if (typeof window.initialAttemptsToday !== 'undefined') {
+    state.attemptsToday = Number(window.initialAttemptsToday);
+  }
 
   document.getElementById('ftp-tts-btn')?.addEventListener('click', () => {
     const round = ROUNDS[state.currentRound];

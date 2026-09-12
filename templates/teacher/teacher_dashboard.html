@@ -5,13 +5,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teacher Dashboard</title>
+  <meta name="description" content="SciencePlay Teacher Dashboard: Monitor student learning progress, game retry improvements, classroom analytics, and assignments.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260903_3') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
 </head>
 
@@ -25,7 +28,7 @@
             <div class="teacher-brand-wrap">
               <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
               <div>
-                <h1 class="teacher-brand-title">SciencePlay</h1>
+                <div class="teacher-brand-title">SciencePlay</div>
                 <p class="teacher-brand-subtitle">Teacher Portal</p>
               </div>
             </div>
@@ -34,6 +37,11 @@
               <a class="teacher-menu-link active" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
                 <i class="bi bi-grid"></i>
                 <span>Dashboard</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="students" href="{{ url_for('teacher.students') }}">
+                <i class="bi bi-people"></i>
+                <span>Students</span>
               </a>
 
               <a class="teacher-menu-link" data-nav="assignments" href="{{ url_for('teacher.assignments') }}">
@@ -47,6 +55,9 @@
               <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
                 <i class="bi bi-chat-square-quote-fill"></i>
                 <span>Feedback</span>
+                {% if needs_feedback_count and needs_feedback_count > 0 %}
+                  <span class="feedback-nav-badge">{{ needs_feedback_count }}</span>
+                {% endif %}
               </a>
               <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
                 <i class="bi bi-book"></i>
@@ -218,6 +229,24 @@
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <!-- Section: Analytics Skeleton -->
+              <div class="mb-4">
+                <span class="skeleton-shimmer skeleton-line" style="width: 70px; height: 12px; margin-bottom: 8px;"></span>
+                <div class="dashboard-section teacher-panel p-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="skeleton-shimmer skeleton-line" style="width: 260px; height: 22px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 180px; height: 32px;"></span>
+                  </div>
+                  <div class="row g-2 mb-3">
+                    <div class="col-3"><span class="skeleton-shimmer skeleton-card" style="height: 50px;"></span></div>
+                    <div class="col-3"><span class="skeleton-shimmer skeleton-card" style="height: 50px;"></span></div>
+                    <div class="col-3"><span class="skeleton-shimmer skeleton-card" style="height: 50px;"></span></div>
+                    <div class="col-3"><span class="skeleton-shimmer skeleton-card" style="height: 50px;"></span></div>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-card w-100" style="height: 250px;"></span>
                 </div>
               </div>
 
@@ -402,7 +431,7 @@
                   <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
                     <div>
                       <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0"><i class="bi bi-activity me-2 text-primary"></i>Recent Student Activity</h5>
+                        <h2 class="h5 mb-0"><i class="bi bi-activity me-2 text-primary"></i>Recent Student Activity</h2>
                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Live Feed</span>
                       </div>
                       <p class="teacher-panel-note mb-3">Live stream of student submissions and feedback status.</p>
@@ -439,7 +468,7 @@
                 <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
                   <div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                      <h5 class="mb-0"><i class="bi bi-broadcast me-2 text-success"></i>Currently Online Students</h5>
+                      <h2 class="h5 mb-0"><i class="bi bi-broadcast me-2 text-success"></i>Currently Online Students</h2>
                       <span class="badge bg-success rounded-pill online-count-badge">{{ online_students|length }} Online</span>
                     </div>
                     <p class="teacher-panel-note mb-3">Real-time status of active students logged in.</p>
@@ -480,6 +509,99 @@
               </div>
             </div>
 
+            <!-- Section: Student Attempt & Retry Improvement Analytics -->
+            <div class="mb-4" id="attempt-analytics-section">
+              <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <p class="teacher-eyebrow mb-0">Analytics</p>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-semibold">
+                  <i class="bi bi-graph-up-arrow me-1"></i>Attempt Progression Curve
+                </span>
+              </div>
+              <div class="dashboard-section teacher-panel p-4">
+                <div class="d-flex justify-content-between align-items-start align-items-md-center flex-column flex-md-row gap-3 mb-3">
+                  <div>
+                    <h2 class="h5 mb-1 d-flex align-items-center gap-2 fw-bold text-dark">
+                      <i class="bi bi-graph-up text-success"></i>
+                      <span>Student Attempt & Retry Improvement</span>
+                    </h2>
+                    <p class="teacher-panel-note mb-0">Track score progression across attempts to verify if replaying games drives learning gains.</p>
+                  </div>
+                  {% if retry_progression %}
+                  <div class="d-flex align-items-center gap-2 w-100 w-md-auto">
+                    <label for="retryProgressionSelect" class="form-label small text-muted mb-0 fw-semibold text-nowrap d-none d-sm-inline">
+                      Select Student:
+                    </label>
+                    <select id="retryProgressionSelect" class="form-select form-select-sm rounded-pill border-secondary-subtle fw-semibold shadow-sm" style="min-width: 250px; max-width: 340px;" aria-label="Select student and activity to view retry progression">
+                      {% for item in retry_progression %}
+                        <option value="{{ loop.index0 }}">{{ item.student_name }} — {{ item.activity_name }} ({{ item.attempt_count }}x {% if item.attempt_count == 1 %}try{% else %}tries{% endif %})</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  {% endif %}
+                </div>
+
+                {% if retry_progression %}
+                  <!-- Dynamic metric chips for selected student -->
+                  <div class="row g-2 mb-3 align-items-stretch" id="retrySummaryChips">
+                    <div class="col-6 col-md-3">
+                      <div class="p-2 px-3 rounded-3 bg-light border text-center h-100">
+                        <small class="text-muted d-block fw-semibold" style="font-size: 0.75rem;">1st Attempt Score</small>
+                        <span class="fw-bold fs-6 text-secondary" id="chip-first-score">-</span>
+                      </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <div class="p-2 px-3 rounded-3 bg-light border text-center h-100">
+                        <small class="text-muted d-block fw-semibold" style="font-size: 0.75rem;">Best Score</small>
+                        <span class="fw-bold fs-6 text-primary" id="chip-best-score">-</span>
+                      </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <div class="p-2 px-3 rounded-3 bg-light border text-center h-100">
+                        <small class="text-muted d-block fw-semibold" style="font-size: 0.75rem;">Latest Score</small>
+                        <span class="fw-bold fs-6 text-info" id="chip-latest-score">-</span>
+                      </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <div class="p-2 px-3 rounded-3 bg-light border text-center h-100">
+                        <small class="text-muted d-block fw-semibold" style="font-size: 0.75rem;">Overall Growth</small>
+                        <span class="fw-bold fs-6" id="chip-improvement">-</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Chart Canvas Container -->
+                  <div class="chart-wrapper position-relative rounded-4 p-3 bg-light-subtle border" style="height: 280px; width: 100%;">
+                    <canvas id="retryImprovementChart"></canvas>
+                  </div>
+
+                  <!-- Attempt Badges List & Link to Analytics -->
+                  <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-1 flex-wrap" id="retryAttemptBadges">
+                      <!-- Populated dynamically by JS -->
+                    </div>
+                    <div>
+                      <a href="{{ url_for('teacher.analytics') }}#retry-improvement-section" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold">
+                        <i class="bi bi-table me-1"></i>
+                        <span>View All {{ retry_progression|length }} Replay Records</span>
+                        <i class="bi bi-arrow-right ms-1"></i>
+                      </a>
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="text-center text-muted py-5">
+                    <i class="bi bi-graph-up-arrow fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                    <h3 class="h6 fw-bold text-dark">No Student Replay Data Yet</h3>
+                    <p class="small text-muted mb-3" style="max-width: 440px; margin: 0 auto;">
+                      When students play games more than once, their attempt-by-attempt improvement progression curve will appear here automatically.
+                    </p>
+                    <a href="{{ url_for('teacher.assignments') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                      <i class="bi bi-journal-plus me-1"></i>Assign Activities to Students
+                    </a>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
             <!-- Section 2: Performance & Struggle Insights -->
             <div class="mb-4">
               <p class="teacher-eyebrow mb-2">Insights</p>
@@ -489,7 +611,7 @@
                 <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
                   <div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                      <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Struggling Concepts</h5>
+                      <h2 class="h5 mb-0"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Struggling Concepts</h2>
                       <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">Top Misses</span>
                     </div>
                     <p class="teacher-panel-note mb-3">Items students found most difficult during lessons and games.</p>
@@ -559,7 +681,7 @@
                 <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
                   <div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                      <h5 class="mb-0"><i class="bi bi-trophy-fill text-warning me-2"></i>Class Leaderboards</h5>
+                      <h2 class="h5 mb-0"><i class="bi bi-trophy-fill text-warning me-2"></i>Class Leaderboards</h2>
                       <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Top Scores</span>
                     </div>
                     <p class="teacher-panel-note mb-3">Best saved scores and overall class champions.</p>
@@ -681,9 +803,187 @@
   </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='js/teacher.js', v='20260810') }}"></script>
-  <script src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher.js', v='20260810') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
+
+  {% if retry_progression %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const retryData = {{ retry_progression|tojson }};
+      const selectElem = document.getElementById('retryProgressionSelect');
+      const canvasElem = document.getElementById('retryImprovementChart');
+      if (!canvasElem || !retryData || !retryData.length) return;
+
+      const chipFirst = document.getElementById('chip-first-score');
+      const chipBest = document.getElementById('chip-best-score');
+      const chipLatest = document.getElementById('chip-latest-score');
+      const chipImprovement = document.getElementById('chip-improvement');
+      const badgesContainer = document.getElementById('retryAttemptBadges');
+
+      let chartInstance = null;
+
+      function updateDashboardAttemptChart(itemIndex) {
+        const item = retryData[itemIndex];
+        if (!item) return;
+
+        // 1. Update Chips
+        if (chipFirst) chipFirst.textContent = `${item.first_score} pts`;
+        if (chipBest) chipBest.textContent = `${item.best_score} pts`;
+        if (chipLatest) chipLatest.textContent = `${item.latest_score} pts`;
+
+        if (chipImprovement) {
+          if (item.attempt_count === 1) {
+            chipImprovement.className = 'fw-bold fs-6 text-primary';
+            chipImprovement.innerHTML = `<i class="bi bi-flag-fill me-1"></i>1st Try (Baseline)`;
+          } else if (item.improvement > 0) {
+            chipImprovement.className = 'fw-bold fs-6 text-success';
+            chipImprovement.innerHTML = `<i class="bi bi-arrow-up-right me-1"></i>+${item.improvement} pts`;
+          } else if (item.improvement < 0) {
+            chipImprovement.className = 'fw-bold fs-6 text-danger';
+            chipImprovement.innerHTML = `<i class="bi bi-arrow-down-right me-1"></i>${item.improvement} pts`;
+          } else {
+            chipImprovement.className = 'fw-bold fs-6 text-muted';
+            chipImprovement.innerHTML = `<i class="bi bi-dash me-1"></i>No change`;
+          }
+        }
+
+        // 2. Update Badges
+        if (badgesContainer) {
+          badgesContainer.innerHTML = '<span class="small text-muted me-2 fw-semibold"><i class="bi bi-list-ol me-1"></i>Attempt Breakdown:</span>';
+          item.attempts.forEach((att, idx) => {
+            const badge = document.createElement('span');
+            badge.className = `badge rounded-pill px-2 py-1 small me-1 ${idx === 0 ? 'bg-secondary' : (att.score >= item.best_score ? 'bg-success' : 'bg-light text-dark border')}`;
+            const dateBadge = att.date ? ` <span style="font-size:0.75rem; color: #f8fafc; font-weight: 500;">(${att.date})</span>` : '';
+            badge.title = `Attempt #${att.num}${att.date ? ' on ' + att.date : ''}: ${att.score} pts (${att.time}s)`;
+            badge.innerHTML = `#${att.num}: <strong>${att.score} pts</strong>${dateBadge}`;
+            badgesContainer.appendChild(badge);
+          });
+        }
+
+        // 3. Prepare Chart Data
+        const labels = item.attempts.map(a => `Attempt #${a.num}`);
+        const scores = item.attempts.map(a => a.score);
+        const times = item.attempts.map(a => a.time);
+
+        const ctx = canvasElem.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.28)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.01)');
+
+        if (chartInstance) {
+          chartInstance.data.labels = labels;
+          chartInstance.data.datasets[0].data = scores;
+          chartInstance.data.datasets[0].timeData = times;
+          chartInstance.data.datasets[0].label = `${item.student_name} - ${item.activity_name}`;
+          chartInstance.update();
+        } else {
+          chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: `${item.student_name} - ${item.activity_name}`,
+                data: scores,
+                timeData: times,
+                borderColor: '#10b981',
+                backgroundColor: gradient,
+                borderWidth: 3,
+                fill: true,
+                tension: 0.35,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#10b981',
+                pointBorderWidth: 3,
+                pointRadius: 6,
+                pointHoverRadius: 9,
+                pointHoverBackgroundColor: '#10b981',
+                pointHoverBorderColor: '#ffffff',
+                pointHoverBorderWidth: 3
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: {
+                mode: 'index',
+                intersect: false
+              },
+              plugins: {
+                legend: {
+                  display: false
+                },
+                tooltip: {
+                  backgroundColor: '#1f2937',
+                  titleFont: { family: 'Plus Jakarta Sans', size: 13, weight: 'bold' },
+                  bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
+                  padding: 12,
+                  cornerRadius: 8,
+                  callbacks: {
+                    title: function (tooltipItems) {
+                      const idx = tooltipItems[0].dataIndex;
+                      const att = item.attempts[idx];
+                      const d = att.date_full || att.date;
+                      return `Attempt #${att.num}${d ? ' (' + d + ')' : ''}`;
+                    },
+                    label: function (context) {
+                      const score = context.parsed.y;
+                      const time = context.dataset.timeData ? context.dataset.timeData[context.dataIndex] : 0;
+                      return [`Score: ${score} pts`, `Time: ${time}s`];
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: 'rgba(0, 0, 0, 0.06)',
+                    drawBorder: false
+                  },
+                  ticks: {
+                    font: { family: 'Plus Jakarta Sans', size: 11 },
+                    color: '#6b7280',
+                    callback: function (val) {
+                      return val + ' pts';
+                    }
+                  }
+                },
+                x: {
+                  grid: {
+                    display: false
+                  },
+                  ticks: {
+                    font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+                    color: '#374151'
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // Initialize with first item after layout settles (avoids forced synchronous reflow)
+      requestAnimationFrame(function () {
+        updateDashboardAttemptChart(0);
+      });
+
+      if (selectElem) {
+        selectElem.addEventListener('change', function () {
+          updateDashboardAttemptChart(parseInt(this.value, 10));
+        });
+      }
+
+      // Resize chart once skeleton animation completes
+      setTimeout(() => {
+        if (chartInstance) {
+          chartInstance.resize();
+        }
+      }, 750);
+    });
+  </script>
+  {% endif %}
 </body>
 
 </html>

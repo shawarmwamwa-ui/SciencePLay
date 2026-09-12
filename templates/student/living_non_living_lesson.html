@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Living vs Non-Living — Interactive Lesson | SciencePlay</title>
+  <meta name="description" content="SciencePlay Living vs Non-Living Lesson: Interactive slides on classification of living things.">
+  
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/LivingNonLivingLesson.css', v='20260811_2') }}">
@@ -24,7 +28,7 @@
         </div>
       </div>
       <div class="d-flex align-items-center gap-3">
-        <div class="lesson-progress-bar">
+        <div class="lesson-progress-bar" role="progressbar" aria-label="Lesson Progress" aria-valuemin="0" aria-valuemax="100">
           <div id="lesson-progress" class="lesson-progress-fill"></div>
         </div>
       </div>
@@ -41,7 +45,6 @@
           <span class="dot dot-yellow"></span>
           <span class="dot dot-green"></span>
         </div>
-        <span class="brutal-window-title"><i class="bi bi-book-fill me-1"></i>LIVING_VS_NONLIVING.EXE</span>
       </div>
 
       <div class="slide-card-body">
@@ -72,6 +75,7 @@
   <script type="module" src="{{ url_for('static', filename='js/LivingNonLivingLesson.js') }}" onerror="console.error('Module loading failed')"></script>
   <script>
     window.currentLessonId = {{ lesson.id if lesson else 'null' }};
+    window.initialSlideIndex = {{ initial_slide if initial_slide is defined else 0 }};
     window.publishedLessonPayload = {{ published_payload|tojson if published_payload else 'null' }};
     
     window.addEventListener('error', function(event) {
@@ -94,6 +98,7 @@
       initLessonWhenReady();
     });
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 </body>
 </html>

@@ -14,6 +14,15 @@ function clearLottieInstances() {
 }
 
 function renderMediaGrid(slide) {
+  // If slide has a dedicated image/diagram
+  if (slide.imageSrc) {
+    return `
+      <div class="bpl-media-wrap" style="background:${slide.illustrationBg || slide.partBg || '#fefce8'}">
+        <img src="${slide.imageSrc}" alt="${slide.illustrationLabel || slide.title || ''}" class="bpl-media-img" loading="lazy" width="800" height="600">
+        ${slide.illustrationLabel ? `<p class="bpl-lottie-caption">${slide.illustrationLabel}</p>` : ''}
+      </div>`;
+  }
+
   const items = [];
   if (Array.isArray(slide.animations) && slide.animations.length > 0) {
     items.push(...slide.animations);
@@ -108,10 +117,24 @@ function renderTeach(slide) {
     </div>`;
 }
 
+function getShuffledOptions(slide, state) {
+  if (!state.shuffledOptions) state.shuffledOptions = {};
+  if (!state.shuffledOptions[slide.id]) {
+    const opts = [...slide.options];
+    for (let i = opts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [opts[i], opts[j]] = [opts[j], opts[i]];
+    }
+    state.shuffledOptions[slide.id] = opts;
+  }
+  return state.shuffledOptions[slide.id];
+}
+
 function renderQuickCheck(slide, state) {
   const media = renderMediaGrid(slide);
   const ss = state.slideStates[slide.id] || {};
-  const optionsHtml = slide.options.map(opt => {
+  const options = getShuffledOptions(slide, state);
+  const optionsHtml = options.map(opt => {
     let cls = 'bpl-option';
     if (ss.selected === opt.id) {
       cls += opt.isCorrect ? ' bpl-opt-correct' : ' bpl-opt-wrong';
@@ -172,18 +195,21 @@ function renderAssess(slide, state) {
 }
 
 function renderSummary(slide) {
+  const media = renderMediaGrid(slide);
   const items = slide.bullets.map(b => `<li>${b}</li>`).join('');
   return `
     <div class="bpl-summary-slide">
+      ${media}
       <ul class="bpl-summary-list">${items}</ul>
     </div>`;
 }
 
 // ── ENGINE ───────────────────────────────────────────────────────────────────
 
-export function initBodyPartsLesson(slides, lessonId, lessonName) {
+export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide = null) {
+  const startIdx = initialSlide !== null ? Number(initialSlide) : (Number(window.initialSlide) || 0);
   const state = {
-    currentIndex: 0,
+    currentIndex: Math.min(Math.max(0, startIdx), slides.length - 1),
     lastSavedTime: performance.now(),
     finished: false,
     slideStates: {},   // quick-check state
@@ -255,6 +281,7 @@ export function initBodyPartsLesson(slides, lessonId, lessonName) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
+      keepalive: true,
       body: JSON.stringify({
         lesson_id: lessonId,
         progress_percent: pct,
@@ -361,6 +388,7 @@ export function initBodyPartsLesson(slides, lessonId, lessonName) {
   function goPrev() {
     if (state.currentIndex === 0) return;
     state.currentIndex -= 1;
+    saveProgress(false);
     render();
   }
 
@@ -392,6 +420,9 @@ export function initBodyPartsLesson(slides, lessonId, lessonName) {
   prevBtn?.addEventListener('click', goPrev);
   nextBtn?.addEventListener('click', goNext);
   document.getElementById('bpl-tts-btn')?.addEventListener('click', readAloud);
+  document.querySelector('.bpl-back-btn')?.addEventListener('click', () => {
+    if (!state.finished) saveProgress(false);
+  });
 
   // ── Heartbeat ──────────────────────────────────────────────────────────────
 

@@ -130,8 +130,8 @@ export const ANIMAL_BODY_PARTS_SLIDES = [
     title: 'Quick Check: The Head',
     prompt: 'Which part of the head helps an animal SEE where food is?',
     options: [
-      { id: 'eyes',  label: 'Eyes',  icon: 'bi-eye-fill',       isCorrect: true  },
       { id: 'tail',  label: 'Tail',  icon: 'bi-arrow-right',    isCorrect: false },
+      { id: 'eyes',  label: 'Eyes',  icon: 'bi-eye-fill',       isCorrect: true  },
       { id: 'claws', label: 'Claws', icon: 'bi-lightning-fill', isCorrect: false },
     ],
     successMessage: 'Correct! Eyes allow animals to spot food and notice danger from afar.',
@@ -143,9 +143,9 @@ export const ANIMAL_BODY_PARTS_SLIDES = [
     title: 'Quick Check: Legs',
     prompt: 'What do legs help an animal do when it is hungry?',
     options: [
-      { id: 'move',  label: 'Walk and run to find food', icon: 'bi-person-walking', isCorrect: true  },
       { id: 'sleep', label: 'Sleep in the shade',        icon: 'bi-moon-stars',     isCorrect: false },
       { id: 'fly',   label: 'Fly high into trees',       icon: 'bi-wind',           isCorrect: false },
+      { id: 'move',  label: 'Walk and run to find food', icon: 'bi-person-walking', isCorrect: true  },
     ],
     successMessage: 'Spot on! Legs allow the animal to move across land in search of food.',
     retryMessage: 'Not quite. Think about how legs are used to move around on the ground.',
@@ -156,9 +156,9 @@ export const ANIMAL_BODY_PARTS_SLIDES = [
     title: 'Quick Check: Wings',
     prompt: 'Why would a bird need wings to get food from a tall tree?',
     options: [
+      { id: 'dig',   label: 'To dig deep holes',                 icon: 'bi-tools',   isCorrect: false },
       { id: 'fly',   label: 'To fly up and reach high branches', icon: 'bi-feather', isCorrect: true  },
       { id: 'swim',  label: 'To swim under the soil',            icon: 'bi-water',   isCorrect: false },
-      { id: 'dig',   label: 'To dig deep holes',                 icon: 'bi-tools',   isCorrect: false },
     ],
     successMessage: 'Great job! Wings allow birds to fly upward to reach food high above the ground.',
     retryMessage: 'Think again. Wings are specialized for moving through the air.',
@@ -176,9 +176,9 @@ export const ANIMAL_BODY_PARTS_SLIDES = [
     ],
     illustrationBg: '#e0f2fe',
     options: [
-      { id: 'fins',  label: 'It uses fins and its tail to swim', icon: 'bi-tsunami',        isCorrect: true  },
       { id: 'legs',  label: 'It grows temporary legs',           icon: 'bi-person-walking', isCorrect: false },
       { id: 'flies', label: 'It flies above the water',          icon: 'bi-wind',           isCorrect: false },
+      { id: 'fins',  label: 'It uses fins and its tail to swim', icon: 'bi-tsunami',        isCorrect: true  },
     ],
     successMessage:
       'Excellent thinking! Fish have fins and tails instead of legs or wings — different animals have different body parts suited for where they live.',

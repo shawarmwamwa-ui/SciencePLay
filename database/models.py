@@ -70,6 +70,7 @@ class LessonProgress(BaseModel):
     lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'))
     progress_percent = db.Column(db.Integer, default=0)
     completed = db.Column(db.Boolean, default=False)
+    completed_at = db.Column(db.DateTime, nullable=True)
     current_slide = db.Column(db.Integer, default=0)
     time_spent = db.Column(db.Integer, default=0)
     initial_time_spent = db.Column(db.Integer, default=0)

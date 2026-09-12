@@ -18,6 +18,7 @@ const state = {
   activeSlotIndex: 0,
   heldObject: null,
   score: 0,
+  streak: 0,
   totalAttempts: 0,
   correctFirstTry: 0,
   wrongDrops: 0,
@@ -511,7 +512,7 @@ function renderSummary() {
     dom.summaryAttempts.textContent = String(state.totalAttempts);
   }
   if (dom.summaryScore) {
-    dom.summaryScore.textContent = `${state.score} pts`;
+    dom.summaryScore.textContent = `${state.score} / 100 pts`;
   }
   if (dom.summaryTime) {
     const elapsed = Math.max(0, Math.round((Date.now() - state.startTime) / 1000));
@@ -633,13 +634,25 @@ async function dropObject() {
 
   if (isCorrect) {
     object.wasCorrect = true;
-    state.score += 15;
+    state.streak = (state.streak || 0) + 1;
     state.correctFirstTry += 1;
-    setMessage(`✓ Correct! ${object.name} is a ${slot.bin.label}.`, 'success');
+
+    // 8 pts per object + streak bonus (+2 pts at streak 4, +2 pts at streak 8) -> 12 * 8 = 96 + 4 = 100 max
+    let earned = 8;
+    let bonusText = '';
+    if (state.streak === 4 || state.streak === 8) {
+      earned += 2;
+      bonusText = ` (+2 Streak Bonus!)`;
+    }
+    state.score = Math.min(100, state.score + earned);
+    setMessage(`✓ Correct! ${object.name} is a ${slot.bin.label}. (+${earned} pts${bonusText})`, 'success');
   } else {
     object.wasCorrect = false;
     state.wrongDrops += 1;
-    setMessage(`✗ Incorrect! ${object.name} is a ${getBinLabel(object.categoryId)}, not a ${slot.bin.label}.`, 'warning');
+    state.streak = 0;
+    // -4 pts penalty for wrong bin
+    state.score = Math.max(0, state.score - 4);
+    setMessage(`✗ Incorrect! ${object.name} is a ${getBinLabel(object.categoryId)}, not a ${slot.bin.label}. (-4 pts)`, 'warning');
   }
 
   object.isHeld = false;
@@ -666,6 +679,13 @@ function maybeCompleteRound() {
   state.completed = true;
   state.isAnimating = false;
   setControlsDisabled(true);
+
+  // Safety floor: guarantee at least 20 pts if at least one object was sorted correctly
+  if (state.correctFirstTry > 0) {
+    state.score = Math.max(20, state.score);
+  }
+  state.score = Math.min(100, state.score);
+
   renderSummary();
   if (dom.summary) {
     dom.summary.classList.remove('d-none');

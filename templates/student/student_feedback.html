@@ -4,9 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Feedback & Teacher Notes — SciencePlay</title>
+  <meta name="description" content="SciencePlay Student Feedback: Read encouraging teacher notes and study tips.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css', v='20260903_8') }}">
   <style>
     .activity-section-card {
       background: #ffffff;
@@ -119,18 +126,17 @@
   {% endwith %}
 
   <!-- Top Window Header matching Leaderboard style -->
-  <div class="student-header brutal-window mb-4" style="background: #fef08a;">
+  <header class="student-header brutal-window mb-4" style="background: #fef08a;">
     <div class="brutal-window-header">
       <div class="brutal-dots">
         <span class="brutal-dot dot-red"></span>
         <span class="brutal-dot dot-yellow"></span>
         <span class="brutal-dot dot-green"></span>
       </div>
-      <span class="brutal-window-title">FEEDBACK.EXE</span>
     </div>
     <div class="brutal-window-body d-flex justify-content-between align-items-center flex-wrap gap-3 py-3">
       <div>
-        <h1 class="mb-0 text-dark fw-black display-5">
+        <h1 class="mb-0 text-dark fw-black fs-2">
           <i class="bi bi-chat-square-quote-fill text-primary me-2"></i>My Feedback & Teacher Notes
         </h1>
         <p class="mb-0 text-dark fw-bold small mt-1">Review personalized teacher messages, game evaluations, and lesson tips!</p>
@@ -142,10 +148,13 @@
         </a>
       </div>
     </div>
-  </div>
+  </header>
+
+  <!-- Main Content Landmark -->
+  <main id="main-content">
 
   <!-- Filter Navigation Tabs -->
-  <div class="d-flex gap-2 flex-wrap mb-4" role="tablist">
+  <div class="d-flex gap-2 flex-wrap mb-4" role="group" aria-label="Filter feedback entries">
     <button type="button" class="filter-pill-btn active" data-filter="all">
       <i class="bi bi-collection-fill me-1"></i> All Feedback ({{ total_feedback_count }})
     </button>
@@ -298,7 +307,9 @@
     </div>
   {% endif %}
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </main>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     function toggleOlder(groupIndex, btn) {
       const container = document.getElementById(`older-attempts-${groupIndex}`);
@@ -348,6 +359,6 @@
       });
     });
   </script>
-  <script src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 </body>
 </html>

@@ -13,9 +13,9 @@ export const PLANT_PARTS_SLIDES = [
     description:
       'A healthy plant stands tall and green because all its body parts work together. ' +
       'Just like animals, plants have specialized structures designed to take in water, transport nutrients, and make food.',
-    illustrationLabel: 'Healthy sunflower · Wilted plant',
-    illustrationBg: '#fef9c3',
-    illustrationIcon: 'bi-flower1',
+    imageSrc: '/static/images/plant_whole.webp',
+    illustrationLabel: 'Plant Parts: Flower, Leaves, Stem & Roots',
+    illustrationBg: '#fefce8',
   },
 
   // ── 2. PART 1: ROOTS (OBSERVE -> TEACH) ──────────────────────────────────
@@ -26,6 +26,8 @@ export const PLANT_PARTS_SLIDES = [
     description:
       'Roots grow downward and spread through the dark soil beneath the plant. ' +
       'They form a wide network of branching strands that grip the earth and reach deep for moisture.',
+    imageSrc: '/static/images/plant_roots.webp',
+    illustrationLabel: 'Branching Roots Spreading in Soil',
     partLabel: 'Roots',
     partBg: '#fef3c7',
     partIcon: 'bi-tree',
@@ -39,6 +41,8 @@ export const PLANT_PARTS_SLIDES = [
     description:
       'Roots absorb water and essential mineral nutrients dissolved in the soil and send them upward. ' +
       'Roots also anchor the plant firmly in the ground so strong winds and rain do not dislodge it.',
+    imageSrc: '/static/images/plant_roots.webp',
+    illustrationLabel: 'Roots Absorbing Water & Nutrients',
     partLabel: 'Roots & Absorption',
     partBg: '#fef3c7',
     partIcon: 'bi-tree',
@@ -54,6 +58,8 @@ export const PLANT_PARTS_SLIDES = [
     description:
       'The stem is the sturdy middle structure of the plant. ' +
       'It rises above the ground, connecting the roots below to the leaves and flowers above.',
+    imageSrc: '/static/images/plant_stem.webp',
+    illustrationLabel: 'Sturdy Stem Supporting the Plant',
     partLabel: 'Stem',
     partBg: '#dcfce7',
     partIcon: 'bi-arrow-up',
@@ -67,6 +73,8 @@ export const PLANT_PARTS_SLIDES = [
     description:
       'Inside the stem are tiny tube-like passageways that carry water and nutrients from the roots up to the leaves. ' +
       'The stem also carries sugar made in the leaves down to the rest of the plant.',
+    imageSrc: '/static/images/plant_stem.webp',
+    illustrationLabel: 'Water Traveling Up and Food Moving Down',
     partLabel: 'Stem & Transport',
     partBg: '#dcfce7',
     partIcon: 'bi-arrow-up',
@@ -82,6 +90,8 @@ export const PLANT_PARTS_SLIDES = [
     description:
       'Leaves are flat, thin, and green structures that spread outward to catch as much sunlight as possible. ' +
       'Their green color comes from chlorophyll, which captures energy from sunlight.',
+    imageSrc: '/static/images/plant_leaves.webp',
+    illustrationLabel: 'Broad Leaves Catching Sunlight',
     partLabel: 'Leaves',
     partBg: '#ecfdf5',
     partIcon: 'bi-leaf',
@@ -95,6 +105,8 @@ export const PLANT_PARTS_SLIDES = [
     description:
       'Leaves take in sunlight and air (carbon dioxide), combining them with water from the stem to produce food (sugar) through photosynthesis. ' +
       'This food provides the energy the plant needs to grow, flower, and make seeds.',
+    imageSrc: '/static/images/plant_leaves.webp',
+    illustrationLabel: 'Photosynthesis: Sunlight + Air + Water = Food',
     partLabel: 'Leaves & Food Making',
     partBg: '#ecfdf5',
     partIcon: 'bi-sun-fill',
@@ -109,8 +121,8 @@ export const PLANT_PARTS_SLIDES = [
     title: 'Quick Check: Roots',
     prompt: 'Which plant part absorbs water and nutrients from the soil?',
     options: [
-      { id: 'roots',  label: 'Roots',  icon: 'bi-tree',        isCorrect: true  },
       { id: 'leaves', label: 'Leaves', icon: 'bi-leaf',        isCorrect: false },
+      { id: 'roots',  label: 'Roots',  icon: 'bi-tree',        isCorrect: true  },
       { id: 'flower', label: 'Flower', icon: 'bi-flower1',     isCorrect: false },
     ],
     successMessage: 'Correct! Roots grow underground and absorb water and minerals from the soil.',
@@ -122,9 +134,9 @@ export const PLANT_PARTS_SLIDES = [
     title: 'Quick Check: Stem',
     prompt: 'What does the stem carry from the roots up to the leaves?',
     options: [
-      { id: 'water',  label: 'Water and nutrients', icon: 'bi-droplet-fill', isCorrect: true  },
       { id: 'seeds',  label: 'Seeds only',          icon: 'bi-circle-fill',  isCorrect: false },
       { id: 'air',    label: 'Only air bubbles',    icon: 'bi-wind',         isCorrect: false },
+      { id: 'water',  label: 'Water and nutrients', icon: 'bi-droplet-fill', isCorrect: true  },
     ],
     successMessage: 'Yes! The stem acts like a pipe system carrying water and nutrients upward.',
     retryMessage: 'Think again. The stem works like a tube carrying liquid from the ground up.',
@@ -135,8 +147,8 @@ export const PLANT_PARTS_SLIDES = [
     title: 'Quick Check: Leaves',
     prompt: 'What do leaves need to make food for the plant?',
     options: [
-      { id: 'sun',   label: 'Sunlight and air', icon: 'bi-sun-fill',  isCorrect: true  },
       { id: 'soil',  label: 'Soil only',        icon: 'bi-tree-fill', isCorrect: false },
+      { id: 'sun',   label: 'Sunlight and air', icon: 'bi-sun-fill',  isCorrect: true  },
       { id: 'rocks', label: 'Rocks and sand',   icon: 'bi-gem',       isCorrect: false },
     ],
     successMessage: 'That is right! Leaves use sunlight and air along with water to make food for the plant.',
@@ -150,11 +162,13 @@ export const PLANT_PARTS_SLIDES = [
     title: 'Deepen Your Thinking: Sun & Growth',
     prompt:
       'A gardener waters a plant every day but places it inside a dark closet with no sunlight. Which part of the plant will suffer first and why?',
+    imageSrc: '/static/images/plant_leaves.webp',
+    illustrationLabel: 'Leaves need sunlight to perform photosynthesis',
     illustrationBg: '#f1f5f9',
     options: [
-      { id: 'leaves', label: 'Leaves — they cannot make food without sunlight', icon: 'bi-leaf',        isCorrect: true  },
       { id: 'roots',  label: 'Roots — they stop absorbing water',               icon: 'bi-tree',        isCorrect: false },
       { id: 'stem',   label: 'Stem — it cannot hold water without light',       icon: 'bi-arrow-up',    isCorrect: false },
+      { id: 'leaves', label: 'Leaves — they cannot make food without sunlight', icon: 'bi-leaf',        isCorrect: true  },
     ],
     successMessage:
       'Well done! Without sunlight, the leaves cannot perform photosynthesis — so the plant runs out of food energy even if it has plenty of water.',
@@ -167,6 +181,8 @@ export const PLANT_PARTS_SLIDES = [
     id: 'summary',
     type: 'summary',
     title: 'Big Ideas — Plant Parts',
+    imageSrc: '/static/images/plant_whole.webp',
+    illustrationLabel: 'All Plant Parts Connected & Working Together',
     bullets: [
       'Roots grow underground, absorb water and minerals, and anchor the plant in place.',
       'The stem supports the plant upright and carries water and nutrients from roots to leaves.',
