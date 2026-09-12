@@ -70,8 +70,24 @@ function initAuthToasts() {
   });
 }
 
+function initInputAutoScroll() {
+  const inputs = document.querySelectorAll('.login-page input');
+  inputs.forEach(input => {
+    input.addEventListener('focus', () => {
+      // Delay slightly for virtual keyboard animation
+      setTimeout(() => {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 350);
+    });
+  });
+}
+
 window.initLoginMusic = initLoginMusic;
 window.initAuthToasts = initAuthToasts;
 window.togglePassword = togglePassword;
+window.initInputAutoScroll = initInputAutoScroll;
 
-document.addEventListener('DOMContentLoaded', initAuthToasts);
+document.addEventListener('DOMContentLoaded', () => {
+  initAuthToasts();
+  initInputAutoScroll();
+});
