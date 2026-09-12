@@ -342,7 +342,6 @@
               <tr>
                 <th style="width: 85px;">Rank</th>
                 <th>Student Name</th>
-                <th>Username</th>
                 <th>Activities Completed</th>
                 <th>Total Score</th>
               </tr>
@@ -364,13 +363,12 @@
                       <i class="bi bi-person-fill text-primary"></i> {{ student.name }} <i class="bi bi-arrow-right-short text-muted"></i>
                     </a>
                   </td>
-                  <td><span class="text-muted small">@{{ student.username }}</span></td>
                   <td><span class="badge bg-light text-dark border">{{ student.activities_completed }} activity types</span></td>
                   <td><span class="badge bg-primary fs-6">{{ student.total_score }} pts</span></td>
                 </tr>
               {% else %}
                 <tr>
-                  <td colspan="5" class="text-center text-muted py-4">No student scores recorded yet.</td>
+                  <td colspan="4" class="text-center text-muted py-4">No student scores recorded yet.</td>
                 </tr>
               {% endfor %}
             </tbody>
