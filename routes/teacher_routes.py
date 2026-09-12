@@ -145,13 +145,14 @@ def build_live_lesson_tracker(online_students_set=None):
         is_revisit = False
         revisit_num = 0
 
+        curr_slide = (lp.current_slide or 0) + 1
+
         if attempts:
             latest_attempt = attempts[-1]
             is_completed = bool(latest_attempt.completed)
             if latest_attempt.attempt_number > 1:
                 is_revisit = True
                 revisit_num = latest_attempt.attempt_number - 1
-            curr_slide = (latest_attempt.current_slide or 0) + 1
             if is_completed:
                 pct = 100
             else:
@@ -165,7 +166,6 @@ def build_live_lesson_tracker(online_students_set=None):
             is_completed = bool(lp.completed)
             is_revisit = (revisit_count > 0)
             revisit_num = revisit_count
-            curr_slide = curr
             if is_completed:
                 pct = 100
             else:
