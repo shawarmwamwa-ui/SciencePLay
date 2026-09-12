@@ -82,12 +82,48 @@ function initInputAutoScroll() {
   });
 }
 
+function initInputElevate() {
+  const usernameInput = document.getElementById('username');
+  const passwordInput = document.getElementById('password');
+  const body = document.body;
+
+  if (usernameInput) {
+    usernameInput.addEventListener('focus', () => {
+      body.classList.remove('password-focused');
+      body.classList.add('username-focused');
+    });
+    usernameInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (!document.activeElement || (document.activeElement.id !== 'username' && document.activeElement.id !== 'password')) {
+          body.classList.remove('username-focused');
+        }
+      }, 150);
+    });
+  }
+
+  if (passwordInput) {
+    passwordInput.addEventListener('focus', () => {
+      body.classList.remove('username-focused');
+      body.classList.add('password-focused');
+    });
+    passwordInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (!document.activeElement || (document.activeElement.id !== 'username' && document.activeElement.id !== 'password')) {
+          body.classList.remove('password-focused');
+        }
+      }, 150);
+    });
+  }
+}
+
 window.initLoginMusic = initLoginMusic;
 window.initAuthToasts = initAuthToasts;
 window.togglePassword = togglePassword;
 window.initInputAutoScroll = initInputAutoScroll;
+window.initInputElevate = initInputElevate;
 
 document.addEventListener('DOMContentLoaded', () => {
   initAuthToasts();
   initInputAutoScroll();
+  initInputElevate();
 });

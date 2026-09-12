@@ -44,8 +44,16 @@ body.login-page {
   border-radius: 20px;
   box-shadow: 8px 8px 0px #18181b;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.35s cubic-bezier(0.2, 1, 0.3, 1), box-shadow 0.2s ease;
   z-index: 10;
+}
+
+body.username-focused .brutal-login-window {
+  transform: translateY(-90px) !important;
+}
+
+body.password-focused .brutal-login-window {
+  transform: translateY(-210px) !important;
 }
 
 .brutal-login-window:hover {
@@ -297,5 +305,11 @@ body.login-page {
   .brutal-btn-login {
     padding: 0.7rem 1.2rem;
     font-size: 1rem;
+  }
+  body.username-focused .brutal-login-window {
+    transform: translateY(-110px) !important;
+  }
+  body.password-focused .brutal-login-window {
+    transform: translateY(-220px) !important;
   }
 }
