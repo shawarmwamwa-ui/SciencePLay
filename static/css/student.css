@@ -501,3 +501,138 @@ body.student-page.container {
   font-size: 1.15rem;
 }
 
+/* Student Feedback View Styles (Modularized from student_feedback.html) */
+.activity-section-card {
+  background: #ffffff;
+  border: 3px solid #18181b;
+  box-shadow: 5px 5px 0 #18181b;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.activity-section-header {
+  border-bottom: 2.5px solid #18181b;
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+}
+.attempt-card-item {
+  background: #ffffff;
+  border: 2.5px solid #18181b;
+  box-shadow: 3px 3px 0 #18181b;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  transition: transform 0.15s ease;
+}
+.attempt-card-item.outcome-correct {
+  border-left: 8px solid #22c55e;
+  background: #ffffff;
+}
+.attempt-card-item.outcome-good {
+  border-left: 8px solid #3b82f6;
+  background: #ffffff;
+}
+.attempt-card-item.outcome-incorrect {
+  border-left: 8px solid #ef4444;
+  background: #ffffff;
+}
+.callout-box {
+  border-radius: 0.85rem;
+  padding: 1rem;
+  margin-top: 0.75rem;
+}
+.callout-correct {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  color: #14532d;
+}
+.callout-good {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  color: #1e3a8a;
+}
+.callout-incorrect {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #7f1d1d;
+}
+.teacher-note-callout {
+  background: #fffbeb;
+  border: 2px solid #f59e0b;
+  border-radius: 0.85rem;
+  padding: 1rem;
+  margin-top: 0.75rem;
+}
+.filter-pill-btn {
+  border: 2.5px solid #18181b;
+  box-shadow: 3px 3px 0 #18181b;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 0.5rem 1.25rem;
+  background: #ffffff;
+  color: #18181b;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+.filter-pill-btn.active {
+  background: #fde047;
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #18181b;
+}
+.older-attempts-container {
+  display: none;
+}
+.older-attempts-container.expanded {
+  display: block;
+}
+.toggle-older-btn {
+  border: 2px solid #18181b;
+  box-shadow: 2px 2px 0 #18181b;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+.toggle-older-btn:hover {
+  background: #f1f5f9;
+  color: #18181b;
+}
+
+/* Student Assignments View Styles (Modularized from student_assignments.html) */
+.task-card {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px) saturate(1.2);
+  border: 3.5px solid var(--kid-border) !important;
+  border-radius: 1.35rem !important;
+  padding: 1.4rem !important;
+  box-shadow: 0 10px 0 rgba(42, 70, 117, 0.14), 0 20px 32px rgba(42, 70, 117, 0.16) !important;
+}
+.task-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1f3762;
+}
+.table-custom {
+  margin-bottom: 0;
+  border-radius: 0.85rem;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+}
+.table-custom th {
+  background: #f1f5f9;
+  color: #1e293b;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+}
+.table-custom td {
+  padding: 0.85rem 1rem;
+  vertical-align: middle;
+  color: #334155;
+}
+.status-badge {
+  font-weight: 700;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+}

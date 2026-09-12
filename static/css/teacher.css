@@ -1742,5 +1742,27 @@ a.btn-outline-warning:active * {
   color: #15233b !important;
 }
 
-
-
+/* KPI Clickable Card & Info Button (Modularized from teacher_analytics.html) */
+.kpi-clickable-card {
+  cursor: pointer !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
+}
+.kpi-clickable-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 24px rgba(16, 47, 93, 0.12) !important;
+  border-color: #93c5fd !important;
+}
+.kpi-info-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+.kpi-info-btn:hover {
+  color: #2563eb !important;
+  transform: scale(1.2);
+}
