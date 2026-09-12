@@ -229,6 +229,24 @@ document.addEventListener('DOMContentLoaded', function () {
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+              duration: 900,
+              easing: 'easeOutQuart'
+            },
+            animations: {
+              y: {
+                duration: 900,
+                easing: 'easeOutQuart',
+                from: (ctx) => {
+                  if (ctx.type === 'data') {
+                    const scale = ctx.chart.scales.y;
+                    return scale ? scale.getPixelForValue(0) : undefined;
+                  }
+                }
+              },
+              x: { duration: 0 },
+              width: { duration: 0 }
+            },
             plugins: {
               legend: {
                 position: 'top',
@@ -290,6 +308,25 @@ document.addEventListener('DOMContentLoaded', function () {
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+              duration: 900,
+              easing: 'easeOutQuart'
+            },
+            animations: {
+              y: {
+                duration: 900,
+                easing: 'easeOutQuart',
+                from: (ctx) => {
+                  if (ctx.type === 'data') {
+                    const scaleId = ctx.dataset.yAxisID || 'y';
+                    const scale = ctx.chart.scales[scaleId];
+                    return scale ? scale.getPixelForValue(0) : undefined;
+                  }
+                }
+              },
+              x: { duration: 0 },
+              width: { duration: 0 }
+            },
             plugins: {
               legend: {
                 position: 'top',
