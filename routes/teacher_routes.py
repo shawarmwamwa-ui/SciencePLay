@@ -1508,8 +1508,40 @@ def student_performance(student_id):
         flash('Student not found', 'danger')
         return redirect(url_for('teacher.dashboard'))
     
-    # Activity progress
-    progress_logs = ProgressLog.query.filter_by(student_id=student_id).all()
+    # Activity progress with specific activity names and metadata
+    raw_progress_logs = ProgressLog.query.filter_by(student_id=student_id).all()
+    all_activities = Activity.query.all()
+    activity_map = {a.id: a for a in all_activities}
+
+    activity_performance = []
+    for log in raw_progress_logs:
+        act = getattr(log, 'activity', None) or activity_map.get(log.activity_id)
+        act_name = act.type if (act and act.type) else f"Activity #{log.activity_id}"
+        lesson_name = act.lesson.title if (act and act.lesson) else None
+
+        icon = 'bi-controller'
+        if act and act.engine:
+            if act.engine == 'claw_machine':
+                icon = 'bi-joystick'
+            elif act.engine == 'find_the_part':
+                icon = 'bi-search'
+            elif act.engine == 'build_a_plant':
+                icon = 'bi-flower1'
+            elif act.engine == 'metal_logic':
+                icon = 'bi-magnet-fill'
+            elif act.engine == 'recycle_sorter':
+                icon = 'bi-recycle'
+
+        activity_performance.append({
+            'log': log,
+            'activity': act,
+            'name': act_name,
+            'lesson_name': lesson_name,
+            'icon': icon,
+            'score': log.score or 0,
+            'time_spent': log.time_spent or 0,
+            'created_at': log.created_at
+        })
     
     # Lesson progress  
     lesson_progress_raw = LessonProgress.query.filter_by(student_id=student_id).all()
@@ -1553,13 +1585,15 @@ def student_performance(student_id):
     ).filter(UserBadge.user_id == student_id).order_by(UserBadge.awarded_at.desc()).all()
     
     # Overall stats
-    total_score = sum((log.score or 0) for log in progress_logs)
-    avg_score = round(total_score / len(progress_logs)) if progress_logs else 0
+    total_score = sum((log.score or 0) for log in raw_progress_logs)
+    avg_score = round(total_score / len(raw_progress_logs)) if raw_progress_logs else 0
     
     return render_template(
         'teacher/student_performance.html',
         student=student,
-        progress_logs=progress_logs,
+        progress_logs=raw_progress_logs,
+        activity_performance=activity_performance,
+        activity_map=activity_map,
         lesson_progress=lesson_progress,
         attempts=attempts,
         badges=badges,

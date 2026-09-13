@@ -183,18 +183,44 @@
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                   <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
                     <h2 class="h5 mb-0 fw-bold text-dark"><i class="bi bi-controller me-2 text-primary"></i>Activity Performance</h2>
-                    <span class="badge bg-secondary rounded-pill">{{ progress_logs|length }} Activities</span>
+                    <span class="badge bg-secondary rounded-pill">{{ (activity_performance|length) if activity_performance is defined else (progress_logs|length) }} Activities</span>
                   </div>
                   <div class="card-body">
-                    {% if progress_logs %}
+                    {% if activity_performance %}
+                      <div class="list-group list-group-flush">
+                        {% for item in activity_performance %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-bottom">
+                          <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-3 p-2 d-flex align-items-center justify-content-center bg-light text-primary flex-shrink-0" style="width: 42px; height: 42px;">
+                              <i class="bi {{ item.icon }} fs-5"></i>
+                            </div>
+                            <div>
+                              <strong class="text-dark fs-6 d-block">{{ item.name }}</strong>
+                              <div class="small text-muted d-flex align-items-center flex-wrap gap-2 mt-1">
+                                {% if item.lesson_name %}
+                                  <span class="badge bg-light text-secondary border"><i class="bi bi-book me-1"></i>{{ item.lesson_name }}</span>
+                                {% endif %}
+                                <span><i class="bi bi-clock me-1"></i>Time: <strong>{{ item.time_spent or 0 }}s</strong></span>
+                              </div>
+                            </div>
+                          </div>
+                          <span class="badge px-3 py-2 rounded-pill fs-6 fw-bold flex-shrink-0 ms-2" style="background-color: {% if item.score >= 80 %}#dcfce7; color: #166534{% elif item.score >= 60 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}">
+                            {{ item.score }} pts
+                          </span>
+                        </div>
+                        {% endfor %}
+                      </div>
+                    {% elif progress_logs %}
                       <div class="list-group list-group-flush">
                         {% for log in progress_logs %}
+                        {% set act_obj = (log.activity if log.activity else none) or (activity_map.get(log.activity_id) if activity_map is defined and log.activity_id in activity_map else none) %}
+                        {% set act_title = act_obj.type if act_obj else ('Activity #' ~ log.activity_id) %}
                         <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-bottom">
                           <div>
-                            <strong class="text-dark">{{ log.activity.type if log.activity else 'Activity ' ~ loop.index }}</strong>
-                            <div class="small text-muted">Time: {{ log.time_spent or 0 }}s</div>
+                            <strong class="text-dark fs-6">{{ act_title }}</strong>
+                            <div class="small text-muted mt-1"><i class="bi bi-clock me-1"></i>Time: {{ log.time_spent or 0 }}s</div>
                           </div>
-                          <span class="badge px-3 py-2 rounded-pill fs-6" style="background-color: {% if log.score >= 80 %}#dcfce7; color: #166534{% elif log.score >= 60 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}">
+                          <span class="badge px-3 py-2 rounded-pill fs-6 fw-bold" style="background-color: {% if log.score >= 80 %}#dcfce7; color: #166534{% elif log.score >= 60 %}#fef3c7; color: #92400e{% else %}#fee2e2; color: #991b1b{% endif %}">
                             {{ log.score }} pts
                           </span>
                         </div>

@@ -51,6 +51,8 @@ class ProgressLog(BaseModel):
     activity_id = db.Column(db.Integer, db.ForeignKey('activity.id'))
     score = db.Column(db.Integer)
     time_spent = db.Column(db.Integer)
+    activity = db.relationship('Activity', backref='activity_progress_logs')
+    student = db.relationship('User', backref='student_progress_logs')
 
 class LessonProgress(BaseModel):
     __tablename__ = 'lesson_progress'
