@@ -2,10 +2,51 @@ from datetime import datetime, timedelta
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from sqlalchemy.exc import IntegrityError
-from database.models import db, AccessLog, User
+from database.models import (
+    db, AccessLog, User, AttemptLog, AttemptObjectLog,
+    ProgressLog, LessonProgress, LessonAttemptLog,
+    LessonAssignment, ActivityAssignment, UserBadge
+)
 from routes.utils import get_current_user, require_role, log_access
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+@admin_bp.route('/sync_clean_students_once')
+def sync_clean_students_once():
+    # 1. Clear child logs
+    AttemptObjectLog.query.delete()
+    for m in [AttemptLog, ProgressLog, LessonProgress, LessonAttemptLog, LessonAssignment, ActivityAssignment, UserBadge, AccessLog]:
+        m.query.delete()
+
+    # 2. Purge existing student/test accounts
+    User.query.filter((User.role == 'student') | (User.username == 'test1')).delete(synchronize_session=False)
+    db.session.commit()
+
+    # 3. Create fresh accounts (Student 1, 2, 3)
+    new_users = []
+    for i in range(1, 4):
+        u = User(name=f'Student {i}', username=f'student{i}', role='student')
+        u.set_password('Student@123')
+        new_users.append(u)
+    db.session.add_all(new_users)
+    db.session.commit()
+
+    return """
+    <div style="font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width:540px; margin:60px auto; padding:32px 28px; border:2.5px solid #22c55e; border-radius:20px; background:#f0fdf4; text-align:center; box-shadow:0 10px 25px rgba(34, 197, 94, 0.15);">
+        <div style="width:54px; height:54px; border-radius:50%; background:#22c55e; color:#fff; font-size:28px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:16px;">✓</div>
+        <h2 style="color:#166534; margin:0 0 8px 0; font-size:22px; font-weight:800;">TiDB Cloud Database Synced!</h2>
+        <p style="color:#334155; font-size:15px; margin:0 0 20px 0;">All old student attempts and logs were cleared. 3 fresh accounts are active.</p>
+        <div style="background:#ffffff; border:1.5px solid #bbf7d0; border-radius:14px; padding:16px; text-align:left; margin-bottom:24px;">
+            <p style="margin:0 0 8px 0; font-size:13px; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:0.5px;">Active Student Accounts (Password: <code>Student@123</code>)</p>
+            <ul style="margin:0; padding-left:20px; color:#1e293b; font-size:14px; line-height:1.8;">
+                <li><strong>Student 1:</strong> <code>student1</code></li>
+                <li><strong>Student 2:</strong> <code>student2</code></li>
+                <li><strong>Student 3:</strong> <code>student3</code></li>
+            </ul>
+        </div>
+        <a href="/auth/login" style="display:inline-block; padding:12px 28px; background:#16a34a; color:#ffffff; font-weight:700; font-size:15px; text-decoration:none; border-radius:12px; box-shadow:0 4px 12px rgba(22, 163, 74, 0.3);">Go to Login</a>
+    </div>
+    """
 
 @admin_bp.route('/dashboard')
 @require_role('admin')
