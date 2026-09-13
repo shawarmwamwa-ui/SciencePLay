@@ -1437,6 +1437,15 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Ensure monospace/tabular numbers for live ticking clocks so digits don't jitter */
+.live-time-ticker,
+.live-time-ticker .time-val,
+.total-val {
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+  display: inline-block;
+}
+
 /* Student Directory Components */
 .student-avatar-circle {
   width: 44px;

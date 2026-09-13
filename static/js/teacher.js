@@ -72,7 +72,7 @@ function initDashboardSkeleton() {
 /**
  * Universal Client-Side Table Pagination for Teacher Views
  */
-function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSelector, itemsPerPage = 5) {
+function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSelector, itemsPerPage = 5, targetPage = null, animate = true) {
   const table = document.querySelector(tableSelector);
   const wrap = document.querySelector(wrapSelector);
   const info = document.querySelector(infoSelector);
@@ -93,24 +93,31 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
     if (nav) nav.innerHTML = '';
     if (wrap) wrap.classList.remove('d-none');
     rows.forEach(r => r.style.display = '');
+    table._currentPage = 1;
     return;
   }
 
   if (wrap) wrap.classList.remove('d-none');
-  let currentPage = 1;
   const totalPages = Math.ceil(totalRows / itemsPerPage);
+  let currentPage = targetPage ? Math.min(Math.max(1, targetPage), totalPages) : (table._currentPage ? Math.min(table._currentPage, totalPages) : 1);
+  table._currentPage = currentPage;
 
-  function showPage(page) {
+  function showPage(page, shouldAnimate = false) {
     currentPage = page;
+    table._currentPage = page;
     const start = (page - 1) * itemsPerPage;
     const end = start + itemsPerPage;
 
     rows.forEach((row, idx) => {
       if (idx >= start && idx < end) {
         row.style.display = '';
-        row.classList.remove('table-row-fade');
-        void row.offsetWidth; // Trigger reflow for smooth animation
-        row.classList.add('table-row-fade');
+        if (shouldAnimate) {
+          row.classList.remove('table-row-fade');
+          void row.offsetWidth; // Trigger reflow for smooth animation on user click
+          row.classList.add('table-row-fade');
+        } else {
+          row.classList.remove('table-row-fade');
+        }
       } else {
         row.style.display = 'none';
       }
@@ -131,7 +138,7 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
     prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><i class="bi bi-chevron-left"></i></a>`;
     prevLi.addEventListener('click', (e) => {
       e.preventDefault();
-      if (currentPage > 1) showPage(currentPage - 1);
+      if (currentPage > 1) showPage(currentPage - 1, true);
     });
     nav.appendChild(prevLi);
 
@@ -141,7 +148,7 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
       li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
       li.addEventListener('click', (e) => {
         e.preventDefault();
-        showPage(i);
+        showPage(i, true);
       });
       nav.appendChild(li);
     }
@@ -151,12 +158,12 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
     nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><i class="bi bi-chevron-right"></i></a>`;
     nextLi.addEventListener('click', (e) => {
       e.preventDefault();
-      if (currentPage < totalPages) showPage(currentPage + 1);
+      if (currentPage < totalPages) showPage(currentPage + 1, true);
     });
     nav.appendChild(nextLi);
   }
 
-  showPage(1);
+  showPage(currentPage, animate);
 }
 
 /**
@@ -300,48 +307,112 @@ function initLiveTrackerSync() {
         return;
       }
 
-      let html = '';
-      data.tracker.forEach(item => {
-        const studentLower = (item.student_name || '').toLowerCase();
-        const lessonLower = (item.lesson_title || '').toLowerCase();
-        const matches = !query || studentLower.includes(query) || lessonLower.includes(query);
-        const displayStyle = matches ? '' : 'style="display:none;"';
+      // Check existing rows in tbody
+      const existingRows = Array.from(tbody.querySelectorAll('tr.live-tracker-row'));
+      const existingKeys = existingRows.map(r => r.getAttribute('data-row-key') || `${r.getAttribute('data-student')}-${r.getAttribute('data-lesson')}`);
+      const incomingKeys = data.tracker.map(item => `${item.student_id}-${(item.lesson_title || '').toLowerCase()}`);
 
-        const onlineBadge = item.is_online
-          ? `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size: 0.74rem;" title="Active online now"><span class="status-pulse-dot me-1"></span>Online</span>`
-          : '';
+      const keysMatch = existingKeys.length === incomingKeys.length && existingKeys.every((k, idx) => k === incomingKeys[idx]);
 
-        html += `
-          <tr class="live-tracker-row" data-student="${studentLower}" data-lesson="${lessonLower}" ${displayStyle}>
-            <td>
-              <div class="d-flex align-items-center gap-2 flex-wrap">
-                <a href="/teacher/student/${item.student_id}" class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
-                  <i class="bi bi-person-fill text-primary"></i> ${item.student_name}
-                </a>
-                ${onlineBadge}
-              </div>
-            </td>
-            <td><span class="fw-semibold text-secondary">${item.lesson_title}</span></td>
-            <td><span class="badge ${item.status_badge_class} px-3 py-2 rounded-pill">${item.status}</span></td>
-            <td>${item.progress_bar_display}</td>
-            <td>${item.time_spent_display}</td>
-            <td>${item.revisit_display}</td>
-          </tr>
-        `;
-      });
+      if (keysMatch && !query) {
+        // SURGICAL IN-PLACE UPDATE: No DOM destruction, zero twitching, zero layout shift!
+        data.tracker.forEach((item, idx) => {
+          const row = existingRows[idx];
+          if (!row) return;
 
-      tbody.innerHTML = html;
+          // 1. Online indicator in student cell
+          const studentCell = row.children[0];
+          if (studentCell) {
+            const existingOnlineBadge = studentCell.querySelector('.badge.bg-success-subtle');
+            if (item.is_online && !existingOnlineBadge) {
+              const wrap = studentCell.querySelector('.d-flex');
+              if (wrap) {
+                const onlineSpan = document.createElement('span');
+                onlineSpan.className = 'badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1';
+                onlineSpan.style.fontSize = '0.74rem';
+                onlineSpan.title = 'Active online now';
+                onlineSpan.innerHTML = '<span class="status-pulse-dot me-1"></span>Online';
+                wrap.appendChild(onlineSpan);
+              }
+            } else if (!item.is_online && existingOnlineBadge) {
+              existingOnlineBadge.remove();
+            }
+          }
 
-      // Re-apply table pagination if search query is empty
-      if (!query && typeof setupTablePagination === 'function') {
-        setupTablePagination('#tracker-table', '#tracker-pagination-wrap', '#tracker-page-info', '#tracker-pagination-nav', 5);
+          // 2. Status badge
+          const statusCell = row.children[2];
+          if (statusCell) {
+            const expectedStatusHtml = `<span class="badge ${item.status_badge_class} px-3 py-2 rounded-pill">${item.status}</span>`;
+            if (statusCell.innerHTML.trim() !== expectedStatusHtml.trim()) {
+              statusCell.innerHTML = expectedStatusHtml;
+            }
+          }
+
+          // 3. Progress bar
+          const progressCell = row.children[3];
+          if (progressCell && progressCell.innerHTML.trim() !== item.progress_bar_display.trim()) {
+            progressCell.innerHTML = item.progress_bar_display;
+          }
+
+          // 4. Time spent
+          const timeCell = row.children[4];
+          if (timeCell && timeCell.innerHTML.trim() !== item.time_spent_display.trim()) {
+            timeCell.innerHTML = item.time_spent_display;
+          }
+
+          // 5. Revisit history
+          const revisitCell = row.children[5];
+          if (revisitCell && revisitCell.innerHTML.trim() !== item.revisit_display.trim()) {
+            revisitCell.innerHTML = item.revisit_display;
+          }
+        });
+      } else {
+        // Rows were added, removed, or filtered: re-render cleanly
+        let html = '';
+        data.tracker.forEach(item => {
+          const studentLower = (item.student_name || '').toLowerCase();
+          const lessonLower = (item.lesson_title || '').toLowerCase();
+          const rowKey = `${item.student_id}-${lessonLower}`;
+          const matches = !query || studentLower.includes(query) || lessonLower.includes(query);
+          const displayStyle = matches ? '' : 'style="display:none;"';
+
+          const onlineBadge = item.is_online
+            ? `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size: 0.74rem;" title="Active online now"><span class="status-pulse-dot me-1"></span>Online</span>`
+            : '';
+
+          html += `
+            <tr class="live-tracker-row" data-student="${studentLower}" data-lesson="${lessonLower}" data-row-key="${rowKey}" ${displayStyle}>
+              <td>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <a href="/teacher/student/${item.student_id}" class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
+                    <i class="bi bi-person-fill text-primary"></i> ${item.student_name}
+                  </a>
+                  ${onlineBadge}
+                </div>
+              </td>
+              <td><span class="fw-semibold text-secondary">${item.lesson_title}</span></td>
+              <td><span class="badge ${item.status_badge_class} px-3 py-2 rounded-pill">${item.status}</span></td>
+              <td>${item.progress_bar_display}</td>
+              <td>${item.time_spent_display}</td>
+              <td>${item.revisit_display}</td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = html;
+
+        if (!query && typeof setupTablePagination === 'function') {
+          const table = document.querySelector('#tracker-table');
+          const savedPage = table ? table._currentPage : 1;
+          setupTablePagination('#tracker-table', '#tracker-pagination-wrap', '#tracker-page-info', '#tracker-pagination-nav', 5, savedPage, false);
+        }
       }
     } catch (e) {
       // Ignore background fetch error
     }
   }
 
-  setInterval(pollTracker, 3500);
+  setInterval(pollTracker, 5000);
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {

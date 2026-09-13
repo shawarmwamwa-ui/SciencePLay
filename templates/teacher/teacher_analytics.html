@@ -566,7 +566,7 @@
             </thead>
             <tbody>
               {% for tracker in live_lesson_tracker %}
-                <tr>
+                <tr class="live-tracker-row" data-student="{{ tracker.student_name|lower }}" data-lesson="{{ tracker.lesson_title|lower }}" data-row-key="{{ tracker.student_id }}-{{ tracker.lesson_title|lower }}">
                   <td>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                       <a href="{{ url_for('teacher.student_performance', student_id=tracker.student_id) }}" class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
@@ -637,7 +637,7 @@
                 </div>
 
                 <div class="bg-light p-3 rounded-3 border">
-                  <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-info-circle me-1 text-primary"></i>Manuscript Learning Insight</h6>
+                  <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-info-circle me-1 text-primary"></i>Student Learning Insight</h6>
                   <p class="small text-muted mb-0">
                     Students invest deliberate time during initial slide discovery, then revisit quickly to reinforce challenging areas and review quick-checks before games.
                   </p>
