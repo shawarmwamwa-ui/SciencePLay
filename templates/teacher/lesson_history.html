@@ -81,17 +81,17 @@
                   <span>{{ student.name }}</span>
                   <span class="text-secondary fw-normal fs-5">·</span>
                   <span class="text-primary">{{ lesson.title }}</span>
-                </h2>
+                </h1>
                 <p class="text-muted mb-0">Detailed chronological record of initial visit and all revisits.</p>
               </div>
               <div class="d-flex gap-2 flex-wrap align-items-center">
-                <a href="{{ url_for('teacher.students') }}#live-tracker" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1">
+                <a href="{{ url_for('teacher.students', tab='live-tracker') }}#live-tracker" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1">
                   <i class="bi bi-play-circle me-1"></i>
                   <span>Live Tracker</span>
                 </a>
-                <a href="{{ url_for('teacher.student_performance', student_id=student.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1">
+                <a href="{{ url_for('teacher.students') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1">
                   <i class="bi bi-arrow-left me-1"></i>
-                  <span>Student Profile</span>
+                  <span>Back to Students</span>
                 </a>
               </div>
             </div>

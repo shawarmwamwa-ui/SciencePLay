@@ -46,4 +46,30 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     });
   }
+
+  // 4. Handle Direct Tab Switching via URL Hash or Query Param (e.g. #live-tracker or ?tab=live-tracker)
+  function activateTabFromUrl() {
+    const hash = window.location.hash;
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+
+    let targetTabId = null;
+    if (hash === '#live-tracker' || hash === '#pane-live-tracker' || tabParam === 'live-tracker') {
+      targetTabId = 'tab-live-tracker';
+    } else if (hash === '#roster' || hash === '#pane-roster' || tabParam === 'roster') {
+      targetTabId = 'tab-roster';
+    }
+
+    if (targetTabId) {
+      const tabBtn = document.getElementById(targetTabId);
+      if (tabBtn && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+        const bsTab = bootstrap.Tab.getOrCreateInstance(tabBtn);
+        bsTab.show();
+      }
+    }
+  }
+
+  activateTabFromUrl();
+  window.addEventListener('hashchange', activateTabFromUrl);
 });
+

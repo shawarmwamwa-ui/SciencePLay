@@ -244,7 +244,7 @@
             </button>
           </div>
           <div class="metric-value text-warning-emphasis">{{ analytics_stats.total_time_formatted }}</div>
-          <small class="text-muted">1st visit avg: {{ analytics_stats.avg_first_time }}</small>
+          <small class="text-muted">Avg: {{ analytics_stats.avg_per_student }} / student</small>
         </div>
         <span class="teacher-summary-icon ts-orange"><i class="bi bi-hourglass-split"></i></span>
       </div>
@@ -771,9 +771,6 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer border-top-0 pt-0">
-          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
-        </div>
       </div>
     </div>
   </div>
@@ -838,9 +835,6 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer border-top-0 pt-0">
-          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
-        </div>
       </div>
     </div>
   </div>
@@ -870,18 +864,52 @@
               <span class="badge bg-warning text-dark px-2 py-1 rounded-pill fw-bold">{{ analytics_stats.total_time_formatted }}</span>
             </div>
             <div class="row g-2 text-center mt-1">
-              <div class="col-6">
+              <div class="col-4">
                 <div class="p-2 bg-white rounded-2 border">
-                  <div class="small text-muted">1st Visit Average</div>
-                  <div class="fw-bold text-dark fs-6">{{ analytics_stats.avg_first_time }}</div>
+                  <div class="small text-muted">Class Avg</div>
+                  <div class="fw-bold text-dark" style="font-size: 0.92rem;">{{ analytics_stats.avg_per_student }}</div>
                 </div>
               </div>
-              <div class="col-6">
+              <div class="col-4">
                 <div class="p-2 bg-white rounded-2 border">
-                  <div class="small text-muted">Review / Revisit Average</div>
-                  <div class="fw-bold text-dark fs-6">{{ analytics_stats.avg_revisit_time }}</div>
+                  <div class="small text-muted">1st Visit Avg</div>
+                  <div class="fw-bold text-dark" style="font-size: 0.92rem;">{{ analytics_stats.avg_first_time }}</div>
                 </div>
               </div>
+              <div class="col-4">
+                <div class="p-2 bg-white rounded-2 border">
+                  <div class="small text-muted">Revisit Avg</div>
+                  <div class="fw-bold text-dark" style="font-size: 0.92rem;">{{ analytics_stats.avg_revisit_time }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Student-level Time on Task Breakdown -->
+          <div class="border rounded-3 p-3 mb-3">
+            <h6 class="fw-bold text-dark mb-2 d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-person-lines-fill me-1 text-warning"></i>Student Time on Task Breakdown</span>
+              <span class="badge bg-light text-dark border rounded-pill">{{ analytics_stats.student_time_list|length }} Students</span>
+            </h6>
+            <div class="table-responsive" style="max-height: 190px; overflow-y: auto;">
+              <table class="table table-sm align-middle mb-0">
+                <tbody>
+                  {% for st in analytics_stats.student_time_list %}
+                    <tr>
+                      <td class="ps-1 py-2">
+                        <a href="{{ url_for('teacher.student_performance', student_id=st.student_id) }}" class="fw-semibold text-dark text-decoration-none hover-primary">
+                          <i class="bi bi-person-fill text-primary me-1"></i>{{ st.name }}
+                        </a>
+                      </td>
+                      <td class="text-end pe-1 py-2">
+                        <span class="badge {% if st.time_seconds > 0 %}bg-warning-subtle text-warning-emphasis border border-warning-subtle{% else %}bg-light text-muted border{% endif %} px-2 py-1 rounded-pill fw-bold">
+                          <i class="bi bi-clock me-1"></i>{{ st.time_formatted }}
+                        </span>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -909,12 +937,9 @@
 
           <div class="p-3 bg-light rounded-3 border">
             <div class="small text-muted">
-              <i class="bi bi-lightbulb text-warning me-1"></i><strong>Teacher Tip:</strong> Longer first visits indicate thorough reading, while shorter revisits show targeted review before mini-games.
+              <i class="bi bi-lightbulb text-warning me-1"></i><strong>Teacher Tip:</strong> Click any student's name above to see their detailed learning timeline and assignment activity.
             </div>
           </div>
-        </div>
-        <div class="modal-footer border-top-0 pt-0">
-          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -979,9 +1004,6 @@
               <i class="bi bi-lightbulb text-warning me-1"></i><strong>Teacher Tip:</strong> Voluntary replays show students seeking mastery and enjoying the interactive game format.
             </div>
           </div>
-        </div>
-        <div class="modal-footer border-top-0 pt-0">
-          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -1049,9 +1071,6 @@
               <i class="bi bi-lightbulb text-warning me-1"></i><strong>Teacher Tip:</strong> Helps check if all students have opened the app and are ready during class exercises.
             </div>
           </div>
-        </div>
-        <div class="modal-footer border-top-0 pt-0">
-          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>

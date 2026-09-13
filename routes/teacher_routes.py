@@ -586,6 +586,7 @@ def students():
     log_access(current_user, 'page_view', 'teacher_students')
 
     search_query = request.args.get('search', '').strip()
+    active_tab = request.args.get('tab', '').strip().lower()
     online_threshold = datetime.utcnow() - timedelta(minutes=3)
 
     query = User.query.filter(User.role == 'student')
@@ -692,7 +693,8 @@ def students():
         total_students=len(students_data),
         online_count=online_count,
         avg_class_progress=avg_class_progress,
-        search_query=search_query
+        search_query=search_query,
+        active_tab=active_tab
     )
 
 
@@ -1206,6 +1208,28 @@ def analytics():
     avg_revisit_time = round(sum((a.time_spent or 0) for a in revisit_lesson_attempts) / len(revisit_lesson_attempts)) if revisit_lesson_attempts else 0
     total_time_task_seconds = sum((a.time_spent or 0) for a in all_lesson_attempts)
 
+    # Per-student time on task breakdown
+    student_time_map = {}
+    for a in all_lesson_attempts:
+        if a.student_id:
+            student_time_map[a.student_id] = student_time_map.get(a.student_id, 0) + (a.time_spent or 0)
+    for lp in LessonProgress.query.all():
+        if lp.student_id and lp.student_id not in student_time_map:
+            student_time_map[lp.student_id] = (lp.total_time_spent or lp.time_spent or 0)
+
+    students_time_list = []
+    for s in User.query.filter_by(role='student').order_by(User.name.asc()).all():
+        s_sec = student_time_map.get(s.id, 0)
+        students_time_list.append({
+            'student_id': s.id,
+            'name': s.name,
+            'username': s.username,
+            'time_seconds': s_sec,
+            'time_formatted': format_time_duration(s_sec)
+        })
+    students_time_list.sort(key=lambda x: x['time_seconds'], reverse=True)
+    avg_per_student_sec = round(total_time_task_seconds / max(total_students_count, 1))
+
     # Live Lesson Slide & Progress Tracker (Manuscript §1: Monitor Student progress)
     live_lesson_tracker = build_live_lesson_tracker(online_students_set)
 
@@ -1291,6 +1315,8 @@ def analytics():
         'participation_rate': participation_rate,
         'avg_first_time': format_time_duration(avg_first_time),
         'avg_revisit_time': format_time_duration(avg_revisit_time),
+        'avg_per_student': format_time_duration(avg_per_student_sec),
+        'student_time_list': students_time_list,
         'total_time_formatted': format_time_duration(total_time_task_seconds),
         'total_time_seconds': total_time_task_seconds,
         'first_attempts_count': len(first_lesson_attempts),
