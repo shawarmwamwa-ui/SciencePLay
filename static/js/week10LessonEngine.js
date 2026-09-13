@@ -117,6 +117,7 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
           <div class="w10-explanation-header">
             <span class="w10-explanation-item-name">
               <i class="bi bi-lightbulb-fill text-warning me-1"></i>${activeItem.label}
+              ${activeItem.tag ? `<span class="badge ${activeItem.isHighlight ? 'bg-success' : 'bg-primary'} ms-2" style="font-size:0.75rem; font-weight:700; border-radius:999px; padding:3px 8px;">${activeItem.tag}</span>` : ''}
             </span>
             <button class="w10-explanation-listen-btn" id="w10-speak-item-btn" title="Listen to this explanation">
               <i class="bi bi-volume-up-fill"></i> Listen
@@ -131,7 +132,7 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
       <div class="w10-icon-grid" style="background:${slide.illustrationBg || '#f1f5f9'}">
         ${itemsHtml}
         <div class="w10-icon-tap-prompt">
-          <i class="bi bi-hand-index-thumb text-primary"></i> Tap any object above to see its simple explanation!
+          <i class="bi bi-hand-index-thumb text-primary"></i> ${slide.tapPrompt || 'Tap any object above to see its simple explanation!'}
         </div>
       </div>
       ${explanationHtml}
@@ -143,6 +144,11 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
       <div class="bpl-info-slide">
         ${renderItemShowcase(slide)}
         <p class="bpl-body-text">${slide.description}</p>
+        ${slide.keyFact ? `
+          <div class="bpl-key-fact" style="background:${slide.factBg || '#f8fafc'}">
+            <i class="bi bi-check-circle-fill me-2 text-success"></i>
+            <span><strong>Key Fact:</strong> ${slide.keyFact}</span>
+          </div>` : ''}
       </div>`;
   }
 
@@ -173,6 +179,9 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
   }
 
   function renderInteractiveGlobeReveal(slide) {
+    if (slide.items && slide.items.length > 0) {
+      return renderMetalHook(slide);
+    }
     const isRevealed = Boolean(state.slideStates[slide.id]?.globeRevealed);
     const metalsHtml = slide.metals.map(m => `
       <div class="w10-metal-pill-card ${m.isHighlight ? 'highlight' : ''}">
@@ -459,7 +468,8 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
           const selectedIdx = state.selectedItemIndex[slide.id] ?? 0;
           const activeItem = slide.items[selectedIdx] || slide.items[0];
           if (activeItem && activeItem.simpleExplanation) {
-            speakText(`${activeItem.label}. ${activeItem.simpleExplanation}`);
+            const tagPart = activeItem.tag ? `${activeItem.tag}. ` : '';
+            speakText(`${activeItem.label}. ${tagPart}${activeItem.simpleExplanation}`);
           }
         });
       }

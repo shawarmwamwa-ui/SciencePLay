@@ -56,45 +56,45 @@ export const PROPERTIES_OF_METALS_SLIDES = [
     factBg: '#eff6ff',
   },
 
-  // ── Slide 3: Teach (Iron: Abundant / Globe Tap-Reveal) ──
+  // ── Slide 3: Teach (Iron: Abundant / Metal Comparison) ──
   {
     id: 'iron-teach-abundant',
-    type: 'interactive-globe-reveal',
+    type: 'metal-hook',
     section: 'Iron',
     title: 'Property 2: Abundant in Earth',
-    description: 'Tap Earth to discover hidden metals! Iron is found all across our planet, making it affordable. 🌍',
-    globePrompt: 'Tap our planet to reveal metals underground! ⛏️',
-    earthImage: '/static/images/icons/earth.png',
-    metals: [
+    description: 'Iron is found all across our planet, making it affordable! Tap each metal below to see how common or rare it is underground. 🌍',
+    items: [
       {
-        name: 'Iron',
         src: '/static/images/icons/nail.png',
+        label: 'Iron',
         tag: 'Super Abundant',
-        desc: 'Found everywhere! Inexpensive, tough, and strong.',
-        isHighlight: true
+        isHighlight: true,
+        simpleExplanation: 'Found everywhere! Iron is super abundant underground, making it inexpensive, tough, and strong.'
       },
       {
-        name: 'Copper',
         src: '/static/images/icons/broken_wire.png',
+        label: 'Copper',
         tag: 'Common in Ores',
-        desc: 'Mined from rocks to power electrical grids.',
-        isHighlight: false
+        isHighlight: false,
+        simpleExplanation: 'Common in rocks and ores. Mined across the world to power electrical grids and cables.'
       },
       {
-        name: 'Gold',
         src: '/static/images/icons/gold_coin.png',
+        label: 'Gold',
         tag: 'Rare & Precious',
-        desc: 'Rare yellow metal prized for crowns and rings.',
-        isHighlight: false
+        isHighlight: false,
+        simpleExplanation: 'Rare and precious yellow metal. Prized for royal crowns and rings because it never rusts.'
       },
       {
-        name: 'Silver',
         src: '/static/images/icons/silver_medal.png',
+        label: 'Silver',
         tag: 'Rare & Shiny',
-        desc: 'Bright shiny metal for awards and fine jewelry.',
-        isHighlight: false
+        isHighlight: false,
+        simpleExplanation: 'Bright shiny metal for awards and fine jewelry. Rare, brilliant, and never tarnishes!'
       }
     ],
+    illustrationBg: '#eff6ff',
+    tapPrompt: 'Tap any metal above to see where it comes from and its properties!',
     keyFact: 'Iron is abundant inside Earth, making it affordable for big buildings!',
     factBg: '#fef3c7',
   },
