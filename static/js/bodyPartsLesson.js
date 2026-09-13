@@ -148,7 +148,9 @@ function renderQuickCheck(slide, state) {
 
   const feedbackHtml = ss.selected
     ? `<div class="bpl-feedback ${ss.correct ? 'bpl-feedback-ok' : 'bpl-feedback-err'}">
-         <div class="bpl-feedback-icon">${ss.correct ? '🎉' : '💡'}</div>
+         <div class="bpl-feedback-icon">
+           <i class="bi ${ss.correct ? 'bi-patch-check-fill text-success' : 'bi-lightbulb-fill text-warning'} fs-3"></i>
+         </div>
          <div class="bpl-feedback-text">
            <strong>${ss.correct ? 'Spot On, Scientist!' : 'Coach Tip:'}</strong>
            <p>${ss.correct ? slide.successMessage : slide.retryMessage}</p>
@@ -170,21 +172,25 @@ function renderQuickCheck(slide, state) {
 
 function renderAssess(slide, state) {
   const as = state.assessAnswers[slide.id] || {};
-  const optionsHtml = slide.options.map(opt => {
+  const options = getShuffledOptions(slide, state);
+  const letters = ['A', 'B', 'C', 'D'];
+  const optionsHtml = options.map((opt, idx) => {
     let cls = 'bpl-assess-opt';
     if (as.selected === opt.id) {
       cls += opt.id === slide.correctId ? ' bpl-opt-correct' : ' bpl-opt-wrong';
     }
     return `
       <button class="${cls}" data-id="${opt.id}" ${as.answered ? 'disabled' : ''}>
-        <span class="bpl-assess-letter">${opt.id.toUpperCase()}</span>
+        <span class="bpl-assess-letter">${letters[idx]}</span>
         <span>${opt.label}</span>
       </button>`;
   }).join('');
 
   const feedbackHtml = as.answered
     ? `<div class="bpl-feedback ${as.selected === slide.correctId ? 'bpl-feedback-ok' : 'bpl-feedback-err'}">
-         <div class="bpl-feedback-icon">${as.selected === slide.correctId ? '🌟' : '💡'}</div>
+         <div class="bpl-feedback-icon">
+           <i class="bi ${as.selected === slide.correctId ? 'bi-star-fill text-warning' : 'bi-lightbulb-fill text-warning'} fs-3"></i>
+         </div>
          <div class="bpl-feedback-text">
            <strong>${as.selected === slide.correctId ? 'Great Job!' : 'Key Takeaway:'}</strong>
            <p>${slide.explanation}</p>
@@ -219,6 +225,24 @@ function renderSummary(slide) {
 // ── ENGINE ───────────────────────────────────────────────────────────────────
 
 export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide = null) {
+  // Shuffle formative assessment questions so each session has randomized questions
+  const assessIndices = [];
+  slides.forEach((s, idx) => {
+    if (s.type === 'assess') assessIndices.push(idx);
+  });
+  if (assessIndices.length > 1) {
+    const assessSlides = assessIndices.map(i => slides[i]);
+    for (let i = assessSlides.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [assessSlides[i], assessSlides[j]] = [assessSlides[j], assessSlides[i]];
+    }
+    assessSlides.forEach((s, idx) => {
+      s.assessNumber = idx + 1;
+      s.title = `Formative Assessment: Question ${idx + 1}`;
+      slides[assessIndices[idx]] = s;
+    });
+  }
+
   const startIdx = initialSlide !== null ? Number(initialSlide) : (Number(window.initialSlide) || 0);
   const state = {
     currentIndex: Math.min(Math.max(0, startIdx), slides.length - 1),
@@ -226,6 +250,7 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
     finished: false,
     slideStates: {},   // quick-check state
     assessAnswers: {}, // assessment answers
+    shuffledOptions: {},
   };
 
   const totalSlides = slides.length;

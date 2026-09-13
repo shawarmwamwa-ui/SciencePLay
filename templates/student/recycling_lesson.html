@@ -19,15 +19,13 @@
 
     <!-- ── Header ─────────────────────────────────────────────────────────── -->
     <header class="bpl-header">
-      <div class="d-flex align-items-center gap-3 flex-wrap">
-        <a href="{{ url_for('student.lessons') }}" class="bpl-back-btn">
-          <i class="bi bi-arrow-left-circle-fill"></i>
-          <span>Back to Lessons</span>
-        </a>
-        <div class="bpl-title-group">
-          <h1><i class="bi bi-recycle me-2 text-success"></i>Recycling</h1>
-          <p>Protecting Earth's Resources (Week 10)</p>
-        </div>
+      <a href="{{ url_for('student.lessons') }}" class="bpl-back-btn">
+        <i class="bi bi-arrow-left-circle-fill"></i>
+        <span>Back to Lessons</span>
+      </a>
+      <div class="bpl-title-group">
+        <h1><i class="bi bi-recycle me-2 text-success"></i>Recycling</h1>
+        <p>Protecting Earth's Resources (Week 10)</p>
       </div>
       <div class="bpl-progress-bar" aria-label="Lesson progress">
         <div id="bpl-progress-fill" class="bpl-progress-fill" style="width:0%"></div>

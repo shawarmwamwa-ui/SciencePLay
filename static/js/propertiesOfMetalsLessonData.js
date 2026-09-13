@@ -47,11 +47,11 @@ export const PROPERTIES_OF_METALS_SLIDES = [
     type: 'interactive-property-card',
     section: 'Iron',
     title: 'Property 1: Hard & Strong',
-    cardPrompt: 'Tap the card to test iron\'s strength! 🛡️',
+    cardPrompt: 'Tap the card to test iron\'s strength!',
     frontLabel: 'Is Iron Hard & Strong?',
     frontIcon: 'bi-shield-shaded',
     imageSrc: '/static/images/icons/shield.png',
-    description: 'Iron is super hard and tough! It holds up tall buildings and bridges without bending. 🌉',
+    description: 'Iron is super hard and tough! It holds up tall buildings and bridges without bending.',
     keyFact: 'Iron is hard and strong — it holds heavy loads without snapping!',
     factBg: '#eff6ff',
   },
@@ -62,13 +62,15 @@ export const PROPERTIES_OF_METALS_SLIDES = [
     type: 'metal-hook',
     section: 'Iron',
     title: 'Property 2: Abundant in Earth',
-    description: 'Iron is found all across our planet, making it affordable! Tap each metal below to see how common or rare it is underground. 🌍',
+    description: 'Iron is found all across our planet, making it affordable! Tap each metal below to inspect its unique properties and rarity.',
     items: [
       {
         src: '/static/images/icons/nail.png',
         label: 'Iron',
         tag: 'Super Abundant',
         isHighlight: true,
+        metalKey: 'iron',
+        theme: { border: '#64748b', bg: '#f1f5f9', pillBg: '#475569', text: '#1e293b' },
         simpleExplanation: 'Found everywhere! Iron is super abundant underground, making it inexpensive, tough, and strong.'
       },
       {
@@ -76,6 +78,8 @@ export const PROPERTIES_OF_METALS_SLIDES = [
         label: 'Copper',
         tag: 'Common in Ores',
         isHighlight: false,
+        metalKey: 'copper',
+        theme: { border: '#ea580c', bg: '#fff7ed', pillBg: '#c2410c', text: '#7c2d12' },
         simpleExplanation: 'Common in rocks and ores. Mined across the world to power electrical grids and cables.'
       },
       {
@@ -83,14 +87,18 @@ export const PROPERTIES_OF_METALS_SLIDES = [
         label: 'Gold',
         tag: 'Rare & Precious',
         isHighlight: false,
-        simpleExplanation: 'Rare and precious yellow metal. Prized for royal crowns and rings because it never rusts.'
+        metalKey: 'gold',
+        theme: { border: '#eab308', bg: '#fefce8', pillBg: '#ca8a04', text: '#713f12' },
+        simpleExplanation: 'Rare and precious yellow metal. Prized for royal crowns and jewelry because it never rusts.'
       },
       {
         src: '/static/images/icons/silver_medal.png',
         label: 'Silver',
         tag: 'Rare & Shiny',
         isHighlight: false,
-        simpleExplanation: 'Bright shiny metal for awards and fine jewelry. Rare, brilliant, and never tarnishes!'
+        metalKey: 'silver',
+        theme: { border: '#0284c7', bg: '#f0f9ff', pillBg: '#0369a1', text: '#075985' },
+        simpleExplanation: 'Bright shiny metal for awards and fine crafts. Rare, brilliant, and never tarnishes!'
       }
     ],
     illustrationBg: '#eff6ff',
@@ -105,11 +113,11 @@ export const PROPERTIES_OF_METALS_SLIDES = [
     type: 'interactive-property-card',
     section: 'Iron',
     title: 'Property 3: Iron Can Rust',
-    cardPrompt: 'Tap the card to see what happens in rain! 🌧️',
+    cardPrompt: 'Tap the card to see what happens in rain!',
     frontLabel: 'What happens when Iron gets wet?',
     frontIcon: 'bi-droplet-half',
     imageSrc: '/static/images/icons/rust.png',
-    description: 'Rain and air cause iron to turn into reddish-brown rust. Paint protects iron from water! 🎨',
+    description: 'Rain and air cause iron to turn into reddish-brown rust. Paint protects iron from water!',
     keyFact: 'Water and air cause iron to rust. Painting iron shields it from water!',
     factBg: '#fee2e2',
   },
@@ -345,11 +353,45 @@ export const PROPERTIES_OF_METALS_SLIDES = [
     id: 'metals-summary',
     type: 'summary',
     title: 'Properties of Metals: Big Ideas',
+    bigIdeas: [
+      {
+        icon: 'bi-shield-shaded',
+        color: '#475569',
+        bg: '#f1f5f9',
+        border: '#cbd5e1',
+        title: 'Iron: Hard & Strong',
+        text: 'Iron is tough and magnetic, making it ideal for tall buildings and bridges (protect it from rust!).'
+      },
+      {
+        icon: 'bi-lightning-charge-fill',
+        color: '#c2410c',
+        bg: '#fff7ed',
+        border: '#fed7aa',
+        title: 'Copper: Master Conductor',
+        text: 'Reddish-orange copper conducts electricity and heat with ease, powering our lights and gadgets.'
+      },
+      {
+        icon: 'bi-stars',
+        color: '#ca8a04',
+        bg: '#fefce8',
+        border: '#fef08a',
+        title: 'Gold & Silver: Never Rust',
+        text: 'Precious metals reflect light with brilliant metallic luster and remain untarnished for centuries.'
+      },
+      {
+        icon: 'bi-recycle',
+        color: '#16a34a',
+        bg: '#f0fdf4',
+        border: '#bbf7d0',
+        title: 'Endlessly Recyclable',
+        text: 'All metals can be melted down and reshaped endlessly forever without losing strength.'
+      }
+    ],
     bullets: [
-      '🔩 Iron: Hard, strong, and magnetic! (Rusts in wet air).',
-      '🔌 Copper: Red-orange champion electricity conductor!',
-      '✨ Gold & Silver: Brilliant luster that never rusts!',
-      '🛠️ Each metal is chosen for the job that fits its properties.',
+      'Iron: Hard, strong, and magnetic! (Rusts in wet air).',
+      'Copper: Red-orange champion electricity conductor!',
+      'Gold & Silver: Brilliant luster that never rusts!',
+      'Each metal is chosen for the job that fits its properties.',
     ],
   },
 

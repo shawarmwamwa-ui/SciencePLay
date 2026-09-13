@@ -64,48 +64,88 @@ export const RECYCLING_LESSON_SLIDES = [
   {
     id: 'recycle-teach-sort',
     type: 'interactive-recycle-sort',
-    title: 'Let\'s Sort! Recyclable or Not?',
+    title: 'Let\'s Sort! Recyclable or Compost?',
     description:
-      'Tap each item below to check if it belongs in the blue Recycling Bin!',
-    recycleBinImage: '/static/images/icons/recycle_bin.png',
+      'Tap each item below to sort it into the Blue Recycling Bin or Green Compost Bin!',
+    bins: [
+      {
+        id: 'bin-recycle',
+        name: 'Blue Recycling Bin',
+        category: 'recyclable',
+        subtitle: 'Bottles, Cans, Glass & Clean Paper',
+        icon: 'bi-recycle',
+        color: '#2563eb',
+        bg: '#eff6ff',
+        border: '#3b82f6',
+        badgeBg: '#dbeafe',
+        badgeText: '#1e40af'
+      },
+      {
+        id: 'bin-compost',
+        name: 'Green Compost Bin',
+        category: 'compost',
+        subtitle: 'Food Scraps & Organic Waste',
+        icon: 'bi-tree-fill',
+        color: '#16a34a',
+        bg: '#f0fdf4',
+        border: '#22c55e',
+        badgeBg: '#dcfce7',
+        badgeText: '#166534'
+      }
+    ],
     items: [
       {
         id: 'item-plastic',
         name: 'Plastic Bottle',
         src: '/static/images/icons/plastic_bottle.png',
-        isRecyclable: true,
-        reason: 'Recyclable! Clean plastic bottles can be melted into new containers.'
+        category: 'recyclable',
+        targetBin: 'bin-recycle',
+        color: '#2563eb',
+        tag: 'Recyclable Plastic',
+        reason: 'Recyclable! Clean plastic bottles can be melted into warm jackets, backpacks, and brand new bottles.'
       },
       {
         id: 'item-banana',
         name: 'Banana Peel',
         src: '/static/images/icons/banana_peel.png',
-        isRecyclable: false,
-        reason: 'Not Recyclable! Food waste belongs in the compost bin for garden soil.'
+        category: 'compost',
+        targetBin: 'bin-compost',
+        color: '#16a34a',
+        tag: 'Compost Food Scrap',
+        reason: 'Compost! Food waste spoils dry paper and cardboard. Banana peels turn into nutrient-rich garden soil.'
       },
       {
         id: 'item-can',
         name: 'Aluminum Can',
         src: '/static/images/icons/aluminum_can.png',
-        isRecyclable: true,
-        reason: 'Recyclable! Metal cans can be melted and reused over and over.'
+        category: 'recyclable',
+        targetBin: 'bin-recycle',
+        color: '#2563eb',
+        tag: 'Recyclable Metal',
+        reason: 'Recyclable! Metal drink cans can be melted down and remade into new cans over and over forever.'
       },
       {
         id: 'item-glass',
         name: 'Glass Jar',
         src: '/static/images/icons/glass_jar.png',
-        isRecyclable: true,
-        reason: 'Recyclable! Glass can be melted and remade without losing quality.'
+        category: 'recyclable',
+        targetBin: 'bin-recycle',
+        color: '#2563eb',
+        tag: 'Recyclable Glass',
+        reason: 'Recyclable! Glass jars are melted and reshaped into new jars without ever losing strength.'
       },
       {
         id: 'item-paper',
         name: 'Newspaper & Paper',
         src: '/static/images/icons/paper.png',
-        isRecyclable: true,
-        reason: 'Recyclable! Clean paper makes fresh notebooks and cardboard.'
+        category: 'recyclable',
+        targetBin: 'bin-recycle',
+        color: '#2563eb',
+        tag: 'Recyclable Paper',
+        reason: 'Recyclable! Clean dry paper is mashed with water into fresh pulp for new notebooks and boxes.'
       }
     ],
-    keyFact: 'Only clean items go in recycling. Wet food belongs in compost!',
+    keyFact: 'Clean items go in recycling. Wet food scraps belong in garden compost!',
     factBg: '#eff6ff',
   },
 
@@ -211,6 +251,40 @@ export const RECYCLING_LESSON_SLIDES = [
     id: 'recycle-summary',
     type: 'summary',
     title: 'Big Ideas — Recycling',
+    bigIdeas: [
+      {
+        icon: 'bi-recycle',
+        color: '#16a34a',
+        bg: '#ecfdf5',
+        border: '#a7f3d0',
+        title: 'Brand New Life',
+        text: 'Recycling takes discarded items and remanufactures them into brand new products instead of trash.'
+      },
+      {
+        icon: 'bi-box-seam-fill',
+        color: '#2563eb',
+        bg: '#eff6ff',
+        border: '#bfdbfe',
+        title: 'Clean Recyclables',
+        text: 'Plastic bottles, aluminum cans, glass jars, and dry paper can all be recycled endlessly.'
+      },
+      {
+        icon: 'bi-tree-fill',
+        color: '#d97706',
+        bg: '#fffbeb',
+        border: '#fde68a',
+        title: 'Compost Food Scraps',
+        text: 'Wet food scraps like banana peels belong in garden compost, never in the dry recycling bin.'
+      },
+      {
+        icon: 'bi-globe-americas',
+        color: '#0d9488',
+        bg: '#f0fdfa',
+        border: '#99f6e4',
+        title: 'Protects Our Planet',
+        text: 'Recycling conserves natural resources, saves energy, and keeps our Earth healthy and green.'
+      }
+    ],
     bullets: [
       'Recycling turns old waste into useful new products.',
       'Cans, plastic bottles, glass jars, and clean paper are recyclable.',

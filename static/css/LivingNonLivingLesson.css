@@ -48,7 +48,7 @@ body {
 }
 
 .lesson-container {
-  width: min(100%, 960px);
+  width: min(100%, 1160px);
   height: 100%;
   max-height: calc(100vh - 10px);
   margin: 0 auto;
@@ -56,30 +56,40 @@ body {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: clamp(4px, 0.8vh, 8px);
+  gap: clamp(6px, 1vh, 10px);
   justify-content: space-between;
 }
 
 /* Header Section */
 .lesson-header {
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   border: 2.5px solid var(--brutal-border);
   border-radius: 14px;
   background: var(--brutal-panel);
   box-shadow: var(--brutal-shadow);
-  padding: clamp(4px, 0.6vh, 8px) clamp(8px, 1vw, 14px);
+  padding: clamp(6px, 1vh, 10px) clamp(12px, 1.4vw, 20px);
   flex-shrink: 0;
 }
 
+.lesson-title-center {
+  justify-self: center;
+  text-align: center;
+}
+
+.lesson-progress-wrap {
+  justify-self: end;
+}
+
 .brutal-back-btn {
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: clamp(3px, 0.5vh, 6px) clamp(8px, 0.8vw, 12px);
+  padding: clamp(4px, 0.6vh, 8px) clamp(10px, 1vw, 14px);
   border: 2px solid var(--brutal-border);
   border-radius: 10px;
   background: #ffffff;
@@ -334,24 +344,24 @@ body {
 /* Options & Traits Grid */
 .quick-options {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  gap: clamp(8px, 1.2vh, 14px);
-  margin: clamp(6px, 1vh, 12px) 0;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: clamp(12px, 1.8vh, 18px);
+  margin: clamp(10px, 1.4vh, 16px) 0;
 }
 
 .traits-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-  gap: clamp(6px, 0.8vh, 10px);
-  margin-top: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: clamp(8px, 1.2vh, 14px);
+  margin-top: 8px;
 }
 
 .quick-check-header-card {
   background: #f8fafc;
   border: 2px solid var(--brutal-border);
   border-radius: 14px;
-  padding: clamp(8px, 1.4vh, 14px) clamp(12px, 1.5vw, 18px);
-  margin-bottom: clamp(8px, 1.2vh, 14px);
+  padding: clamp(10px, 1.6vh, 16px) clamp(14px, 1.6vw, 20px);
+  margin-bottom: clamp(10px, 1.4vh, 16px);
   box-shadow: 3px 3px 0 #18181b;
 }
 
@@ -367,14 +377,14 @@ body {
   color: #854d0e;
   border: 1.5px solid #ca8a04;
   border-radius: 999px;
-  padding: 2px 10px;
-  margin-bottom: 6px;
+  padding: 3px 12px;
+  margin-bottom: 8px;
 }
 
 .quick-check-prompt {
   margin: 0;
   color: var(--brutal-dark);
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1.35;
 }
@@ -384,10 +394,11 @@ body {
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  gap: 14px;
-  padding: clamp(8px, 1.4vh, 14px) clamp(14px, 1.6vw, 22px);
+  gap: 16px;
+  padding: clamp(12px, 1.6vh, 18px) clamp(16px, 1.8vw, 24px);
+  min-height: 60px;
   border: 2.5px solid var(--brutal-border);
-  border-radius: 14px;
+  border-radius: 16px;
   background: #ffffff;
   box-shadow: 4px 4px 0px #18181b;
   cursor: pointer;

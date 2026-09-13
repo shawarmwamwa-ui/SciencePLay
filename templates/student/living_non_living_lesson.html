@@ -17,17 +17,15 @@
   <div class="container py-3 lesson-container">
     <!-- Header Banner -->
     <div class="lesson-header">
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <a href="{{ url_for('student.lessons') }}" class="brutal-back-btn">
-          <i class="bi bi-arrow-left-circle-fill"></i>
-          <span>Back to Lessons</span>
-        </a>
-        <div>
-          <h1 class="mb-0"><i class="bi bi-journal-bookmark-fill me-2 text-primary"></i>Living vs Non-Living</h1>
-          <p class="mb-0 text-dark fw-bold">Learn how to tell living things from non-living things!</p>
-        </div>
+      <a href="{{ url_for('student.lessons') }}" class="brutal-back-btn">
+        <i class="bi bi-arrow-left-circle-fill"></i>
+        <span>Back to Lessons</span>
+      </a>
+      <div class="lesson-title-center text-center">
+        <h1 class="mb-0"><i class="bi bi-journal-bookmark-fill me-2 text-primary"></i>Living vs Non-Living</h1>
+        <p class="mb-0 text-dark fw-bold small">Learn how to tell living things from non-living things!</p>
       </div>
-      <div class="d-flex align-items-center gap-3">
+      <div class="lesson-progress-wrap d-flex align-items-center">
         <div class="lesson-progress-bar" role="progressbar" aria-label="Lesson Progress" aria-valuemin="0" aria-valuemax="100">
           <div id="lesson-progress" class="lesson-progress-fill"></div>
         </div>

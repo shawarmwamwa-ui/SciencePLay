@@ -7,18 +7,18 @@
   display: flex;
   justify-content: center;
   align-items: stretch;
-  gap: clamp(12px, 2vw, 24px);
+  gap: clamp(18px, 2.5vw, 32px);
   flex-wrap: wrap;
-  padding: clamp(12px, 2vh, 20px);
-  border-radius: 16px;
+  padding: clamp(14px, 2.2vh, 22px);
+  border-radius: 18px;
   border: 2.5px solid var(--bpl-border, #18181b);
   box-shadow: 3.5px 3.5px 0 #18181b;
-  margin-bottom: clamp(10px, 1.5vh, 16px);
+  margin-bottom: clamp(12px, 1.8vh, 18px);
 }
 
 .w10-icon-item {
-  flex: 1 1 120px;
-  max-width: 170px;
+  flex: 1 1 135px;
+  max-width: 195px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,7 +26,7 @@
   background: #ffffff;
   border: 2.5px solid #e2e8f0;
   border-radius: 16px;
-  padding: 14px 10px 10px;
+  padding: 16px 14px 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   cursor: pointer;
   user-select: none;
@@ -45,6 +45,78 @@
   background: #f0f7ff;
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
   transform: translateY(-4px) scale(1.03);
+}
+
+/* Unique color states for metals on click */
+.w10-icon-item.active[data-metal="iron"],
+.w10-icon-item.active-iron {
+  border-color: #475569 !important;
+  background: #f1f5f9 !important;
+  box-shadow: 0 8px 20px rgba(71, 85, 105, 0.28) !important;
+}
+.w10-icon-item.active[data-metal="iron"] .w10-icon-active-pill,
+.w10-icon-item.active-iron .w10-icon-active-pill {
+  background: #475569 !important;
+}
+.w10-icon-item.active[data-metal="iron"] .w10-icon-label,
+.w10-icon-item.active-iron .w10-icon-label {
+  color: #1e293b !important;
+}
+
+.w10-icon-item.active[data-metal="copper"],
+.w10-icon-item.active-copper {
+  border-color: #ea580c !important;
+  background: #fff7ed !important;
+  box-shadow: 0 8px 20px rgba(234, 88, 12, 0.28) !important;
+}
+.w10-icon-item.active[data-metal="copper"] .w10-icon-active-pill,
+.w10-icon-item.active-copper .w10-icon-active-pill {
+  background: #c2410c !important;
+}
+.w10-icon-item.active[data-metal="copper"] .w10-icon-label,
+.w10-icon-item.active-copper .w10-icon-label {
+  color: #7c2d12 !important;
+}
+
+.w10-icon-item.active[data-metal="gold"],
+.w10-icon-item.active-gold {
+  border-color: #eab308 !important;
+  background: #fefce8 !important;
+  box-shadow: 0 8px 20px rgba(234, 179, 8, 0.32) !important;
+}
+.w10-icon-item.active[data-metal="gold"] .w10-icon-active-pill,
+.w10-icon-item.active-gold .w10-icon-active-pill {
+  background: #ca8a04 !important;
+}
+.w10-icon-item.active[data-metal="gold"] .w10-icon-label,
+.w10-icon-item.active-gold .w10-icon-label {
+  color: #713f12 !important;
+}
+
+.w10-icon-item.active[data-metal="silver"],
+.w10-icon-item.active-silver {
+  border-color: #0284c7 !important;
+  background: #f0f9ff !important;
+  box-shadow: 0 8px 20px rgba(2, 132, 199, 0.28) !important;
+}
+.w10-icon-item.active[data-metal="silver"] .w10-icon-active-pill,
+.w10-icon-item.active-silver .w10-icon-active-pill {
+  background: #0369a1 !important;
+}
+.w10-icon-item.active[data-metal="silver"] .w10-icon-label,
+.w10-icon-item.active-silver .w10-icon-label {
+  color: #075985 !important;
+}
+
+.w10-icon-item.active[data-metal="recycle"],
+.w10-icon-item.active-recycle {
+  border-color: #16a34a !important;
+  background: #f0fdf4 !important;
+  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.28) !important;
+}
+.w10-icon-item.active[data-metal="recycle"] .w10-icon-active-pill,
+.w10-icon-item.active-recycle .w10-icon-active-pill {
+  background: #15803d !important;
 }
 
 .w10-icon-active-pill {
@@ -509,23 +581,45 @@
   margin-bottom: 6px;
 }
 
-.w10-recycle-bin-target {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 14px;
-  background: #ffffff;
-  border: 2.5px dashed #059669;
-  border-radius: 18px;
-  padding: 12px 20px;
-  max-width: 480px;
-  margin: 0 auto;
+.w10-sort-card.active-sort {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
 }
 
-.w10-bin-img {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
+.w10-sort-card.is-sorted {
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);
+}
+
+.w10-bin-target-box {
+  transition: all 0.2s ease;
+}
+.w10-bin-target-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
+.w10-bin-item-pill {
+  animation: w10PopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Summary Big Ideas Grid & Compact Complete Card ── */
+.w10-big-ideas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(12px, 1.8vh, 18px);
+  margin-bottom: clamp(12px, 1.8vh, 18px);
+}
+
+.w10-big-idea-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.w10-big-idea-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08) !important;
+}
+
+.w10-lesson-complete-card {
+  animation: w10PopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ── Keyframe Animations ─────────────────────────────────────────────────── */

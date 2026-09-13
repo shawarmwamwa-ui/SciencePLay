@@ -390,13 +390,23 @@ function handleHotspotTap(slide, hotspot, button) {
 
 function renderQuickCheckSlide(slide, container, explanationContainer) {
   const slideState = getCurrentSlideState();
+  if (!slideState.shuffledOptions) {
+    const opts = [...slide.options];
+    for (let i = opts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [opts[i], opts[j]] = [opts[j], opts[i]];
+    }
+    slideState.shuffledOptions = opts;
+  }
+  const optionsToRender = slideState.shuffledOptions;
+
   const promptMarkup = slide.prompt
     ? `<div class="quick-check-header-card">
          <span class="quick-check-badge"><i class="bi bi-lightbulb-fill me-1"></i>Quick Check</span>
          <p class="quick-check-prompt">${slide.prompt}</p>
        </div>`
     : '';
-  const optionsHtml = slide.options
+  const optionsHtml = optionsToRender
     .map(option => {
       const isSelected = slideState.quickCheckState?.selected === option.id;
       const isCorrect = slideState.quickCheckState?.correct;
@@ -422,7 +432,7 @@ function renderQuickCheckSlide(slide, container, explanationContainer) {
     </div>
   `;
 
-  slide.options.forEach(option => {
+  optionsToRender.forEach(option => {
     const button = container.querySelector(`.quick-option[data-id="${option.id}"]`);
     if (button) {
       button.addEventListener('click', () => handleQuickCheckTap(slide, option, button));
@@ -437,7 +447,9 @@ function renderQuickCheckSlide(slide, container, explanationContainer) {
     const msg = getQuickFeedbackMessage(slide, isCorrect);
     feedback.innerHTML = `
       <div class="quick-feedback-bubble ${isCorrect ? 'bubble-correct' : 'bubble-incorrect'}">
-        <div class="bubble-icon">${isCorrect ? '🎉' : '💡'}</div>
+        <div class="bubble-icon">
+          <i class="bi ${isCorrect ? 'bi-patch-check-fill text-success' : 'bi-lightbulb-fill text-warning'} fs-3"></i>
+        </div>
         <div class="bubble-text">
           <strong>${isCorrect ? 'Awesome Job, Scientist!' : 'Coach Tip:'}</strong>
           <p>${msg}</p>
@@ -472,7 +484,9 @@ function handleQuickCheckTap(slide, option, button) {
   const msg = getQuickFeedbackMessage(slide, isCorrect);
   feedback.innerHTML = `
     <div class="quick-feedback-bubble ${isCorrect ? 'bubble-correct' : 'bubble-incorrect'}">
-      <div class="bubble-icon">${isCorrect ? '🎉' : '💡'}</div>
+      <div class="bubble-icon">
+        <i class="bi ${isCorrect ? 'bi-patch-check-fill text-success' : 'bi-lightbulb-fill text-warning'} fs-3"></i>
+      </div>
       <div class="bubble-text">
         <strong>${isCorrect ? 'Awesome Job, Scientist!' : 'Coach Tip:'}</strong>
         <p>${msg}</p>

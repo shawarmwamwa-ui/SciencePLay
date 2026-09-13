@@ -72,40 +72,31 @@ function resolveVoice() {
 }
 
 /**
- * Speak a string of text using the preferred voice settings.
+ * Speak a string of text using the system default voice settings.
+ * Optimized for cross-device tablet/mobile stability.
  *
  * @param {string} text   The text to read aloud.
  * @param {object} [opts] Optional overrides: { pitch, rate, volume }
  */
 export function speakText(text, opts = {}) {
-  if (!window.speechSynthesis) return;
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-
-  // Tuned for Grade 3 — slightly higher pitch, slightly slower pace
-  utterance.pitch  = opts.pitch  ?? 1.2;   // 1.0 = default; 1.2 = friendlier / more expressive
-  utterance.rate   = opts.rate   ?? 0.9;   // 1.0 = default; 0.9 = a touch slower, clearer
-  utterance.volume = opts.volume ?? 1.0;
-
-  const applyVoiceAndSpeak = () => {
-    if (!_cachedVoice) {
-      _cachedVoice = resolveVoice();
+  try {
+    window.speechSynthesis.cancel();
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
     }
-    if (_cachedVoice) {
-      utterance.voice = _cachedVoice;
-    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.pitch = opts.pitch ?? 1.0;
+    utterance.rate = opts.rate ?? 0.95;
+    utterance.volume = opts.volume ?? 1.0;
+
+    // Use device default voice for maximum stability across mobile and tablet hardware
     window.speechSynthesis.speak(utterance);
-  };
-
-  // Chrome loads voices asynchronously — voices may not be ready on first call
-  const voices = window.speechSynthesis.getVoices();
-  if (voices.length > 0) {
-    applyVoiceAndSpeak();
-  } else {
-    // Wait for voiceschanged, then speak
-    window.speechSynthesis.addEventListener('voiceschanged', applyVoiceAndSpeak, { once: true });
+  } catch (e) {
+    console.warn('[SciencePlay TTS] Speech synthesis notice:', e);
   }
 }
 
