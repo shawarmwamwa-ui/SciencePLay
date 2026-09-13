@@ -167,13 +167,15 @@ body {
 
 .bap-plant-part.bap-part-revealed {
   opacity: 1;
-  animation: bap-pop-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: bap-bloom-grow 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: center bottom;
 }
 
-@keyframes bap-pop-in {
-  0%   { opacity: 0; transform: scale(0.2); }
-  60%  { opacity: 1; transform: scale(1.15); }
-  100% { opacity: 1; transform: scale(1); }
+@keyframes bap-bloom-grow {
+  0%   { opacity: 0; transform: scale(0.3); filter: brightness(1.6) drop-shadow(0 0 16px #4ade80); }
+  50%  { opacity: 1; transform: scale(1.18); filter: brightness(1.3) drop-shadow(0 0 24px #22c55e); }
+  75%  { transform: scale(0.96); filter: brightness(1.1); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
 }
 
 /* ── Drop Zone ───────────────────────────────────────────────────────────────── */

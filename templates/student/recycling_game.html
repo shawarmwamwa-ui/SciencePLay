@@ -56,25 +56,33 @@
         </div>
       </div>
 
-      <!-- 3-Column Landscape Battlefield: Left Station | Center Card Stack | Right Station -->
+      <!-- 3-Column Landscape Battlefield: Left Bin | Center Card Stack | Right Bin -->
       <div class="ecoswipe-stage" id="ecoswipe-stage">
 
-        <!-- Left Station: Compost Bin (Clickable / Tap Target) -->
-        <div class="ecoswipe-station ecoswipe-station--compost" id="btn-swipe-compost" role="button" tabindex="0" title="Swipe left or tap to sort into Compost">
-          <div class="station-icon-circle station-icon-circle--compost">
-            <i class="bi bi-tree-fill"></i>
+        <!-- Left Station: 3D Compost Bin with Opening Lid -->
+        <div class="ecoswipe-station ecoswipe-bin ecoswipe-bin--compost" id="btn-swipe-compost" role="button" tabindex="0" title="Swipe left or tap for Compost">
+          <div class="bin-3d-wrap">
+            <div class="bin-lid-pivot">
+              <div class="bin-lid bin-lid--compost">
+                <div class="bin-lid-handle"></div>
+              </div>
+            </div>
+            <div class="bin-body bin-body--compost">
+              <div class="bin-rim"></div>
+              <div class="bin-ribs"></div>
+              <div class="bin-badge bin-badge--compost">
+                <i class="bi bi-tree-fill"></i>
+                <span>COMPOST</span>
+              </div>
+              <div class="bin-wheels">
+                <span class="bin-wheel"></span>
+                <span class="bin-wheel"></span>
+              </div>
+            </div>
           </div>
-          <h2 class="station-title">Compost</h2>
-          <div class="station-action-pill station-action-pill--compost">
-            <i class="bi bi-arrow-left-circle-fill me-1"></i> Swipe Left / Tap
-          </div>
-          <div class="station-helper-box">
-            <div class="station-helper-title">What Belongs Here:</div>
-            <ul class="station-guide-list">
-              <li><i class="bi bi-check-circle-fill text-success me-1"></i>Organic plant & food scraps</li>
-              <li><i class="bi bi-check-circle-fill text-success me-1"></i>Natural matter that rots</li>
-              <li><i class="bi bi-check-circle-fill text-success me-1"></i>Breaks down into soil</li>
-            </ul>
+          <div class="bin-footer-label">
+            <span class="bin-label-title text-success">COMPOST</span>
+            <span class="bin-sublabel">Food & Garden Scraps</span>
           </div>
         </div>
 
@@ -86,6 +94,12 @@
               <div class="swipe-stamp swipe-stamp--compost" id="stamp-compost">COMPOST</div>
               <div class="swipe-stamp swipe-stamp--recycle" id="stamp-recycle">RECYCLE</div>
 
+              <!-- Swipe Direction Guidance on Middle Card -->
+              <div class="swipe-direction-guide">
+                <span class="guide-left"><i class="bi bi-arrow-left"></i> Compost</span>
+                <span class="guide-right">Recycle <i class="bi bi-arrow-right"></i></span>
+              </div>
+
               <!-- Card Content -->
               <div class="swipe-card-img-container">
                 <img src="/static/images/icons/plastic_bottle.png" alt="" aria-hidden="true" class="swipe-card-img" id="card-img">
@@ -95,28 +109,36 @@
 
               <!-- Drag Cue -->
               <div class="swipe-drag-cue">
-                <i class="bi bi-arrows"></i> Drag or Swipe Card
+                <i class="bi bi-hand-index-thumb"></i> Drag or Swipe Card
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Station: Recyclable Bin (Clickable / Tap Target) -->
-        <div class="ecoswipe-station ecoswipe-station--recycle" id="btn-swipe-recycle" role="button" tabindex="0" title="Swipe right or tap to sort into Recyclable">
-          <div class="station-icon-circle station-icon-circle--recycle">
-            <i class="bi bi-recycle"></i>
+        <!-- Right Station: 3D Recyclable Bin with Opening Lid -->
+        <div class="ecoswipe-station ecoswipe-bin ecoswipe-bin--recycle" id="btn-swipe-recycle" role="button" tabindex="0" title="Swipe right or tap for Recyclable">
+          <div class="bin-3d-wrap">
+            <div class="bin-lid-pivot">
+              <div class="bin-lid bin-lid--recycle">
+                <div class="bin-lid-handle"></div>
+              </div>
+            </div>
+            <div class="bin-body bin-body--recycle">
+              <div class="bin-rim"></div>
+              <div class="bin-ribs"></div>
+              <div class="bin-badge bin-badge--recycle">
+                <i class="bi bi-recycle"></i>
+                <span>RECYCLE</span>
+              </div>
+              <div class="bin-wheels">
+                <span class="bin-wheel"></span>
+                <span class="bin-wheel"></span>
+              </div>
+            </div>
           </div>
-          <h2 class="station-title">Recyclable</h2>
-          <div class="station-action-pill station-action-pill--recycle">
-            Swipe Right / Tap <i class="bi bi-arrow-right-circle-fill ms-1"></i>
-          </div>
-          <div class="station-helper-box">
-            <div class="station-helper-title">What Belongs Here:</div>
-            <ul class="station-guide-list">
-              <li><i class="bi bi-check-circle-fill text-primary me-1"></i>Clean, dry manufactured scrap</li>
-              <li><i class="bi bi-check-circle-fill text-primary me-1"></i>Melted down & remanufactured</li>
-              <li><i class="bi bi-check-circle-fill text-primary me-1"></i>Free of food or grease</li>
-            </ul>
+          <div class="bin-footer-label">
+            <span class="bin-label-title text-primary">RECYCLABLE</span>
+            <span class="bin-sublabel">Bottles, Cans & Paper</span>
           </div>
         </div>
 

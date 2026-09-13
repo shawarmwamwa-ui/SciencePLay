@@ -140,23 +140,23 @@ body {
 /* Explanation Box */
 .slide-explanation {
   width: 100%;
-  padding: clamp(5px, 0.8vh, 8px) 14px;
+  padding: clamp(6px, 1vh, 10px) 16px;
   color: var(--brutal-dark);
-  font-size: 14.5px;
+  font-size: 18px;
   font-weight: 700;
   border: 2px solid var(--brutal-border);
   border-radius: 12px;
   background: var(--brutal-purple);
   box-shadow: 3px 3px 0px #18181b;
   flex-shrink: 0;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .slide-explanation-text {
   display: inline-block;
   background: transparent;
   padding: 0;
-  font-size: 14.5px !important;
+  font-size: 18px !important;
   font-weight: 700;
 }
 
@@ -247,8 +247,8 @@ body {
   min-height: 0;
   margin-top: 0;
   padding: 0;
-  font-size: 15.5px;
-  line-height: 1.5;
+  font-size: 18px;
+  line-height: 1.55;
   color: var(--brutal-dark);
   display: flex;
   flex-direction: column;
@@ -349,7 +349,7 @@ body {
 .quick-check-prompt {
   margin: 0 0 clamp(6px, 0.8vh, 10px);
   color: var(--brutal-dark);
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 800;
   line-height: 1.35;
 }
@@ -377,7 +377,7 @@ body {
 }
 
 .quick-option span {
-  font-size: 15.5px;
+  font-size: 18px;
   font-weight: 800;
 }
 
@@ -388,7 +388,7 @@ body {
   justify-content: space-between;
   gap: 0.5rem;
   padding: clamp(6px, 0.9vh, 10px) 12px;
-  font-size: 14.5px;
+  font-size: 17px;
   font-weight: 800;
   border: 2px solid var(--brutal-border);
   border-radius: 12px;
@@ -408,6 +408,12 @@ body {
 .trait-option:hover {
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #18181b;
+}
+
+.quick-option:disabled,
+.trait-option:disabled {
+  opacity: 0.85;
+  cursor: default;
 }
 
 .quick-option.option-correct,

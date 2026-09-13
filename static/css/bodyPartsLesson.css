@@ -207,11 +207,11 @@ body {
 }
 
 .bpl-slide-title {
-  font-size: 19px;
+  font-size: 22px;
   font-weight: 900;
   color: var(--bpl-dark);
   margin: 0;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 
 .bpl-tts-btn {
@@ -418,7 +418,7 @@ body {
   margin: 0;
 }
 .bpl-body-text {
-  font-size: 16px !important;
+  font-size: 18.5px !important;
   font-weight: 600;
   line-height: 1.55;
   color: #1f2937;
@@ -438,7 +438,7 @@ body {
   box-shadow: 2px 2px 0 #18181b;
 }
 .bpl-part-icon { font-size: 1.2rem; }
-.bpl-part-label { font-weight: 800; font-size: 15px; color: var(--bpl-dark); }
+.bpl-part-label { font-weight: 800; font-size: 16px; color: var(--bpl-dark); }
 
 .bpl-think-box {
   display: flex;
@@ -448,7 +448,7 @@ body {
   border: 1.5px solid #fde047;
   border-radius: 10px;
   padding: clamp(6px, 0.9vh, 10px) 12px;
-  font-size: 15px;
+  font-size: 17.5px;
   font-weight: 700;
   line-height: 1.45;
   color: #78350f;
@@ -465,7 +465,7 @@ body {
   border-radius: 10px;
   background: #f0fdf4;
   padding: clamp(6px, 0.9vh, 10px) 12px;
-  font-size: 15px;
+  font-size: 17.5px;
   font-weight: 700;
   line-height: 1.45;
   color: #166534;
@@ -475,7 +475,7 @@ body {
 /* ── Quick-Check & Assess Options ────────────────────────────────────────── */
 
 .bpl-prompt {
-  font-size: 17px;
+  font-size: 19.5px;
   font-weight: 800;
   color: var(--bpl-dark);
   margin-bottom: clamp(6px, 1vh, 10px);
@@ -499,7 +499,7 @@ body {
   border-radius: 12px;
   background: #fff;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 17.5px;
   cursor: pointer;
   box-shadow: 2.5px 2.5px 0 #18181b;
   transition: all 0.13s ease;

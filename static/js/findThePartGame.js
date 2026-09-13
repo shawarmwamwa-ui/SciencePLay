@@ -2,24 +2,41 @@
 // "Find the Part" — Hotspot Callout Leader Pin labeling game for Animal Body Parts
 // Game 2A: Grade 3 Science, Week 3-4
 
-import { speakText } from './ttsHelper.js';
-
-// ── Audio helpers ─────────────────────────────────────────────────────────────
-
-function playTone(freq, dur = 0.18) {
+let audioCtx = null;
+function playSound(type) {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
     osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + dur);
+    gain.connect(audioCtx.destination);
+
+    if (type === 'correct') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.12);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else if (type === 'wrong') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.linearRampToValueAtTime(140, now + 0.22);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+      osc.start(now);
+      osc.stop(now + 0.28);
+    } else if (type === 'pop') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(660, now + 0.08);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    }
   } catch (_) {}
 }
 
@@ -248,8 +265,6 @@ function showSummary(data) {
       </div>`;
   }
 
-  speakText(`Game complete! You scored ${state.score} out of ${maxScore} points. Daily attempts: ${attemptsUsed} of ${limit}.`);
-
   container.innerHTML = `
     <div class="ftp-summary text-center">
       <div class="ftp-summary-icon">
@@ -469,8 +484,7 @@ function processMatch(zoneId, labelId, round) {
         Correct! <strong>${zone.label}</strong> labeled! <strong>${ptsBadge}</strong>`;
     }
 
-    playTone(660, 0.22);
-    speakText(`Correct! ${zone.label}. ${fact}`);
+    playSound('correct');
     updateHUD();
 
     // Check if round complete
@@ -497,7 +511,7 @@ function processMatch(zoneId, labelId, round) {
       banner.innerHTML = `<i class="bi bi-x-circle-fill me-2"></i>
         Not quite! <strong>${labelName}</strong> does not go there. (Points for this part lessened to <strong>+${nextPotential} pts</strong>)`;
     }
-    playTone(220, 0.2);
+    playSound('wrong');
 
     if (slotEl) {
       slotEl.classList.add('ftp-slot-error');
@@ -527,9 +541,9 @@ function processMatch(zoneId, labelId, round) {
 function bindRoundEvents(round) {
   const banner = document.getElementById('ftp-banner');
 
-  // Word bank chips: Tap and Drag
+  // Word bank chips: Tap and Touch Drag
   document.querySelectorAll('.ftp-chip').forEach(chip => {
-    // Drag Start
+    // HTML5 Drag Start (desktop)
     chip.addEventListener('dragstart', (e) => {
       if (chip.classList.contains('ftp-chip-used')) {
         e.preventDefault();
@@ -546,6 +560,70 @@ function bindRoundEvents(round) {
       }
     });
 
+    // Touch Drag (tablets & touch screens)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isDragging = false;
+    let ghostChip = null;
+
+    chip.addEventListener('touchstart', (e) => {
+      if (chip.classList.contains('ftp-chip-used')) return;
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      isDragging = false;
+    }, { passive: true });
+
+    chip.addEventListener('touchmove', (e) => {
+      if (chip.classList.contains('ftp-chip-used')) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+
+      if (!isDragging && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+        isDragging = true;
+        ghostChip = document.createElement('div');
+        ghostChip.className = 'ftp-chip ftp-chip-selected';
+        ghostChip.textContent = chip.textContent.trim();
+        ghostChip.style.position = 'fixed';
+        ghostChip.style.pointerEvents = 'none';
+        ghostChip.style.zIndex = '9999';
+        ghostChip.style.boxShadow = '0 8px 16px rgba(0,0,0,0.2)';
+        document.body.appendChild(ghostChip);
+      }
+
+      if (isDragging && ghostChip) {
+        e.preventDefault();
+        ghostChip.style.left = `${touch.clientX - 40}px`;
+        ghostChip.style.top = `${touch.clientY - 20}px`;
+      }
+    }, { passive: false });
+
+    const endTouchDrag = (e) => {
+      if (isDragging && ghostChip) {
+        const touch = e.changedTouches ? e.changedTouches[0] : null;
+        if (touch) {
+          const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+          const slotEl = targetEl?.closest('.ftp-slot');
+          if (slotEl && !state.matched.has(slotEl.dataset.zoneId)) {
+            processMatch(slotEl.dataset.zoneId, chip.dataset.labelId, round);
+          }
+        }
+        ghostChip.remove();
+        ghostChip = null;
+        isDragging = false;
+      }
+    };
+
+    chip.addEventListener('touchend', endTouchDrag);
+    chip.addEventListener('touchcancel', () => {
+      if (ghostChip) {
+        ghostChip.remove();
+        ghostChip = null;
+      }
+      isDragging = false;
+    });
+
     // Tap
     chip.addEventListener('click', () => {
       if (chip.classList.contains('ftp-chip-used')) return;
@@ -560,14 +638,13 @@ function bindRoundEvents(round) {
       document.querySelectorAll('.ftp-chip').forEach(c => c.classList.remove('ftp-chip-selected'));
       chip.classList.add('ftp-chip-selected');
       state.selectedLabel = chip.dataset.labelId;
-      playTone(480, 0.08);
+      playSound('pop');
 
       if (banner) {
         banner.className = 'ftp-banner ftp-banner-primary';
         banner.innerHTML = `<i class="bi bi-hand-index-thumb-fill me-2"></i>
           Word chosen: <strong>${chip.textContent.trim()}</strong>. Now tap the matching numbered pin slot!`;
       }
-      speakText(`Word chosen: ${chip.textContent.trim()}. Tap the matching pin slot.`);
     });
   });
 
@@ -653,11 +730,6 @@ export function initFindThePart() {
   if (typeof window.initialAttemptsToday !== 'undefined') {
     state.attemptsToday = Number(window.initialAttemptsToday);
   }
-
-  document.getElementById('ftp-tts-btn')?.addEventListener('click', () => {
-    const round = ROUNDS[state.currentRound];
-    if (round) speakText(`${round.title}. ${round.subtitle}`);
-  });
 
   renderRound(0);
   updateHUD();

@@ -2,7 +2,6 @@
 // Clean rebuild of the Living vs Non-Living claw machine.
 
 import { getClawGameObjects } from './gameObjects.js';
-import { speakText } from './ttsHelper.js';
 
 const LANE_COUNT = 4;
 const DEFAULT_ATTEMPT_LIMIT = 3;
@@ -70,7 +69,43 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-function playSound() {}
+let clawAudioCtx = null;
+function playSound(type) {
+  try {
+    if (!clawAudioCtx) clawAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = clawAudioCtx.currentTime;
+    const osc = clawAudioCtx.createOscillator();
+    const gain = clawAudioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(clawAudioCtx.destination);
+
+    if (type === 'correct') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.12);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else if (type === 'wrong') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.linearRampToValueAtTime(140, now + 0.22);
+      gain.gain.setValueAtTime(0.16, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+      osc.start(now);
+      osc.stop(now + 0.28);
+    } else if (type === 'grab') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(330, now);
+      osc.frequency.exponentialRampToValueAtTime(440, now + 0.1);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    }
+  } catch (_) {}
+}
 
 function wait(ms) {
   return new Promise(resolve => window.setTimeout(resolve, ms));
@@ -346,20 +381,7 @@ function renderBins() {
       <div class="bin-catch" aria-hidden="true"></div>
     `;
 
-    const handleSelect = () => {
-      setActiveSlotIndex(slotIndex);
-      renderBoard();
-      renderStatus();
-    };
-
-    binElement.addEventListener('click', handleSelect);
-    binElement.addEventListener('keydown', event => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        handleSelect();
-      }
-    });
-
+    // Side bins are visual targets only; claw movement is strictly controlled via arrow buttons
     if (index < state.leftBinCount) {
       dom.leftBins.appendChild(binElement);
     } else {
@@ -391,8 +413,7 @@ function renderTray() {
     }
 
     objects.forEach(object => {
-      const objectButton = document.createElement('button');
-      objectButton.type = 'button';
+      const objectButton = document.createElement('div');
       objectButton.className = 'tray-object';
       objectButton.dataset.objectId = String(object.id);
 
@@ -410,14 +431,7 @@ function renderTray() {
         </div>
       `;
 
-      objectButton.addEventListener('click', () => {
-        if (state.completed || state.heldObject || object.isSorted) {
-          return;
-        }
-        setActiveSlotIndex(getSlotIndexForColumn(columnIndex));
-        grabObject();
-      });
-
+      // Tray objects are picked up via the GRAB button when the claw is positioned above, avoiding accidental touch jumps
       columnElement.appendChild(objectButton);
     });
 
@@ -576,6 +590,7 @@ async function grabObject() {
 
   await animateObjectPickup(targetObject);
 
+  playSound('grab');
   targetObject.isHeld = true;
   state.heldObject = targetObject;
   renderBoard();
@@ -633,6 +648,7 @@ async function dropObject() {
   object.isSorted = true;
 
   if (isCorrect) {
+    playSound('correct');
     object.wasCorrect = true;
     state.streak = (state.streak || 0) + 1;
     state.correctFirstTry += 1;
@@ -647,6 +663,7 @@ async function dropObject() {
     state.score = Math.min(100, state.score + earned);
     setMessage(`✓ Correct! ${object.name} is a ${slot.bin.label}. (+${earned} pts${bonusText})`, 'success');
   } else {
+    playSound('wrong');
     object.wasCorrect = false;
     state.wrongDrops += 1;
     state.streak = 0;
@@ -775,20 +792,6 @@ async function saveProgress() {
   }
 }
 
-
-let ttsBound = false;
-function bindTTS() {
-  if (ttsBound) return;
-  const ttsBtn = document.querySelector('#tts-btn');
-  if (!ttsBtn) return;
-  ttsBtn.onclick = () => {
-    let textToRead = `${state.title}. ${state.instructions}.`;
-    if (window.speechSynthesis) {
-      speakText(textToRead);
-    }
-  };
-  ttsBound = true;
-}
 
 function bindControls() {
   if (controlsBound) return;

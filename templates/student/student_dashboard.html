@@ -67,9 +67,29 @@
   <!-- Main Landmark -->
   <main id="main-content">
 
-  <!-- Stat Cards Grid (Big numbers, punchy headers) -->
-  <div class="row student-summary mb-4 g-3">
-    <div class="col-md-4">
+  <!-- Stat Cards Grid: Separated Lessons & Activities -->
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 student-summary mb-4 g-3">
+    <!-- Card 1: Lessons Done -->
+    <div class="col">
+      <div class="brutal-card stat-card p-3 p-md-4 d-flex flex-column justify-content-between h-100" style="background: #bae6fd;">
+        <div class="brutal-window-header mb-2" style="background: transparent; border: none; padding: 0;">
+          <div class="brutal-dots">
+            <span class="brutal-dot dot-red"></span>
+            <span class="brutal-dot dot-yellow"></span>
+            <span class="brutal-dot dot-green"></span>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="metric-value text-dark fw-black">{{ completed_lessons_count }}<span class="fs-4 text-muted fw-bold">/{{ total_lessons_count }}</span></div>
+          <span class="display-5 text-dark"><i class="bi bi-journal-check"></i></span>
+        </div>
+        <div class="fw-black text-dark fs-4 mt-2">Lessons Done</div>
+        <div class="fw-bold text-secondary small mt-1">Science Slideshows</div>
+      </div>
+    </div>
+
+    <!-- Card 2: Activities Done -->
+    <div class="col">
       <div class="brutal-card stat-card p-3 p-md-4 d-flex flex-column justify-content-between h-100" style="background: #bbf7d0;">
         <div class="brutal-window-header mb-2" style="background: transparent; border: none; padding: 0;">
           <div class="brutal-dots">
@@ -79,13 +99,16 @@
           </div>
         </div>
         <div class="d-flex justify-content-between align-items-center">
-          <div class="metric-value text-dark fw-black">{{ completed_activities }}</div>
-          <span class="display-5 text-dark"><i class="bi bi-check-circle-fill"></i></span>
+          <div class="metric-value text-dark fw-black">{{ completed_activities_count }}<span class="fs-4 text-muted fw-bold">/{{ total_activities }}</span></div>
+          <span class="display-5 text-dark"><i class="bi bi-controller"></i></span>
         </div>
         <div class="fw-black text-dark fs-4 mt-2">Activities Done</div>
+        <div class="fw-bold text-secondary small mt-1">Interactive Games</div>
       </div>
     </div>
-    <div class="col-md-4">
+
+    <!-- Card 3: Total Points -->
+    <div class="col">
       <div class="brutal-card stat-card p-3 p-md-4 d-flex flex-column justify-content-between h-100" style="background: #fef08a;">
         <div class="brutal-window-header mb-2" style="background: transparent; border: none; padding: 0;">
           <div class="brutal-dots">
@@ -96,12 +119,15 @@
         </div>
         <div class="d-flex justify-content-between align-items-center">
           <div class="metric-value text-dark fw-black">{{ total_score }}</div>
-          <span class="display-5 text-dark"><i class="bi bi-star-fill"></i></span>
+          <span class="display-5 text-dark"><i class="bi bi-star-fill text-warning" style="text-shadow: 2px 2px 0 #000;"></i></span>
         </div>
         <div class="fw-black text-dark fs-4 mt-2">Total Points</div>
+        <div class="fw-bold text-secondary small mt-1">Stars Earned</div>
       </div>
     </div>
-    <div class="col-md-4">
+
+    <!-- Card 4: Overall Quest Progress -->
+    <div class="col">
       <div class="brutal-card stat-card p-3 p-md-4 d-flex flex-column justify-content-between h-100" style="background: #e9d5ff;">
         <div class="brutal-window-header mb-2" style="background: transparent; border: none; padding: 0;">
           <div class="brutal-dots">
@@ -112,10 +138,10 @@
         </div>
         <div class="d-flex justify-content-between align-items-center">
           <div class="metric-value text-dark fw-black">{{ student_progress }}%</div>
-          <span class="display-5 text-dark"><i class="bi bi-flag-fill"></i></span>
+          <span class="display-5 text-dark"><i class="bi bi-trophy-fill text-primary"></i></span>
         </div>
-        <div class="fw-black text-dark fs-4 mt-2">Overall Progress</div>
-        <div class="fw-bold text-secondary small mt-1">Lessons &amp; Activities</div>
+        <div class="fw-black text-dark fs-4 mt-2">Overall Quest</div>
+        <div class="fw-bold text-secondary small mt-1">Total Completion</div>
       </div>
     </div>
   </div>

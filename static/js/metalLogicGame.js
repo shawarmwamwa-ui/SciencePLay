@@ -1,101 +1,142 @@
 // metalLogicGame.js
 // Metal Clue Detective — Clues are the questions (1, 2, 3...) & Answer Boxes hold the metal items!
-// Features extra metals (Aluminum) and confusing distractors/decoys (Plastic Insulator, Glass Jar, Wood Shield).
-// Full tablet touch drag-and-drop + desktop drag & tap-to-place support.
+// Features concise kid-friendly clues, shuffle per round, choice dimming, remove/swap actions,
+// post-round review modal with right/wrong feedback, and latency-free Web Audio sound effects.
 // Standalone arcade activity for Lesson 6 (Properties of Metals)
 
 export function initMetalLogicGame() {
+  // Web Audio Synthesizer for instant game sound effects
+  let audioCtx = null;
+  function playSound(type) {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'correct') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.12); // G5
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now); // A3
+        osc.frequency.linearRampToValueAtTime(140, now + 0.22);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.start(now);
+        osc.stop(now + 0.28);
+      } else if (type === 'pop') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(660, now + 0.08);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      }
+    } catch (e) {
+      // AudioContext unavailable or blocked
+    }
+  }
+
   const ITEMS_BANK = {
-    // --- Genuine Metals ---
+    // --- Genuine Metals (Concise 1-sentence kid-friendly clues) ---
     iron: {
       id: "iron",
       name: "Iron",
       isDecoy: false,
       icon: "/static/images/icons/opt/nail.png",
-      badge: "Magnetic & Rusts",
-      clue: "I stick firmly to magnets and form reddish-brown rust when wet. What metal am I?",
-      fact: "Iron is magnetic and reacts with air and water to form rust."
+      badge: "Magnetic",
+      clue: "Sticks to magnets and forms reddish-brown rust.",
+      fact: "Iron is magnetic and reacts with moisture to form rust."
     },
     copper: {
       id: "copper",
       name: "Copper",
       isDecoy: false,
       icon: "/static/images/icons/opt/broken_wire.png",
-      badge: "Power Cords & Wires",
-      clue: "I have a warm reddish-orange color and carry electric currents safely inside household wires. What metal am I?",
-      fact: "Copper is non-magnetic and is one of the best conductors of electricity."
+      badge: "Electric Wires",
+      clue: "Reddish-orange metal that powers electric wires.",
+      fact: "Copper is non-magnetic and conducts electricity inside wires."
     },
     gold: {
       id: "gold",
       name: "Gold",
       isDecoy: false,
       icon: "/static/images/icons/opt/gold_coin.png",
-      badge: "Lustrous & Never Rusts",
-      clue: "I have a bright yellow metallic shine and never rust or tarnish in air or water. What metal am I?",
-      fact: "Gold has a brilliant yellow luster and is resistant to corrosion."
+      badge: "Shiny Yellow",
+      clue: "Shiny yellow metal that never rusts or tarnishes.",
+      fact: "Gold stays shiny forever and never rusts or tarnishes."
     },
     silver: {
       id: "silver",
       name: "Silver",
       isDecoy: false,
       icon: "/static/images/icons/opt/silver_medal.png",
-      badge: "Silver-White & Shiny",
-      clue: "I have a brilliant grayish-white shine and am crafted into champion medals and dining spoons. What metal am I?",
-      fact: "Silver has a shiny silver-white luster and high electrical conductivity."
+      badge: "Shiny Medals",
+      clue: "Shiny silver metal crafted into medals and spoons.",
+      fact: "Silver has a brilliant silver-white luster and high conductivity."
     },
     aluminum: {
       id: "aluminum",
       name: "Aluminum",
       isDecoy: false,
       icon: "/static/images/icons/opt/aluminum_can.png",
-      badge: "Light & Non-Magnetic",
-      clue: "I am a silvery, lightweight metal shaped into drink cans and foil. Unlike iron, I do NOT stick to magnets! What metal am I?",
-      fact: "Aluminum is lightweight and silvery, but is completely non-magnetic!"
+      badge: "Drink Cans",
+      clue: "Lightweight silvery metal for drink cans; not magnetic.",
+      fact: "Aluminum is silvery and lightweight, but not magnetic!"
     },
     steel: {
       id: "steel",
       name: "Steel",
       isDecoy: false,
       icon: "/static/images/icons/opt/paperclip.png",
-      badge: "Strong Alloy & Magnetic",
-      clue: "I am an ultra-tough metal alloy made from iron and carbon, shaped into paperclips and bridge beams. I attract magnets! What metal am I?",
-      fact: "Steel is a magnetic alloy of iron that is stronger and more durable than pure iron."
+      badge: "Strong Alloy",
+      clue: "Strong magnetic metal alloy for bridge beams and clips.",
+      fact: "Steel is a magnetic alloy of iron made for heavy strength."
     },
     tin: {
       id: "tin",
       name: "Tin",
       isDecoy: false,
       icon: "/static/images/icons/opt/canned_food.png",
-      badge: "Protective Food Coating",
-      clue: "I am a soft, shiny metal used to coat and line food cans so they don't rust or spoil meals. What metal am I?",
-      fact: "Tin is a malleable metal that resists corrosion and is widely used to coat food cans."
+      badge: "Food Cans",
+      clue: "Soft metal used to coat and protect food cans.",
+      fact: "Tin coats food cans to keep meals safe and prevent rust."
     },
     stainless_steel: {
       id: "stainless_steel",
       name: "Stainless Steel",
       isDecoy: false,
       icon: "/static/images/icons/opt/spoon.png",
-      badge: "Rust-Proof Kitchenware",
-      clue: "I am polished to a mirror shine for dining spoons and cooking pots. Water and dishwashers will NOT make me rust! What metal am I?",
-      fact: "Stainless steel contains chromium, protecting dining spoons from rusting in dishwashers."
+      badge: "Rust-Proof",
+      clue: "Rust-proof metal for dining spoons and cooking pots.",
+      fact: "Stainless steel stays shiny in water and does not rust."
     },
     wrought_iron: {
       id: "wrought_iron",
       name: "Wrought Iron",
       isDecoy: false,
       icon: "/static/images/icons/opt/gate.png",
-      badge: "Heavy Forged Metal",
-      clue: "I am dark, heavy metal heated and forged into strong decorative outdoor garden gates and fences. What metal am I?",
-      fact: "Wrought iron is tough and malleable, forged by blacksmiths for outdoor gates."
+      badge: "Heavy Forged",
+      clue: "Heavy forged metal for tough garden gates.",
+      fact: "Wrought iron is forged by blacksmiths into outdoor gates."
     },
     gold_jewelry: {
       id: "gold_jewelry",
       name: "Gold Jewelry",
       isDecoy: false,
       icon: "/static/images/icons/opt/gold_ring.png",
-      badge: "Precious Yellow Metal",
-      clue: "I am a precious, glittering yellow metal shaped into valuable wedding rings that never corrodes or tarnishes. What metal am I?",
-      fact: "Gold is very malleable and retains its brilliant luster without corroding."
+      badge: "Precious Rings",
+      clue: "Precious yellow metal shaped into glittering rings.",
+      fact: "Gold is shaped into valuable jewelry that never tarnishes."
     },
 
     // --- Confusing Decoys / Non-Metals ---
@@ -104,32 +145,32 @@ export function initMetalLogicGame() {
       name: "Plastic Plug",
       isDecoy: true,
       icon: "/static/images/icons/opt/plug.png",
-      badge: "Insulator (Non-Metal)",
-      wrongFeedback: "Watch out! Plastic is an electrical insulator, not a metal conductor! It covers cables to block electric shocks."
+      badge: "Insulator",
+      wrongFeedback: "Plastic is an insulator, not a metal conductor!"
     },
     glass_jar: {
       id: "glass_jar",
       name: "Glass Jar",
       isDecoy: true,
       icon: "/static/images/icons/opt/glass_jar.png",
-      badge: "Fragile Non-Metal",
-      wrongFeedback: "Careful! Glass is brittle and transparent — it is a non-metal that does not conduct electricity or attract magnets."
+      badge: "Non-Metal",
+      wrongFeedback: "Glass is brittle and transparent, not a metal!"
     },
     wood_shield: {
       id: "wood_shield",
       name: "Wood Shield",
       isDecoy: true,
       icon: "/static/images/icons/opt/shield.png",
-      badge: "Organic Non-Metal",
-      wrongFeedback: "Oops! Wood comes from trees and is not a metal. It does not have metallic luster or conduct electric current."
+      badge: "Non-Metal",
+      wrongFeedback: "Wood comes from trees and is not a metal!"
     },
     cardboard_box: {
       id: "cardboard_box",
       name: "Cardboard Box",
       isDecoy: true,
       icon: "/static/images/icons/opt/box.png",
-      badge: "Paper Packaging (Non-Metal)",
-      wrongFeedback: "Watch out! Cardboard is made from plant fibers, not metal. It is not magnetic and does not conduct electricity."
+      badge: "Non-Metal",
+      wrongFeedback: "Cardboard is made of plant fibers, not metal!"
     }
   };
 
@@ -189,6 +230,12 @@ export function initMetalLogicGame() {
   const levelUpModal = levelUpModalEl ? new bootstrap.Modal(levelUpModalEl) : null;
   const btnNextLevel = document.getElementById("btn-next-level");
 
+  const roundReviewModalEl = document.getElementById("roundReviewModal");
+  const roundReviewModal = roundReviewModalEl ? new bootstrap.Modal(roundReviewModalEl) : null;
+  const roundReviewList = document.getElementById("round-review-list");
+  const roundReviewSubtitle = document.getElementById("round-review-subtitle");
+  const btnReviewContinue = document.getElementById("btn-review-continue");
+
   const victoryModalEl = document.getElementById("victoryModal");
   const victoryModal = victoryModalEl ? new bootstrap.Modal(victoryModalEl) : null;
   const btnPlayAgain = document.getElementById("btn-play-again");
@@ -206,7 +253,7 @@ export function initMetalLogicGame() {
     currentLevelIdx = lvlIdx;
     const config = LEVELS[currentLevelIdx];
 
-    // Update HUD with clean short level title
+    // Update HUD level text
     if (hudLevelText) hudLevelText.textContent = `Level ${currentLevelIdx + 1} / ${LEVELS.length}`;
     document.querySelectorAll(".level-dot").forEach((dot, idx) => {
       dot.classList.remove("active", "completed");
@@ -214,7 +261,7 @@ export function initMetalLogicGame() {
       if (idx === currentLevelIdx) dot.classList.add("active");
     });
 
-    // Pick random metals for the clues
+    // Pick random metals for clues
     const shuffledMetals = shuffle(config.metalsPool);
     const chosenMetalIds = shuffledMetals.slice(0, config.clueCount);
 
@@ -226,7 +273,7 @@ export function initMetalLogicGame() {
       };
     });
 
-    // Build choice shelf: chosen metals + unused metals + decoys, shuffled
+    // Build choice shelf: chosen metals + extra pool metals + decoys, shuffled
     const remainingMetals = shuffledMetals.slice(config.clueCount);
     currentShelfIds = shuffle([...chosenMetalIds, ...remainingMetals, ...config.decoys]);
 
@@ -275,12 +322,12 @@ export function initMetalLogicGame() {
         <div class="mystery-answer-box ${item.boxNum === activeBoxIndex ? 'active-box' : ''} ${answeredItem ? 'filled-box' : ''}" 
              id="mystery-box-${item.boxNum}" 
              data-box="${item.boxNum}"
-             title="Drop or tap to select item for Clue #${item.boxNum}">
+             title="Tap to place or change metal for Clue #${item.boxNum}">
           ${
             answeredItem
               ? `
               <div class="mystery-filled-content">
-                <img src="${answeredItem.icon}" alt="" aria-hidden="true" class="mystery-filled-img" width="40" height="40">
+                <img src="${answeredItem.icon}" alt="" aria-hidden="true" class="mystery-filled-img" width="38" height="38">
                 <h4 class="mystery-filled-name ${answeredItem.isDecoy ? 'text-danger' : ''}">${answeredItem.name}</h4>
                 <span class="mystery-change-tag"><i class="bi bi-arrow-repeat me-1"></i>Tap to change</span>
               </div>
@@ -288,7 +335,7 @@ export function initMetalLogicGame() {
               : `
               <div class="mystery-empty-prompt">
                 <i class="bi bi-box-seam mystery-empty-icon"></i>
-                <span>Drop or Tap Metal</span>
+                <span>Drop / Tap</span>
               </div>
             `
           }
@@ -298,11 +345,11 @@ export function initMetalLogicGame() {
       mysteryGrid.appendChild(colEl);
     });
 
-    // Attach click and drag drop listeners to answer boxes
+    // Attach click and drag-drop listeners to answer boxes
     mysteryGrid.querySelectorAll(".mystery-answer-box").forEach((box) => {
       const boxNum = parseInt(box.getAttribute("data-box"), 10);
 
-      // Tap click handler
+      // Tap click handler: open picker modal
       box.addEventListener("click", () => {
         setActiveBox(boxNum);
         openPickerModal(boxNum);
@@ -340,33 +387,31 @@ export function initMetalLogicGame() {
 
     currentShelfIds.forEach((itemId) => {
       const item = ITEMS_BANK[itemId];
-      const isUsed = Object.values(userAnswers).includes(itemId);
+      const assignedBoxEntry = Object.entries(userAnswers).find(([, id]) => id === itemId);
+      const isUsed = Boolean(assignedBoxEntry);
 
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = `metal-choice-btn ${isUsed ? "used" : ""}`;
       btn.draggable = true;
       btn.setAttribute("data-item", itemId);
+      btn.title = isUsed ? `${item.name} is placed in Clue #${assignedBoxEntry[0]}. Tap to focus.` : `Select ${item.name}`;
       btn.innerHTML = `
-        <img src="${item.icon}" alt="" aria-hidden="true" width="38" height="38">
+        <img src="${item.icon}" alt="" aria-hidden="true" width="26" height="26">
         <span>${item.name}</span>
       `;
 
-      // 1. Desktop HTML5 Drag Start
+      // HTML5 Drag
       btn.addEventListener("dragstart", (e) => {
         e.dataTransfer.setData("text/plain", itemId);
-        btn.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
       });
 
-      btn.addEventListener("dragend", () => {
-        btn.classList.remove("dragging");
-      });
-
-      // 2. Tablet Touch Drag & Drop (Pointer / Touch Events)
+      // Tablet Touch Drag
       let touchStartX = 0;
       let touchStartY = 0;
-      let ghostEl = null;
       let isTouchDragging = false;
+      let ghostEl = null;
 
       btn.addEventListener("touchstart", (e) => {
         const touch = e.touches[0];
@@ -380,7 +425,6 @@ export function initMetalLogicGame() {
         const dx = touch.clientX - touchStartX;
         const dy = touch.clientY - touchStartY;
 
-        // Threshold to initiate drag
         if (!isTouchDragging && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
           isTouchDragging = true;
           btn.classList.add("dragging");
@@ -397,11 +441,10 @@ export function initMetalLogicGame() {
         }
 
         if (isTouchDragging && ghostEl) {
-          e.preventDefault(); // Prevent tablet screen scroll or gesture zoom while dragging item
+          e.preventDefault();
           ghostEl.style.left = `${touch.clientX}px`;
           ghostEl.style.top = `${touch.clientY}px`;
 
-          // Check if finger is hovering over any mystery answer box
           const targetBox = findBoxUnderTouch(touch.clientX, touch.clientY);
           mysteryGrid?.querySelectorAll(".mystery-answer-box").forEach((b) => {
             if (b === targetBox) {
@@ -424,7 +467,6 @@ export function initMetalLogicGame() {
 
       btn.addEventListener("touchend", () => {
         if (isTouchDragging) {
-          // Check target box with drag-over
           const hoveredBox = mysteryGrid?.querySelector(".mystery-answer-box.drag-over");
           if (hoveredBox) {
             hoveredBox.classList.remove("drag-over");
@@ -434,16 +476,26 @@ export function initMetalLogicGame() {
           cleanupTouchDrag();
         } else {
           cleanupTouchDrag();
-          // Standard tap on item button: Assign to active box
-          assignItemToActiveBox(itemId);
+          // Tapped choice:
+          if (isUsed && assignedBoxEntry) {
+            // Already placed: focus on that box
+            setActiveBox(parseInt(assignedBoxEntry[0], 10));
+            playSound('pop');
+          } else {
+            assignItemToActiveBox(itemId);
+          }
         }
       });
 
       btn.addEventListener("touchcancel", cleanupTouchDrag);
 
-      // Desktop Click (fallback)
       btn.addEventListener("click", () => {
-        assignItemToActiveBox(itemId);
+        if (isUsed && assignedBoxEntry) {
+          setActiveBox(parseInt(assignedBoxEntry[0], 10));
+          playSound('pop');
+        } else {
+          assignItemToActiveBox(itemId);
+        }
       });
 
       metalChoiceRow.appendChild(btn);
@@ -456,7 +508,7 @@ export function initMetalLogicGame() {
 
     for (const box of boxes) {
       const rect = box.getBoundingClientRect();
-      const margin = 20; // generous touch hit area for tablet fingertips
+      const margin = 20;
       if (
         clientX >= rect.left - margin &&
         clientX <= rect.right + margin &&
@@ -478,14 +530,21 @@ export function initMetalLogicGame() {
   }
 
   function assignItemToBox(boxNum, itemId) {
+    // If this item was in another box, clear it from that box so it moves cleanly
+    Object.keys(userAnswers).forEach((b) => {
+      if (userAnswers[b] === itemId && parseInt(b, 10) !== boxNum) {
+        delete userAnswers[b];
+      }
+    });
+
     userAnswers[boxNum] = itemId;
+    playSound('pop');
     setActiveBox(boxNum);
 
-    // Re-render
     renderMysteryGrid();
     renderChoiceShelf();
 
-    // Auto-advance activeBoxIndex to next empty box if any
+    // Move to next empty box
     const nextEmpty = currentLevelData.find((d) => !userAnswers[d.boxNum]);
     if (nextEmpty) {
       setActiveBox(nextEmpty.boxNum);
@@ -508,6 +567,22 @@ export function initMetalLogicGame() {
 
     if (modalPickerOptions) {
       modalPickerOptions.innerHTML = "";
+
+      // Option to remove item if box is currently filled
+      if (userAnswers[boxNum]) {
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "btn btn-outline-danger fw-bold rounded-pill w-100 mb-2 py-1";
+        removeBtn.innerHTML = `<i class="bi bi-trash3 me-1"></i> Empty / Remove Item from Box #${boxNum}`;
+        removeBtn.addEventListener("click", () => {
+          delete userAnswers[boxNum];
+          playSound('pop');
+          renderMysteryGrid();
+          renderChoiceShelf();
+          metalPickerModal.hide();
+        });
+        modalPickerOptions.appendChild(removeBtn);
+      }
 
       currentShelfIds.forEach((itemId) => {
         const item = ITEMS_BANK[itemId];
@@ -540,18 +615,17 @@ export function initMetalLogicGame() {
   btnClearAll?.addEventListener("click", () => {
     userAnswers = {};
     activeBoxIndex = 1;
+    playSound('pop');
     renderMysteryGrid();
     renderChoiceShelf();
   });
 
   // Hint Logic
   btnUseHint?.addEventListener("click", () => {
-    // Find first empty or incorrectly answered box
     let target = currentLevelData.find((d) => userAnswers[d.boxNum] !== d.correctMetalId);
 
-    // Deduct 10 points (minimum floor 25)
     hintsUsed++;
-    score = Math.max(25, score - 10);
+    score = Math.max(25, score - 5);
     if (hudScoreVal) hudScoreVal.textContent = score;
 
     if (target) {
@@ -564,25 +638,16 @@ export function initMetalLogicGame() {
 
       const metal = target.metal;
       if (hintToast && hintMessage) {
-        hintMessage.textContent = `Hint (-10 pts) for Clue #${target.boxNum}: ${metal.fact} Choose ${metal.name}! (Beware of decoy non-metals!)`;
+        hintMessage.textContent = `Hint for Clue #${target.boxNum}: ${metal.fact} Try ${metal.name}!`;
         hintToast.style.display = "block";
       }
     } else {
       if (hintToast && hintMessage) {
-        hintMessage.textContent = `All boxes are correctly filled! Press 'Check My Answers!' to proceed.`;
+        hintMessage.textContent = `All boxes are correctly filled! Press 'Check Answers!' to proceed.`;
         hintToast.style.display = "block";
       }
     }
   });
-
-  function speakClue(text) {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.92;
-      window.speechSynthesis.speak(utterance);
-    }
-  }
 
   // Check deduction answers
   btnSubmit?.addEventListener("click", () => {
@@ -594,36 +659,37 @@ export function initMetalLogicGame() {
     const unfilled = currentLevelData.some((d) => !userAnswers[d.boxNum]);
     if (unfilled) {
       if (hintToast && hintMessage) {
-        hintMessage.textContent = `Please drag or choose an item for all ${currentLevelData.length} clues!`;
+        hintMessage.textContent = `Please place an item in all ${currentLevelData.length} boxes before checking!`;
         hintToast.style.display = "block";
       }
+      playSound('wrong');
       const card = document.getElementById("logic-game-card");
       card?.classList.add("shake-card");
       setTimeout(() => card?.classList.remove("shake-card"), 600);
       return;
     }
 
-    // 2. Check correctness & identify decoy mistakes
+    // 2. Evaluate all answers
     let allCorrect = true;
-    let decoyFeedback = null;
+    const reviewItems = [];
 
     currentLevelData.forEach((d) => {
-      const boxEl = document.getElementById(`mystery-box-${d.boxNum}`);
       const chosenItemId = userAnswers[d.boxNum];
+      const isCorrect = (chosenItemId === d.correctMetalId);
+      if (!isCorrect) allCorrect = false;
 
-      if (chosenItemId !== d.correctMetalId) {
-        allCorrect = false;
-        boxEl?.classList.add("shake-card");
-        setTimeout(() => boxEl?.classList.remove("shake-card"), 600);
-
-        const chosenItem = ITEMS_BANK[chosenItemId];
-        if (chosenItem && chosenItem.isDecoy && !decoyFeedback) {
-          decoyFeedback = chosenItem.wrongFeedback;
-        }
-      }
+      const chosenItem = chosenItemId ? ITEMS_BANK[chosenItemId] : null;
+      reviewItems.push({
+        boxNum: d.boxNum,
+        clue: d.metal.clue,
+        chosenItem: chosenItem,
+        correctItem: d.metal,
+        isCorrect: isCorrect
+      });
     });
 
     if (allCorrect) {
+      playSound('correct');
       objectLogs.push({
         object_id: `level_${currentLevelIdx + 1}_clues`,
         was_correct: true,
@@ -635,24 +701,76 @@ export function initMetalLogicGame() {
         const levelUpMsg = document.getElementById("levelup-msg");
         if (levelUpTitle) levelUpTitle.textContent = `${LEVELS[currentLevelIdx].name} Solved!`;
         if (levelUpMsg) {
-          levelUpMsg.textContent = `Awesome detective work! You avoided the tricky distractors and matched all metals to their clues. Ready for ${LEVELS[currentLevelIdx + 1].name}?`;
+          levelUpMsg.textContent = `Awesome detective work! You solved all ${currentLevelData.length} clues! Ready for ${LEVELS[currentLevelIdx + 1].name}?`;
         }
         levelUpModal?.show();
       } else {
         handleVictory();
       }
     } else {
-      // Deduct 5 points on wrong check (minimum floor 25)
+      // Mistakes found:
+      playSound('wrong');
       score = Math.max(25, score - 5);
       if (hudScoreVal) hudScoreVal.textContent = score;
 
-      if (hintToast && hintMessage) {
-        if (decoyFeedback) {
-          hintMessage.textContent = `${decoyFeedback} (-5 pts penalty)`;
-        } else {
-          hintMessage.textContent = `Some items don't match their clues! (-5 pts) Re-read the clues carefully or use a Simple Hint.`;
+      // Show Round Review Modal with detailed feedback
+      if (roundReviewList && roundReviewModal) {
+        roundReviewList.innerHTML = "";
+        let mistakeCount = 0;
+
+        reviewItems.forEach((r) => {
+          const card = document.createElement("div");
+          card.className = `review-item-card ${r.isCorrect ? "correct" : "incorrect"}`;
+          
+          if (r.isCorrect) {
+            card.innerHTML = `
+              <div class="review-item-badge bg-success">✓</div>
+              <div class="review-item-info">
+                <h5 class="review-item-title text-success">Clue #${r.boxNum}: ${r.chosenItem.name} — Correct!</h5>
+                <p class="review-item-clue">"${r.clue}"</p>
+              </div>
+              <div class="review-item-status text-success fw-bold">
+                <i class="bi bi-check-circle-fill me-1"></i> Kept
+              </div>
+            `;
+          } else {
+            mistakeCount++;
+            card.innerHTML = `
+              <div class="review-item-badge bg-danger">✗</div>
+              <div class="review-item-info">
+                <h5 class="review-item-title text-danger">Clue #${r.boxNum}: Placed ${r.chosenItem ? r.chosenItem.name : 'None'}</h5>
+                <p class="review-item-clue">"${r.clue}"</p>
+                <div class="small fw-bold text-dark mt-1">
+                  <i class="bi bi-lightbulb-fill text-warning me-1"></i>Hint: ${r.correctItem.fact}
+                </div>
+              </div>
+              <div class="review-item-status text-danger fw-bold">
+                <i class="bi bi-arrow-repeat me-1"></i> Try Again
+              </div>
+            `;
+          }
+          roundReviewList.appendChild(card);
+        });
+
+        if (roundReviewSubtitle) {
+          roundReviewSubtitle.textContent = `You got ${currentLevelData.length - mistakeCount} of ${currentLevelData.length} right! Correct items stay locked in place.`;
         }
-        hintToast.style.display = "block";
+
+        // When user continues, keep the correct answers and clear the wrong ones
+        if (btnReviewContinue) {
+          btnReviewContinue.onclick = () => {
+            reviewItems.forEach((r) => {
+              if (!r.isCorrect) {
+                delete userAnswers[r.boxNum];
+              }
+            });
+            renderMysteryGrid();
+            renderChoiceShelf();
+            roundReviewModal.hide();
+          };
+        }
+
+        roundReviewModal.show();
       }
     }
   }

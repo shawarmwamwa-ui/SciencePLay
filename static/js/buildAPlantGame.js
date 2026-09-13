@@ -3,32 +3,40 @@
 // Round 1: Garden Flower Plant (Roots → Stem → Leaves → Flower → Fruit → Seeds)
 // Round 2: Mighty Apple Tree (Tree Roots → Trunk → Branches → Canopy Leaves → Blossoms → Apples & Seeds)
 
-import { speakText } from './ttsHelper.js';
-
 // ── Audio ─────────────────────────────────────────────────────────────────────
 
-function playTone(freq, dur = 0.18) {
+let plantAudioCtx = null;
+function playSound(type) {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    if (!plantAudioCtx) plantAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = plantAudioCtx.currentTime;
+    const osc = plantAudioCtx.createOscillator();
+    const gain = plantAudioCtx.createGain();
     osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + dur);
+    gain.connect(plantAudioCtx.destination);
+
+    if (type === 'correct') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.12);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else if (type === 'wrong') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.linearRampToValueAtTime(140, now + 0.22);
+      gain.gain.setValueAtTime(0.16, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+      osc.start(now);
+      osc.stop(now + 0.28);
+    }
   } catch (_) {}
 }
 
-function playSuccess() {
-  [523, 659, 784].forEach((f, i) => setTimeout(() => playTone(f, 0.22), i * 110));
-}
-
-function playError() { playTone(200, 0.28); }
+function playSuccess() { playSound('correct'); }
+function playError() { playSound('wrong'); }
 
 // ── ROUNDS DATA ───────────────────────────────────────────────────────────────
 
@@ -48,8 +56,8 @@ const ROUNDS = [
         dzTop: '79%',
         dzLeft: '50%',
         svgId: 'svg-roots',
-        hint: 'I live hidden deep in the dark soil, drinking water and anchoring the plant firmly. What am I?',
-        funFact: 'Roots grip the soil and drink up water and minerals for the whole plant! 💧',
+        hint: 'I drink water deep in the soil and hold the plant steady.',
+        funFact: 'Roots grip the soil and drink up water and minerals! 💧',
       },
       {
         id: 'stem',
@@ -59,8 +67,8 @@ const ROUNDS = [
         dzTop: '55%',
         dzLeft: '50%',
         svgId: 'svg-stem',
-        hint: 'I stand tall like an elevator straw, carrying water and nutrients up to the top. What am I?',
-        funFact: 'The stem works like a straw, carrying water from roots all the way up! 🥤',
+        hint: 'I stand tall like a straw, carrying water up to the leaves.',
+        funFact: 'The stem works like a straw, carrying water upward! 🥤',
       },
       {
         id: 'leaves',
@@ -70,8 +78,8 @@ const ROUNDS = [
         dzTop: '38%',
         dzLeft: '50%',
         svgId: 'svg-leaves',
-        hint: 'We are green solar panels that catch sunlight and air to cook food (sugar). What are we?',
-        funFact: 'Leaves use sunlight and air to cook food (sugar) for the whole plant! ☀️',
+        hint: 'We catch sunlight and air to cook food for the plant.',
+        funFact: 'Leaves use sunlight and air to make food (sugar)! ☀️',
       },
       {
         id: 'flower',
@@ -81,8 +89,8 @@ const ROUNDS = [
         dzTop: '16%',
         dzLeft: '50%',
         svgId: 'svg-flower',
-        hint: 'I show off bright colorful petals and sweet nectar to invite pollinating bees. What am I?',
-        funFact: 'Flowers attract bees and butterflies that carry pollen to make seeds! 🐝',
+        hint: 'I bloom colorful petals to attract helpful bees and butterflies.',
+        funFact: 'Flowers attract bees and butterflies to help make seeds! 🐝',
       },
       {
         id: 'fruit',
@@ -92,8 +100,8 @@ const ROUNDS = [
         dzTop: '23%',
         dzLeft: '50%',
         svgId: 'svg-fruit',
-        hint: 'I grow juicy and sweet around the baby seeds to keep them safe. What am I?',
-        funFact: 'Fruit wraps around seeds to protect them until they are ready to grow! 🌱',
+        hint: 'I grow sweet and juicy to protect the baby seeds inside.',
+        funFact: 'Fruit wraps around seeds to protect them until planting! 🌱',
       },
       {
         id: 'seeds',
@@ -103,8 +111,8 @@ const ROUNDS = [
         dzTop: '29%',
         dzLeft: '50%',
         svgId: 'svg-seeds',
-        hint: 'We are tiny dormant packages carrying the blueprint to sprout into a brand new plant. What are we?',
-        funFact: 'Seeds carry the blueprint for a brand new plant — the cycle starts again! 🌿',
+        hint: 'We are tiny packages ready to sprout into new plants.',
+        funFact: 'Seeds sprout into brand new plants — life begins again! 🌿',
       },
     ],
     decoys: [
@@ -113,35 +121,35 @@ const ROUNDS = [
         label: 'Soil',
         cardClass: 'bap-card--decoy',
         iconHtml: '<i class="bi bi-layers-fill" style="color:#64748b;"></i>',
-        wrongHint: 'Soil is where roots live, but soil itself is not a plant part! Look for a plant part.',
+        wrongHint: 'Soil is dirt where roots live, not a plant part!',
       },
       {
         id: 'branch',
         label: 'Branch',
         cardClass: 'bap-card--decoy',
         iconHtml: '<i class="bi bi-signpost-split-fill" style="color:#b45309;"></i>',
-        wrongHint: 'Branches grow on woody trees, but for a basic garden plant we need a green Stem!',
+        wrongHint: 'Branches grow on trees. A garden plant needs a green Stem!',
       },
       {
         id: 'petal',
         label: 'Petal',
         cardClass: 'bap-card--decoy',
         iconHtml: '<i class="bi bi-suit-heart-fill" style="color:#ec4899;"></i>',
-        wrongHint: 'A petal is just one piece of a flower. We need the whole Flower as a plant part!',
+        wrongHint: 'A petal is just one piece. We need the whole Flower!',
       },
       {
         id: 'bud',
         label: 'Bud',
         cardClass: 'bap-card--decoy',
         iconHtml: '<i class="bi bi-droplet-half" style="color:#3b82f6;"></i>',
-        wrongHint: 'A bud is a flower that has not bloomed yet. We need the full blooming Flower!',
+        wrongHint: 'A bud is unbloomed. We need the full Flower!',
       },
       {
         id: 'pollen',
         label: 'Pollen',
         cardClass: 'bap-card--decoy',
         iconHtml: '<i class="bi bi-stars" style="color:#eab308;"></i>',
-        wrongHint: 'Pollen is made inside flowers, but it is not one of the main plant parts we are building!',
+        wrongHint: 'Pollen is yellow dust inside flowers, not a main plant part!',
       },
     ],
   },
@@ -160,8 +168,8 @@ const ROUNDS = [
         dzTop: '78%',
         dzLeft: '50%',
         svgId: 'svg-tree-roots',
-        hint: 'We spread deep and wide underground to anchor this heavy giant against fierce storms and drink gallons of water. What are we?',
-        funFact: 'Mighty tree roots spread deep and wide to anchor the heavy tree and drink gallons of water! 💧',
+        hint: 'Deep underground to anchor the giant tree and drink water.',
+        funFact: 'Roots anchor the giant tree and drink lots of water! 💧',
       },
       {
         id: 'trunk',
@@ -171,8 +179,8 @@ const ROUNDS = [
         dzTop: '60%',
         dzLeft: '50%',
         svgId: 'svg-tree-trunk',
-        hint: 'I am wrapped in tough protective woody bark, holding up the massive weight of the whole tree. What am I?',
-        funFact: 'The tree trunk is covered in tough bark that protects the tree and contains tubes carrying water upward! 🛡️',
+        hint: 'A thick, woody pillar that holds up the whole tree.',
+        funFact: 'The woody trunk stands strong and carries water up! 🛡️',
       },
       {
         id: 'branches',
@@ -182,8 +190,8 @@ const ROUNDS = [
         dzTop: '44%',
         dzLeft: '50%',
         svgId: 'svg-tree-branches',
-        hint: 'We reach out like long wooden arms across the sky to hold all the leaves high into the sun. What are we?',
-        funFact: 'Branches spread out wide in every direction so the leaves can reach the most sunlight! 🌲',
+        hint: 'Wooden arms spreading wide to hold leaves up to the sun.',
+        funFact: 'Branches spread out so leaves get plenty of sunshine! 🌲',
       },
       {
         id: 'tree_leaves',
@@ -193,8 +201,8 @@ const ROUNDS = [
         dzTop: '26%',
         dzLeft: '50%',
         svgId: 'svg-tree-leaves',
-        hint: 'We form a giant green dome in the sky, absorbing sunlight to cook food for the whole tree. What are we?',
-        funFact: 'Thousands of leaves in the tree crown act like tiny solar factories making sugar from sunlight! ☀️',
+        hint: 'A green crown in the sky making food from sunlight.',
+        funFact: 'Green leaves make food for the whole tree! ☀️',
       },
       {
         id: 'blossoms',
@@ -204,8 +212,8 @@ const ROUNDS = [
         dzTop: '20%',
         dzLeft: '50%',
         svgId: 'svg-tree-blossoms',
-        hint: 'In springtime, we burst open with sweet fragrance so pollinating bees can visit. What are we?',
-        funFact: 'Sweet apple blossoms attract bees that pollinate the tree so it can grow fruit! 🐝🌸',
+        hint: 'Sweet pink flowers that attract bees in spring.',
+        funFact: 'Blossoms bring bees to pollinate the tree! 🌸🐝',
       },
       {
         id: 'apples',
@@ -215,8 +223,8 @@ const ROUNDS = [
         dzTop: '32%',
         dzLeft: '50%',
         svgId: 'svg-tree-apples',
-        hint: 'We hang heavy from the branches, full of sweet flesh protecting seeds to grow future trees. What are we?',
-        funFact: 'Apples protect the seeds inside! When an apple falls or is eaten, its seeds can sprout into a new tree! 🍎🌱',
+        hint: 'Sweet fruit hanging on branches, protecting the seeds.',
+        funFact: 'Apples protect the seeds for new trees! 🍎🌱',
       },
     ],
     decoys: [
@@ -225,35 +233,35 @@ const ROUNDS = [
         label: 'Mushroom',
         cardClass: 'bap-card--decoy',
         iconHtml: '<i class="bi bi-umbrella-fill" style="color:#dc2626;"></i>',
-        wrongHint: 'Mushrooms often grow near trees, but fungi are not plant parts! Look for a part of the tree.',
+        wrongHint: 'Mushrooms are fungi, not a part of this tree!',
       },
       {
         id: 'nest',
         label: 'Bird Nest',
         cardClass: 'bap-card--decoy',
         iconHtml: '<i class="bi bi-egg-fill" style="color:#d97706;"></i>',
-        wrongHint: 'Birds build nests in tree branches, but a nest is an animal home, not a part of the tree!',
+        wrongHint: 'A nest is an animal home, not a plant part!',
       },
       {
         id: 'green_stem',
         label: 'Green Stem',
         cardClass: 'bap-card--decoy',
         iconHtml: '<i class="bi bi-arrow-up" style="color:#16a34a;"></i>',
-        wrongHint: 'Small garden flowers have soft green stems, but a tall heavy tree needs a thick Woody Trunk!',
+        wrongHint: 'Trees need a thick woody trunk, not a soft stem!',
       },
       {
         id: 'vine',
         label: 'Climbing Vine',
         cardClass: 'bap-card--decoy',
         iconHtml: '<i class="bi bi-infinity" style="color:#15803d;"></i>',
-        wrongHint: 'Vines sometimes climb on tree bark, but a vine is a completely separate plant!',
+        wrongHint: 'Vines are separate climbing plants, not part of the tree!',
       },
       {
         id: 'pinecone',
         label: 'Pinecone',
         cardClass: 'bap-card--decoy',
         iconHtml: '<i class="bi bi-triangle-fill" style="color:#78350f;"></i>',
-        wrongHint: 'Pinecones come from evergreen pine trees, but an apple tree produces fragrant blossoms and apples!',
+        wrongHint: 'Pinecones are from pine trees, but apple trees grow blossoms and fruit!',
       },
     ],
   },
@@ -398,7 +406,6 @@ function tryPlace(cardId) {
     revealPlantPart(stage.svgId);
     playSuccess();
     showFeedback(true, `<strong>+${pts} pts!</strong> ${stage.funFact}`);
-    speakText(`Correct! ${stage.funFact}`);
 
     // Flash drop zone green
     const dz = $('bap-dropzone');
@@ -443,7 +450,6 @@ function tryPlace(cardId) {
 
     showFeedback(false, wrongMsg);
     playError();
-    speakText(`Not quite! ${wrongMsg}`);
 
     // Shake drop zone
     const dz = $('bap-dropzone');
@@ -468,7 +474,6 @@ function showRoundIntermission() {
   const nextRound = ROUNDS[state.currentRoundIdx + 1];
 
   playSuccess();
-  speakText(`Round 1 complete! You grew a Garden Flower! Get ready for Round 2: Mighty Apple Tree.`);
 
   const overlay = document.createElement('div');
   overlay.className = 'bap-intermission-overlay';
@@ -602,8 +607,6 @@ function showCompletion(data) {
 
   const main = $('bap-main');
   if (!main) return;
-
-  speakText(`Master botanist! You assembled both the Garden Plant and the Apple Tree and scored ${state.score} points!`);
 
   main.innerHTML = `
     <div class="bap-completion">
@@ -1090,14 +1093,6 @@ function renderCurrentRound() {
       if (state.selectedCardId) tryPlace(state.selectedCardId);
     });
   }
-
-  // TTS button in header
-  $('bap-tts-btn')?.addEventListener('click', () => {
-    const r = ROUNDS[state.currentRoundIdx];
-    if (state.currentStageIdx < r.stages.length) {
-      speakText(r.stages[state.currentStageIdx].hint);
-    }
-  });
 
   updateHUD();
 }

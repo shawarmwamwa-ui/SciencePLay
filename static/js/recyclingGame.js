@@ -244,17 +244,48 @@ export function initRecyclingGame() {
     updateHUD();
   }
 
+  // Web Audio synthesizer for instant sound effects
+  let audioCtx = null;
+  function playSound(type) {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'correct') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.12);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(140, now + 0.22);
+        gain.gain.setValueAtTime(0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.start(now);
+        osc.stop(now + 0.28);
+      }
+    } catch (_) {}
+  }
+
   function resetCardPosition() {
     if (!swipeCard) return;
-    swipeCard.style.transition = "transform 0.25s ease-out, opacity 0.25s";
-    swipeCard.style.transform = "translate(0px, 0px) rotate(0deg)";
+    swipeCard.style.transition = "transform 0.22s ease-out, opacity 0.22s";
+    swipeCard.style.transform = "translate3d(0px, 0px, 0px) rotate(0deg)";
     swipeCard.style.opacity = "1";
 
     if (stampCompost) stampCompost.style.opacity = "0";
     if (stampRecycle) stampRecycle.style.opacity = "0";
 
-    btnCompost?.classList.remove("station-hover");
-    btnRecycle?.classList.remove("station-hover");
+    btnCompost?.classList.remove("station-hover", "bin-open");
+    btnRecycle?.classList.remove("station-hover", "bin-open");
   }
 
   function updateHUD() {
@@ -268,33 +299,42 @@ export function initRecyclingGame() {
     if (isAnimating || currentIndex >= deck.length) return;
     isAnimating = true;
 
+    // Open target bin lid
+    if (direction === "compost") {
+      btnCompost?.classList.add("bin-open");
+      setTimeout(() => btnCompost?.classList.remove("bin-open"), 450);
+    } else {
+      btnRecycle?.classList.add("bin-open");
+      setTimeout(() => btnRecycle?.classList.remove("bin-open"), 450);
+    }
+
     btnCompost?.classList.remove("station-hover");
     btnRecycle?.classList.remove("station-hover");
 
     const currentItem = deck[currentIndex];
     const isCorrect = currentItem.type === direction;
 
-    // Fly off screen
-    const flyX = direction === "compost" ? -500 : 500;
-    const flyRotate = direction === "compost" ? -25 : 25;
+    // Fly off screen with GPU-accelerated translate3d
+    const flyX = direction === "compost" ? -460 : 460;
+    const flyRotate = direction === "compost" ? -22 : 22;
 
     if (swipeCard) {
-      swipeCard.style.transition = "transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s";
-      swipeCard.style.transform = `translate(${flyX}px, 40px) rotate(${flyRotate}deg)`;
+      swipeCard.style.transition = "transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.28s";
+      swipeCard.style.transform = `translate3d(${flyX}px, 30px, 0) rotate(${flyRotate}deg)`;
       swipeCard.style.opacity = "0";
     }
 
-    // Process outcome
+    // Process outcome with audio
     if (isCorrect) {
+      playSound('correct');
       streak++;
       if (streak > bestStreak) bestStreak = streak;
       correctCount++;
-      // Score calculation: 7.5 base points per correct item (12 * 7.5 = 90 pts)
-      // Streak bonuses: streak >= 3 (+3 pts), streak >= 6 (+3 pts), streak >= 10 (+4 pts) -> Total = 100 pts max!
       const streakBonus = streak >= 10 ? 10 : streak >= 6 ? 6 : streak >= 3 ? 3 : 0;
       score = Math.min(100, Math.round(correctCount * 7.5 + streakBonus));
       showFeedback(true, currentItem, direction);
     } else {
+      playSound('wrong');
       streak = 0;
       showFeedback(false, currentItem, direction);
     }
@@ -311,7 +351,7 @@ export function initRecyclingGame() {
       currentIndex++;
       if (swipeCard) {
         swipeCard.style.transition = "none";
-        swipeCard.style.transform = "translate(0px, 0px) scale(0.9)";
+        swipeCard.style.transform = "translate3d(0px, 0px, 0px) scale(0.92)";
         swipeCard.style.opacity = "0";
       }
 
@@ -319,12 +359,12 @@ export function initRecyclingGame() {
         loadCard(currentIndex);
         if (swipeCard) {
           swipeCard.style.transition = "transform 0.2s ease-out, opacity 0.2s";
-          swipeCard.style.transform = "translate(0px, 0px) scale(1)";
+          swipeCard.style.transform = "translate3d(0px, 0px, 0px) scale(1)";
           swipeCard.style.opacity = "1";
         }
         isAnimating = false;
-      }, 60);
-    }, 320);
+      }, 50);
+    }, 300);
   }
 
   function showFeedback(isCorrect, item, chosenDirection) {
@@ -336,27 +376,27 @@ export function initRecyclingGame() {
       feedbackIcon.className = "bi bi-check-circle-fill me-1";
 
       if (item.id === "box") {
-        feedbackText.textContent = "Correct! Clean boxes go to Recycling to save trees, but can be shredded for compost if soiled!";
+        feedbackText.textContent = "Correct! Clean boxes go to Recycling to save trees!";
       } else {
-        feedbackText.textContent = `Spot on! ${item.name} correctly sorted into ${chosenDirection === "compost" ? "Compost" : "Recyclable"}!`;
+        feedbackText.textContent = `Spot on! ${item.name} belongs in ${chosenDirection === "compost" ? "Compost" : "Recyclable"}!`;
       }
     } else {
       feedbackBanner.classList.add("feedback--wrong");
       feedbackIcon.className = "bi bi-exclamation-circle-fill me-1";
 
       if (item.id === "box") {
-        feedbackText.textContent = "Cardboard boxes are recyclable to save paper fibers! (They can also be composted if soiled or torn into scraps).";
+        feedbackText.textContent = "Cardboard boxes are recyclable to save paper fibers!";
       } else if (item.type === "compost") {
-        feedbackText.textContent = `Oops! ${item.name} is organic waste and belongs in Compost. Food waste contaminates recyclables!`;
+        feedbackText.textContent = `Oops! ${item.name} belongs in Compost. Wet food ruins dry paper!`;
       } else {
-        feedbackText.textContent = `Oops! ${item.name} is clean scrap and belongs in Recyclable so it can be remanufactured!`;
+        feedbackText.textContent = `Oops! ${item.name} belongs in Recyclable to be remade into new items!`;
       }
     }
 
     feedbackBanner.style.display = "block";
   }
 
-  // Pointer & Drag Events
+  // Pointer & Drag Events with GPU transforms
   if (swipeCard) {
     swipeCard.addEventListener("pointerdown", (e) => {
       if (isAnimating) return;
@@ -375,26 +415,26 @@ export function initRecyclingGame() {
       currentY = e.clientY - startY;
 
       const rotateDeg = currentX * 0.08;
-      swipeCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rotateDeg}deg)`;
+      swipeCard.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) rotate(${rotateDeg}deg)`;
 
-      // Update stamp opacity & station hover highlights
-      if (currentX < -30) {
-        const opacity = Math.min(1, Math.abs(currentX) / 120);
+      // Animate bin lids opening as card approaches
+      if (currentX < -25) {
+        const opacity = Math.min(1, Math.abs(currentX) / 100);
         if (stampCompost) stampCompost.style.opacity = opacity.toString();
         if (stampRecycle) stampRecycle.style.opacity = "0";
-        btnCompost?.classList.add("station-hover");
-        btnRecycle?.classList.remove("station-hover");
-      } else if (currentX > 30) {
-        const opacity = Math.min(1, currentX / 120);
+        btnCompost?.classList.add("bin-open");
+        btnRecycle?.classList.remove("bin-open");
+      } else if (currentX > 25) {
+        const opacity = Math.min(1, currentX / 100);
         if (stampRecycle) stampRecycle.style.opacity = opacity.toString();
         if (stampCompost) stampCompost.style.opacity = "0";
-        btnRecycle?.classList.add("station-hover");
-        btnCompost?.classList.remove("station-hover");
+        btnRecycle?.classList.add("bin-open");
+        btnCompost?.classList.remove("bin-open");
       } else {
         if (stampCompost) stampCompost.style.opacity = "0";
         if (stampRecycle) stampRecycle.style.opacity = "0";
-        btnCompost?.classList.remove("station-hover");
-        btnRecycle?.classList.remove("station-hover");
+        btnCompost?.classList.remove("bin-open");
+        btnRecycle?.classList.remove("bin-open");
       }
     });
 
@@ -405,13 +445,13 @@ export function initRecyclingGame() {
         swipeCard.releasePointerCapture(e.pointerId);
       } catch (_) {}
 
-      btnCompost?.classList.remove("station-hover");
-      btnRecycle?.classList.remove("station-hover");
+      btnCompost?.classList.remove("bin-open");
+      btnRecycle?.classList.remove("bin-open");
 
       // Commit threshold
-      if (currentX < -75) {
+      if (currentX < -65) {
         triggerSwipe("compost");
-      } else if (currentX > 75) {
+      } else if (currentX > 65) {
         triggerSwipe("recycle");
       } else {
         resetCardPosition();
