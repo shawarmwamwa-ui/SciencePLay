@@ -154,7 +154,7 @@
                       {% set act_engine = assignment.activity.engine if assignment.activity else '' %}
                       {% set target_url = url_for('student.claw_machine') if ('Claw Machine' in act_type or act_engine == 'claw_machine')
                              else url_for('student.find_the_part_game') if ('Find the Part' in act_type or act_engine == 'find_the_part')
-                             else url_for('student.build_a_plant_game') if ('Streak Race' in act_type or act_engine == 'streak_race' or 'Build a Plant' in act_type or act_engine == 'build_a_plant')
+                             else url_for('student.build_a_plant_game') if ('Build a Plant' in act_type or act_engine == 'build_a_plant')
                              else url_for('student.activities') %}
                       {% if is_unlocked %}
                         <a href="{{ target_url }}" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold text-dark shadow-sm" style="text-decoration:none;">

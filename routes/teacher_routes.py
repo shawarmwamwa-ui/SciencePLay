@@ -48,9 +48,9 @@ GAME_TYPE_PRESETS = [
         'badge_class': 'preset-hotspot'
     },
     {
-        'value': 'Plant Parts — Streak Race',
-        'label': 'Streak Race',
-        'description': 'Answer plant part questions in a race to the finish line.',
+        'value': 'Plant Parts — Build a Plant',
+        'label': 'Build a Plant',
+        'description': 'Assemble roots, stems, leaves, and flowers to grow healthy plants.',
         'points': 20,
         'badge_class': 'preset-trait'
     },
@@ -744,11 +744,11 @@ def lessons():
     lesson_assignments = LessonAssignment.query.order_by(LessonAssignment.created_at.desc()).all()
     activity_assignments = ActivityAssignment.query.order_by(ActivityAssignment.created_at.desc()).all()
 
-    # Map each lesson to its primary paired game activity (e.g. Claw Machine, Streak Race)
+    # Map each lesson to its primary paired game activity (e.g. Claw Machine, Build a Plant)
     lesson_activity_map = {}
     for lesson in lessons:
         paired_act = Activity.query.filter_by(lesson_id=lesson.id).filter(
-            Activity.engine.in_(['claw_machine', 'find_the_part', 'build_a_plant', 'streak_race', 'metal_logic', 'recycle_sorter']),
+            Activity.engine.in_(['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']),
             ~Activity.type.ilike('%Quick Check%'),
             ~Activity.type.ilike('%Slide Questions%')
         ).first()
@@ -853,14 +853,14 @@ def assign_lesson():
             try:
                 candidate_id = int(paired_activity_id)
                 candidate_act = Activity.query.get(candidate_id)
-                if candidate_act and candidate_act.engine in ['claw_machine', 'find_the_part', 'build_a_plant', 'streak_race', 'metal_logic', 'recycle_sorter']:
+                if candidate_act and candidate_act.engine in ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']:
                     act_id = candidate_id
             except (ValueError, TypeError):
                 act_id = None
 
         if not act_id:
             paired_act = Activity.query.filter_by(lesson_id=lesson_id).filter(
-                Activity.engine.in_(['claw_machine', 'find_the_part', 'build_a_plant', 'streak_race', 'metal_logic', 'recycle_sorter']),
+                Activity.engine.in_(['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']),
                 ~Activity.type.ilike('%Quick Check%'),
                 ~Activity.type.ilike('%Slide Questions%')
             ).first()
@@ -1319,7 +1319,7 @@ def analytics():
 
     claw_leaderboard_rows = build_teacher_game_lb('Claw Machine')
     animal_leaderboard_rows = build_teacher_game_lb('Find the Part')
-    plant_leaderboard_rows = build_teacher_game_lb('Streak Race')
+    plant_leaderboard_rows = build_teacher_game_lb('Build a Plant')
 
     analytics_stats = {
         'total_assignments': total_assignments,

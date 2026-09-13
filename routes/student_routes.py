@@ -180,7 +180,7 @@ def has_student_completed_lesson(user_id, lesson_id):
     return False
 
 
-PLAYABLE_GAME_ENGINES = {'claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter', 'streak_race'}
+PLAYABLE_GAME_ENGINES = {'claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter'}
 
 
 def check_and_award_badges(student_id):
@@ -207,10 +207,10 @@ def check_and_award_badges(student_id):
 
     completed_game_ids = set()
     for pl in game_progress_logs:
-        if pl.score is not None and pl.score > 0:
+        if pl.score is not None and pl.score >= 50:
             completed_game_ids.add(pl.activity_id)
     for att in game_attempts:
-        if att.result == 'completed' or (att.score is not None and att.score > 0):
+        if att.score is not None and att.score >= 50:
             completed_game_ids.add(att.activity_id)
 
     # 2. Dedicated Lesson Achievements (Every single lesson has a dedicated badge)
@@ -373,7 +373,7 @@ def dashboard():
     ).filter(
         ActivityAssignment.student_id == user_id,
         ActivityAssignment.status == 'assigned',
-        Activity.engine.in_(['claw_machine', 'find_the_part', 'build_a_plant', 'streak_race', 'metal_logic', 'recycle_sorter'])
+        Activity.engine.in_(['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter'])
     ).all()
     activities = [activity for _, activity in activity_assignment_rows]
     activity_due_dates = {activity.id: assignment.due_date for assignment, activity in activity_assignment_rows}
@@ -521,7 +521,7 @@ def dashboard():
         act_engine = activity.engine or ''
         if 'find_the_part' in act_engine or 'Find the Part' in act_type:
             act_url = url_for('student.find_the_part_game')
-        elif 'build_a_plant' in act_engine or 'Build a Plant' in act_type or 'streak_race' in act_engine:
+        elif 'build_a_plant' in act_engine or 'Build a Plant' in act_type:
             act_url = url_for('student.build_a_plant_game')
         elif 'metal_logic' in act_engine or 'Metal' in act_type:
             act_url = url_for('student.materials_game')
@@ -960,7 +960,7 @@ def activities():
     current_user = get_current_user()
     user_id = current_user.id
     claw_machine_activity = get_or_create_claw_machine_activity()
-    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'streak_race', 'metal_logic', 'recycle_sorter']
+    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
     assigned_activity_ids = [a.activity_id for a in ActivityAssignment.query.filter_by(student_id=user_id, status='assigned').all()]
     activities = Activity.query.filter(
         Activity.id.in_(assigned_activity_ids),
@@ -1617,7 +1617,7 @@ def leaderboard():
 
     claw_leaderboard = build_game_leaderboard('Claw Machine')
     animal_leaderboard = build_game_leaderboard('Find the Part')
-    plant_leaderboard = build_game_leaderboard('Streak Race')
+    plant_leaderboard = build_game_leaderboard('Build a Plant')
 
     # --- My Progress: personal retry history per game (private) ---
     def get_my_attempts(activity_type_fragment):
@@ -1652,7 +1652,7 @@ def leaderboard():
 
     my_claw_attempts = get_my_attempts('Claw Machine')
     my_animal_attempts = get_my_attempts('Find the Part')
-    my_plant_attempts = get_my_attempts('Streak Race')
+    my_plant_attempts = get_my_attempts('Build a Plant')
 
     # --- My Lesson Attempts & Revisits ---
     lessons_progress = LessonProgress.query.filter_by(student_id=user_id).all()

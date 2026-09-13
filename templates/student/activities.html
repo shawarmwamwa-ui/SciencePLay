@@ -46,8 +46,6 @@
         {% set activity_url = url_for('student.claw_machine') %}
       {% elif activity.engine == 'find_the_part' %}
         {% set activity_url = url_for('student.find_the_part_game') %}
-      {% elif activity.engine == 'streak_race' %}
-        {% set activity_url = url_for('student.build_a_plant_game') %}
       {% elif activity.engine == 'build_a_plant' %}
         {% set activity_url = url_for('student.build_a_plant_game') %}
       {% elif activity.engine == 'metal_logic' %}
@@ -75,8 +73,6 @@
                 <p class="text-dark fw-bold fs-6 mb-2">Use the claw to grab the correct objects and score big.</p>
               {% elif activity.engine == 'find_the_part' %}
                 <p class="text-dark fw-bold fs-6 mb-2">Tap a label from the word bank and match it to the correct body zone on each animal.</p>
-              {% elif activity.engine == 'streak_race' %}
-                <p class="text-dark fw-bold fs-6 mb-2">Answer plant-parts questions correctly to advance your character to the finish line!</p>
               {% elif activity.engine == 'build_a_plant' %}
                 <p class="text-dark fw-bold fs-6 mb-2">Drag each plant part onto the glowing spot to build a complete flowering plant — watch out for tricky decoys!</p>
               {% elif activity.engine == 'metal_logic' %}
