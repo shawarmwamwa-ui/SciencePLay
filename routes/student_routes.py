@@ -242,17 +242,18 @@ def check_and_award_badges(student_id):
     if completed_lesson_count >= 1:
         award_badge_if_earned(student_id, 'Lesson Master', 'Completed an entire lesson!', '🎓')
     
-    # Speedster - Complete a real arcade game in under 3 minutes
-    fast_game_attempts = [a for a in game_attempts if a.time_spent and 5 < a.time_spent < 180]
+    # Speedster - Complete a real arcade game in under 3 minutes with passing score
+    fast_game_attempts = [a for a in game_attempts if a.time_spent and 5 < a.time_spent < 180 and (a.score or 0) >= 50]
     if fast_game_attempts:
         award_badge_if_earned(student_id, 'Speedster', 'Completed an activity in lightning speed!', '⚡')
     
     # Consistency - Complete 5 real game plays
-    if len(game_attempts) >= 5 or len(completed_game_ids) >= 5:
+    passed_attempts = [a for a in game_attempts if (a.score or 0) >= 50]
+    if len(passed_attempts) >= 5 or len(completed_game_ids) >= 5:
         award_badge_if_earned(student_id, 'Consistency', 'Completed 5 activities!', '🔥')
     
     # Scholar - Complete 10 real game plays
-    if len(game_attempts) >= 10 or len(completed_game_ids) >= 10:
+    if len(passed_attempts) >= 10 or len(completed_game_ids) >= 10:
         award_badge_if_earned(student_id, 'Scholar', 'Completed 10 activities!', '📚')
     
     # Lesson Complete - Complete 3 lessons
