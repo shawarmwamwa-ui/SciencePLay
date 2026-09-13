@@ -369,7 +369,7 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
             <span class="w10-question-tag" style="background:#fef3c7;border-color:#fde68a;color:#92400e;">
               <i class="bi bi-star-fill me-1 text-warning"></i>Question ${slide.assessNumber} of 5
             </span>
-            <span class="w10-question-hint-pill"><i class="bi bi-award-fill me-1"></i>Graded Assessment</span>
+            <span class="w10-question-hint-pill"><i class="bi bi-patch-question-fill me-1"></i>Check Your Understanding</span>
           </div>
           <p class="bpl-prompt">${slide.question}</p>
         </div>

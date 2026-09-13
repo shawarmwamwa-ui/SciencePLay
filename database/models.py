@@ -32,7 +32,6 @@ class Lesson(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
-    prerequisite_lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=True)
 
 class Activity(BaseModel):
     __tablename__ = 'activity'
@@ -43,16 +42,6 @@ class Activity(BaseModel):
     points = db.Column(db.Integer)
     config = db.Column(db.JSON, nullable=True)
     lesson = db.relationship('Lesson', backref='activities')
-
-
-class LessonContent(BaseModel):
-    __tablename__ = 'lesson_content'
-    id = db.Column(db.Integer, primary_key=True)
-    lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=False)
-    version = db.Column(db.Integer, default=1)
-    status = db.Column(db.String(20), default='draft')
-    payload = db.Column(db.Text, nullable=False)
-    lesson = db.relationship('Lesson', backref='content_versions')
 
 
 class ProgressLog(BaseModel):

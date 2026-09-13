@@ -671,12 +671,23 @@ export function initMetalLogicGame() {
 
     // 2. Evaluate all answers
     let allCorrect = true;
+    let mistakeCount = 0;
     const reviewItems = [];
 
     currentLevelData.forEach((d) => {
       const chosenItemId = userAnswers[d.boxNum];
       const isCorrect = (chosenItemId === d.correctMetalId);
-      if (!isCorrect) allCorrect = false;
+      if (!isCorrect) {
+        allCorrect = false;
+        mistakeCount++;
+      }
+
+      // Log each clue individually for teacher analytics & missed questions tracking
+      objectLogs.push({
+        object_id: `${d.metal.name} Clue (Level ${currentLevelIdx + 1})`,
+        was_correct: isCorrect,
+        attempt_number: 1
+      });
 
       const chosenItem = chosenItemId ? ITEMS_BANK[chosenItemId] : null;
       reviewItems.push({
@@ -690,88 +701,78 @@ export function initMetalLogicGame() {
 
     if (allCorrect) {
       playSound('correct');
-      objectLogs.push({
-        object_id: `level_${currentLevelIdx + 1}_clues`,
-        was_correct: true,
-        attempt_number: 1
+    } else {
+      playSound('wrong');
+      score = Math.max(25, score - (mistakeCount * 5));
+      if (hudScoreVal) hudScoreVal.textContent = score;
+    }
+
+    // Show Round Review Modal before moving to next level
+    if (roundReviewList && roundReviewModal) {
+      roundReviewList.innerHTML = "";
+
+      reviewItems.forEach((r) => {
+        const card = document.createElement("div");
+        card.className = `review-item-card ${r.isCorrect ? "correct" : "incorrect"}`;
+        
+        if (r.isCorrect) {
+          card.innerHTML = `
+            <div class="review-item-badge bg-success">✓</div>
+            <div class="review-item-info">
+              <h5 class="review-item-title text-success">Clue #${r.boxNum}: ${r.chosenItem.name} — Correct!</h5>
+              <p class="review-item-clue">"${r.clue}"</p>
+            </div>
+            <div class="review-item-status text-success fw-bold">
+              <i class="bi bi-check-circle-fill me-1"></i> Correct
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div class="review-item-badge bg-danger">✗</div>
+            <div class="review-item-info">
+              <h5 class="review-item-title text-danger">Clue #${r.boxNum}: Placed ${r.chosenItem ? r.chosenItem.name : 'None'}</h5>
+              <p class="review-item-clue">"${r.clue}"</p>
+              <div class="small fw-bold text-dark mt-1">
+                <i class="bi bi-lightbulb-fill text-warning me-1"></i>Fact: ${r.correctItem.name} — ${r.correctItem.fact}
+              </div>
+            </div>
+            <div class="review-item-status text-danger fw-bold">
+              <i class="bi bi-x-circle-fill me-1"></i> Missed
+            </div>
+          `;
+        }
+        roundReviewList.appendChild(card);
       });
 
-      if (currentLevelIdx < LEVELS.length - 1) {
-        const levelUpTitle = document.getElementById("levelup-title");
-        const levelUpMsg = document.getElementById("levelup-msg");
-        if (levelUpTitle) levelUpTitle.textContent = `${LEVELS[currentLevelIdx].name} Solved!`;
-        if (levelUpMsg) {
-          levelUpMsg.textContent = `Awesome detective work! You solved all ${currentLevelData.length} clues! Ready for ${LEVELS[currentLevelIdx + 1].name}?`;
+      if (roundReviewSubtitle) {
+        if (allCorrect) {
+          roundReviewSubtitle.innerHTML = `<span class="text-success fw-bold">🎉 Perfect Detective Work!</span> You solved all ${currentLevelData.length} clues correctly!`;
+        } else {
+          roundReviewSubtitle.innerHTML = `You got <strong>${currentLevelData.length - mistakeCount} of ${currentLevelData.length}</strong> clues right. Review the clues below before continuing!`;
         }
-        levelUpModal?.show();
-      } else {
-        handleVictory();
       }
-    } else {
-      // Mistakes found:
-      playSound('wrong');
-      score = Math.max(25, score - 5);
-      if (hudScoreVal) hudScoreVal.textContent = score;
 
-      // Show Round Review Modal with detailed feedback
-      if (roundReviewList && roundReviewModal) {
-        roundReviewList.innerHTML = "";
-        let mistakeCount = 0;
-
-        reviewItems.forEach((r) => {
-          const card = document.createElement("div");
-          card.className = `review-item-card ${r.isCorrect ? "correct" : "incorrect"}`;
-          
-          if (r.isCorrect) {
-            card.innerHTML = `
-              <div class="review-item-badge bg-success">✓</div>
-              <div class="review-item-info">
-                <h5 class="review-item-title text-success">Clue #${r.boxNum}: ${r.chosenItem.name} — Correct!</h5>
-                <p class="review-item-clue">"${r.clue}"</p>
-              </div>
-              <div class="review-item-status text-success fw-bold">
-                <i class="bi bi-check-circle-fill me-1"></i> Kept
-              </div>
-            `;
-          } else {
-            mistakeCount++;
-            card.innerHTML = `
-              <div class="review-item-badge bg-danger">✗</div>
-              <div class="review-item-info">
-                <h5 class="review-item-title text-danger">Clue #${r.boxNum}: Placed ${r.chosenItem ? r.chosenItem.name : 'None'}</h5>
-                <p class="review-item-clue">"${r.clue}"</p>
-                <div class="small fw-bold text-dark mt-1">
-                  <i class="bi bi-lightbulb-fill text-warning me-1"></i>Hint: ${r.correctItem.fact}
-                </div>
-              </div>
-              <div class="review-item-status text-danger fw-bold">
-                <i class="bi bi-arrow-repeat me-1"></i> Try Again
-              </div>
-            `;
-          }
-          roundReviewList.appendChild(card);
-        });
-
-        if (roundReviewSubtitle) {
-          roundReviewSubtitle.textContent = `You got ${currentLevelData.length - mistakeCount} of ${currentLevelData.length} right! Correct items stay locked in place.`;
-        }
-
-        // When user continues, keep the correct answers and clear the wrong ones
-        if (btnReviewContinue) {
+      // Continue button directly advances to the next level (or victory)
+      if (btnReviewContinue) {
+        const isLastLevel = (currentLevelIdx >= LEVELS.length - 1);
+        if (isLastLevel) {
+          btnReviewContinue.innerHTML = `<i class="bi bi-award-fill me-1"></i> See Final Detective Results`;
+          btnReviewContinue.className = "btn btn-success btn-lg fw-black px-4 py-2 border-dark border-3 rounded-pill shadow";
           btnReviewContinue.onclick = () => {
-            reviewItems.forEach((r) => {
-              if (!r.isCorrect) {
-                delete userAnswers[r.boxNum];
-              }
-            });
-            renderMysteryGrid();
-            renderChoiceShelf();
             roundReviewModal.hide();
+            handleVictory();
+          };
+        } else {
+          btnReviewContinue.innerHTML = `<i class="bi bi-arrow-right-circle-fill me-1"></i> Continue to ${LEVELS[currentLevelIdx + 1].name}`;
+          btnReviewContinue.className = "btn btn-warning btn-lg fw-black px-4 py-2 border-dark border-3 rounded-pill shadow";
+          btnReviewContinue.onclick = () => {
+            roundReviewModal.hide();
+            setupLevel(currentLevelIdx + 1);
           };
         }
-
-        roundReviewModal.show();
       }
+
+      roundReviewModal.show();
     }
   }
 

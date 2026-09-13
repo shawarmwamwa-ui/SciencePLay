@@ -391,17 +391,24 @@ function handleHotspotTap(slide, hotspot, button) {
 function renderQuickCheckSlide(slide, container, explanationContainer) {
   const slideState = getCurrentSlideState();
   const promptMarkup = slide.prompt
-    ? `<p class="quick-check-prompt">${slide.prompt}</p>`
+    ? `<div class="quick-check-header-card">
+         <span class="quick-check-badge"><i class="bi bi-lightbulb-fill me-1"></i>Quick Check</span>
+         <p class="quick-check-prompt">${slide.prompt}</p>
+       </div>`
     : '';
   const optionsHtml = slide.options
     .map(option => {
-      const selectedClass = slideState.quickCheckState?.selected === option.id
-        ? slideState.quickCheckState.correct ? 'option-correct' : 'option-incorrect'
+      const isSelected = slideState.quickCheckState?.selected === option.id;
+      const isCorrect = slideState.quickCheckState?.correct;
+      const selectedClass = isSelected
+        ? isCorrect ? 'option-correct' : 'option-incorrect'
         : '';
       return `
       <button class="quick-option ${selectedClass}" data-id="${option.id}">
-        ${(option.icon || option.image) ? `<img src="${option.icon || option.image}" alt="${option.label}" class="quick-option-icon">` : ''}
-        <span>${option.label}</span>
+        <div class="quick-opt-icon-circle">
+          ${(option.icon || option.image) ? `<img src="${option.icon || option.image}" alt="${option.label}" class="quick-option-icon">` : '<i class="bi bi-patch-question-fill"></i>'}
+        </div>
+        <span class="quick-opt-text">${option.label}</span>
       </button>
     `;
     })
@@ -425,11 +432,18 @@ function renderQuickCheckSlide(slide, container, explanationContainer) {
   });
 
   const feedback = container.querySelector('#quick-feedback');
-  feedback.classList.remove('feedback-correct', 'feedback-incorrect');
   if (slideState.quickCheckState) {
     const isCorrect = slideState.quickCheckState.correct;
-    feedback.textContent = getQuickFeedbackMessage(slide, isCorrect);
-    feedback.classList.add(isCorrect ? 'feedback-correct' : 'feedback-incorrect');
+    const msg = getQuickFeedbackMessage(slide, isCorrect);
+    feedback.innerHTML = `
+      <div class="quick-feedback-bubble ${isCorrect ? 'bubble-correct' : 'bubble-incorrect'}">
+        <div class="bubble-icon">${isCorrect ? '🎉' : '💡'}</div>
+        <div class="bubble-text">
+          <strong>${isCorrect ? 'Awesome Job, Scientist!' : 'Coach Tip:'}</strong>
+          <p>${msg}</p>
+        </div>
+      </div>
+    `;
   }
 }
 
@@ -455,9 +469,16 @@ function handleQuickCheckTap(slide, option, button) {
   };
 
   const feedback = document.querySelector('#quick-feedback');
-  feedback.textContent = getQuickFeedbackMessage(slide, isCorrect);
-  feedback.classList.add(isCorrect ? 'feedback-correct' : 'feedback-incorrect');
-  feedback.classList.remove(isCorrect ? 'feedback-incorrect' : 'feedback-correct');
+  const msg = getQuickFeedbackMessage(slide, isCorrect);
+  feedback.innerHTML = `
+    <div class="quick-feedback-bubble ${isCorrect ? 'bubble-correct' : 'bubble-incorrect'}">
+      <div class="bubble-icon">${isCorrect ? '🎉' : '💡'}</div>
+      <div class="bubble-text">
+        <strong>${isCorrect ? 'Awesome Job, Scientist!' : 'Coach Tip:'}</strong>
+        <p>${msg}</p>
+      </div>
+    </div>
+  `;
   button.classList.add(isCorrect ? 'option-correct' : 'option-incorrect');
   playFeedbackSound(isCorrect);
   updateNavigationState();

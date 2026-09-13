@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, session, request, jsonify
-from database.models import db, Lesson, Activity, ProgressLog, LessonProgress, LessonAttemptLog, User, LessonAssignment, ActivityAssignment, AttemptLog, AttemptObjectLog, UserBadge, Badge, LessonContent
+from database.models import db, Lesson, Activity, ProgressLog, LessonProgress, LessonAttemptLog, User, LessonAssignment, ActivityAssignment, AttemptLog, AttemptObjectLog, UserBadge, Badge
 from routes.utils import get_current_user, require_role, log_access, csrf
 from types import SimpleNamespace
 from datetime import datetime, time
@@ -147,19 +147,6 @@ def get_or_create_default_lesson():
     db.session.add(lesson)
     db.session.commit()
     return lesson
-
-
-def get_published_lesson_payload(lesson_id):
-    lesson_content = LessonContent.query.filter_by(lesson_id=lesson_id, status='published').order_by(LessonContent.version.desc()).first()
-    if not lesson_content:
-        return None
-
-    try:
-        payload = json.loads(lesson_content.payload)
-    except (TypeError, json.JSONDecodeError):
-        return None
-
-    return payload if isinstance(payload, dict) else None
 
 
 def get_or_create_claw_machine_activity():
@@ -604,10 +591,6 @@ def lessons():
         lesson_activities = [activity for activity in activities if activity.lesson_id == lesson.id]
         
         is_locked = False
-        if lesson.prerequisite_lesson_id:
-            prereq_log = lesson_progress_by_lesson.get(lesson.prerequisite_lesson_id)
-            if not prereq_log or (not prereq_log.completed and (prereq_log.revisit_count or 0) == 0):
-                is_locked = True
                 
         if lesson.id in lesson_progress_by_lesson:
             log = lesson_progress_by_lesson[lesson.id]
@@ -814,9 +797,12 @@ def lesson_question_attempt():
             lesson_id=lesson.id,
             type=f'{lesson.title} Slide Questions',
             engine='lesson',
-            points=10
+            points=0
         )
         db.session.add(activity)
+        db.session.commit()
+    elif activity.points != 0:
+        activity.points = 0
         db.session.commit()
 
     current_lesson_attempt = LessonAttemptLog.query.filter_by(
@@ -918,13 +904,12 @@ def activity_complete(activity_id, score):
 def living_non_living_lesson():
     user_id = session.get('user_id')
     lesson = get_or_create_default_lesson()
-    published_payload = get_published_lesson_payload(lesson.id)
     if user_id:
         attempt, log = start_or_resume_lesson_attempt(user_id, lesson.id)
         initial_slide = log.current_slide if log else 0
     else:
         initial_slide = 0
-    return render_template('student/living_non_living_lesson.html', lesson=lesson, published_payload=published_payload, initial_slide=initial_slide)
+    return render_template('student/living_non_living_lesson.html', lesson=lesson, initial_slide=initial_slide)
 
 @student_bp.route('/lesson/characters-of-living-things')
 @student_bp.route('/lesson/parts-of-an-animal')
@@ -960,14 +945,10 @@ def characters_game():
 def get_or_create_animal_body_parts_lesson():
     lesson = Lesson.query.filter_by(title='Animal Body Parts').first()
     if lesson:
-        if lesson.prerequisite_lesson_id is not None:
-            lesson.prerequisite_lesson_id = None
-            db.session.commit()
         return lesson
     lesson = Lesson(
         title='Animal Body Parts',
         description='Discover how the head, legs, and wings help animals move and find food.',
-        prerequisite_lesson_id=None,
     )
     db.session.add(lesson)
     db.session.commit()
@@ -1032,14 +1013,10 @@ def find_the_part_game():
 def get_or_create_plant_parts_lesson():
     lesson = Lesson.query.filter_by(title='Plant Parts').first()
     if lesson:
-        if lesson.prerequisite_lesson_id is not None:
-            lesson.prerequisite_lesson_id = None
-            db.session.commit()
         return lesson
     lesson = Lesson(
         title='Plant Parts',
         description='Explore how roots, stem, and leaves work together to keep a plant alive.',
-        prerequisite_lesson_id=None,
     )
     db.session.add(lesson)
     db.session.commit()
@@ -1119,14 +1096,10 @@ def build_a_plant_game():
 def get_or_create_properties_of_metals_lesson():
     lesson = Lesson.query.filter_by(title='Properties of Metals').first()
     if lesson:
-        if lesson.prerequisite_lesson_id is not None:
-            lesson.prerequisite_lesson_id = None
-            db.session.commit()
         return lesson
     lesson = Lesson(
         title='Properties of Metals',
         description='Explore the properties of Iron, Copper, Gold, and Silver through interactive experiments.',
-        prerequisite_lesson_id=None,
     )
     db.session.add(lesson)
     db.session.commit()
@@ -1152,14 +1125,10 @@ def properties_of_metals_lesson():
 def get_or_create_recycling_lesson():
     lesson = Lesson.query.filter_by(title='Recycling').first()
     if lesson:
-        if lesson.prerequisite_lesson_id is not None:
-            lesson.prerequisite_lesson_id = None
-            db.session.commit()
         return lesson
     lesson = Lesson(
         title='Recycling',
         description='Discover the recycling process and practice sorting recyclable materials from food waste.',
-        prerequisite_lesson_id=None,
     )
     db.session.add(lesson)
     db.session.commit()

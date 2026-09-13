@@ -141,22 +141,28 @@ function renderQuickCheck(slide, state) {
     }
     return `
       <button class="${cls}" data-id="${opt.id}" ${ss.correct ? 'disabled' : ''}>
-        <i class="bi ${opt.icon || 'bi-circle'} bpl-opt-icon"></i>
+        <div class="bpl-opt-icon-circle"><i class="bi ${opt.icon || 'bi-patch-question-fill'}"></i></div>
         <span>${opt.label}</span>
       </button>`;
   }).join('');
 
   const feedbackHtml = ss.selected
     ? `<div class="bpl-feedback ${ss.correct ? 'bpl-feedback-ok' : 'bpl-feedback-err'}">
-         <i class="bi ${ss.correct ? 'bi-check-circle-fill' : 'bi-x-circle-fill'} me-2"></i>
-         ${ss.correct ? slide.successMessage : slide.retryMessage}
+         <div class="bpl-feedback-icon">${ss.correct ? '🎉' : '💡'}</div>
+         <div class="bpl-feedback-text">
+           <strong>${ss.correct ? 'Spot On, Scientist!' : 'Coach Tip:'}</strong>
+           <p>${ss.correct ? slide.successMessage : slide.retryMessage}</p>
+         </div>
        </div>`
     : '';
 
   return `
     <div class="bpl-quickcheck-slide">
       ${media}
-      <p class="bpl-prompt">${slide.prompt}</p>
+      <div class="bpl-question-card">
+        <span class="bpl-question-tag"><i class="bi bi-lightbulb-fill me-1"></i>Quick Check</span>
+        <p class="bpl-prompt">${slide.prompt}</p>
+      </div>
       <div class="bpl-options">${optionsHtml}</div>
       ${feedbackHtml}
     </div>`;
@@ -178,17 +184,23 @@ function renderAssess(slide, state) {
 
   const feedbackHtml = as.answered
     ? `<div class="bpl-feedback ${as.selected === slide.correctId ? 'bpl-feedback-ok' : 'bpl-feedback-err'}">
-         <i class="bi ${as.selected === slide.correctId ? 'bi-check-circle-fill' : 'bi-x-circle-fill'} me-2"></i>
-         ${slide.explanation}
+         <div class="bpl-feedback-icon">${as.selected === slide.correctId ? '🌟' : '💡'}</div>
+         <div class="bpl-feedback-text">
+           <strong>${as.selected === slide.correctId ? 'Great Job!' : 'Key Takeaway:'}</strong>
+           <p>${slide.explanation}</p>
+         </div>
        </div>`
     : '';
 
   return `
     <div class="bpl-assess-slide">
-      <div class="bpl-assess-header">
-        <span class="bpl-assess-num">Question ${slide.assessNumber} of 5</span>
+      <div class="bpl-question-card">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="bpl-assess-num"><i class="bi bi-star-fill text-warning me-1"></i>Question ${slide.assessNumber} of 5</span>
+          <span class="bpl-formative-badge"><i class="bi bi-patch-question-fill me-1"></i>Check Your Understanding</span>
+        </div>
+        <p class="bpl-prompt">${slide.question}</p>
       </div>
-      <p class="bpl-prompt">${slide.question}</p>
       <div class="bpl-options">${optionsHtml}</div>
       ${feedbackHtml}
     </div>`;

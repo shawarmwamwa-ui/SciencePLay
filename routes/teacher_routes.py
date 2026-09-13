@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
-from database.models import db, Lesson, Activity, User, ProgressLog, LessonAssignment, ActivityAssignment, AttemptLog, UserBadge, LessonProgress, LessonAttemptLog, Badge, LessonContent, AttemptObjectLog
+from database.models import db, Lesson, Activity, User, ProgressLog, LessonAssignment, ActivityAssignment, AttemptLog, UserBadge, LessonProgress, LessonAttemptLog, Badge, AttemptObjectLog
 from routes.utils import get_current_user, require_role, log_access, csrf
 
 teacher_bp = Blueprint('teacher', __name__, url_prefix='/teacher')
@@ -310,18 +310,6 @@ def load_teacher_object_library():
 
 
 
-def save_lesson_content(lesson_id, payload, status='draft'):
-    existing = LessonContent.query.filter_by(lesson_id=lesson_id, status=status).order_by(LessonContent.version.desc()).first()
-    version = 1 if not existing else (existing.version + 1)
-    content = LessonContent(
-        lesson_id=lesson_id,
-        version=version,
-        status=status,
-        payload=json.dumps(payload)
-    )
-    db.session.add(content)
-    db.session.commit()
-    return content
 
 
 def get_student_retry_progression():
