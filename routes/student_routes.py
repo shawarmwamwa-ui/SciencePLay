@@ -93,47 +93,163 @@ def compute_rating(score, correct_first_try):
     return 'Needs Improvement'
 
 
+DEDICATED_LESSON_BADGES = {
+    'living': {
+        'name': 'Living Explorer',
+        'icon': '🌱',
+        'description': 'Mastered the Living vs Non-Living lesson!'
+    },
+    'animal': {
+        'name': 'Animal Scout',
+        'icon': '🦁',
+        'description': 'Mastered the Animal Body Parts lesson!'
+    },
+    'plant': {
+        'name': 'Junior Botanist',
+        'icon': '🌻',
+        'description': 'Mastered the Plant Parts lesson!'
+    },
+    'metal': {
+        'name': 'Metal Specialist',
+        'icon': '🧲',
+        'description': 'Mastered the Properties of Metals lesson!'
+    },
+    'recycl': {
+        'name': 'Eco Champion',
+        'icon': '🌍',
+        'description': 'Mastered the Recycling & Conservation lesson!'
+    },
+}
+
+DEDICATED_ACTIVITY_BADGES = {
+    'claw': {
+        'name': 'Claw Master',
+        'icon': '🕹️',
+        'description': 'Conquered the Living vs Non-Living Claw Machine!'
+    },
+    'find_the_part': {
+        'name': 'Eagle Eye',
+        'icon': '🦅',
+        'description': 'Identified every animal feature in Find the Part!'
+    },
+    'build_a_plant': {
+        'name': 'Master Gardener',
+        'icon': '🌿',
+        'description': 'Constructed roots, stems, and petals in Build a Plant!'
+    },
+    'metal_logic': {
+        'name': 'Metal Detective',
+        'icon': '🔍',
+        'description': 'Cracked mystery element puzzles in Metal Clue Detective!'
+    },
+    'recycle_sorter': {
+        'name': 'Sorting Hero',
+        'icon': '♻️',
+        'description': 'Sorted scrap with lightning reflexes in EcoSwipe Sorter!'
+    },
+}
+
+
+def get_lesson_badge_meta(lesson):
+    title_lower = (lesson.title or '').lower()
+    for key, meta in DEDICATED_LESSON_BADGES.items():
+        if key in title_lower:
+            return meta['name'], meta['description'], meta['icon']
+    return f"{lesson.title} Graduate", f"Mastered the {lesson.title} lesson!", "🎓"
+
+
+def get_activity_badge_meta(activity):
+    engine_lower = (activity.engine or '').lower()
+    type_lower = (activity.type or '').lower()
+    for key, meta in DEDICATED_ACTIVITY_BADGES.items():
+        if key in engine_lower or key in type_lower:
+            return meta['name'], meta['description'], meta['icon']
+    return f"{activity.type} Champion", f"Conquered the {activity.type} activity!", "🎮"
+
+
+def has_student_completed_lesson(user_id, lesson_id):
+    """Check if the student has ever completed this lesson."""
+    if not user_id or not lesson_id:
+        return False
+    lp = LessonProgress.query.filter_by(student_id=user_id, lesson_id=lesson_id).first()
+    if lp and (lp.completed_at is not None or lp.completed or (lp.revisit_count or 0) > 0 or (lp.progress_percent or 0) >= 100):
+        return True
+    attempt = LessonAttemptLog.query.filter_by(student_id=user_id, lesson_id=lesson_id, completed=True).first()
+    if attempt:
+        return True
+    return False
+
+
 def check_and_award_badges(student_id):
     """Check if student has earned any new badges based on their progress"""
     student = User.query.get(student_id)
     if not student:
         return
     
-    # Get student's progress
+    # 1. Get student's progress records
     progress_logs = ProgressLog.query.filter_by(student_id=student_id).all()
-    lesson_progress = LessonProgress.query.filter_by(student_id=student_id).all()
     attempts = AttemptLog.query.filter_by(student_id=student_id).all()
     
+    # 2. Dedicated Lesson Achievements (Every single lesson has a dedicated badge)
+    all_lessons = Lesson.query.all()
+    completed_lesson_count = 0
+    for lesson in all_lessons:
+        if has_student_completed_lesson(student_id, lesson.id):
+            completed_lesson_count += 1
+            badge_name, desc, icon = get_lesson_badge_meta(lesson)
+            award_badge_if_earned(student_id, badge_name, desc, icon)
+
+    # 3. Dedicated Activity Achievements (Every single playable game has a dedicated badge)
+    completed_activity_ids = set()
+    for pl in progress_logs:
+        if pl.activity_id:
+            completed_activity_ids.add(pl.activity_id)
+    for att in attempts:
+        if att.activity_id and (att.result == 'completed' or (att.score is not None and att.score > 0)):
+            completed_activity_ids.add(att.activity_id)
+
+    all_activities = Activity.query.all()
+    for activity in all_activities:
+        if activity.id in completed_activity_ids:
+            engine = (activity.engine or '').lower()
+            if engine not in ['lesson', 'quick_check'] and 'slide question' not in (activity.type or '').lower():
+                badge_name, desc, icon = get_activity_badge_meta(activity)
+                award_badge_if_earned(student_id, badge_name, desc, icon)
+
+    # 4. Milestone Achievements
     # First Success - Complete first activity
-    if len(progress_logs) >= 1:
+    if len(completed_activity_ids) >= 1:
         award_badge_if_earned(student_id, 'First Success', 'Completed your first activity!', '🎯')
     
     # Perfect Score - Get 100 on an activity
-    perfect_scores = [p for p in progress_logs if p.score and p.score >= 100]
+    perfect_scores = [p for p in progress_logs if p.score and p.score >= 100] or [a for a in attempts if a.score and a.score >= 100]
     if perfect_scores:
         award_badge_if_earned(student_id, 'Perfect Score', 'Achieved a perfect score on an activity!', '⭐')
     
-    # Lesson Master - Complete entire lesson
-    completed_lessons = [lp for lp in lesson_progress if lp.completed or (lp.revisit_count or 0) > 0]
-    if completed_lessons:
+    # Lesson Master - Complete at least 1 lesson
+    if completed_lesson_count >= 1:
         award_badge_if_earned(student_id, 'Lesson Master', 'Completed an entire lesson!', '🎓')
     
     # Speedster - Complete activity in under 3 minutes (180 seconds)
-    fast_attempts = [a for a in attempts if a.time_spent and a.time_spent < 180]
+    fast_attempts = [a for a in attempts if a.time_spent and 5 < a.time_spent < 180]
     if fast_attempts:
         award_badge_if_earned(student_id, 'Speedster', 'Completed an activity in lightning speed!', '⚡')
     
     # Consistency - Complete 5 activities
-    if len(progress_logs) >= 5:
+    if len(progress_logs) >= 5 or len(attempts) >= 5:
         award_badge_if_earned(student_id, 'Consistency', 'Completed 5 activities!', '🔥')
     
     # Scholar - Complete 10 activities
-    if len(progress_logs) >= 10:
+    if len(progress_logs) >= 10 or len(attempts) >= 10:
         award_badge_if_earned(student_id, 'Scholar', 'Completed 10 activities!', '📚')
     
     # Lesson Complete - Complete 3 lessons
-    if len(completed_lessons) >= 3:
+    if completed_lesson_count >= 3:
         award_badge_if_earned(student_id, 'Lesson Complete', 'Completed 3 entire lessons!', '🏆')
+
+    # Curriculum Champion - Complete all 5 lessons
+    if completed_lesson_count >= 5:
+        award_badge_if_earned(student_id, 'Curriculum Champion', 'Mastered all 5 science lessons in the curriculum!', '👑')
 
 
 def get_or_create_default_lesson():
@@ -186,20 +302,6 @@ def get_or_create_quick_check_activity():
     db.session.add(activity)
     db.session.commit()
     return activity
-
-
-
-def has_student_completed_lesson(user_id, lesson_id):
-    """Check if the student has ever completed this lesson."""
-    if not user_id or not lesson_id:
-        return False
-    lp = LessonProgress.query.filter_by(student_id=user_id, lesson_id=lesson_id).first()
-    if lp and (lp.completed_at is not None or lp.completed or (lp.revisit_count or 0) > 0):
-        return True
-    attempt = LessonAttemptLog.query.filter_by(student_id=user_id, lesson_id=lesson_id, completed=True).first()
-    if attempt:
-        return True
-    return False
 
 
 def get_attempts_today(student_id, activity_id):
@@ -1437,7 +1539,8 @@ def activity_attempt():
 def badges():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'student_badges')
-    badges = UserBadge.query.filter_by(user_id=current_user.id).all()
+    check_and_award_badges(current_user.id)
+    badges = UserBadge.query.filter_by(user_id=current_user.id).order_by(UserBadge.awarded_at.desc()).all()
     return render_template('student/student_badges.html', current_user=current_user, badges=badges)
 
 

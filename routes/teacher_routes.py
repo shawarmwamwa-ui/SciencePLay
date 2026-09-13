@@ -1545,10 +1545,12 @@ def student_performance(student_id):
         AttemptLog.created_at.desc()
     ).limit(10).all()
     
-    # Badges earned
+    # Badges earned (evaluate any pending newly completed milestones)
+    from routes.student_routes import check_and_award_badges
+    check_and_award_badges(student_id)
     badges = db.session.query(UserBadge, Badge).join(
         Badge, Badge.id == UserBadge.badge_id
-    ).filter(UserBadge.user_id == student_id).all()
+    ).filter(UserBadge.user_id == student_id).order_by(UserBadge.awarded_at.desc()).all()
     
     # Overall stats
     total_score = sum((log.score or 0) for log in progress_logs)

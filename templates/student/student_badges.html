@@ -43,8 +43,12 @@
       {% for user_badge in badges %}
       <div class="col-12 col-sm-6 col-md-4">
         <div class="brutal-card text-center p-4 h-100" style="background: #ffffff;">
-          <div class="display-1 mb-2 text-warning">
-            <i class="bi bi-patch-check-fill"></i>
+          <div class="display-1 mb-2">
+            {% if user_badge.badge.icon and user_badge.badge.icon != '🏅' %}
+              <span class="badge-emoji-sticker" style="font-size: 3.5rem; display: inline-block; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); line-height: 1;">{{ user_badge.badge.icon }}</span>
+            {% else %}
+              <i class="bi bi-patch-check-fill text-warning"></i>
+            {% endif %}
           </div>
           <div class="fw-black text-dark fs-3 mb-2">{{ user_badge.badge.name }}</div>
           <p class="text-dark fw-bold fs-6 mb-3">{{ user_badge.badge.description or 'Achievement unlocked!' }}</p>
