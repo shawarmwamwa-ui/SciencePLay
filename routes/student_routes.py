@@ -180,8 +180,11 @@ def has_student_completed_lesson(user_id, lesson_id):
     return False
 
 
+PLAYABLE_GAME_ENGINES = {'claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter', 'streak_race'}
+
+
 def check_and_award_badges(student_id):
-    """Check if student has earned any new badges based on their progress"""
+    """Check if student has earned any new badges based on their actual lesson and game progress."""
     student = User.query.get(student_id)
     if not student:
         return
@@ -189,7 +192,27 @@ def check_and_award_badges(student_id):
     # 1. Get student's progress records
     progress_logs = ProgressLog.query.filter_by(student_id=student_id).all()
     attempts = AttemptLog.query.filter_by(student_id=student_id).all()
+    all_activities = Activity.query.all()
+    act_map = {a.id: a for a in all_activities}
     
+    # Strictly filter for real playable games — SLIDE QUESTIONS / QUICK CHECKS ARE NEVER GAMES!
+    game_progress_logs = [
+        pl for pl in progress_logs
+        if pl.activity_id in act_map and act_map[pl.activity_id].engine in PLAYABLE_GAME_ENGINES
+    ]
+    game_attempts = [
+        att for att in attempts
+        if att.activity_id in act_map and act_map[att.activity_id].engine in PLAYABLE_GAME_ENGINES
+    ]
+
+    completed_game_ids = set()
+    for pl in game_progress_logs:
+        if pl.score is not None and pl.score > 0:
+            completed_game_ids.add(pl.activity_id)
+    for att in game_attempts:
+        if att.result == 'completed' or (att.score is not None and att.score > 0):
+            completed_game_ids.add(att.activity_id)
+
     # 2. Dedicated Lesson Achievements (Every single lesson has a dedicated badge)
     all_lessons = Lesson.query.all()
     completed_lesson_count = 0
@@ -199,48 +222,37 @@ def check_and_award_badges(student_id):
             badge_name, desc, icon = get_lesson_badge_meta(lesson)
             award_badge_if_earned(student_id, badge_name, desc, icon)
 
-    # 3. Dedicated Activity Achievements (Every single playable game has a dedicated badge)
-    completed_activity_ids = set()
-    for pl in progress_logs:
-        if pl.activity_id:
-            completed_activity_ids.add(pl.activity_id)
-    for att in attempts:
-        if att.activity_id and (att.result == 'completed' or (att.score is not None and att.score > 0)):
-            completed_activity_ids.add(att.activity_id)
-
-    all_activities = Activity.query.all()
+    # 3. Dedicated Activity Achievements (Only for real games actually completed by the student)
     for activity in all_activities:
-        if activity.id in completed_activity_ids:
-            engine = (activity.engine or '').lower()
-            if engine not in ['lesson', 'quick_check'] and 'slide question' not in (activity.type or '').lower():
-                badge_name, desc, icon = get_activity_badge_meta(activity)
-                award_badge_if_earned(student_id, badge_name, desc, icon)
+        if activity.engine in PLAYABLE_GAME_ENGINES and activity.id in completed_game_ids:
+            badge_name, desc, icon = get_activity_badge_meta(activity)
+            award_badge_if_earned(student_id, badge_name, desc, icon)
 
-    # 4. Milestone Achievements
-    # First Success - Complete first activity
-    if len(completed_activity_ids) >= 1:
+    # 4. Milestone Achievements (Only based on actual games, never slide clicks)
+    # First Success - Complete first real arcade game
+    if len(completed_game_ids) >= 1:
         award_badge_if_earned(student_id, 'First Success', 'Completed your first activity!', '🎯')
     
-    # Perfect Score - Get 100 on an activity
-    perfect_scores = [p for p in progress_logs if p.score and p.score >= 100] or [a for a in attempts if a.score and a.score >= 100]
-    if perfect_scores:
+    # Perfect Score - Get 100 on a real arcade game
+    perfect_game_scores = [p for p in game_progress_logs if p.score and p.score >= 100] or [a for a in game_attempts if a.score and a.score >= 100]
+    if perfect_game_scores:
         award_badge_if_earned(student_id, 'Perfect Score', 'Achieved a perfect score on an activity!', '⭐')
     
     # Lesson Master - Complete at least 1 lesson
     if completed_lesson_count >= 1:
         award_badge_if_earned(student_id, 'Lesson Master', 'Completed an entire lesson!', '🎓')
     
-    # Speedster - Complete activity in under 3 minutes (180 seconds)
-    fast_attempts = [a for a in attempts if a.time_spent and 5 < a.time_spent < 180]
-    if fast_attempts:
+    # Speedster - Complete a real arcade game in under 3 minutes
+    fast_game_attempts = [a for a in game_attempts if a.time_spent and 5 < a.time_spent < 180]
+    if fast_game_attempts:
         award_badge_if_earned(student_id, 'Speedster', 'Completed an activity in lightning speed!', '⚡')
     
-    # Consistency - Complete 5 activities
-    if len(progress_logs) >= 5 or len(attempts) >= 5:
+    # Consistency - Complete 5 real game plays
+    if len(game_attempts) >= 5 or len(completed_game_ids) >= 5:
         award_badge_if_earned(student_id, 'Consistency', 'Completed 5 activities!', '🔥')
     
-    # Scholar - Complete 10 activities
-    if len(progress_logs) >= 10 or len(attempts) >= 10:
+    # Scholar - Complete 10 real game plays
+    if len(game_attempts) >= 10 or len(completed_game_ids) >= 10:
         award_badge_if_earned(student_id, 'Scholar', 'Completed 10 activities!', '📚')
     
     # Lesson Complete - Complete 3 lessons
