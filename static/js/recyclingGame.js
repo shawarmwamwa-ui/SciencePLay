@@ -462,16 +462,60 @@ export function initRecyclingGame() {
     swipeCard.addEventListener("pointercancel", endDrag);
   }
 
-  // Action Buttons / Stations Click Handlers
-  btnCompost?.addEventListener("click", () => triggerSwipe("compost"));
-  btnRecycle?.addEventListener("click", () => triggerSwipe("recycle"));
+  // Action Stations / Bins Interaction
+  // Single-tap is protected against accidental touches; requires double-tap or swipe
+  let lastCompostTap = 0;
+  let lastRecycleTap = 0;
+  const DOUBLE_TAP_THRESHOLD_MS = 400;
+
+  function handleBinActivation(direction) {
+    if (isAnimating) return;
+    const now = Date.now();
+    if (direction === "compost") {
+      if (now - lastCompostTap < DOUBLE_TAP_THRESHOLD_MS) {
+        lastCompostTap = 0;
+        triggerSwipe("compost");
+      } else {
+        lastCompostTap = now;
+        // Visual nudge indicating single tap registered, need double-tap to commit
+        btnCompost?.classList.add("bin-nudge");
+        setTimeout(() => btnCompost?.classList.remove("bin-nudge"), 260);
+      }
+    } else if (direction === "recycle") {
+      if (now - lastRecycleTap < DOUBLE_TAP_THRESHOLD_MS) {
+        lastRecycleTap = 0;
+        triggerSwipe("recycle");
+      } else {
+        lastRecycleTap = now;
+        // Visual nudge indicating single tap registered, need double-tap to commit
+        btnRecycle?.classList.add("bin-nudge");
+        setTimeout(() => btnRecycle?.classList.remove("bin-nudge"), 260);
+      }
+    }
+  }
+
+  btnCompost?.addEventListener("click", () => handleBinActivation("compost"));
+  btnRecycle?.addEventListener("click", () => handleBinActivation("recycle"));
+
+  // Global Keyboard controls (Left Arrow = Compost, Right Arrow = Recycle)
+  window.addEventListener("keydown", (e) => {
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      triggerSwipe("compost");
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      triggerSwipe("recycle");
+    }
+  });
 
   // Keyboard accessibility for stations
   [btnCompost, btnRecycle].forEach((btn) => {
     btn?.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        btn.click();
+        const dir = btn.id === "btn-swipe-compost" ? "compost" : "recycle";
+        triggerSwipe(dir);
       }
     });
   });

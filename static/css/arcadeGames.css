@@ -1274,13 +1274,13 @@ body.arcade-page--compact {
 /* 3-Column Landscape Battlefield: Left Station | Center Card Stack | Right Station */
 .ecoswipe-stage {
   display: grid;
-  grid-template-columns: minmax(160px, 1.15fr) minmax(190px, 0.95fr) minmax(160px, 1.15fr);
-  gap: clamp(0.75rem, 1.5vw, 1.5rem);
+  grid-template-columns: minmax(180px, 1.35fr) minmax(150px, 0.75fr) minmax(180px, 1.35fr);
+  gap: clamp(0.5rem, 1.5vw, 1.5rem);
   align-items: center;
   justify-content: center;
   position: relative;
-  min-height: 330px;
-  max-width: 900px;
+  min-height: 380px;
+  max-width: 960px;
   margin: 0 auto;
 }
 
@@ -1309,7 +1309,7 @@ body.arcade-page--compact {
 }
 
 .bin-3d-wrap {
-  width: clamp(135px, 19vw, 180px);
+  width: clamp(165px, 24vw, 225px);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1319,7 +1319,7 @@ body.arcade-page--compact {
 /* Bin Lid Pivot & Lid */
 .bin-lid-pivot {
   width: 108%;
-  height: 32px;
+  height: 38px;
   position: relative;
   z-index: 5;
   display: flex;
@@ -1329,9 +1329,9 @@ body.arcade-page--compact {
 
 .bin-lid {
   width: 100%;
-  height: 28px;
+  height: 34px;
   border: 3.5px solid #18181b;
-  border-radius: 14px 14px 4px 4px;
+  border-radius: 16px 16px 4px 4px;
   box-shadow: 0 4px 0 #18181b;
   position: relative;
   display: flex;
@@ -1350,12 +1350,12 @@ body.arcade-page--compact {
 }
 
 .bin-lid-handle {
-  width: 38px;
-  height: 8px;
+  width: 44px;
+  height: 10px;
   background: #18181b;
   border-radius: 4px 4px 0 0;
   position: absolute;
-  top: -7px;
+  top: -9px;
 }
 
 /* Lid opening animations on swipe drag hover */
@@ -1369,10 +1369,21 @@ body.arcade-page--compact {
   transform: rotate(38deg) translateY(-8px);
 }
 
+/* Bin nudge animation on single tap (requires double-tap or swipe to commit) */
+@keyframes binNudgeLid {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  35% { transform: rotate(-12deg) translateY(-5px); }
+  70% { transform: rotate(6deg) translateY(-2px); }
+}
+
+.ecoswipe-bin.bin-nudge .bin-lid {
+  animation: binNudgeLid 0.25s ease;
+}
+
 /* Bin Body (Tapered 3D Wheelie Bin) */
 .bin-body {
   width: 100%;
-  height: clamp(180px, 26vh, 225px);
+  height: clamp(210px, 30vh, 265px);
   border: 3.5px solid #18181b;
   border-radius: 4px 4px 18px 18px;
   box-shadow: 4.5px 4.5px 0 #18181b;
@@ -1381,7 +1392,7 @@ body.arcade-page--compact {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 8px 14px;
+  padding: 10px 10px 16px;
   overflow: visible;
   clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%);
 }
@@ -1396,38 +1407,38 @@ body.arcade-page--compact {
 
 .bin-rim {
   width: 100%;
-  height: 10px;
+  height: 12px;
   background: rgba(0, 0, 0, 0.15);
   border-bottom: 2px solid rgba(0, 0, 0, 0.2);
 }
 
 .bin-ribs {
   position: absolute;
-  top: 24px;
-  bottom: 28px;
-  left: 10px;
-  right: 10px;
+  top: 26px;
+  bottom: 30px;
+  left: 12px;
+  right: 12px;
   background: repeating-linear-gradient(
     90deg,
     transparent,
-    transparent 12px,
-    rgba(255, 255, 255, 0.12) 12px,
-    rgba(255, 255, 255, 0.12) 16px
+    transparent 14px,
+    rgba(255, 255, 255, 0.12) 14px,
+    rgba(255, 255, 255, 0.12) 18px
   );
   pointer-events: none;
 }
 
 .bin-badge {
   background: rgba(255, 255, 255, 0.95);
-  border: 2px solid #18181b;
+  border: 2.5px solid #18181b;
   border-radius: 999px;
-  padding: 4px 12px;
+  padding: 6px 16px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-family: 'Fredoka', sans-serif;
   font-weight: 900;
-  font-size: clamp(0.78rem, 1.2vw, 0.88rem);
+  font-size: clamp(0.85rem, 1.3vw, 1rem);
   box-shadow: 2px 2px 0 #18181b;
   z-index: 2;
 }
@@ -1440,15 +1451,15 @@ body.arcade-page--compact {
   justify-content: space-between;
   width: 84%;
   position: absolute;
-  bottom: -7px;
+  bottom: -8px;
   z-index: -1;
 }
 
 .bin-wheel {
-  width: 19px;
-  height: 19px;
+  width: 23px;
+  height: 23px;
   background: #18181b;
-  border: 2px solid #475569;
+  border: 2.5px solid #475569;
   border-radius: 50%;
   display: inline-block;
   box-shadow: 1px 1px 0 #000;
@@ -1464,17 +1475,17 @@ body.arcade-page--compact {
 .bin-label-title {
   font-family: 'Fredoka', sans-serif;
   font-weight: 900;
-  font-size: clamp(1.1rem, 1.7vw, 1.35rem);
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
   letter-spacing: 0.5px;
 }
 
 .bin-sublabel {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #475569;
 }
 
-/* Center Card Stack Area - Compact & Focused */
+/* Center Card Stack Area - Extra Compact & Proportional */
 .card-stack-zone {
   display: flex;
   flex-direction: column;
@@ -1486,8 +1497,8 @@ body.arcade-page--compact {
 .card-stack {
   position: relative;
   width: 100%;
-  max-width: 215px;
-  height: 240px;
+  max-width: 175px;
+  height: 195px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1497,13 +1508,13 @@ body.arcade-page--compact {
 /* Compact & GPU-Accelerated Swipe Card */
 .swipe-card {
   width: 100%;
-  max-width: 215px;
-  height: 240px;
+  max-width: 175px;
+  height: 195px;
   background: #ffffff;
-  border: 3px solid #18181b;
-  box-shadow: 4px 4px 0 #18181b;
-  border-radius: 18px;
-  padding: 0.6rem 0.8rem;
+  border: 2.5px solid #18181b;
+  box-shadow: 3.5px 3.5px 0 #18181b;
+  border-radius: 14px;
+  padding: 0.45rem 0.6rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1530,14 +1541,14 @@ body.arcade-page--compact {
   align-items: center;
   font-family: 'Fredoka', sans-serif;
   font-weight: 800;
-  font-size: 0.72rem;
-  margin-bottom: 2px;
+  font-size: 0.64rem;
+  margin-bottom: 0.1rem;
 }
 
 .guide-left {
   color: #15803d;
   background: #dcfce7;
-  padding: 1px 7px;
+  padding: 0px 5px;
   border-radius: 999px;
   border: 1.5px solid #86efac;
 }
@@ -1545,23 +1556,23 @@ body.arcade-page--compact {
 .guide-right {
   color: #0369a1;
   background: #e0f2fe;
-  padding: 1px 7px;
+  padding: 0px 5px;
   border-radius: 999px;
   border: 1.5px solid #7dd3fc;
 }
 
 .swipe-card-img-container {
-  width: 66px;
-  height: 66px;
+  width: 50px;
+  height: 50px;
   background: #f8fafc;
   border: 2px solid #18181b;
   box-shadow: 2px 2px 0 #18181b;
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.35rem;
-  margin-bottom: 0.15rem;
+  padding: 0.2rem;
+  margin-bottom: 0.1rem;
 }
 
 .swipe-card-img {
@@ -1573,31 +1584,37 @@ body.arcade-page--compact {
 .swipe-card-title {
   font-family: 'Fredoka', sans-serif;
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 0.88rem;
   margin: 0 0 0.1rem;
   color: #18181b;
+  line-height: 1.15;
 }
 
 .swipe-card-fact {
   font-weight: 700;
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   color: #475569;
-  line-height: 1.22;
-  margin: 0 0 0.15rem;
+  line-height: 1.15;
+  max-height: 2.3em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin: 0 0 0.1rem;
 }
 
 .swipe-drag-cue {
   font-family: 'Fredoka', sans-serif;
   font-weight: 700;
-  font-size: 0.66rem;
+  font-size: 0.60rem;
   color: #0f172a;
   background: #f1f5f9;
-  padding: 0.12rem 0.5rem;
+  padding: 0.08rem 0.4rem;
   border-radius: 999px;
   border: 1.5px solid #94a3b8;
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 /* Stamp Overlays during swipe */
