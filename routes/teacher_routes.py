@@ -91,61 +91,12 @@ def build_live_lesson_tracker(online_students_set=None):
         ).order_by(LessonAttemptLog.attempt_number.asc()).all()
 
         total_slides = get_lesson_total_slides(lp.lesson)
-        curr = (lp.current_slide or 0) + 1
+        curr_slide = (lp.current_slide or 0) + 1
         revisit_count = lp.revisit_count or 0
-
-        if attempts:
-            first_att = attempts[0]
-            first_time_str = format_time_duration(first_att.time_spent)
-            latest_att = attempts[-1]
-            latest_time_str = format_time_duration(latest_att.time_spent)
-            tot_sec = sum((att.time_spent or 0) for att in attempts)
-            tot_str = format_time_duration(tot_sec)
-
-            if len(attempts) > 1:
-                time_spent_display = (
-                    f'<div class="d-flex flex-column gap-1">'
-                    f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
-                    f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" title="First Visit (Initial)"><i class="bi bi-flag-fill me-1"></i>First: {first_time_str}</span>'
-                    f'    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1" title="Latest Revisit"><i class="bi bi-arrow-repeat me-1"></i>R{len(attempts)-1}: {latest_time_str}</span>'
-                    f'  </div>'
-                    f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: {tot_str}</div>'
-                    f'</div>'
-                )
-            else:
-                time_spent_display = (
-                    f'<div class="d-flex flex-column gap-1">'
-                    f'  <span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-clock me-1 text-primary"></i>First: {first_time_str}</span>'
-                    f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: {tot_str}</div>'
-                    f'</div>'
-                )
-        else:
-            sec = lp.time_spent or 0
-            init_sec = lp.initial_time_spent or sec
-            tot_sec = lp.total_time_spent or (init_sec + (sec if revisit_count > 0 else 0))
-            if revisit_count > 0:
-                time_spent_display = (
-                    f'<div class="d-flex flex-column gap-1">'
-                    f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
-                    f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-flag-fill me-1"></i>First: {format_time_duration(init_sec)}</span>'
-                    f'    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-arrow-repeat me-1"></i>Current: {format_time_duration(sec)}</span>'
-                    f'  </div>'
-                    f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: {format_time_duration(tot_sec)}</div>'
-                    f'</div>'
-                )
-            else:
-                time_spent_display = (
-                    f'<div class="d-flex flex-column gap-1">'
-                    f'  <span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-clock me-1 text-primary"></i>First: {format_time_duration(sec)}</span>'
-                    f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: {format_time_duration(sec)}</div>'
-                    f'</div>'
-                )
 
         is_completed = False
         is_revisit = False
         revisit_num = 0
-
-        curr_slide = (lp.current_slide or 0) + 1
 
         if attempts:
             latest_attempt = attempts[-1]
@@ -174,6 +125,96 @@ def build_live_lesson_tracker(online_students_set=None):
                 else:
                     pct = min(int(round((curr_slide / max(total_slides, 1)) * 100)), 99)
                     pct = max(pct, 1 if curr_slide > 0 else 0)
+
+        is_student_online = (lp.student_id in online_students_set)
+        is_active_online = is_student_online and not is_completed
+
+        if attempts:
+            first_att = attempts[0]
+            first_time_sec = first_att.time_spent or 0
+            first_time_str = format_time_duration(first_time_sec)
+            latest_att = attempts[-1]
+            latest_time_sec = latest_att.time_spent or 0
+            latest_time_str = format_time_duration(latest_time_sec)
+            tot_sec = sum((att.time_spent or 0) for att in attempts)
+            tot_str = format_time_duration(tot_sec)
+
+            if len(attempts) > 1:
+                if is_active_online:
+                    time_spent_display = (
+                        f'<div class="d-flex flex-column gap-1">'
+                        f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
+                        f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" title="First Visit (Initial)"><i class="bi bi-flag-fill me-1"></i>First: {first_time_str}</span>'
+                        f'    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 live-time-ticker" data-seconds="{latest_time_sec}" data-base-total="{tot_sec - latest_time_sec}" title="Live Revisit Active Now"><span class="status-pulse-dot me-1"></span>Live R{len(attempts)-1}: <span class="time-val">{latest_time_str}</span></span>'
+                        f'  </div>'
+                        f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: <span class="total-val">{tot_str}</span></div>'
+                        f'</div>'
+                    )
+                else:
+                    time_spent_display = (
+                        f'<div class="d-flex flex-column gap-1">'
+                        f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
+                        f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" title="First Visit (Initial)"><i class="bi bi-flag-fill me-1"></i>First: {first_time_str}</span>'
+                        f'    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1" title="Latest Revisit"><i class="bi bi-arrow-repeat me-1"></i>R{len(attempts)-1}: {latest_time_str}</span>'
+                        f'  </div>'
+                        f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: {tot_str}</div>'
+                        f'</div>'
+                    )
+            else:
+                if is_active_online:
+                    time_spent_display = (
+                        f'<div class="d-flex flex-column gap-1">'
+                        f'  <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 live-time-ticker" data-seconds="{first_time_sec}" data-base-total="0" title="Live Initial Visit Active Now"><span class="status-pulse-dot me-1"></span>Live: <span class="time-val">{first_time_str}</span></span>'
+                        f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: <span class="total-val">{tot_str}</span></div>'
+                        f'</div>'
+                    )
+                else:
+                    time_spent_display = (
+                        f'<div class="d-flex flex-column gap-1">'
+                        f'  <span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-clock me-1 text-primary"></i>First: {first_time_str}</span>'
+                        f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: {tot_str}</div>'
+                        f'</div>'
+                    )
+        else:
+            sec = lp.time_spent or 0
+            init_sec = lp.initial_time_spent or sec
+            tot_sec = lp.total_time_spent or (init_sec + (sec if revisit_count > 0 else 0))
+            if revisit_count > 0:
+                if is_active_online:
+                    time_spent_display = (
+                        f'<div class="d-flex flex-column gap-1">'
+                        f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
+                        f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-flag-fill me-1"></i>First: {format_time_duration(init_sec)}</span>'
+                        f'    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 live-time-ticker" data-seconds="{sec}" data-base-total="{tot_sec - sec}" title="Live Revisit Active Now"><span class="status-pulse-dot me-1"></span>Live Current: <span class="time-val">{format_time_duration(sec)}</span></span>'
+                        f'  </div>'
+                        f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: <span class="total-val">{format_time_duration(tot_sec)}</span></div>'
+                        f'</div>'
+                    )
+                else:
+                    time_spent_display = (
+                        f'<div class="d-flex flex-column gap-1">'
+                        f'  <div class="d-flex flex-wrap gap-1 align-items-center">'
+                        f'    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-flag-fill me-1"></i>First: {format_time_duration(init_sec)}</span>'
+                        f'    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-arrow-repeat me-1"></i>Current: {format_time_duration(sec)}</span>'
+                        f'  </div>'
+                        f'  <div class="fw-bold text-dark small mt-1"><i class="bi bi-hourglass-split me-1 text-secondary"></i>Total: {format_time_duration(tot_sec)}</div>'
+                        f'</div>'
+                    )
+            else:
+                if is_active_online:
+                    time_spent_display = (
+                        f'<div class="d-flex flex-column gap-1">'
+                        f'  <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 live-time-ticker" data-seconds="{sec}" data-base-total="0" title="Live Initial Visit Active Now"><span class="status-pulse-dot me-1"></span>Live: <span class="time-val">{format_time_duration(sec)}</span></span>'
+                        f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: <span class="total-val">{format_time_duration(sec)}</span></div>'
+                        f'</div>'
+                    )
+                else:
+                    time_spent_display = (
+                        f'<div class="d-flex flex-column gap-1">'
+                        f'  <span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-clock me-1 text-primary"></i>First: {format_time_duration(sec)}</span>'
+                        f'  <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Total: {format_time_duration(sec)}</div>'
+                        f'</div>'
+                    )
 
         if is_completed:
             status_text = 'Completed'
@@ -1675,3 +1716,20 @@ def api_lesson_history(student_id, lesson_id):
         'attempts': serialized_attempts,
         'kpis': data['kpis']
     })
+
+
+@teacher_bp.route('/api/live_lesson_tracker')
+@require_role('teacher')
+def api_live_lesson_tracker():
+    """Real-time JSON endpoint for live polling the Live Student Lesson Progress Tracker"""
+    online_threshold = datetime.utcnow() - timedelta(minutes=3)
+    student_users = User.query.filter(User.role == 'student').all()
+    online_students_set = set(s.id for s in student_users if s.last_seen and s.last_seen >= online_threshold)
+    live_tracker = build_live_lesson_tracker(online_students_set)
+    return jsonify({
+        'success': True,
+        'tracker': live_tracker,
+        'online_count': len(online_students_set),
+        'total_active': len(live_tracker)
+    })
+

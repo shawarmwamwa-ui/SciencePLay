@@ -541,10 +541,16 @@
     <!-- TAB 2: Live Progress & Attempt Logs -->
     <div class="tab-pane fade" id="pane-live-logs" role="tabpanel" aria-labelledby="tab-live-logs">
       <!-- Live Lesson Progress & Slide Tracker -->
-      <section class="table-shell teacher-table-shell mb-4" id="live-tracker-section">
-        <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
-          <h2 class="h5 mb-0"><i class="bi bi-play-btn me-2 text-primary"></i>Live Student Lesson Progress Tracker</h2>
-          <span class="badge bg-primary rounded-pill">{{ live_lesson_tracker|length }} Active Students</span>
+      <section class="table-shell teacher-table-shell mb-4" id="live-tracker-section" data-live-tracker-api-url="{{ url_for('teacher.api_live_lesson_tracker') }}">
+        <div class="table-header teacher-table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h2 class="h5 mb-0"><i class="bi bi-play-btn me-2 text-primary"></i>Live Student Lesson Progress Tracker</h2>
+            <span class="badge bg-primary rounded-pill" id="analytics-live-tracker-count-badge">{{ live_lesson_tracker|length }} Active Students</span>
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-semibold d-inline-flex align-items-center gap-1">
+              <span class="spinner-grow spinner-grow-sm text-success" role="status" style="width: 7px; height: 7px;"></span>
+              <span>Live Feed</span>
+            </span>
+          </div>
         </div>
         <div class="table-responsive">
           <table id="tracker-table" class="table align-middle mb-0">
@@ -554,7 +560,7 @@
                 <th>Lesson Title</th>
                 <th>Status</th>
                 <th>Progress</th>
-                <th>Time Spent</th>
+                <th>Time Spent / Live Time</th>
                 <th>Revisit History</th>
               </tr>
             </thead>

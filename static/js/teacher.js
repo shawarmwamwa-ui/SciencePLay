@@ -236,10 +236,126 @@ function initHashTabSwitching() {
   }
 }
 
+/**
+ * Real-Time Live Time Stopwatch & Auto-Polling Sync for Live Tracker
+ */
+function formatDurationStr(totalSec) {
+  if (isNaN(totalSec) || totalSec < 0) totalSec = 0;
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+function initLiveStopwatchTicker() {
+  setInterval(() => {
+    const tickers = document.querySelectorAll('.live-time-ticker');
+    tickers.forEach(ticker => {
+      let sec = parseInt(ticker.getAttribute('data-seconds') || '0', 10);
+      sec += 1;
+      ticker.setAttribute('data-seconds', sec);
+      const valEl = ticker.querySelector('.time-val');
+      if (valEl) valEl.textContent = formatDurationStr(sec);
+
+      const baseTotal = parseInt(ticker.getAttribute('data-base-total') || '0', 10);
+      const parent = ticker.closest('.d-flex.flex-column');
+      if (parent) {
+        const totalValEl = parent.querySelector('.total-val');
+        if (totalValEl) totalValEl.textContent = formatDurationStr(baseTotal + sec);
+      }
+    });
+  }, 1000);
+}
+
+function initLiveTrackerSync() {
+  const section = document.getElementById('live-tracker-section');
+  if (!section) return;
+  const apiUrl = section.getAttribute('data-live-tracker-api-url');
+  if (!apiUrl) return;
+
+  async function pollTracker() {
+    try {
+      const res = await fetch(apiUrl, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || !data.success || !Array.isArray(data.tracker)) return;
+
+      const tbody = document.querySelector('#tracker-table tbody');
+      if (!tbody) return;
+
+      // Update count badges if present
+      const badge1 = document.getElementById('live-tracker-count-badge');
+      if (badge1) badge1.textContent = `${data.total_active} Active Students`;
+      const badge2 = document.getElementById('analytics-live-tracker-count-badge');
+      if (badge2) badge2.textContent = `${data.total_active} Active Students`;
+
+      // Check current search filter
+      const searchInput = document.getElementById('liveTrackerSearch');
+      const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+      if (data.tracker.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No student lesson progress recorded yet.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      data.tracker.forEach(item => {
+        const studentLower = (item.student_name || '').toLowerCase();
+        const lessonLower = (item.lesson_title || '').toLowerCase();
+        const matches = !query || studentLower.includes(query) || lessonLower.includes(query);
+        const displayStyle = matches ? '' : 'style="display:none;"';
+
+        const onlineBadge = item.is_online
+          ? `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size: 0.74rem;" title="Active online now"><span class="status-pulse-dot me-1"></span>Online</span>`
+          : '';
+
+        html += `
+          <tr class="live-tracker-row" data-student="${studentLower}" data-lesson="${lessonLower}" ${displayStyle}>
+            <td>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a href="/teacher/student/${item.student_id}" class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Student Performance Report">
+                  <i class="bi bi-person-fill text-primary"></i> ${item.student_name}
+                </a>
+                ${onlineBadge}
+              </div>
+            </td>
+            <td><span class="fw-semibold text-secondary">${item.lesson_title}</span></td>
+            <td><span class="badge ${item.status_badge_class} px-3 py-2 rounded-pill">${item.status}</span></td>
+            <td>${item.progress_bar_display}</td>
+            <td>${item.time_spent_display}</td>
+            <td>${item.revisit_display}</td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+
+      // Re-apply table pagination if search query is empty
+      if (!query && typeof setupTablePagination === 'function') {
+        setupTablePagination('#tracker-table', '#tracker-pagination-wrap', '#tracker-page-info', '#tracker-pagination-nav', 5);
+      }
+    } catch (e) {
+      // Ignore background fetch error
+    }
+  }
+
+  setInterval(pollTracker, 3500);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      pollTracker();
+    }
+  });
+}
+
 function setupTeacherPortal() {
   initTeacherNavigation();
   initAlertAutoDismiss();
   initDashboardSkeleton();
+  initLiveStopwatchTicker();
+  initLiveTrackerSync();
   window.addEventListener('hashchange', initHashTabSwitching);
 }
 
@@ -248,3 +364,4 @@ if (document.readyState === 'loading') {
 } else {
   setupTeacherPortal();
 }
+
