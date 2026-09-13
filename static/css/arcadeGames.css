@@ -549,21 +549,64 @@ body.arcade-page--compact {
   margin-top: 0;
 }
 
+.metal-choice-carousel-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  position: relative;
+}
+
+.btn-shelf-nav {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #18181b;
+  box-shadow: 2px 2px 0 #18181b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1rem;
+  color: #18181b;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s, background-color 0.12s;
+  padding: 0;
+  user-select: none;
+}
+
+.btn-shelf-nav:hover {
+  background: #fef08a;
+  transform: translateY(-1px);
+}
+
+.btn-shelf-nav:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #18181b;
+}
+
 .metal-choice-row--compact {
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
   gap: 0.4rem;
   justify-content: flex-start;
-  padding-bottom: 3px;
+  padding: 2px 2px 4px 2px;
+  touch-action: pan-x !important;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
 }
 
 .metal-choice-row--compact::-webkit-scrollbar {
-  height: 5px;
+  height: 6px;
 }
 .metal-choice-row--compact::-webkit-scrollbar-thumb {
-  background: #94a3b8;
+  background: #cbd5e1;
   border-radius: 999px;
+  border: 1px solid #94a3b8;
 }
 
 .metal-choice-row--compact .metal-choice-btn {
@@ -876,10 +919,14 @@ body.arcade-page--compact {
   white-space: nowrap !important;
 }
 
-.metal-choice-shelf--compact,
-.metal-choice-row--compact,
 .mystery-clues-grid--compact {
-  touch-action: none;
+  touch-action: manipulation;
+}
+
+.metal-choice-shelf--compact,
+.metal-choice-row--compact {
+  touch-action: pan-x !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Landscape Item Picker Modal */
@@ -911,6 +958,7 @@ body.arcade-page--compact {
   user-select: none;
   min-height: 140px;
   justify-content: space-between;
+  position: relative;
 }
 
 .picker-card-tile:hover {
@@ -928,6 +976,55 @@ body.arcade-page--compact {
   background: #dcfce7 !important;
   border-color: #16a34a !important;
   box-shadow: 0 0 0 3px #16a34a, 4px 4px 0 #18181b !important;
+}
+
+.picker-card-tile.already-placed {
+  background: #f0fdf4 !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 2.5px #22c55e, 3.5px 3.5px 0 #18181b !important;
+}
+
+.picker-tile-placed-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  border: 1.5px solid #18181b;
+  border-radius: 999px;
+  padding: 2px 7px;
+  box-shadow: 1px 1px 0 #18181b;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.picker-tile-in-use-tag {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #15803d;
+  background: #dcfce7;
+  border: 1.5px solid #86efac;
+  border-radius: 999px;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.picker-tile-current-tag {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #166534;
+  background: #bbf7d0;
+  border: 1.5px solid #22c55e;
+  border-radius: 999px;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .picker-tile-top {

@@ -218,6 +218,29 @@ export function initMetalLogicGame() {
   const btnUseHint = document.getElementById("btn-use-hint");
   const btnSubmit = document.getElementById("btn-submit-deduction");
   const btnClearAll = document.getElementById("btn-clear-all-boxes");
+  const btnShelfLeft = document.getElementById("btn-shelf-scroll-left");
+  const btnShelfRight = document.getElementById("btn-shelf-scroll-right");
+
+  btnShelfLeft?.addEventListener("click", () => {
+    metalChoiceRow?.scrollBy({ left: -180, behavior: "smooth" });
+  });
+
+  btnShelfRight?.addEventListener("click", () => {
+    metalChoiceRow?.scrollBy({ left: 180, behavior: "smooth" });
+  });
+
+  // Cheerful, high-contrast themes for clues
+  const CLUE_THEMES = [
+    { bg: '#f0f9ff', border: '#0284c7', badgeBg: '#0284c7', qBg: '#e0f2fe', dashBorder: '#38bdf8' }, // 1: Sky Blue
+    { bg: '#f0fdf4', border: '#059669', badgeBg: '#059669', qBg: '#dcfce7', dashBorder: '#34d399' }, // 2: Emerald Green
+    { bg: '#fffbeb', border: '#d97706', badgeBg: '#d97706', qBg: '#fef3c7', dashBorder: '#fbbf24' }, // 3: Warm Amber
+    { bg: '#faf5ff', border: '#7c3aed', badgeBg: '#7c3aed', qBg: '#f3e8ff', dashBorder: '#a78bfa' }, // 4: Royal Purple
+    { bg: '#fff1f2', border: '#e11d48', badgeBg: '#e11d48', qBg: '#ffe4e6', dashBorder: '#fb7185' }, // 5: Coral Rose
+    { bg: '#f0fdfa', border: '#0d9488', badgeBg: '#0d9488', qBg: '#ccfbf1', dashBorder: '#2dd4bf' }, // 6: Deep Teal
+    { bg: '#fff7ed', border: '#ea580c', badgeBg: '#ea580c', qBg: '#ffedd5', dashBorder: '#fb923c' }, // 7: Tangerine Orange
+    { bg: '#eef2ff', border: '#4f46e5', badgeBg: '#4f46e5', qBg: '#e0e7ff', dashBorder: '#818cf8' }, // 8: Indigo Navy
+    { bg: '#fdf2f8', border: '#db2777', badgeBg: '#db2777', qBg: '#fce7f3', dashBorder: '#f472b6' }, // 9: Berry Pink
+  ];
 
   // Modals
   const metalPickerModalEl = document.getElementById("metalPickerModal");
@@ -303,23 +326,26 @@ export function initMetalLogicGame() {
     }
 
     currentLevelData.forEach((item) => {
+      const theme = CLUE_THEMES[(item.boxNum - 1) % CLUE_THEMES.length];
       const colEl = document.createElement("div");
       colEl.className = "mystery-column";
       colEl.id = `mystery-col-${item.boxNum}`;
+      colEl.style.backgroundColor = theme.bg;
 
       const answeredItemId = userAnswers[item.boxNum];
       const answeredItem = answeredItemId ? ITEMS_BANK[answeredItemId] : null;
 
       colEl.innerHTML = `
-        <div class="mystery-header-badge" title="Clue #${item.boxNum}">
+        <div class="mystery-header-badge" style="background:${theme.badgeBg}; border-color:#18181b;" title="Clue #${item.boxNum}">
           ${item.boxNum}
         </div>
 
-        <div class="mystery-question-box">
+        <div class="mystery-question-box" style="background:${theme.qBg}; border-color:${theme.border};">
           <p class="mystery-question-text">"${item.metal.clue}"</p>
         </div>
 
         <div class="mystery-answer-box ${item.boxNum === activeBoxIndex ? 'active-box' : ''} ${answeredItem ? 'filled-box' : ''}" 
+             style="${answeredItem ? '' : `border-color:${theme.dashBorder}; background:#ffffff;`}"
              id="mystery-box-${item.boxNum}" 
              data-box="${item.boxNum}"
              title="Tap to place or change metal for Clue #${item.boxNum}">
@@ -334,8 +360,8 @@ export function initMetalLogicGame() {
             `
               : `
               <div class="mystery-empty-prompt">
-                <i class="bi bi-box-seam mystery-empty-icon"></i>
-                <span>Drop / Tap</span>
+                <i class="bi bi-box-seam mystery-empty-icon" style="color:${theme.border};"></i>
+                <span style="color:${theme.border};">Drop / Tap</span>
               </div>
             `
           }
@@ -425,7 +451,9 @@ export function initMetalLogicGame() {
         const dx = touch.clientX - touchStartX;
         const dy = touch.clientY - touchStartY;
 
-        if (!isTouchDragging && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+        // Only initiate drag-drop ghost when dragging upwards towards the puzzle board
+        // If the gesture is horizontal (|dx| >= |dy|), allow the choice shelf to scroll naturally!
+        if (!isTouchDragging && dy < -14 && Math.abs(dy) > Math.abs(dx) * 1.1) {
           isTouchDragging = true;
           btn.classList.add("dragging");
 
@@ -587,17 +615,29 @@ export function initMetalLogicGame() {
       currentShelfIds.forEach((itemId) => {
         const item = ITEMS_BANK[itemId];
         const isSelected = userAnswers[boxNum] === itemId;
+        const placedInBox = Object.keys(userAnswers).find(b => userAnswers[b] === itemId);
+        const isPlacedElsewhere = placedInBox && parseInt(placedInBox, 10) !== boxNum;
 
         const optBtn = document.createElement("button");
         optBtn.type = "button";
-        optBtn.className = `picker-card-tile ${isSelected ? "selected" : ""}`;
+        let stateClass = "";
+        if (isSelected) {
+          stateClass = "selected";
+        } else if (isPlacedElsewhere) {
+          stateClass = "already-placed";
+        }
+
+        optBtn.className = `picker-card-tile ${stateClass}`;
         optBtn.innerHTML = `
           <div class="picker-tile-top">
             <img src="${item.icon}" alt="" aria-hidden="true" class="picker-tile-img" width="56" height="56">
             ${isSelected ? '<span class="picker-tile-check"><i class="bi bi-check-circle-fill"></i></span>' : ''}
+            ${isPlacedElsewhere ? `<span class="picker-tile-placed-badge" title="Already in Box #${placedInBox}"><i class="bi bi-pin-map-fill"></i> #${placedInBox}</span>` : ''}
           </div>
           <div class="picker-tile-name">${item.name}</div>
           <div class="picker-tile-badge">${item.badge}</div>
+          ${isPlacedElsewhere ? `<div class="picker-tile-in-use-tag"><i class="bi bi-check2-circle me-1"></i>In Box #${placedInBox}</div>` : ''}
+          ${isSelected ? `<div class="picker-tile-current-tag"><i class="bi bi-check-circle-fill me-1"></i>Current Choice</div>` : ''}
         `;
 
         optBtn.addEventListener("click", () => {

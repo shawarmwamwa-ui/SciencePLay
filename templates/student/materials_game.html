@@ -91,12 +91,25 @@
             <span class="metal-choice-title mb-0 fs-6">
               <i class="bi bi-hand-index-thumb-fill text-primary"></i> Choices:
             </span>
-            <button type="button" class="btn btn-outline-dark btn-sm py-0 px-2 fw-bold rounded-pill" id="btn-clear-all-boxes" style="font-size:0.75rem;">
-              <i class="bi bi-arrow-counterclockwise"></i> Clear
-            </button>
+            <div class="d-flex align-items-center gap-1">
+              <span class="badge bg-light text-secondary border border-secondary-subtle rounded-pill px-2 py-1 shelf-scroll-hint" style="font-size:0.68rem; font-weight:700;">
+                <i class="bi bi-arrows-expand-vertical me-1 d-none"></i>Swipe or tap arrows
+              </span>
+              <button type="button" class="btn btn-outline-dark btn-sm py-0 px-2 fw-bold rounded-pill" id="btn-clear-all-boxes" style="font-size:0.75rem;">
+                <i class="bi bi-arrow-counterclockwise"></i> Clear
+              </button>
+            </div>
           </div>
-          <div class="metal-choice-row metal-choice-row--compact" id="metal-choice-row">
-            <!-- Rendered by JS -->
+          <div class="metal-choice-carousel-wrap">
+            <button type="button" class="btn-shelf-nav btn-shelf-nav-left" id="btn-shelf-scroll-left" title="Scroll left" aria-label="Scroll choices left">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <div class="metal-choice-row metal-choice-row--compact flex-grow-1" id="metal-choice-row">
+              <!-- Rendered by JS -->
+            </div>
+            <button type="button" class="btn-shelf-nav btn-shelf-nav-right" id="btn-shelf-scroll-right" title="Scroll right" aria-label="Scroll choices right">
+              <i class="bi bi-chevron-right"></i>
+            </button>
           </div>
         </section>
 
