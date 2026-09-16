@@ -651,10 +651,63 @@ function handleTraitTap(slide, trait, button) {
 }
 
 function renderSummarySlide(slide, container) {
-  const bulletsHtml = slide.bullets.map(bullet => `<li>${bullet}</li>`).join('');
+  const defaultIdeas = [
+    {
+      icon: '🌱',
+      title: 'Living Needs & Growth',
+      text: 'Living things grow, breathe, reproduce, and need food and water to survive.',
+      bg: '#f0fdf4',
+      border: '#86efac',
+      color: '#16a34a'
+    },
+    {
+      icon: '🪨',
+      title: 'Non-Living Characteristics',
+      text: 'Non-living things do not eat, breathe, grow, or move on their own.',
+      bg: '#f8fafc',
+      border: '#cbd5e1',
+      color: '#475569'
+    },
+    {
+      icon: '🐾',
+      title: 'Plants & Animals Are Living',
+      text: 'Puppies, birds, fish, trees, and flowers are all living organisms!',
+      bg: '#ecfdf5',
+      border: '#a7f3d0',
+      color: '#059669'
+    },
+    {
+      icon: '🚲',
+      title: 'Everyday Objects Are Non-Living',
+      text: 'Toys, bicycles, chairs, rocks, and pencils are non-living items.',
+      bg: '#eff6ff',
+      border: '#bfdbfe',
+      color: '#2563eb'
+    }
+  ];
+
   container.innerHTML = `
-    <div class="summary-slide">
-      <ul>${bulletsHtml}</ul>
+    <div class="summary-slide ln-summary-container">
+      <div class="ln-summary-badge">
+        <div class="ln-summary-badge-icon">
+          <i class="bi bi-award-fill"></i>
+        </div>
+        <div class="ln-summary-badge-text">
+          <h3>Lesson Complete!</h3>
+          <p>You've mastered the core concepts of Living and Non-Living things!</p>
+        </div>
+      </div>
+      <div class="ln-summary-grid">
+        ${defaultIdeas.map(idea => `
+          <div class="ln-summary-card" style="background:${idea.bg};border:2px solid ${idea.border};">
+            <div class="ln-summary-card-header">
+              <span class="ln-summary-emoji">${idea.icon}</span>
+              <h4 style="color:${idea.color};">${idea.title}</h4>
+            </div>
+            <p class="ln-summary-desc">${idea.text}</p>
+          </div>
+        `).join('')}
+      </div>
     </div>
   `;
 }
