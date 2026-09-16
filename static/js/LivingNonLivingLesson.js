@@ -186,21 +186,9 @@ function bindTTS() {
   
   btn.addEventListener('click', () => {
     const slide = getCurrentSlide();
-    let textToRead = `${slide.title}. `;
-    if (slide.description && slide.type !== 'intro') textToRead += `${slide.description}. `;
-    if (slide.prompt) textToRead += `${slide.prompt}. `;
-    
-    if (slide.bullets && slide.bullets.length) {
-       textToRead += slide.bullets.join('. ') + '. ';
-    }
-    
-    if (slide.options && slide.options.length) {
-       textToRead += "Options are: " + slide.options.map(o => o.label).join(', ') + '. ';
-    }
-
-    if (window.speechSynthesis) {
-      speakText(textToRead);
-    }
+    // Strictly one read aloud per page: only the instruction or question
+    const textToRead = slide.question || slide.prompt || slide.description || slide.title;
+    speakText(textToRead);
   });
 }
 

@@ -744,28 +744,8 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
   if (ttsBtn) {
     ttsBtn.addEventListener('click', () => {
       const slide = slides[state.currentIndex];
-      let textToSpeak = slide.title + '. ';
-      
-      // If slide has items with active explanation/sort reason, include that
-      if (slide.items && slide.items.length > 0) {
-        if (slide.type === 'interactive-recycle-sort') {
-          const activeItem = slide.items.find(i => i.id === state.activeSortedItemId) || slide.items[0];
-          if (activeItem) {
-            textToSpeak += `${activeItem.name}: ${activeItem.reason} `;
-          }
-        } else {
-          const selectedIdx = state.selectedItemIndex[slide.id] ?? 0;
-          const activeItem = slide.items[selectedIdx] || slide.items[0];
-          if (activeItem && activeItem.simpleExplanation) {
-            textToSpeak += `${activeItem.label}: ${activeItem.simpleExplanation} `;
-          }
-        }
-      }
-
-      if (slide.description) textToSpeak += slide.description + ' ';
-      if (slide.prompt) textToSpeak += slide.prompt + ' ';
-      if (slide.question) textToSpeak += slide.question + ' ';
-      if (slide.keyFact) textToSpeak += 'Key Fact: ' + slide.keyFact;
+      // Strictly one read aloud per page: only the instruction or question
+      const textToSpeak = slide.question || slide.prompt || slide.description || slide.title;
       speakText(textToSpeak);
     });
   }

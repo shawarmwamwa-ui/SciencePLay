@@ -433,10 +433,8 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
 
   function readAloud() {
     const slide = slides[state.currentIndex];
-    let text = slide.title + '. ';
-    text += slide.description || slide.prompt || slide.question || '';
-    if (slide.bullets) text += ' ' + slide.bullets.join('. ');
-    if (slide.options)  text += ' Options are: ' + slide.options.map(o => o.label).join(', ');
+    // Strictly one read aloud per page: only the instruction or question
+    const text = slide.question || slide.prompt || slide.description || slide.title;
     speakText(text);
   }
 
