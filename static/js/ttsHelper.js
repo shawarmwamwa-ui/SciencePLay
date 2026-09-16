@@ -113,17 +113,73 @@ export function speakText(text, opts = {}) {
   }
 }
 
-// Ensure speech synthesis is instantly cancelled when navigating back or minimizing the app
-if (typeof window !== 'undefined' && window.speechSynthesis) {
-  window.addEventListener('pagehide', () => {
-    window.speechSynthesis.cancel();
-  });
-  window.addEventListener('beforeunload', () => {
-    window.speechSynthesis.cancel();
-  });
+let _currentVoiceAudio = null;
+
+/**
+ * Play a studio recorded voice prompt (e.g. from ElevenLabs in /static/audio/voice/).
+ * Automatically falls back to TTS if the audio file hasn't been generated yet or fails.
+ *
+ * @param {string} promptKey     Name of the audio file without extension (e.g. 'welcome', 'great_job')
+ * @param {string} [fallbackText] Text to speak if the audio file is not available
+ */
+export function playVoicePrompt(promptKey, fallbackText = '') {
+  if (!promptKey) return;
+
+  if (_currentVoiceAudio) {
+    try {
+      _currentVoiceAudio.pause();
+      _currentVoiceAudio.currentTime = 0;
+    } catch (_) {}
+  }
+
+  const audioPath = `/static/audio/voice/${promptKey}.mp3`;
+  const audio = new Audio(audioPath);
+
+  let played = false;
+
+  audio.addEventListener('canplaythrough', () => {
+    if (played) return;
+    played = true;
+    _currentVoiceAudio = audio;
+    audio.play().catch(() => {
+      if (fallbackText) speakText(fallbackText);
+    });
+  }, { once: true });
+
+  audio.addEventListener('error', () => {
+    // If studio file is not downloaded yet, speak using TTS engine seamlessly
+    if (fallbackText) speakText(fallbackText);
+  }, { once: true });
+
+  // Load the audio resource
+  audio.load();
+}
+
+export function stopVoicePrompt() {
+  if (_currentVoiceAudio) {
+    try {
+      _currentVoiceAudio.pause();
+      _currentVoiceAudio.currentTime = 0;
+    } catch (_) {}
+    _currentVoiceAudio = null;
+  }
+  if (typeof window !== 'undefined') {
+    if (window.AndroidTTS && typeof window.AndroidTTS.stopSpeech === 'function') {
+      try { window.AndroidTTS.stopSpeech(); } catch (_) {}
+    }
+    if (window.speechSynthesis) {
+      try { window.speechSynthesis.cancel(); } catch (_) {}
+    }
+  }
+}
+
+// Ensure speech synthesis and audio are instantly cancelled when navigating back or minimizing the app
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', stopVoicePrompt);
+  window.addEventListener('beforeunload', stopVoicePrompt);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
-      window.speechSynthesis.cancel();
+      stopVoicePrompt();
     }
   });
 }
