@@ -465,7 +465,7 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
     const slide = slides[state.currentIndex];
     // Strictly one read aloud per page: only the instruction or question
     const text = slide.question || slide.prompt || slide.description || slide.title;
-    const isPlant = String(lessonTitle).toLowerCase().includes('plant');
+    const isPlant = String(lessonName).toLowerCase().includes('plant');
     const voiceList = isPlant ? PLANT_VOICE_KEYS : ANIMAL_VOICE_KEYS;
     const promptKey = voiceList[state.currentIndex] || '';
     playVoicePrompt(promptKey, text);
