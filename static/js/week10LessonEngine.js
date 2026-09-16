@@ -3,7 +3,7 @@
 // Inherits standard progress saving, TTS audio speech, quick checks, and formative assessments
 // Supports custom interactive components: reveal cards, globe tap-reveal, wire conduction toggle, flashlight shine, and recycle sort.
 
-import { speakText } from './ttsHelper.js';
+import { speakText, playVoicePrompt, stopVoicePrompt } from './ttsHelper.js';
 
 export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0) {
   // Shuffle formative assessment questions so each session gets a fresh question order
@@ -719,6 +719,7 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
   if (prevBtn) {
     prevBtn.addEventListener('click', () => {
       if (state.currentIndex > 0) {
+        stopVoicePrompt();
         state.currentIndex--;
         saveProgress(false);
         render();
@@ -728,6 +729,7 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
 
   if (nextBtn) {
     nextBtn.addEventListener('click', () => {
+      stopVoicePrompt();
       if (state.currentIndex < totalSlides - 1) {
         state.currentIndex++;
         saveProgress(false);
@@ -740,13 +742,53 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
     });
   }
 
-  // ── Read Aloud (TTS) ───────────────────────────────────────────────────────
+  // ── Voice Prompts & Read Aloud ─────────────────────────────────────────────
+  const WEEK10_VOICE_MAP = {
+    // Properties of Metals
+    'iron-hook': 'metal_s1_iron_hook',
+    'iron-teach-strong': 'metal_s2_iron_strong',
+    'iron-teach-abundant': 'metal_s3_iron_abundant',
+    'iron-teach-rust': 'metal_s4_iron_rust',
+    'iron-qc': 'metal_s5_iron_qc',
+    'copper-hook': 'metal_s6_copper_hook',
+    'copper-teach-wire': 'metal_s7_copper_wire',
+    'copper-qc': 'metal_s8_copper_qc',
+    'gold-hook': 'metal_s9_gold_hook',
+    'gold-teach-shine': 'metal_s10_gold_shine',
+    'gold-qc': 'metal_s11_gold_qc',
+    'metal-reflect': 'metal_s12_reflect',
+    'metal-discuss': 'metal_s13_discuss',
+    'metal-deepen': 'metal_s14_deepen',
+    'metal-summary': 'metal_s15_summary',
+    'metal-assess-1': 'metal_s16_assess1',
+    'metal-assess-2': 'metal_s17_assess2',
+    'metal-assess-3': 'metal_s18_assess3',
+    'metal-assess-4': 'metal_s19_assess4',
+    'metal-assess-5': 'metal_s20_assess5',
+
+    // Recycling
+    'recycle-hook': 'recycle_s1_hook',
+    'recycle-teach-loop': 'recycle_s2_process',
+    'recycle-teach-sort': 'recycle_s3_sort',
+    'recycle-qc': 'recycle_s4_qc',
+    'recycle-reflect': 'recycle_s5_reflect',
+    'recycle-discuss': 'recycle_s6_discuss',
+    'recycle-deepen': 'recycle_s7_deepen',
+    'recycle-summary': 'recycle_s8_summary',
+    'recycle-assess-1': 'recycle_s9_q1',
+    'recycle-assess-2': 'recycle_s10_q2',
+    'recycle-assess-3': 'recycle_s11_q3',
+    'recycle-assess-4': 'recycle_s12_q4',
+    'recycle-assess-5': 'recycle_s13_q5',
+  };
+
   if (ttsBtn) {
     ttsBtn.addEventListener('click', () => {
       const slide = slides[state.currentIndex];
       // Strictly one read aloud per page: only the instruction or question
       const textToSpeak = slide.question || slide.prompt || slide.description || slide.title;
-      speakText(textToSpeak);
+      const voiceKey = WEEK10_VOICE_MAP[slide.id] || '';
+      playVoicePrompt(voiceKey, textToSpeak);
     });
   }
 

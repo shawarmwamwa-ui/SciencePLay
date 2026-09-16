@@ -2,7 +2,7 @@
 // Shared lesson engine for Lesson 2A (Animal Body Parts) and Lesson 2B (Plant Parts).
 // Handles slide navigation, slide rendering, quick-checks, formative assessment, and progress saving.
 
-import { speakText } from './ttsHelper.js';
+import { speakText, playVoicePrompt, stopVoicePrompt } from './ttsHelper.js';
 
 let currentLottieInstances = [];
 
@@ -417,6 +417,7 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
       return;
     }
 
+    stopVoicePrompt();
     state.currentIndex += 1;
     saveProgress(false);
     render();
@@ -424,18 +425,50 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
 
   function goPrev() {
     if (state.currentIndex === 0) return;
+    stopVoicePrompt();
     state.currentIndex -= 1;
     saveProgress(false);
     render();
   }
 
-  // ── TTS ────────────────────────────────────────────────────────────────────
+  // ── Voice & TTS ─────────────────────────────────────────────────────────────
+
+  const ANIMAL_VOICE_KEYS = [
+    'animal_s1_hook',
+    'animal_s2_head_obs',
+    'animal_s3_head_teach',
+    'animal_s4_legs_obs',
+    'animal_s5_legs_teach',
+    'animal_s6_wings_obs',
+    'animal_s7_wings_teach',
+    'animal_s8_qc_head',
+    'animal_s9_qc_legs',
+    'animal_s10_qc_wings',
+    'animal_s11_deepen'
+  ];
+
+  const PLANT_VOICE_KEYS = [
+    'plant_s1_hook',
+    'plant_s2_roots_obs',
+    'plant_s3_roots_teach',
+    'plant_s4_stem_obs',
+    'plant_s5_stem_teach',
+    'plant_s6_leaves_obs',
+    'plant_s7_leaves_teach',
+    'plant_s8_qc_roots',
+    'plant_s9_qc_stem',
+    'plant_s10_qc_leaves',
+    'plant_s11_deepen'
+  ];
 
   function readAloud() {
     const slide = slides[state.currentIndex];
     // Strictly one read aloud per page: only the instruction or question
     const text = slide.question || slide.prompt || slide.description || slide.title;
-    speakText(text);
+    const isPlant = String(lessonTitle).toLowerCase().includes('plant');
+    const voiceList = isPlant ? PLANT_VOICE_KEYS : ANIMAL_VOICE_KEYS;
+    const promptKey = voiceList[state.currentIndex] || '';
+    playVoicePrompt(promptKey, text);
   }
 
   // ── Swipe support ──────────────────────────────────────────────────────────

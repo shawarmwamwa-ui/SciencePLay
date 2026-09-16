@@ -2,6 +2,8 @@
 // EcoSwipe: Sort the Scrap (Left = Compost, Right = Recyclable)
 // Standalone arcade activity for Lesson 7 (Recycling)
 
+import { playVoicePrompt } from './ttsHelper.js';
+
 export function initRecyclingGame() {
   const MASTER_ITEMS = [
     // Recyclable Items (Clean Manufactured Materials)
@@ -222,6 +224,7 @@ export function initRecyclingGame() {
     loadCard(currentIndex);
 
     if (feedbackBanner) feedbackBanner.style.display = "none";
+    playVoicePrompt('recycle_intro', 'Swipe left for Compost, and swipe right for Recycling!');
   }
 
   function loadCard(index) {
@@ -327,6 +330,7 @@ export function initRecyclingGame() {
     // Process outcome with audio
     if (isCorrect) {
       playSound('correct');
+      playVoicePrompt('recycle_correct', 'Nice sort!');
       streak++;
       if (streak > bestStreak) bestStreak = streak;
       correctCount++;
@@ -335,6 +339,7 @@ export function initRecyclingGame() {
       showFeedback(true, currentItem, direction);
     } else {
       playSound('wrong');
+      playVoicePrompt('recycle_wrong', 'Wrong bin! Check the item.');
       streak = 0;
       showFeedback(false, currentItem, direction);
     }
@@ -563,6 +568,7 @@ export function initRecyclingGame() {
       }
     }
 
+    playVoicePrompt('level_complete', 'Level complete! Great job!');
     victoryModal?.show();
   }
 

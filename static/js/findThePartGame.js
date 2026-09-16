@@ -2,6 +2,8 @@
 // "Find the Part" — Hotspot Callout Leader Pin labeling game for Animal Body Parts
 // Game 2A: Grade 3 Science, Week 3-4
 
+import { playVoicePrompt } from './ttsHelper.js';
+
 let audioCtx = null;
 function playSound(type) {
   try {
@@ -308,8 +310,14 @@ function showSummary(data) {
 
 function renderRound(roundIdx) {
   if (roundIdx >= ROUNDS.length) {
+    playVoicePrompt('level_complete', 'Level complete! Great job!');
     saveResult();
     return;
+  }
+
+  const roundVoiceKeys = ['ftp_r1_bird', 'ftp_r2_lion', 'ftp_r3_fish'];
+  if (roundVoiceKeys[roundIdx]) {
+    playVoicePrompt(roundVoiceKeys[roundIdx], ROUNDS[roundIdx].title);
   }
 
   state.currentRound = roundIdx;
@@ -485,6 +493,7 @@ function processMatch(zoneId, labelId, round) {
     }
 
     playSound('correct');
+    playVoicePrompt('ftp_correct', 'Nice match!');
     updateHUD();
 
     // Check if round complete
@@ -512,6 +521,7 @@ function processMatch(zoneId, labelId, round) {
         Not quite! <strong>${labelName}</strong> does not go there. (Points for this part lessened to <strong>+${nextPotential} pts</strong>)`;
     }
     playSound('wrong');
+    playVoicePrompt('ftp_wrong', "Oops! That part doesn't belong here.");
 
     if (slotEl) {
       slotEl.classList.add('ftp-slot-error');

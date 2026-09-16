@@ -3,6 +3,8 @@
 // Round 1: Garden Flower Plant (Roots → Stem → Leaves → Flower → Fruit → Seeds)
 // Round 2: Mighty Apple Tree (Tree Roots → Trunk → Branches → Canopy Leaves → Blossoms → Apples & Seeds)
 
+import { playVoicePrompt } from './ttsHelper.js';
+
 // ── Audio ─────────────────────────────────────────────────────────────────────
 
 let plantAudioCtx = null;
@@ -35,8 +37,14 @@ function playSound(type) {
   } catch (_) {}
 }
 
-function playSuccess() { playSound('correct'); }
-function playError() { playSound('wrong'); }
+function playSuccess() {
+  playSound('correct');
+  playVoicePrompt('bap_correct', 'Great placement!');
+}
+function playError() {
+  playSound('wrong');
+  playVoicePrompt('bap_wrong', 'Not that one! Try another part.');
+}
 
 // ── ROUNDS DATA ───────────────────────────────────────────────────────────────
 
@@ -569,6 +577,7 @@ function launchConfetti() {
 function showCompletion(data) {
   state.completed = true;
   launchConfetti();
+  playVoicePrompt('bap_complete', 'Awesome! You built the plant!');
 
   const maxScore = 100;
   const pct = Math.round(state.score);
@@ -999,6 +1008,11 @@ function buildTreeSVG() {
 
 function renderCurrentRound() {
   const round = ROUNDS[state.currentRoundIdx];
+
+  const roundVoiceKeys = ['bap_r1_intro', 'bap_r2_intro'];
+  if (roundVoiceKeys[state.currentRoundIdx]) {
+    playVoicePrompt(roundVoiceKeys[state.currentRoundIdx], round.nameText);
+  }
 
   // Shuffle parts + decoys for this round
   const allParts = [...round.stages, ...round.decoys];

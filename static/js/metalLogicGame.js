@@ -4,6 +4,8 @@
 // post-round review modal with right/wrong feedback, and latency-free Web Audio sound effects.
 // Standalone arcade activity for Lesson 6 (Properties of Metals)
 
+import { playVoicePrompt } from './ttsHelper.js';
+
 export function initMetalLogicGame() {
   // Web Audio Synthesizer for instant game sound effects
   let audioCtx = null;
@@ -275,6 +277,10 @@ export function initMetalLogicGame() {
   function setupLevel(lvlIdx) {
     currentLevelIdx = lvlIdx;
     const config = LEVELS[currentLevelIdx];
+
+    if (lvlIdx === 0) {
+      playVoicePrompt('metal_intro', 'Read the clues and match each metal into its box!');
+    }
 
     // Update HUD level text
     if (hudLevelText) hudLevelText.textContent = `Level ${currentLevelIdx + 1} / ${LEVELS.length}`;
@@ -558,6 +564,10 @@ export function initMetalLogicGame() {
   }
 
   function assignItemToBox(boxNum, itemId) {
+    if (ITEMS_BANK[itemId]?.isDecoy) {
+      playVoicePrompt('metal_decoy', 'Oops! That is not a metal!');
+    }
+
     // If this item was in another box, clear it from that box so it moves cleanly
     Object.keys(userAnswers).forEach((b) => {
       if (userAnswers[b] === itemId && parseInt(b, 10) !== boxNum) {
@@ -741,6 +751,7 @@ export function initMetalLogicGame() {
 
     if (allCorrect) {
       playSound('correct');
+      playVoicePrompt('metal_correct', 'Detective deduction correct!');
     } else {
       playSound('wrong');
       score = Math.max(25, score - (mistakeCount * 5));
@@ -822,6 +833,7 @@ export function initMetalLogicGame() {
   });
 
   async function handleVictory() {
+    playVoicePrompt('level_complete', 'Level complete! Great job!');
     const timeSpent = Math.max(1, Math.round((performance.now() - startTime) / 1000));
     const finalScore = score;
     const actId = window.metalGameActivityId;

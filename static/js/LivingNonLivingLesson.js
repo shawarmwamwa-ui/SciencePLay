@@ -3,7 +3,7 @@
 // This file handles slide navigation, progress updates, audio feedback, and event logging.
 
 import { LESSON_SLIDES } from './lessonSlidesData.js';
-import { speakText } from './ttsHelper.js';
+import { speakText, playVoicePrompt, stopVoicePrompt } from './ttsHelper.js';
 
 const lessonState = {
   currentIndex: 0,
@@ -162,6 +162,7 @@ function bindNavigation() {
       return;
     }
 
+    stopVoicePrompt();
     lessonState.currentIndex += 1;
     resetSlideState();
     renderLesson();
@@ -172,6 +173,7 @@ function bindNavigation() {
     if (lessonState.currentIndex === 0) {
       return;
     }
+    stopVoicePrompt();
     logCurrentSlide();
     lessonState.currentIndex -= 1;
     resetSlideState();
@@ -179,6 +181,16 @@ function bindNavigation() {
     saveLessonProgress();
   });
 }
+
+const LIVING_VOICE_KEYS = [
+  'living_s1_intro',
+  'living_s2_explore',
+  'living_s3_qc1',
+  'living_s4_explore2',
+  'living_s5_qc2',
+  'living_s6_fish',
+  'living_s7_summary'
+];
 
 function bindTTS() {
   const btn = document.querySelector('#tts-btn');
@@ -188,7 +200,8 @@ function bindTTS() {
     const slide = getCurrentSlide();
     // Strictly one read aloud per page: only the instruction or question
     const textToRead = slide.question || slide.prompt || slide.description || slide.title;
-    speakText(textToRead);
+    const voiceKey = LIVING_VOICE_KEYS[lessonState.currentIndex] || '';
+    playVoicePrompt(voiceKey, textToRead);
   });
 }
 
