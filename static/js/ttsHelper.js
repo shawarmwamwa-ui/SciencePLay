@@ -123,36 +123,35 @@ let _currentVoiceAudio = null;
  * @param {string} [fallbackText] Text to speak if the audio file is not available
  */
 export function playVoicePrompt(promptKey, fallbackText = '') {
-  if (!promptKey) return;
-
-  if (_currentVoiceAudio) {
-    try {
-      _currentVoiceAudio.pause();
-      _currentVoiceAudio.currentTime = 0;
-    } catch (_) {}
+  if (!promptKey) {
+    if (fallbackText) speakText(fallbackText);
+    return;
   }
+
+  stopVoicePrompt();
 
   const audioPath = `/static/audio/voice/${promptKey}.mp3`;
   const audio = new Audio(audioPath);
+  _currentVoiceAudio = audio;
 
-  let played = false;
-
-  audio.addEventListener('canplaythrough', () => {
-    if (played) return;
-    played = true;
-    _currentVoiceAudio = audio;
-    audio.play().catch(() => {
-      if (fallbackText) speakText(fallbackText);
-    });
-  }, { once: true });
+  let fallbackHandled = false;
+  const triggerFallback = () => {
+    if (fallbackHandled) return;
+    fallbackHandled = true;
+    if (fallbackText) speakText(fallbackText);
+  };
 
   audio.addEventListener('error', () => {
-    // If studio file is not downloaded yet, speak using TTS engine seamlessly
-    if (fallbackText) speakText(fallbackText);
+    triggerFallback();
   }, { once: true });
 
-  // Load the audio resource
-  audio.load();
+  const playPromise = audio.play();
+  if (playPromise !== undefined) {
+    playPromise.catch((err) => {
+      console.warn(`[VoicePrompt] Audio play notice for ${promptKey}:`, err);
+      triggerFallback();
+    });
+  }
 }
 
 export function stopVoicePrompt() {
