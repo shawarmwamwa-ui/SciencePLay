@@ -79,6 +79,19 @@ function resolveVoice() {
  * @param {object} [opts] Optional overrides: { pitch, rate, volume }
  */
 export function speakText(text, opts = {}) {
+  if (!text) return;
+
+  // 1. If running inside the Android Tablet APK, use the native Android TTS bridge
+  if (typeof window !== 'undefined' && window.AndroidTTS && typeof window.AndroidTTS.speak === 'function') {
+    try {
+      window.AndroidTTS.speak(text);
+      return;
+    } catch (err) {
+      console.warn('[SciencePlay TTS] AndroidTTS bridge notice:', err);
+    }
+  }
+
+  // 2. Standard Browser SpeechSynthesis fallback
   if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
   try {
