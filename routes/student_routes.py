@@ -1026,6 +1026,7 @@ def activities():
     current_user = get_current_user()
     user_id = current_user.id
     claw_machine_activity = get_or_create_claw_machine_activity()
+    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
     assigned_activity_ids = [
         a.activity_id for a in ActivityAssignment.query.filter(
             ActivityAssignment.student_id == user_id,
