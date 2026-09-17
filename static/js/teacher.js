@@ -34,6 +34,109 @@ function initTeacherNavigation() {
   setActive(resolveActiveKey());
 }
 
+function initTeacherSlidingIndicator() {
+  const menuGroup = document.querySelector('.teacher-sidebar .teacher-menu-group');
+  if (!menuGroup) return;
+
+  const links = Array.from(menuGroup.querySelectorAll('.teacher-menu-link'));
+  if (!links.length) return;
+
+  let indicator = menuGroup.querySelector('.teacher-menu-indicator');
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.className = 'teacher-menu-indicator';
+    indicator.setAttribute('aria-hidden', 'true');
+    menuGroup.prepend(indicator);
+  }
+
+  menuGroup.classList.add('has-indicator');
+
+  function getTargetOffset(targetEl) {
+    const groupRect = menuGroup.getBoundingClientRect();
+    const targetRect = targetEl.getBoundingClientRect();
+    return {
+      top: targetRect.top - groupRect.top,
+      height: targetRect.height
+    };
+  }
+
+  function moveIndicator(targetEl, animate = true) {
+    if (!targetEl) return;
+    const { top, height } = getTargetOffset(targetEl);
+    if (!animate) {
+      indicator.style.transition = 'none';
+    } else {
+      indicator.style.transition = 'transform 0.38s cubic-bezier(0.34, 1.25, 0.64, 1), height 0.22s ease, opacity 0.2s ease';
+    }
+    indicator.style.transform = `translateY(${top}px)`;
+    indicator.style.height = `${height}px`;
+    indicator.style.opacity = '1';
+
+    if (!animate) {
+      requestAnimationFrame(() => {
+        indicator.style.transition = 'transform 0.38s cubic-bezier(0.34, 1.25, 0.64, 1), height 0.22s ease, opacity 0.2s ease';
+      });
+    }
+  }
+
+  const activeLink = menuGroup.querySelector('.teacher-menu-link.active') || links[0];
+  const activeIndex = links.indexOf(activeLink);
+
+  // Cross-page sliding continuity
+  const prevOffsetRaw = sessionStorage.getItem('teacher_active_offset');
+  const prevIndexRaw = sessionStorage.getItem('teacher_active_index');
+
+  if (prevOffsetRaw !== null && prevIndexRaw !== null && Number(prevIndexRaw) !== activeIndex) {
+    const prevOffset = parseFloat(prevOffsetRaw);
+    indicator.style.transition = 'none';
+    indicator.style.transform = `translateY(${prevOffset}px)`;
+    indicator.style.height = `${activeLink.offsetHeight}px`;
+    indicator.style.opacity = '1';
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        moveIndicator(activeLink, true);
+      });
+    });
+  } else {
+    moveIndicator(activeLink, false);
+  }
+
+  sessionStorage.setItem('teacher_active_offset', getTargetOffset(activeLink).top);
+  sessionStorage.setItem('teacher_active_index', activeIndex);
+
+  // Hover and Click gliding
+  links.forEach((link, idx) => {
+    link.addEventListener('mouseenter', () => {
+      links.forEach(l => l.style.color = '#ffffff');
+      link.style.color = '#4c1d95';
+      moveIndicator(link, true);
+    });
+
+    link.addEventListener('click', () => {
+      const currentOffset = getTargetOffset(link);
+      sessionStorage.setItem('teacher_active_offset', currentOffset.top);
+      sessionStorage.setItem('teacher_active_index', idx);
+      links.forEach(l => l.style.color = '#ffffff');
+      link.style.color = '#4c1d95';
+      moveIndicator(link, true);
+    });
+  });
+
+  menuGroup.addEventListener('mouseleave', () => {
+    const currentActive = menuGroup.querySelector('.teacher-menu-link.active') || links[0];
+    links.forEach(l => {
+      l.style.color = l === currentActive ? '#4c1d95' : '';
+    });
+    moveIndicator(currentActive, true);
+  });
+
+  window.addEventListener('resize', () => {
+    const currentActive = menuGroup.querySelector('.teacher-menu-link.active') || links[0];
+    moveIndicator(currentActive, false);
+  });
+}
+
 function initAlertAutoDismiss() {
   const alerts = document.querySelectorAll('.alert, .alerts-container .alert, .brutal-alert');
   alerts.forEach((alert) => {
@@ -423,6 +526,7 @@ function initLiveTrackerSync() {
 
 function setupTeacherPortal() {
   initTeacherNavigation();
+  initTeacherSlidingIndicator();
   initAlertAutoDismiss();
   initDashboardSkeleton();
   initLiveStopwatchTicker();
