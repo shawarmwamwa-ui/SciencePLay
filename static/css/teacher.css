@@ -525,7 +525,8 @@
   }
 
   .teacher-menu-group.has-indicator .teacher-menu-link:hover:not(.active) {
-    background: transparent !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    border-radius: 14px;
   }
 }
 

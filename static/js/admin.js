@@ -246,30 +246,16 @@ function initAdminSlidingIndicator() {
   sessionStorage.setItem('admin_active_offset', getTargetOffset(activeLink).top);
   sessionStorage.setItem('admin_active_index', activeIndex);
 
-  // Smooth hover and click gliding
+  // Only glide when clicking a different navigation item!
   links.forEach((link, idx) => {
-    link.addEventListener('mouseenter', () => {
-      links.forEach(l => l.style.color = '#ffffff');
-      link.style.color = '#4c1d95';
-      moveIndicator(link, true);
-    });
-
     link.addEventListener('click', () => {
       const currentOffset = getTargetOffset(link);
       sessionStorage.setItem('admin_active_offset', currentOffset.top);
       sessionStorage.setItem('admin_active_index', idx);
-      links.forEach(l => l.style.color = '#ffffff');
-      link.style.color = '#4c1d95';
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
       moveIndicator(link, true);
     });
-  });
-
-  menuGroup.addEventListener('mouseleave', () => {
-    const currentActive = menuGroup.querySelector('.menu-link.active') || links[0];
-    links.forEach(l => {
-      l.style.color = l === currentActive ? '#4c1d95' : '';
-    });
-    moveIndicator(currentActive, true);
   });
 
   window.addEventListener('resize', () => {
