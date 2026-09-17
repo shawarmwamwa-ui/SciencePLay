@@ -222,9 +222,10 @@ async function animateObjectDrop(object, targetElement) {
   ghost.style.margin = '0';
   ghost.style.opacity = '1';
   ghost.style.transform = 'translate(0, 0) scale(1)';
+  const dropFallback = `/static/images/${(object.name || object.label || '').toLowerCase()}.webp`;
   ghost.innerHTML = `
     <div class="object-card">
-      ${object.icon ? `<img class="tray-object-icon" src="${object.icon}" alt="${object.name}" />` : ''}
+      ${object.icon ? `<img class="tray-object-icon" src="${object.icon}" alt="${object.name}" onerror="if(this.src!=='${dropFallback}')this.src='${dropFallback}';else this.style.display='none';" />` : ''}
       <div class="tray-object-label">${object.name}</div>
     </div>
   `;
@@ -425,9 +426,10 @@ function renderTray() {
         objectButton.classList.add('is-sorted');
       }
 
+      const fallbackUrl = `/static/images/${(object.name || object.label || '').toLowerCase()}.webp`;
       objectButton.innerHTML = `
         <div class="object-card">
-          ${object.icon ? `<img class="tray-object-icon" src="${object.icon}" alt="${object.name}" />` : ''}
+          ${object.icon ? `<img class="tray-object-icon" src="${object.icon}" alt="${object.name}" onerror="if(this.src!=='${fallbackUrl}')this.src='${fallbackUrl}';else this.style.display='none';" />` : ''}
           <div class="tray-object-label">${object.name}</div>
         </div>
       `;
@@ -467,11 +469,12 @@ function renderClaw() {
     leftPercent = clamp(((state.activeSlotIndex + 1) / (totalSlots + 1)) * 100, 4, 96);
   }
 
+  const heldFallback = state.heldObject ? `/static/images/${(state.heldObject.name || state.heldObject.label || '').toLowerCase()}.webp` : '';
   const heldMarkup = state.heldObject
     ? `
       <div class="claw-held-object-tile">
         <div class="claw-held-object-card">
-          ${state.heldObject.icon ? `<img class="claw-held-object-icon" src="${state.heldObject.icon}" alt="${state.heldObject.name}" />` : ''}
+          ${state.heldObject.icon ? `<img class="claw-held-object-icon" src="${state.heldObject.icon}" alt="${state.heldObject.name}" onerror="if(this.src!=='${heldFallback}')this.src='${heldFallback}';else this.style.display='none';" />` : ''}
           <div class="claw-held-object-label">${state.heldObject.name}</div>
         </div>
       </div>
@@ -797,6 +800,18 @@ async function saveProgress() {
 }
 
 
+let ttsBound = false;
+function bindTTS() {
+  if (ttsBound) return;
+  const ttsBtn = document.querySelector('#tts-btn');
+  if (!ttsBtn) return;
+  ttsBtn.onclick = () => {
+    const textToRead = `${state.title || 'Claw Machine'}. ${state.instructions || 'Sort the objects into the correct bins.'}`;
+    playVoicePrompt('claw_instructions', textToRead);
+  };
+  ttsBound = true;
+}
+
 function bindControls() {
   if (controlsBound) return;
 
@@ -973,8 +988,26 @@ async function initGame() {
   }
 }
 
+let gameInitialized = false;
+
+export async function initClawMachineGame() {
+  if (gameInitialized) return;
+  gameInitialized = true;
+  await initGame();
+}
+
 function setupGlobals() {
-  window.initClawMachineGame = initGame;
+  window.initClawMachineGame = () => {
+    gameInitialized = false;
+    return initGame();
+  };
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      initClawMachineGame();
+    } else {
+      document.addEventListener('DOMContentLoaded', () => initClawMachineGame());
+    }
+  }
 }
 
 setupGlobals();

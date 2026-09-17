@@ -84,7 +84,10 @@
                     <td>
                       {% set lesson_title = assignment.lesson.title if assignment.lesson else '' %}
                       {% set target_url = url_for('student.living_non_living_lesson') if 'Living vs Non-Living' in lesson_title
-                             else url_for('student.parts_lesson') if 'Parts of an Animal' in lesson_title
+                             else url_for('student.animal_body_parts_lesson') if ('Animal Body Parts' in lesson_title or 'Parts of an Animal' in lesson_title)
+                             else url_for('student.plant_parts_lesson') if 'Plant Parts' in lesson_title
+                             else url_for('student.properties_of_metals_lesson') if 'Properties of Metals' in lesson_title
+                             else url_for('student.recycling_lesson') if 'Recycling' in lesson_title
                              else url_for('student.lessons') %}
                       <a href="{{ target_url }}" class="btn btn-sm {% if assignment.status == 'completed' %}btn-outline-primary{% else %}btn-primary{% endif %} rounded-pill px-3 fw-bold" style="text-decoration:none;">
                         <i class="bi {% if assignment.status == 'completed' %}bi-arrow-clockwise{% else %}bi-play-fill{% endif %} me-1"></i>
@@ -155,6 +158,8 @@
                       {% set target_url = url_for('student.claw_machine') if ('Claw Machine' in act_type or act_engine == 'claw_machine')
                              else url_for('student.find_the_part_game') if ('Find the Part' in act_type or act_engine == 'find_the_part')
                              else url_for('student.build_a_plant_game') if ('Build a Plant' in act_type or act_engine == 'build_a_plant')
+                             else url_for('student.materials_game') if ('Metal' in act_type or act_engine == 'metal_logic')
+                             else url_for('student.recycling_game') if ('Recycl' in act_type or act_engine == 'recycle_sorter')
                              else url_for('student.activities') %}
                       {% if is_unlocked %}
                         <a href="{{ target_url }}" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold text-dark shadow-sm" style="text-decoration:none;">

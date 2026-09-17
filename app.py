@@ -93,7 +93,11 @@ def ensure_default_curriculum():
             get_or_create_animal_body_parts_lesson,
             get_or_create_find_the_part_activity,
             get_or_create_plant_parts_lesson,
-            get_or_create_build_a_plant_activity
+            get_or_create_build_a_plant_activity,
+            get_or_create_properties_of_metals_lesson,
+            get_or_create_metals_game_activity,
+            get_or_create_recycling_lesson,
+            get_or_create_recycling_game_activity
         )
         try:
             get_or_create_default_lesson()
@@ -102,6 +106,10 @@ def ensure_default_curriculum():
             get_or_create_find_the_part_activity()
             get_or_create_plant_parts_lesson()
             get_or_create_build_a_plant_activity()
+            get_or_create_properties_of_metals_lesson()
+            get_or_create_metals_game_activity()
+            get_or_create_recycling_lesson()
+            get_or_create_recycling_game_activity()
         except Exception as e:
             print("Curriculum auto-seed notice:", e)
 

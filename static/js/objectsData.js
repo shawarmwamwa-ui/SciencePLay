@@ -127,16 +127,16 @@ export const LIVING_NON_LIVING_OBJECTS = [
     label: 'Cup',
     isLiving: false,
     explanation: 'A cup can hold a drink, but it does not need food, air, or water to survive because it is non-living.',
-    image: 'https://api.iconify.design/twemoji:teacup-without-handle.svg',
-    icon: 'https://api.iconify.design/twemoji:teacup-without-handle.svg',
+    image: '/static/images/icons/plastic_bottle.png',
+    icon: '/static/images/icons/plastic_bottle.png',
   },
   {
     id: 17,
     label: 'Book',
     isLiving: false,
     explanation: 'A book can tell a story, but it is still non-living because it was made by people and has no life processes.',
-    image: 'https://api.iconify.design/twemoji:green-book.svg',
-    icon: 'https://api.iconify.design/twemoji:green-book.svg',
+    image: '/static/images/icons/paper.png',
+    icon: '/static/images/icons/paper.png',
   },
   {
     id: 18,
@@ -159,8 +159,8 @@ export const LIVING_NON_LIVING_OBJECTS = [
     label: 'Spoon',
     isLiving: false,
     explanation: 'A spoon is useful at mealtime, but it cannot eat, breathe, or grow. That means it is non-living.',
-    image: 'https://api.iconify.design/twemoji:spoon.svg',
-    icon: 'https://api.iconify.design/twemoji:spoon.svg',
+    image: '/static/images/icons/spoon.png',
+    icon: '/static/images/icons/spoon.png',
   },
 ];
 

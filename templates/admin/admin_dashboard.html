@@ -58,6 +58,106 @@
         <section class="admin-content">
           <div class="content-center-wrap">
 
+          <!-- Admin Skeleton Loader View (Accurate 1-to-1 Mapping) -->
+          <div id="admin-skeleton-view" class="dashboard-skeleton-wrap">
+            <header class="page-header mb-4">
+              <div>
+                <span class="skeleton-shimmer skeleton-line" style="width: 140px; height: 12px; margin-bottom: 8px;"></span>
+                <span class="skeleton-shimmer skeleton-line" style="width: 240px; height: 28px; margin-bottom: 8px;"></span>
+                <span class="skeleton-shimmer skeleton-line" style="width: 320px; height: 14px;"></span>
+              </div>
+            </header>
+
+            <!-- Summary Grid 5-Card Skeleton -->
+            <section class="summary-grid mb-4">
+              <article class="summary-card skeleton-summary-card">
+                <div class="w-75">
+                  <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 12px; margin-bottom: 8px;"></span>
+                  <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 26px;"></span>
+                </div>
+                <span class="skeleton-shimmer skeleton-circle" style="width: 48px; height: 48px;"></span>
+              </article>
+              <article class="summary-card skeleton-summary-card">
+                <div class="w-75">
+                  <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 12px; margin-bottom: 8px;"></span>
+                  <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 26px;"></span>
+                </div>
+                <span class="skeleton-shimmer skeleton-circle" style="width: 48px; height: 48px;"></span>
+              </article>
+              <article class="summary-card skeleton-summary-card">
+                <div class="w-75">
+                  <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 12px; margin-bottom: 8px;"></span>
+                  <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 26px;"></span>
+                </div>
+                <span class="skeleton-shimmer skeleton-circle" style="width: 48px; height: 48px;"></span>
+              </article>
+              <article class="summary-card skeleton-summary-card">
+                <div class="w-75">
+                  <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 12px; margin-bottom: 8px;"></span>
+                  <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 26px;"></span>
+                </div>
+                <span class="skeleton-shimmer skeleton-circle" style="width: 48px; height: 48px;"></span>
+              </article>
+              <article class="summary-card skeleton-summary-card">
+                <div class="w-75">
+                  <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 12px; margin-bottom: 8px;"></span>
+                  <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 26px;"></span>
+                </div>
+                <span class="skeleton-shimmer skeleton-circle" style="width: 48px; height: 48px;"></span>
+              </article>
+            </section>
+
+            <!-- Online Users Section Skeleton -->
+            <section class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <span class="skeleton-shimmer skeleton-line" style="width: 280px; height: 20px;"></span>
+                <span class="skeleton-shimmer skeleton-pill" style="width: 40px; height: 22px;"></span>
+              </div>
+              <div class="card-body p-3">
+                <div class="row g-2">
+                  <div class="col-md-6 col-lg-4">
+                    <div class="p-2 border rounded d-flex align-items-center justify-content-between bg-light-subtle">
+                      <div class="d-flex align-items-center gap-2 w-75">
+                        <span class="skeleton-shimmer skeleton-circle" style="width: 32px; height: 32px;"></span>
+                        <div class="w-75">
+                          <span class="skeleton-shimmer skeleton-line" style="width: 65%; height: 12px; margin-bottom: 4px;"></span>
+                          <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 10px;"></span>
+                        </div>
+                      </div>
+                      <span class="skeleton-shimmer skeleton-pill" style="width: 55px; height: 20px;"></span>
+                    </div>
+                  </div>
+                  <div class="col-md-6 col-lg-4">
+                    <div class="p-2 border rounded d-flex align-items-center justify-content-between bg-light-subtle">
+                      <div class="d-flex align-items-center gap-2 w-75">
+                        <span class="skeleton-shimmer skeleton-circle" style="width: 32px; height: 32px;"></span>
+                        <div class="w-75">
+                          <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 12px; margin-bottom: 4px;"></span>
+                          <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 10px;"></span>
+                        </div>
+                      </div>
+                      <span class="skeleton-shimmer skeleton-pill" style="width: 55px; height: 20px;"></span>
+                    </div>
+                  </div>
+                  <div class="col-md-6 col-lg-4">
+                    <div class="p-2 border rounded d-flex align-items-center justify-content-between bg-light-subtle">
+                      <div class="d-flex align-items-center gap-2 w-75">
+                        <span class="skeleton-shimmer skeleton-circle" style="width: 32px; height: 32px;"></span>
+                        <div class="w-75">
+                          <span class="skeleton-shimmer skeleton-line" style="width: 70%; height: 12px; margin-bottom: 4px;"></span>
+                          <span class="skeleton-shimmer skeleton-line" style="width: 50%; height: 10px;"></span>
+                        </div>
+                      </div>
+                      <span class="skeleton-shimmer skeleton-pill" style="width: 55px; height: 20px;"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- Real Content View -->
+          <div id="admin-real-content" class="dashboard-real-content">
             <header class="page-header">
               <div>
                 <p class="eyebrow mb-2">System Administrator</p>
@@ -99,52 +199,47 @@
                   <p class="summary-label">Teachers</p>
                   <div class="h3 font-weight-bold mb-0 text-dark">{{ dashboard_stats.teacher_count }}</div>
                 </div>
-                <span class="summary-icon icon-cyan"><i class="bi bi-person-workspace"></i></span>
+                <span class="summary-icon icon-orange"><i class="bi bi-person-workspace"></i></span>
               </article>
               <article class="summary-card">
                 <div>
                   <p class="summary-label">Students</p>
                   <div class="h3 font-weight-bold mb-0 text-dark">{{ dashboard_stats.student_count }}</div>
                 </div>
-                <span class="summary-icon icon-lime"><i class="bi bi-mortarboard"></i></span>
+                <span class="summary-icon icon-purple"><i class="bi bi-mortarboard"></i></span>
               </article>
               <article class="summary-card">
                 <div>
-                  <p class="summary-label">New This Week</p>
-                  <div class="h3 font-weight-bold mb-0 text-dark">{{ dashboard_stats.new_this_week }}</div>
+                  <p class="summary-label">Admins</p>
+                  <div class="h3 font-weight-bold mb-0 text-dark">{{ dashboard_stats.admin_count }}</div>
                 </div>
-                <span class="summary-icon icon-orange"><i class="bi bi-stars"></i></span>
+                <span class="summary-icon icon-cyan"><i class="bi bi-shield-check"></i></span>
               </article>
             </section>
 
-            <section class="card border-0 shadow-sm mb-4">
+            <section class="card border-0 shadow-sm mt-4">
               <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h2 class="h5 mb-0 text-dark fw-bold"><i class="bi bi-broadcast text-success me-2"></i>Currently Online Users (Teachers & Students)</h2>
-                <span class="badge bg-success rounded-pill online-count-badge">{{ online_users|length }}</span>
+                <h2 class="h5 mb-0 fw-bold">Currently Online Users</h2>
+                <span class="badge bg-success online-count-badge">{{ dashboard_stats.online_count }} Active</span>
               </div>
-              <div class="card-body p-3 online-users-container">
+              <div class="card-body">
                 {% if online_users %}
                   <div class="row g-2">
                     {% for u in online_users %}
-                    <div class="col-md-6 col-lg-4">
-                      <div class="p-2 border rounded d-flex align-items-center justify-content-between bg-light-subtle">
-                        <div class="d-flex align-items-center gap-2">
-                          <span class="position-relative d-inline-block">
-                            {% if u.role == 'teacher' %}
-                              <i class="bi bi-person-workspace fs-4 text-info"></i>
-                            {% else %}
-                              <i class="bi bi-mortarboard fs-4 text-primary"></i>
-                            {% endif %}
-                            <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-light rounded-circle" style="transform: translate(25%, 25%);"></span>
-                          </span>
-                          <div>
-                            <div class="fw-semibold text-dark text-truncate" style="max-width: 140px;">{{ u.name }}</div>
-                            <small class="text-muted">@{{ u.username }}</small>
+                      <div class="col-md-6 col-lg-4">
+                        <div class="p-2 border rounded d-flex align-items-center justify-content-between bg-light">
+                          <div class="d-flex align-items-center gap-2">
+                            <span class="status-indicator online"></span>
+                            <div>
+                              <div class="fw-semibold text-dark">{{ u.name }}</div>
+                              <small class="text-muted">{{ u.email }}</small>
+                            </div>
                           </div>
+                          <span class="badge bg-{{ 'primary' if u.role == 'teacher' else ('info' if u.role == 'student' else 'dark') }}">
+                            {{ u.role|capitalize }}
+                          </span>
                         </div>
-                        <span class="badge {% if u.role == 'teacher' %}bg-info text-dark{% else %}bg-primary{% endif %} text-capitalize">{{ u.role }}</span>
                       </div>
-                    </div>
                     {% endfor %}
                   </div>
                 {% else %}
@@ -155,6 +250,8 @@
                 {% endif %}
               </div>
             </section>
+          </div>
+          <!-- End #admin-real-content -->
 
           </div>
         </section>

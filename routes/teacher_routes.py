@@ -94,13 +94,15 @@ def build_live_lesson_tracker(online_students_set=None):
         curr_slide = (lp.current_slide or 0) + 1
         revisit_count = lp.revisit_count or 0
 
-        is_completed = False
+        has_master_completion = bool(lp.completed or (lp.progress_percent or 0) >= 100 or lp.completed_at is not None)
+        is_completed = has_master_completion
         is_revisit = False
         revisit_num = 0
 
         if attempts:
             latest_attempt = attempts[-1]
-            is_completed = bool(latest_attempt.completed)
+            if latest_attempt.completed:
+                is_completed = True
             if latest_attempt.attempt_number > 1:
                 is_revisit = True
                 revisit_num = latest_attempt.attempt_number - 1
@@ -114,7 +116,7 @@ def build_live_lesson_tracker(online_students_set=None):
                     pct = min(int(round((curr_slide / max(total_slides, 1)) * 100)), 99)
                     pct = max(pct, 1 if curr_slide > 0 else 0)
         else:
-            is_completed = bool(lp.completed)
+            is_completed = has_master_completion or bool(lp.completed)
             is_revisit = (revisit_count > 0)
             revisit_num = revisit_count
             if is_completed:
@@ -126,8 +128,11 @@ def build_live_lesson_tracker(online_students_set=None):
                     pct = min(int(round((curr_slide / max(total_slides, 1)) * 100)), 99)
                     pct = max(pct, 1 if curr_slide > 0 else 0)
 
+        # Student is considered actively in THIS lesson only if they are online AND this lesson was updated recently (within 60s)
+        active_lesson_window = datetime.utcnow() - timedelta(seconds=60)
+        is_lesson_actively_open = bool(lp.updated_at and lp.updated_at >= active_lesson_window)
         is_student_online = (lp.student_id in online_students_set)
-        is_active_online = is_student_online and not is_completed
+        is_active_online = is_student_online and is_lesson_actively_open and not is_completed
 
         if attempts:
             first_att = attempts[0]

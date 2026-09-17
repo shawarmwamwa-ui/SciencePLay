@@ -1,10 +1,33 @@
 // gameObjects.js
 // Data adapter for teacher-configurable sorting activities.
 
-import { getObjectByLabel } from './objectsData.js';
+import { getObjectByLabel, LIVING_NON_LIVING_OBJECTS } from './objectsData.js';
 
 const DEFAULT_ROUND_SIZE = 12;
 const configCache = new Map();
+
+function getDefaultFallbackConfig() {
+  const defaultBins = [
+    { id: 'living', label: 'Living', icon: '🌱', color: '#4ade80' },
+    { id: 'non-living', label: 'Non-Living', icon: '🪨', color: '#fb923c' },
+  ];
+  const defaultObjects = (LIVING_NON_LIVING_OBJECTS || []).map((obj, index) => ({
+    id: obj.id ?? index + 1,
+    label: obj.label,
+    categoryId: obj.isLiving ? 'living' : 'non-living',
+    explanation: obj.explanation || '',
+    image: obj.image || `/static/images/${obj.label.toLowerCase()}.webp`,
+    icon: obj.icon || obj.image || `/static/images/${obj.label.toLowerCase()}.webp`,
+  }));
+
+  return {
+    title: 'Living vs Non-Living Claw Machine',
+    instructions: 'Sort each object into the correct chute to win stars.',
+    roundSize: DEFAULT_ROUND_SIZE,
+    bins: defaultBins,
+    objects: defaultObjects,
+  };
+}
 
 function shuffleArray(items) {
   const shuffled = [...items];
@@ -18,14 +41,15 @@ function shuffleArray(items) {
 function normalizeObject(object, index) {
   const sharedObject = getObjectByLabel(object.label || object.name || '');
   const categoryId = object.categoryId || (sharedObject ? (sharedObject.isLiving ? 'living' : 'non-living') : undefined);
+  const fallbackImg = object.label ? `/static/images/${object.label.toLowerCase()}.webp` : '';
 
   return {
     id: object.id ?? index + 1,
     label: object.label || object.name || sharedObject?.label || `Object ${index + 1}`,
     categoryId,
     explanation: object.explanation || sharedObject?.explanation || '',
-    image: object.image || sharedObject?.image || '',
-    icon: object.icon || sharedObject?.icon || object.image || sharedObject?.image || '',
+    image: object.image || sharedObject?.image || fallbackImg,
+    icon: object.icon || sharedObject?.icon || object.image || sharedObject?.image || fallbackImg,
   };
 }
 
@@ -80,19 +104,27 @@ function allocateByCategory(objects, bins, roundSize) {
 }
 
 async function getSortingActivityConfig(activityId) {
-  if (configCache.has(activityId)) {
+  if (activityId && configCache.has(activityId)) {
     return configCache.get(activityId);
   }
 
+  if (!activityId) {
+    return getDefaultFallbackConfig();
+  }
+
   try {
-    const response = await fetch(`/student/sorting_activity_config/${activityId}`, { cache: 'no-store' });
+    const response = await fetch(`/student/sorting_activity_config/${activityId}`, {
+      cache: 'no-store',
+      credentials: 'same-origin'
+    });
     if (!response.ok) {
-      throw new Error(`Config request failed with status ${response.status}`);
+      console.warn(`Config request failed (${response.status}), falling back to defaults.`);
+      return getDefaultFallbackConfig();
     }
 
     const payload = await response.json();
     if (!payload || !Array.isArray(payload.bins) || !Array.isArray(payload.objects)) {
-      throw new Error('Invalid sorting activity payload');
+      return getDefaultFallbackConfig();
     }
 
     const bins = payload.bins
@@ -100,7 +132,7 @@ async function getSortingActivityConfig(activityId) {
       .map((bin, index) => normalizeBin(bin, index));
 
     if (bins.length < 2 || bins.length > 4) {
-      throw new Error('Sorting activity must have 2 to 4 bins');
+      return getDefaultFallbackConfig();
     }
 
     const normalizedObjects = payload.objects
@@ -108,7 +140,7 @@ async function getSortingActivityConfig(activityId) {
       .map((object, index) => normalizeObject(object, index));
 
     if (normalizedObjects.length === 0) {
-      throw new Error('Activity has no valid objects');
+      return getDefaultFallbackConfig();
     }
 
     const config = {
@@ -122,8 +154,8 @@ async function getSortingActivityConfig(activityId) {
     configCache.set(activityId, config);
     return config;
   } catch (error) {
-    console.error('Unable to load sorting activity config:', error);
-    throw error;
+    console.warn('Unable to load sorting activity config, using fallback:', error);
+    return getDefaultFallbackConfig();
   }
 }
 
@@ -137,11 +169,11 @@ export async function getClawGameObjects(activityId) {
     instructions: config.instructions,
     bins: config.bins,
     objects: selectedObjects.map(object => ({
-    ...object,
-    name: object.label,
-    icon: object.icon || object.image,
-    attempts: 0,
-    isSorted: false,
+      ...object,
+      name: object.label,
+      icon: object.icon || object.image || (object.label ? `/static/images/${object.label.toLowerCase()}.webp` : ''),
+      attempts: 0,
+      isSorted: false,
     })),
   };
 }

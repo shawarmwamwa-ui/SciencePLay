@@ -150,19 +150,12 @@
 
   <script>window.clawMachineActivityId = {{ activity_id|tojson }};</script>
 
-  <script type="module" src="{{ url_for('static', filename='js/clawMachineGame.js') }}"></script>
   <script type="module">
+    import { initClawMachineGame } from "{{ url_for('static', filename='js/clawMachineGame.js', v='20260918_1') }}";
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
-    window.addEventListener('DOMContentLoaded', () => {
-      initBgmPlayer('game-bgm', { volume: 0.20, storageKey: 'scienceplay_game_bgm_muted' });
-    });
-  </script>
-  <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      if (window.initClawMachineGame) {
-        window.initClawMachineGame();
-      }
-    });
+
+    initClawMachineGame();
+    initBgmPlayer('game-bgm', { volume: 0.20, storageKey: 'scienceplay_game_bgm_muted' });
   </script>
   <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 </body>

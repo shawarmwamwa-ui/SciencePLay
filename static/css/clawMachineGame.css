@@ -643,6 +643,70 @@ body.arcade-page {
   transition: transform 180ms ease;
 }
 
+/* Ghost Pickup & Drop Animation Overlays */
+.pickup-object,
+.dropped-object {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: linear-gradient(160deg, #ffffff 0%, #e0f2fe 100%);
+  border: 2.5px solid #1e3a8a;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Held Object in Claw Pincers */
+.claw-held-object-tile {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 7;
+  pointer-events: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #ffffff 0%, #e0f2fe 100%);
+  border: 2px solid #1e3a8a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.claw-held-object-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+}
+
+.claw-held-object-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.claw-held-object-label {
+  font-size: 8px;
+  font-weight: 700;
+  color: #172554;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40px;
+  text-align: center;
+  line-height: 1;
+}
+
 .claw-pincer.left {
   left: 3px;
   border-right: 0;

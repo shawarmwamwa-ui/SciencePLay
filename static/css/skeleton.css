@@ -59,35 +59,38 @@
 
 /* Dashboard Skeleton Container Visibility Transition */
 .dashboard-skeleton-wrap {
-  display: none !important;
+  opacity: 1;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s ease;
+  position: relative;
+  width: 100%;
 }
 
 .dashboard-real-content {
-  opacity: 1 !important;
-  display: block !important;
-  transform: none !important;
-  animation: none !important;
+  opacity: 0;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: none;
 }
 
 .dashboard-loaded .dashboard-skeleton-wrap {
+  opacity: 0;
+  pointer-events: none;
   display: none !important;
 }
 
 .dashboard-loaded .dashboard-real-content {
-  opacity: 1 !important;
-  display: block !important;
-  transform: none !important;
-  animation: none !important;
+  opacity: 1;
+  display: block;
+  animation: dashboardFadeIn 0.35s ease forwards;
 }
 
 @keyframes dashboardFadeIn {
   0% {
-    opacity: 1;
-    transform: none;
+    opacity: 0;
+    transform: translateY(6px);
   }
   100% {
     opacity: 1;
-    transform: none;
+    transform: translateY(0);
   }
 }
 

@@ -58,6 +58,91 @@
         <section class="admin-content">
           <div class="content-center-wrap">
 
+          <!-- Compliance Skeleton View -->
+          <div class="dashboard-skeleton-wrap">
+            <header class="page-header mb-4">
+              <div>
+                <span class="skeleton-shimmer skeleton-line" style="width: 140px; height: 12px; margin-bottom: 8px;"></span>
+                <span class="skeleton-shimmer skeleton-line" style="width: 250px; height: 28px; margin-bottom: 8px;"></span>
+                <span class="skeleton-shimmer skeleton-line" style="width: 420px; height: 14px;"></span>
+              </div>
+              <span class="skeleton-shimmer skeleton-pill" style="width: 120px; height: 38px;"></span>
+            </header>
+
+            <!-- Filter Controls Bar Skeleton -->
+            <div class="compliance-filter-bar mb-4">
+              <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+                <div class="d-flex gap-2">
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 100px; height: 32px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 32px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 32px;"></span>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 32px;"></span>
+                </div>
+                <span class="skeleton-shimmer skeleton-pill" style="width: 140px; height: 32px;"></span>
+              </div>
+              <div class="row g-2">
+                <div class="col-md-5"><span class="skeleton-shimmer skeleton-box" style="height: 38px; width: 100%;"></span></div>
+                <div class="col-md-3"><span class="skeleton-shimmer skeleton-box" style="height: 38px; width: 100%;"></span></div>
+                <div class="col-md-4"><span class="skeleton-shimmer skeleton-box" style="height: 38px; width: 100%;"></span></div>
+              </div>
+            </div>
+
+            <!-- Compiled User Cards Skeleton -->
+            <div class="d-flex flex-column gap-3 mb-4">
+              <div class="compiled-user-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div class="d-flex align-items-center gap-3 w-50">
+                    <span class="skeleton-shimmer skeleton-circle" style="width: 48px; height: 48px;"></span>
+                    <div class="w-75">
+                      <span class="skeleton-shimmer skeleton-line" style="width: 60%; height: 16px; margin-bottom: 6px;"></span>
+                      <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 12px;"></span>
+                    </div>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 26px;"></span>
+                </div>
+                <div class="border-top pt-3">
+                  <div class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 110px; height: 20px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 90px; height: 16px;"></span>
+                  </div>
+                  <div class="py-2 d-flex justify-content-between align-items-center">
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 110px; height: 20px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 45%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 90px; height: 16px;"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="compiled-user-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div class="d-flex align-items-center gap-3 w-50">
+                    <span class="skeleton-shimmer skeleton-circle" style="width: 48px; height: 48px;"></span>
+                    <div class="w-75">
+                      <span class="skeleton-shimmer skeleton-line" style="width: 55%; height: 16px; margin-bottom: 6px;"></span>
+                      <span class="skeleton-shimmer skeleton-line" style="width: 35%; height: 12px;"></span>
+                    </div>
+                  </div>
+                  <span class="skeleton-shimmer skeleton-pill" style="width: 80px; height: 26px;"></span>
+                </div>
+                <div class="border-top pt-3">
+                  <div class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 110px; height: 20px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 35%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 90px; height: 16px;"></span>
+                  </div>
+                  <div class="py-2 d-flex justify-content-between align-items-center">
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 110px; height: 20px;"></span>
+                    <span class="skeleton-shimmer skeleton-line" style="width: 40%; height: 14px;"></span>
+                    <span class="skeleton-shimmer skeleton-pill" style="width: 90px; height: 16px;"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real Content View -->
+          <div class="dashboard-real-content">
             <header class="page-header mb-4">
               <div>
                 <p class="eyebrow mb-1">Security & Audit Tracking</p>
@@ -406,6 +491,8 @@
                 </div>
               {% endif %}
             {% endif %}
+          </div>
+          <!-- End .dashboard-real-content -->
 
           </div>
         </section>
