@@ -157,8 +157,14 @@ function bindNavigation() {
       if (lessonHeartbeatInterval) {
         clearInterval(lessonHeartbeatInterval);
       }
-      saveLessonProgress(true);
-      window.location.href = '/student/lessons';
+      const nextBtn = document.querySelector('#next-slide');
+      if (nextBtn) {
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Finishing...';
+      }
+      saveLessonProgress(true).finally(() => {
+        window.location.href = '/student/lessons';
+      });
       return;
     }
 
@@ -180,6 +186,19 @@ function bindNavigation() {
     renderLesson();
     saveLessonProgress();
   });
+
+  const backBtn = document.querySelector('.brutal-back-btn, .bpl-back-btn');
+  if (backBtn) {
+    backBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const slides = getActiveLessonSlides();
+      const isAtEnd = lessonState.currentIndex >= slides.length - 1 || getCurrentSlide()?.type === 'summary';
+      backBtn.classList.add('disabled');
+      saveLessonProgress(isAtEnd).finally(() => {
+        window.location.href = '/student/lessons';
+      });
+    });
+  }
 }
 
 const LIVING_VOICE_KEYS = [
@@ -722,22 +741,27 @@ let lastSavedTime = performance.now();
 function saveLessonProgress(completed = false) {
   const lessonId = window.currentLessonId || null;
   if (!lessonId) {
-    return;
+    return Promise.resolve();
   }
 
   const now = performance.now();
   const timeSpentDelta = Math.max(1, Math.round((now - lastSavedTime) / 1000));
   lastSavedTime = now;
 
+  const slides = getActiveLessonSlides();
+  const isAtSummary = lessonState.currentIndex >= slides.length - 1 || getCurrentSlide()?.type === 'summary';
+  const isDone = completed || isAtSummary;
+  const progressPercent = isDone ? 100 : Math.round(((lessonState.currentIndex + 1) / slides.length) * 100);
+
   const payload = {
     lesson_id: lessonId,
-    progress_percent: completed ? 100 : Math.round(((lessonState.currentIndex + 1) / getActiveLessonSlides().length) * 100),
+    progress_percent: progressPercent,
     current_slide: lessonState.currentIndex,
-    completed: completed,
+    completed: isDone,
     time_spent: timeSpentDelta,
   };
 
-  fetch('/student/lesson_progress', {
+  return fetch('/student/lesson_progress', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -752,6 +776,7 @@ function saveLessonProgress(completed = false) {
     return response.json();
   }).then(data => {
     console.debug('Lesson progress saved:', data);
+    return data;
   }).catch(error => {
     console.warn('Failed to save lesson progress:', error);
   });

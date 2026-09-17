@@ -309,12 +309,14 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
   }
 
   function saveProgress(completed = false) {
-    if (!lessonId) return;
+    if (!lessonId) return Promise.resolve();
     const now = performance.now();
     const delta = Math.max(1, Math.round((now - state.lastSavedTime) / 1000));
     state.lastSavedTime = now;
-    const pct = completed ? 100 : Math.round(((state.currentIndex + 1) / totalSlides) * 100);
-    fetch('/student/lesson_progress', {
+    const isAtEnd = state.currentIndex >= totalSlides - 1 || slides[state.currentIndex]?.type === 'summary';
+    const isDone = completed || isAtEnd;
+    const pct = isDone ? 100 : Math.round(((state.currentIndex + 1) / totalSlides) * 100);
+    return fetch('/student/lesson_progress', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
@@ -323,10 +325,15 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
         lesson_id: lessonId,
         progress_percent: pct,
         current_slide: state.currentIndex,
-        completed: completed,
+        completed: isDone,
         time_spent: delta,
       }),
-    }).catch(() => {});
+    }).then(res => {
+      if (!res.ok) return res.json().then(err => Promise.reject(err));
+      return res.json();
+    }).catch(err => {
+      console.warn('saveProgress error:', err);
+    });
   }
 
   function logQuickCheckAttempt(slide, optId, correct) {
@@ -412,8 +419,13 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
     if (slide.type === 'summary' || isLast) {
       state.finished = true;
       clearInterval(heartbeat);
-      saveProgress(true);
-      setTimeout(() => { window.location.href = '/student/lessons'; }, 800);
+      if (nextBtn) {
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Finishing...';
+      }
+      saveProgress(true).finally(() => {
+        window.location.href = '/student/lessons';
+      });
       return;
     }
 
@@ -488,8 +500,14 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
   prevBtn?.addEventListener('click', goPrev);
   nextBtn?.addEventListener('click', goNext);
   document.getElementById('bpl-tts-btn')?.addEventListener('click', readAloud);
-  document.querySelector('.bpl-back-btn')?.addEventListener('click', () => {
-    if (!state.finished) saveProgress(false);
+  const backBtn = document.querySelector('.bpl-back-btn, .brutal-back-btn');
+  backBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const isAtEnd = state.currentIndex >= totalSlides - 1 || slides[state.currentIndex]?.type === 'summary';
+    backBtn.classList.add('disabled');
+    saveProgress(isAtEnd).finally(() => {
+      window.location.href = '/student/lessons';
+    });
   });
 
   // ── Heartbeat ──────────────────────────────────────────────────────────────

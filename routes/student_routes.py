@@ -171,12 +171,76 @@ def has_student_completed_lesson(user_id, lesson_id):
     """Check if the student has ever completed this lesson."""
     if not user_id or not lesson_id:
         return False
+
+    # 1. Check direct LessonProgress record
     lp = LessonProgress.query.filter_by(student_id=user_id, lesson_id=lesson_id).first()
     if lp and (lp.completed_at is not None or lp.completed or (lp.revisit_count or 0) > 0 or (lp.progress_percent or 0) >= 100):
         return True
-    attempt = LessonAttemptLog.query.filter_by(student_id=user_id, lesson_id=lesson_id, completed=True).first()
+
+    # 2. Check direct LessonAttemptLog record
+    attempt = LessonAttemptLog.query.filter(
+        LessonAttemptLog.student_id == user_id,
+        LessonAttemptLog.lesson_id == lesson_id
+    ).filter(
+        (LessonAttemptLog.completed == True) | (LessonAttemptLog.progress_percent >= 100)
+    ).first()
     if attempt:
         return True
+
+    # 3. Check direct LessonAssignment record
+    assignment = LessonAssignment.query.filter_by(student_id=user_id, lesson_id=lesson_id, status='completed').first()
+    if assignment:
+        return True
+
+    # 4. Check by matching lesson title to protect against duplicate/re-seeded lesson rows
+    target_lesson = Lesson.query.get(lesson_id)
+    if target_lesson and target_lesson.title:
+        title_stripped = target_lesson.title.strip()
+        matching_lesson_ids = [l.id for l in Lesson.query.filter(Lesson.title.ilike(title_stripped)).all() if l.id != lesson_id]
+        if matching_lesson_ids:
+            alt_lp = LessonProgress.query.filter(
+                LessonProgress.student_id == user_id,
+                LessonProgress.lesson_id.in_(matching_lesson_ids)
+            ).filter(
+                (LessonProgress.completed == True) |
+                (LessonProgress.completed_at.isnot(None)) |
+                (LessonProgress.revisit_count > 0) |
+                (LessonProgress.progress_percent >= 100)
+            ).first()
+            if alt_lp:
+                return True
+            alt_att = LessonAttemptLog.query.filter(
+                LessonAttemptLog.student_id == user_id,
+                LessonAttemptLog.lesson_id.in_(matching_lesson_ids)
+            ).filter(
+                (LessonAttemptLog.completed == True) | (LessonAttemptLog.progress_percent >= 100)
+            ).first()
+            if alt_att:
+                return True
+            alt_assign = LessonAssignment.query.filter(
+                LessonAssignment.student_id == user_id,
+                LessonAssignment.lesson_id.in_(matching_lesson_ids),
+                LessonAssignment.status == 'completed'
+            ).first()
+            if alt_assign:
+                return True
+
+    # 5. Check paired activity attempts: if student already played and scored in the paired game, lesson was completed
+    paired_acts = Activity.query.filter_by(lesson_id=lesson_id).all()
+    if paired_acts:
+        paired_ids = [a.id for a in paired_acts]
+        has_score = AttemptLog.query.filter(
+            AttemptLog.student_id == user_id,
+            AttemptLog.activity_id.in_(paired_ids),
+            AttemptLog.score.isnot(None)
+        ).first() or ProgressLog.query.filter(
+            ProgressLog.student_id == user_id,
+            ProgressLog.activity_id.in_(paired_ids),
+            ProgressLog.score.isnot(None)
+        ).first()
+        if has_score:
+            return True
+
     return False
 
 
@@ -322,10 +386,10 @@ def get_attempts_today(student_id, activity_id):
     today_end = datetime.combine(datetime.utcnow().date(), time.max)
     
     # Check if there is an active assignment for this student & activity
-    assignment = ActivityAssignment.query.filter_by(
-        student_id=student_id,
-        activity_id=activity_id,
-        status='assigned'
+    assignment = ActivityAssignment.query.filter(
+        ActivityAssignment.student_id == student_id,
+        ActivityAssignment.activity_id == activity_id,
+        ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted'])
     ).order_by(ActivityAssignment.assigned_at.desc()).first()
 
     # If the assignment was assigned recently, count attempts since this assignment began
@@ -373,7 +437,7 @@ def dashboard():
         Activity, Activity.id == ActivityAssignment.activity_id
     ).filter(
         ActivityAssignment.student_id == user_id,
-        ActivityAssignment.status == 'assigned',
+        ActivityAssignment.status.in_(['assigned', 'completed']),
         Activity.engine.in_(['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter'])
     ).all()
     activities = [activity for _, activity in activity_assignment_rows]
@@ -391,27 +455,22 @@ def dashboard():
     total_score = sum((log.score or 0) for log in progress_logs)
 
     lesson_progress = []
-    lesson_progress_by_lesson = {log.lesson_id: log for log in LessonProgress.query.filter_by(student_id=user_id).all()}
     for lesson in lessons:
         lesson_activities = [activity for activity in activities if activity.lesson_id == lesson.id]
-        if lesson.id in lesson_progress_by_lesson:
-            log = lesson_progress_by_lesson[lesson.id]
-            is_done = bool(log.completed or (log.revisit_count or 0) > 0 or bool(log.initial_time_spent))
-            lesson_progress.append({
-                'lesson': lesson,
-                'completed': is_done,
-                'total': len(lesson_activities),
-                'percent': 100 if is_done else (log.progress_percent or 0)
-            })
-        else:
-            completed = sum(1 for activity in lesson_activities if activity.id in completed_by_activity)
-            percent = round((completed / len(lesson_activities)) * 100) if lesson_activities else 0
-            lesson_progress.append({
-                'lesson': lesson,
-                'completed': completed,
-                'total': len(lesson_activities),
-                'percent': percent
-            })
+        is_done = has_student_completed_lesson(user_id, lesson.id)
+        matching_lesson_ids = [l.id for l in Lesson.query.filter(Lesson.title.ilike(lesson.title.strip())).all()]
+        log = LessonProgress.query.filter(
+            LessonProgress.student_id == user_id,
+            LessonProgress.lesson_id.in_(matching_lesson_ids)
+        ).first() if user_id else None
+
+        pct = 100 if is_done else ((log.progress_percent or 0) if log else 0)
+        lesson_progress.append({
+            'lesson': lesson,
+            'completed': is_done,
+            'total': len(lesson_activities),
+            'percent': pct
+        })
 
     # Overall Progress = (Completed Lessons + Completed Activities) / (Total Assigned Lessons + Total Assigned Activities)
     completed_lessons_count = sum(1 for lp in lesson_progress if bool(lp.get('completed')) or lp.get('percent', 0) >= 100)
@@ -701,32 +760,24 @@ def lessons():
         completed_by_activity = {log.activity_id: log for log in progress_logs}
 
     lesson_progress = []
-    lesson_progress_by_lesson = {log.lesson_id: log for log in LessonProgress.query.filter_by(student_id=user_id).all()} if user_id else {}
     for lesson in lessons:
         lesson_activities = [activity for activity in activities if activity.lesson_id == lesson.id]
-        
         is_locked = False
-                
-        if lesson.id in lesson_progress_by_lesson:
-            log = lesson_progress_by_lesson[lesson.id]
-            is_done = bool(log.completed or (log.revisit_count or 0) > 0)
-            lesson_progress.append({
-                'lesson': lesson,
-                'completed': is_done,
-                'total': len(lesson_activities),
-                'percent': 100 if is_done else (log.progress_percent or 0),
-                'is_locked': is_locked
-            })
-        else:
-            completed = sum(1 for activity in lesson_activities if activity.id in completed_by_activity)
-            percent = round((completed / len(lesson_activities)) * 100) if lesson_activities else 0
-            lesson_progress.append({
-                'lesson': lesson,
-                'completed': completed,
-                'total': len(lesson_activities),
-                'percent': percent,
-                'is_locked': is_locked
-            })
+        is_done = has_student_completed_lesson(user_id, lesson.id)
+        matching_lesson_ids = [l.id for l in Lesson.query.filter(Lesson.title.ilike(lesson.title.strip())).all()]
+        log = LessonProgress.query.filter(
+            LessonProgress.student_id == user_id,
+            LessonProgress.lesson_id.in_(matching_lesson_ids)
+        ).first() if user_id else None
+
+        pct = 100 if is_done else ((log.progress_percent or 0) if log else 0)
+        lesson_progress.append({
+            'lesson': lesson,
+            'completed': is_done,
+            'total': len(lesson_activities),
+            'percent': pct,
+            'is_locked': is_locked
+        })
 
     return render_template('student/lessons.html', lesson_progress=lesson_progress)
 
@@ -880,9 +931,23 @@ def lesson_progress_api():
     
     # Sync assignment status to completed when lesson is finished
     if completed or progress_percent >= 100:
-        assignments = LessonAssignment.query.filter_by(student_id=user_id, lesson_id=lesson_id).all()
+        matching_lesson_ids = [l.id for l in Lesson.query.filter(Lesson.title.ilike(lesson.title.strip())).all()]
+        assignments = LessonAssignment.query.filter(
+            LessonAssignment.student_id == user_id,
+            LessonAssignment.lesson_id.in_(matching_lesson_ids)
+        ).all()
         for la in assignments:
             la.status = 'completed'
+            
+        # Also ensure any LessonProgress records for matching lessons are marked completed
+        for match_id in matching_lesson_ids:
+            other_lp = LessonProgress.query.filter_by(student_id=user_id, lesson_id=match_id).first()
+            if other_lp:
+                other_lp.completed = True
+                other_lp.progress_percent = 100
+                if not other_lp.completed_at:
+                    other_lp.completed_at = datetime.utcnow()
+
         check_and_award_badges(user_id)
     db.session.commit()
     
@@ -961,8 +1026,12 @@ def activities():
     current_user = get_current_user()
     user_id = current_user.id
     claw_machine_activity = get_or_create_claw_machine_activity()
-    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
-    assigned_activity_ids = [a.activity_id for a in ActivityAssignment.query.filter_by(student_id=user_id, status='assigned').all()]
+    assigned_activity_ids = [
+        a.activity_id for a in ActivityAssignment.query.filter(
+            ActivityAssignment.student_id == user_id,
+            ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted'])
+        ).all()
+    ]
     activities = Activity.query.filter(
         Activity.id.in_(assigned_activity_ids),
         Activity.engine.in_(playable_engines)

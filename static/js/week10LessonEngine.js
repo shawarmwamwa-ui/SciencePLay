@@ -91,12 +91,14 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
   }
 
   function saveProgress(completed = false) {
-    if (!lessonId) return;
+    if (!lessonId) return Promise.resolve();
     const now = performance.now();
     const delta = Math.max(1, Math.round((now - state.lastSavedTime) / 1000));
     state.lastSavedTime = now;
-    const pct = completed ? 100 : Math.round(((state.currentIndex + 1) / totalSlides) * 100);
-    fetch('/student/lesson_progress', {
+    const isAtEnd = state.currentIndex >= totalSlides - 1 || slides[state.currentIndex]?.type === 'summary';
+    const isDone = completed || isAtEnd;
+    const pct = isDone ? 100 : Math.round(((state.currentIndex + 1) / totalSlides) * 100);
+    return fetch('/student/lesson_progress', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
@@ -105,10 +107,15 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
         lesson_id: lessonId,
         progress_percent: pct,
         current_slide: state.currentIndex,
-        completed: completed,
+        completed: isDone,
         time_spent: delta,
       }),
-    }).catch(() => {});
+    }).then(res => {
+      if (!res.ok) return res.json().then(err => Promise.reject(err));
+      return res.json();
+    }).catch(err => {
+      console.warn('saveProgress error:', err);
+    });
   }
 
   function logQuestionAttempt(questionText, correct) {
@@ -736,9 +743,24 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
         render();
       } else {
         // Final finish
-        saveProgress(true);
-        window.location.href = '/student/lessons';
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Finishing...';
+        saveProgress(true).finally(() => {
+          window.location.href = '/student/lessons';
+        });
       }
+    });
+  }
+
+  const backBtn = document.querySelector('.bpl-back-btn, .brutal-back-btn');
+  if (backBtn) {
+    backBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const isAtEnd = state.currentIndex >= totalSlides - 1 || slides[state.currentIndex]?.type === 'summary';
+      backBtn.classList.add('disabled');
+      saveProgress(isAtEnd).finally(() => {
+        window.location.href = '/student/lessons';
+      });
     });
   }
 
@@ -805,6 +827,17 @@ export function initWeek10Lesson(slides, lessonId, lessonName, initialSlide = 0)
     });
   }
 
-  // Initial render
+  // Heartbeat & Pagehide to keep live tracking accurate
+  const heartbeat = setInterval(() => {
+    saveProgress(false);
+  }, 5000);
+
+  window.addEventListener('pagehide', () => {
+    clearInterval(heartbeat);
+    saveProgress(false);
+  });
+
+  // Initial save and render
+  saveProgress(false);
   render();
 }
