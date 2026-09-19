@@ -162,10 +162,31 @@ function shuffle(arr) {
   return a;
 }
 
+let activeElapsedSeconds = 0;
+let lastTickTime = Date.now();
+let timerPaused = false;
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      timerPaused = true;
+      activeElapsedSeconds += Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+    } else {
+      timerPaused = false;
+      lastTickTime = Date.now();
+    }
+  });
+}
+
+function getActiveElapsedSeconds() {
+  if (timerPaused) return activeElapsedSeconds;
+  return activeElapsedSeconds + Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+}
+
 function updateHUD() {
   const el = document.getElementById('ftp-score');
   const maxScore = 100;
-  if (el) el.textContent = `${state.score} / ${maxScore}`;
+  if (el) el.textContent = `${Math.min(100, state.score)} / ${maxScore} pts`;
 }
 
 // ── SAVE RESULT ───────────────────────────────────────────────────────────────
@@ -174,14 +195,16 @@ async function saveResult() {
   if (state.completed) return;
   state.completed = true;
 
-  // Bonus for perfect run (all first try): +1 pt to make exactly 100 pts
   const totalZones = ROUNDS.reduce((acc, r) => acc + r.zones.length, 0);
   if (state.correctFirstTry >= totalZones) {
     state.score = 100;
+  } else if (state.matched.size >= totalZones) {
+    // Completion bonus (+4 pts)
+    state.score = Math.min(100, state.score + 4);
   }
   state.score = Math.min(100, Math.max(20, state.score));
 
-  const timeSpent = Math.max(1, Math.round((performance.now() - state.startTime) / 1000));
+  const timeSpent = Math.max(1, getActiveElapsedSeconds());
   const actId = window.findThePartActivityId || state.activityId;
 
   let responseData = null;
@@ -222,10 +245,15 @@ function showSummary(data) {
 
   const maxScore = 100;
   const pct = Math.round(state.score);
+  const total = ROUNDS.reduce((acc, r) => acc + r.zones.length, 0);
+  const stars = state.score >= 90 ? 3 : state.score >= 60 ? 2 : 1;
+  const starStr = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  const timeSpentStr = `${getActiveElapsedSeconds()}s`;
 
   const attemptsUsed = state.attemptsToday || (data && data.attempts_today) || 1;
   const limit = state.attemptsLimit || 3;
   const exhausted = attemptsUsed >= limit;
+  const left = Math.max(0, limit - attemptsUsed);
 
   let attemptBadge = '';
   let restartBtnHtml = '';
@@ -241,20 +269,14 @@ function showSummary(data) {
       <button class="ftp-btn ftp-btn-disabled" disabled title="You have reached your 3 daily attempts. Check back tomorrow for more practice!">
         <i class="bi bi-lock-fill me-1"></i>Daily Limit Reached (3/3)
       </button>`;
-    coachHintHtml = `
-      <div class="ftp-hint-box ftp-hint-box-exhausted">
-        <i class="bi bi-info-circle-fill me-2 text-warning"></i>
-        <span>You've completed all <strong>3 daily attempts</strong> for today! Awesome work. Check back tomorrow or explore other activities!</span>
-      </div>`;
   } else {
-    const left = limit - attemptsUsed;
     attemptBadge = `
       <div class="ftp-stat-box">
         <span class="ftp-stat-val text-success">${attemptsUsed}/${limit}</span>
         <span class="ftp-stat-lbl">${left} Attempt${left === 1 ? '' : 's'} Left Today</span>
       </div>`;
     restartBtnHtml = `
-      <button id="ftp-restart" class="ftp-btn ftp-btn-primary">
+      <button id="ftp-restart" class="ftp-btn ftp-btn-secondary">
         <i class="bi bi-arrow-clockwise me-1"></i>Play Again (${left} left)
       </button>`;
   }
@@ -269,24 +291,24 @@ function showSummary(data) {
 
   container.innerHTML = `
     <div class="ftp-summary text-center">
-      <div class="ftp-summary-icon">
-        <i class="bi bi-trophy-fill"></i>
+      <div class="ftp-summary-icon" style="font-size: 2.2rem; margin-bottom: 4px;">
+        ${starStr}
       </div>
       <h2 class="ftp-summary-title">Find the Part — Complete!</h2>
       <p class="ftp-summary-sub">You labeled all animal body parts. Great effort!</p>
       
       <div class="ftp-stats-row">
         <div class="ftp-stat-box">
-          <span class="ftp-stat-val">${state.score} / ${maxScore}</span>
+          <span class="ftp-stat-val text-warning">${state.score} / ${maxScore}</span>
           <span class="ftp-stat-lbl">Final Score</span>
         </div>
         <div class="ftp-stat-box">
           <span class="ftp-stat-val">${state.correctFirstTry}/${total}</span>
-          <span class="ftp-stat-lbl">First Try</span>
+          <span class="ftp-stat-lbl">First Try (${pct}%)</span>
         </div>
         <div class="ftp-stat-box">
-          <span class="ftp-stat-val">${pct}%</span>
-          <span class="ftp-stat-lbl">Score Accuracy</span>
+          <span class="ftp-stat-val text-info">${timeSpentStr}</span>
+          <span class="ftp-stat-lbl">Time Spent</span>
         </div>
         ${attemptBadge}
       </div>
@@ -294,8 +316,8 @@ function showSummary(data) {
       ${coachHintHtml}
 
       <div class="ftp-summary-btns">
-        <a href="/student/activities" class="ftp-btn ${exhausted ? 'ftp-btn-primary' : 'ftp-btn-secondary'}">
-          <i class="bi bi-grid-fill me-1"></i>Back to Activities
+        <a href="/student/activities" class="ftp-btn ftp-btn-primary">
+          <i class="bi bi-check-circle-fill me-1"></i>Finish & Return to Playground
         </a>
         ${restartBtnHtml}
       </div>
@@ -427,24 +449,25 @@ function processMatch(zoneId, labelId, round) {
     const fact = round.facts[zoneId];
     const firstTry = tries === 1;
 
-    // Diminishing point return (9 parts total -> 9 * 11 = 99 + 1 perfect bonus = 100 pts max):
-    // 1st try: 11 pts | 2nd try: 6 pts | 3rd try: 3 pts | 4+ tries: 1 pt
+    // 12 parts total across 3 animals (4 bird + 4 lion + 4 fish):
+    // 1st try: 8 pts (12 * 8 = 96 + 4 completion bonus = 100 pts max)
+    // 2nd try: 5 pts | 3rd try: 3 pts | 4+ tries: 1 pt
     let pts = 1;
     let ptsBadge = '+1 pt (Review needed)';
     if (tries === 1) {
-      pts = 11;
-      ptsBadge = '+11 pts (First Try!)';
+      pts = 8;
+      ptsBadge = '+8 pts (First Try!)';
       state.correctFirstTry += 1;
     } else if (tries === 2) {
-      pts = 6;
-      ptsBadge = '+6 pts';
+      pts = 5;
+      ptsBadge = '+5 pts';
     } else if (tries === 3) {
       pts = 3;
       ptsBadge = '+3 pts';
     }
 
     state.matched.add(zoneId);
-    state.score += pts;
+    state.score = Math.min(100, state.score + pts);
 
     state.objectLogs.push({
       object_id: `${round.id}_${zoneId}`,
@@ -731,6 +754,9 @@ export function initFindThePart() {
   state.currentRound = 0;
   state.completed = false;
   state.startTime = performance.now();
+  activeElapsedSeconds = 0;
+  lastTickTime = Date.now();
+  timerPaused = false;
   state.objectLogs = [];
   state.selectedLabel = null;
   state.selectedSlot = null;
@@ -741,8 +767,57 @@ export function initFindThePart() {
     state.attemptsToday = Number(window.initialAttemptsToday);
   }
 
+  bindBackConfirmation();
   renderRound(0);
   updateHUD();
+}
+
+function bindBackConfirmation() {
+  const backBtn = document.getElementById('ftp-back-link');
+  if (!backBtn || backBtn._confirmBound) return;
+  backBtn._confirmBound = true;
+
+  backBtn.addEventListener('click', (e) => {
+    if (state.completed || (state.currentRound === 0 && state.matched.size === 0)) {
+      return;
+    }
+    e.preventDefault();
+    showExitModal();
+  });
+}
+
+function showExitModal() {
+  const existing = document.getElementById('ftp-exit-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'ftp-exit-overlay';
+  overlay.className = 'ftp-overlay-backdrop';
+  overlay.innerHTML = `
+    <div class="ftp-overlay-card">
+      <div class="ftp-overlay-icon">🤔</div>
+      <h3 class="ftp-overlay-title">Leave Activity?</h3>
+      <p class="ftp-overlay-sub">You're currently matching animal parts! What would you like to do?</p>
+      <div class="ftp-overlay-actions">
+        <button id="ftp-exit-save-btn" class="ftp-btn ftp-btn-primary">
+          <i class="bi bi-check-circle-fill me-1"></i>Finish & Save Score (${state.score} pts)
+        </button>
+        <button id="ftp-exit-cancel-btn" class="ftp-btn ftp-btn-secondary">
+          <i class="bi bi-play-fill me-1"></i>Keep Playing
+        </button>
+        <a href="/student/activities" class="ftp-btn ftp-btn-ghost">
+          Exit Without Saving
+        </a>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById('ftp-exit-cancel-btn')?.addEventListener('click', () => overlay.remove());
+  document.getElementById('ftp-exit-save-btn')?.addEventListener('click', () => {
+    overlay.remove();
+    saveResult();
+  });
 }
 
 window.initFindThePart = initFindThePart;

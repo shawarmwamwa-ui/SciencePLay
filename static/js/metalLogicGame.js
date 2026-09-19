@@ -203,7 +203,27 @@ export function initMetalLogicGame() {
   let currentLevelIdx = 0;
   let score = 100;
   let hintsUsed = 0;
-  let startTime = performance.now();
+  let activeElapsedSeconds = 0;
+  let lastTickTime = Date.now();
+  let timerPaused = false;
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        timerPaused = true;
+        activeElapsedSeconds += Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+      } else {
+        timerPaused = false;
+        lastTickTime = Date.now();
+      }
+    });
+  }
+
+  function getActiveElapsedSeconds() {
+    if (timerPaused) return activeElapsedSeconds;
+    return activeElapsedSeconds + Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+  }
+
   let currentLevelData = []; // array of { boxNum: 1, metal: obj, correctMetalId: str }
   let currentShelfIds = []; // array of metal and decoy IDs shown on choice shelf
   let userAnswers = {}; // { 1: itemId, 2: itemId, ... }
@@ -834,13 +854,18 @@ export function initMetalLogicGame() {
 
   async function handleVictory() {
     playVoicePrompt('level_complete', 'Level complete! Great job!');
-    const timeSpent = Math.max(1, Math.round((performance.now() - startTime) / 1000));
-    const finalScore = score;
+    const timeSpent = Math.max(1, getActiveElapsedSeconds());
+    const finalScore = Math.min(100, Math.max(25, score));
     const actId = window.metalGameActivityId;
 
     const modalScore = document.getElementById("modal-final-score");
     const modalTime = document.getElementById("modal-time-spent");
     const modalRating = document.getElementById("modal-rating");
+    const modalStars = document.getElementById("modal-stars");
+    const modalAttemptsUsed = document.getElementById("modal-attempts-used");
+
+    const stars = finalScore >= 90 ? 3 : finalScore >= 60 ? 2 : 1;
+    if (modalStars) modalStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
 
     if (modalScore) modalScore.textContent = finalScore;
     if (modalTime) modalTime.textContent = `${timeSpent}s`;
@@ -853,10 +878,13 @@ export function initMetalLogicGame() {
           : "Detective (50%+)";
     }
 
+    let attemptsToday = typeof window.initialAttemptsToday !== 'undefined' ? Number(window.initialAttemptsToday) + 1 : 1;
+    let attemptsLimit = 3;
+
     // Save to backend
     if (actId) {
       try {
-        await fetch("/student/activity_progress", {
+        const res = await fetch("/student/activity_progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -869,8 +897,29 @@ export function initMetalLogicGame() {
           }),
           keepalive: true
         });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.attempts_today !== undefined) attemptsToday = Number(data.attempts_today);
+          if (data.attempts_limit !== undefined) attemptsLimit = Number(data.attempts_limit);
+        }
       } catch (err) {
         console.warn("Could not save metal game progress:", err);
+      }
+    }
+
+    const left = Math.max(0, attemptsLimit - attemptsToday);
+    if (modalAttemptsUsed) {
+      if (attemptsToday >= attemptsLimit) {
+        modalAttemptsUsed.textContent = `${attemptsToday} / ${attemptsLimit} (Daily Limit Reached)`;
+        modalAttemptsUsed.className = "text-danger";
+        if (btnPlayAgain) {
+          btnPlayAgain.disabled = true;
+          btnPlayAgain.classList.add("disabled");
+          btnPlayAgain.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Limit Reached (3/3)`;
+        }
+      } else {
+        modalAttemptsUsed.textContent = `${attemptsToday} / ${attemptsLimit} (${left} left today)`;
+        modalAttemptsUsed.className = "text-success";
       }
     }
 
@@ -882,9 +931,35 @@ export function initMetalLogicGame() {
     score = 100;
     hintsUsed = 0;
     if (hudScoreVal) hudScoreVal.textContent = score;
-    startTime = performance.now();
+    activeElapsedSeconds = 0;
+    lastTickTime = Date.now();
+    timerPaused = false;
     objectLogs = [];
     setupLevel(0);
+  });
+
+  // Safe exit confirmation
+  const backLink = document.getElementById("arcade-back-link");
+  backLink?.addEventListener("click", (e) => {
+    const hasProgress = currentLevelIdx > 0 || hintsUsed > 0 || Object.keys(userAnswers).length > 0;
+    if (hasProgress) {
+      e.preventDefault();
+      const exitModalEl = document.getElementById("exitConfirmModal");
+      if (exitModalEl && window.bootstrap?.Modal) {
+        const modal = window.bootstrap.Modal.getOrCreateInstance(exitModalEl);
+        modal.show();
+      }
+    }
+  });
+
+  const btnModalFinishSave = document.getElementById("btn-modal-finish-save");
+  btnModalFinishSave?.addEventListener("click", () => {
+    const exitModalEl = document.getElementById("exitConfirmModal");
+    if (exitModalEl && window.bootstrap?.Modal) {
+      const modal = window.bootstrap.Modal.getInstance(exitModalEl);
+      modal?.hide();
+    }
+    handleVictory();
   });
 
   // Start Level 1

@@ -208,6 +208,27 @@ export function initRecyclingGame() {
   }
 
   function startNewGame() {
+    let activeElapsedSeconds = 0;
+    let lastTickTime = Date.now();
+    let timerPaused = false;
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          timerPaused = true;
+          activeElapsedSeconds += Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+        } else {
+          timerPaused = false;
+          lastTickTime = Date.now();
+        }
+      });
+    }
+
+    function getActiveElapsedSeconds() {
+      if (timerPaused) return activeElapsedSeconds;
+      return activeElapsedSeconds + Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+    }
+
     // Shuffle and pick 12 items
     const shuffled = shuffle(MASTER_ITEMS);
     deck = shuffled.slice(0, ROUND_SIZE);
@@ -216,7 +237,9 @@ export function initRecyclingGame() {
     bestStreak = 0;
     correctCount = 0;
     score = 0;
-    startTime = performance.now();
+    activeElapsedSeconds = 0;
+    lastTickTime = Date.now();
+    timerPaused = false;
     objectLogs = [];
     isAnimating = false;
 
@@ -526,7 +549,7 @@ export function initRecyclingGame() {
   });
 
   async function finishGame() {
-    const timeSpent = Math.max(1, Math.round((performance.now() - startTime) / 1000));
+    const timeSpent = Math.max(1, getActiveElapsedSeconds());
     const finalScore = Math.min(100, correctCount > 0 ? Math.max(20, score) : 0);
     const actId = window.recyclingGameActivityId;
 
@@ -534,6 +557,12 @@ export function initRecyclingGame() {
     const modalStreak = document.getElementById("modal-best-streak");
     const modalTime = document.getElementById("modal-time-spent");
     const modalRating = document.getElementById("modal-rating");
+    const modalStars = document.getElementById("modal-stars");
+    const modalAttemptsUsed = document.getElementById("modal-attempts-used");
+    const btnPlayAgain = document.getElementById("btn-play-again");
+
+    const stars = finalScore >= 90 ? 3 : finalScore >= 60 ? 2 : 1;
+    if (modalStars) modalStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
 
     if (modalScore) modalScore.textContent = finalScore;
     if (modalStreak) modalStreak.textContent = bestStreak;
@@ -547,10 +576,13 @@ export function initRecyclingGame() {
           : "Junior Recycler (50%+)";
     }
 
+    let attemptsToday = typeof window.initialAttemptsToday !== 'undefined' ? Number(window.initialAttemptsToday) + 1 : 1;
+    let attemptsLimit = 3;
+
     // Save to backend
     if (actId) {
       try {
-        await fetch("/student/activity_progress", {
+        const res = await fetch("/student/activity_progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -563,8 +595,29 @@ export function initRecyclingGame() {
           }),
           keepalive: true
         });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.attempts_today !== undefined) attemptsToday = Number(data.attempts_today);
+          if (data.attempts_limit !== undefined) attemptsLimit = Number(data.attempts_limit);
+        }
       } catch (err) {
         console.warn("Could not save recycling game progress:", err);
+      }
+    }
+
+    const left = Math.max(0, attemptsLimit - attemptsToday);
+    if (modalAttemptsUsed) {
+      if (attemptsToday >= attemptsLimit) {
+        modalAttemptsUsed.textContent = `${attemptsToday} / ${attemptsLimit} (Daily Limit Reached)`;
+        modalAttemptsUsed.className = "text-danger";
+        if (btnPlayAgain) {
+          btnPlayAgain.disabled = true;
+          btnPlayAgain.classList.add("disabled");
+          btnPlayAgain.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Limit Reached (3/3)`;
+        }
+      } else {
+        modalAttemptsUsed.textContent = `${attemptsToday} / ${attemptsLimit} (${left} left today)`;
+        modalAttemptsUsed.className = "text-success";
       }
     }
 
@@ -575,6 +628,29 @@ export function initRecyclingGame() {
   btnPlayAgain?.addEventListener("click", () => {
     victoryModal?.hide();
     startNewGame();
+  });
+
+  // Safe exit confirmation
+  const backLink = document.getElementById("arcade-back-link");
+  backLink?.addEventListener("click", (e) => {
+    if (currentIndex > 0 || correctCount > 0) {
+      e.preventDefault();
+      const exitModalEl = document.getElementById("exitConfirmModal");
+      if (exitModalEl && window.bootstrap?.Modal) {
+        const modal = window.bootstrap.Modal.getOrCreateInstance(exitModalEl);
+        modal.show();
+      }
+    }
+  });
+
+  const btnModalFinishSave = document.getElementById("btn-modal-finish-save");
+  btnModalFinishSave?.addEventListener("click", () => {
+    const exitModalEl = document.getElementById("exitConfirmModal");
+    if (exitModalEl && window.bootstrap?.Modal) {
+      const modal = window.bootstrap.Modal.getInstance(exitModalEl);
+      modal?.hide();
+    }
+    finishGame();
   });
 
   // Start game on init

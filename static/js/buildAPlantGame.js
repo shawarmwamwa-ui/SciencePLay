@@ -293,9 +293,31 @@ const state = {
   shuffledParts: [],
 };
 
+let activeElapsedSeconds = 0;
+let lastTickTime = Date.now();
+let timerPaused = false;
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      timerPaused = true;
+      activeElapsedSeconds += Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+    } else {
+      timerPaused = false;
+      lastTickTime = Date.now();
+    }
+  });
+}
+
+function getActiveElapsedSeconds() {
+  if (timerPaused) return activeElapsedSeconds;
+  return activeElapsedSeconds + Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+}
+
 function getPoints() {
-  if (state.attemptsThisStage === 0) return 14;
-  if (state.attemptsThisStage === 1) return 7;
+  // 12 stages total (6 Garden Flower + 6 Apple Tree): 12 * 8 = 96 + 4 completion bonus = 100 max
+  if (state.attemptsThisStage === 0) return 8;
+  if (state.attemptsThisStage === 1) return 5;
   if (state.attemptsThisStage === 2) return 3;
   return 1;
 }
@@ -326,7 +348,7 @@ function updateHUD() {
   const progBar = $('bap-progress-bar');
   const roundTitle = $('bap-round-title');
 
-  if (scoreEl) scoreEl.textContent = state.score;
+  if (scoreEl) scoreEl.textContent = `${Math.min(100, state.score)} / 100`;
   const currentNum = Math.min(state.currentStageIdx + 1, round.stages.length);
   if (stageEl) stageEl.textContent = `${currentNum} / ${round.stages.length}`;
   if (stageHud) stageHud.textContent = `Round ${state.currentRoundIdx + 1} (${currentNum}/6)`;
@@ -395,7 +417,7 @@ function tryPlace(cardId) {
   if (cardId === stage.id) {
     // ✅ CORRECT
     const pts = getPoints();
-    state.score += pts;
+    state.score = Math.min(100, state.score + pts);
     if (state.attemptsThisStage === 0) state.totalFirstTry++;
     state.objectLogs.push({
       object_id: `${round.id}_${stage.id}`,
@@ -512,14 +534,16 @@ function showRoundIntermission() {
 // ── COMPLETION ────────────────────────────────────────────────────────────────
 
 async function saveResult() {
-  // Bonus for perfect garden (all 7 stages first try): +2 pts to make exactly 100 pts
   const totalStages = getTotalStages();
   if (state.totalFirstTry >= totalStages) {
     state.score = 100;
+  } else if (state.currentStageIdx >= ROUNDS[state.currentRoundIdx].stages.length && state.currentRoundIdx >= ROUNDS.length - 1) {
+    // Full completion bonus (+4 pts)
+    state.score = Math.min(100, state.score + 4);
   }
   state.score = Math.min(100, Math.max(20, state.score));
 
-  const timeSpent = Math.max(1, Math.round((performance.now() - state.startTime) / 1000));
+  const timeSpent = Math.max(1, getActiveElapsedSeconds());
   const actId = window.buildAPlantActivityId;
   if (!actId) return;
 
@@ -583,6 +607,8 @@ function showCompletion(data) {
   const pct = Math.round(state.score);
   const stars = pct >= 90 ? 3 : pct >= 60 ? 2 : 1;
   const starStr = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  const totalStages = getTotalStages();
+  const timeSpentStr = `${getActiveElapsedSeconds()}s`;
 
   const attemptsUsed = state.attemptsToday || (data && data.attempts_today) || 1;
   const limit = state.attemptsLimit || 3;
@@ -609,7 +635,7 @@ function showCompletion(data) {
         <span class="bap-stat-lbl">${left} Left Today</span>
       </div>`;
     restartBtnHtml = `
-      <button id="bap-restart" class="bap-btn bap-btn--primary">
+      <button id="bap-restart" class="bap-btn bap-btn--secondary">
         <i class="bi bi-arrow-clockwise me-1"></i>Play Again (${left} left)
       </button>`;
   }
@@ -625,25 +651,25 @@ function showCompletion(data) {
         <p class="bap-completion-sub">
           You placed all <strong>${totalStages} parts</strong> across both rounds — Garden Flower & Apple Tree!
         </p>
-        <div class="bap-stars">${starStr}</div>
+        <div class="bap-stars" style="font-size: 2rem; margin-bottom: 8px;">${starStr}</div>
         <div class="bap-stats-row">
           <div class="bap-stat">
-            <span class="bap-stat-val">${state.score} / ${maxScore}</span>
+            <span class="bap-stat-val text-warning">${state.score} / ${maxScore}</span>
             <span class="bap-stat-lbl">Total Score</span>
           </div>
           <div class="bap-stat">
             <span class="bap-stat-val">${state.totalFirstTry}/${totalStages}</span>
-            <span class="bap-stat-lbl">First Try</span>
+            <span class="bap-stat-lbl">First Try (${pct}%)</span>
           </div>
           <div class="bap-stat">
-            <span class="bap-stat-val">${pct}%</span>
-            <span class="bap-stat-lbl">Accuracy</span>
+            <span class="bap-stat-val text-info">${timeSpentStr}</span>
+            <span class="bap-stat-lbl">Time Spent</span>
           </div>
           ${attemptStatHtml}
         </div>
         <div class="bap-completion-btns">
-          <a href="/student/activities" class="bap-btn ${exhausted ? 'bap-btn--primary' : 'bap-btn--secondary'}">
-            <i class="bi bi-grid-fill me-1"></i>Back to Activities
+          <a href="/student/activities" class="bap-btn bap-btn--primary">
+            <i class="bi bi-check-circle-fill me-1"></i>Finish & Return to Playground
           </a>
           ${restartBtnHtml}
         </div>
@@ -1121,6 +1147,9 @@ export function initBuildAPlant() {
   state.attemptsThisStage = 0;
   state.completed         = false;
   state.startTime         = performance.now();
+  activeElapsedSeconds    = 0;
+  lastTickTime            = Date.now();
+  timerPaused             = false;
   state.objectLogs        = [];
   state.selectedCardId    = null;
   state.draggedCardId     = null;
@@ -1129,7 +1158,56 @@ export function initBuildAPlant() {
     state.attemptsToday = Number(window.initialAttemptsToday);
   }
 
+  bindBackConfirmation();
   renderCurrentRound();
+}
+
+function bindBackConfirmation() {
+  const backBtn = document.getElementById('bap-back-link');
+  if (!backBtn || backBtn._confirmBound) return;
+  backBtn._confirmBound = true;
+
+  backBtn.addEventListener('click', (e) => {
+    if (state.completed || (state.currentRoundIdx === 0 && state.currentStageIdx === 0)) {
+      return;
+    }
+    e.preventDefault();
+    showExitModal();
+  });
+}
+
+function showExitModal() {
+  const existing = document.getElementById('bap-exit-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'bap-exit-overlay';
+  overlay.className = 'bap-intermission-overlay';
+  overlay.innerHTML = `
+    <div class="bap-intermission-card" style="max-width: 440px;">
+      <div class="bap-intermission-icon">🌱</div>
+      <h2 class="bap-intermission-title">Leave Activity?</h2>
+      <p class="bap-intermission-sub">You have plant parts currently growing! What would you like to do?</p>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:1rem;">
+        <button id="bap-exit-save-btn" class="bap-btn bap-btn--primary" style="padding:0.75rem 1.5rem;">
+          <i class="bi bi-check-circle-fill me-1"></i>Finish & Save Score (${state.score} pts)
+        </button>
+        <button id="bap-exit-cancel-btn" class="bap-btn bap-btn--secondary" style="padding:0.75rem 1.5rem;">
+          <i class="bi bi-play-fill me-1"></i>Keep Playing
+        </button>
+        <a href="/student/activities" class="bap-btn" style="background:transparent; border:1.5px solid #cbd5e1; color:#64748b; padding:0.6rem 1.5rem;">
+          Exit Without Saving
+        </a>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById('bap-exit-cancel-btn')?.addEventListener('click', () => overlay.remove());
+  document.getElementById('bap-exit-save-btn')?.addEventListener('click', () => {
+    overlay.remove();
+    saveResult();
+  });
 }
 
 window.initBuildAPlant = initBuildAPlant;

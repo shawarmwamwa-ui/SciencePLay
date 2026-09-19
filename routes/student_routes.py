@@ -1489,6 +1489,10 @@ def activity_progress():
         if score > (progress_log.score or 0):
             progress_log.score = score
             progress_log.time_spent = time_spent
+        elif score == (progress_log.score or 0):
+            # If tied score (e.g. 100 == 100), preserve the faster completion time
+            if time_spent < (progress_log.time_spent or 999999):
+                progress_log.time_spent = time_spent
     else:
         progress_log = ProgressLog(
             student_id=current_user.id,

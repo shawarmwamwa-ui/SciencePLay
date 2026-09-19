@@ -66,7 +66,29 @@ let resizeObserver = null;
 let resizeTimer = null;
 let controlsBound = false;
 
+let activeElapsedSeconds = 0;
+let lastTickTime = Date.now();
+let timerPaused = false;
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      timerPaused = true;
+      activeElapsedSeconds += Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+    } else {
+      timerPaused = false;
+      lastTickTime = Date.now();
+    }
+  });
+}
+
+function getActiveElapsedSeconds() {
+  if (timerPaused) return activeElapsedSeconds;
+  return activeElapsedSeconds + Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+}
+
 function clamp(value, min, max) {
+  if (!Number.isFinite(value)) return min;
   return Math.min(Math.max(value, min), max);
 }
 
@@ -252,6 +274,7 @@ async function animateObjectDrop(object, targetElement) {
 
 function cacheDom() {
   dom.cabinet = document.querySelector('.arcade-cabinet');
+  dom.stage = document.querySelector('.arcade-stage');
   dom.title = document.querySelector('.marquee-title h1');
   dom.subtitle = document.querySelector('.marquee-title p');
   dom.scoreValue = document.querySelector('#score-value');
@@ -271,13 +294,18 @@ function cacheDom() {
   dom.grabButton = document.querySelector('#grab-button');
   dom.dropButton = document.querySelector('#drop-button');
   dom.summary = document.querySelector('#summary-screen');
+  dom.summaryStars = document.querySelector('#summary-stars');
   dom.summaryCorrect = document.querySelector('#summary-correct');
   dom.summaryWrong = document.querySelector('#summary-wrong');
   dom.summaryAttempts = document.querySelector('#summary-attempts');
   dom.summaryScore = document.querySelector('#summary-sorted');
   dom.summaryTime = document.querySelector('#summary-time');
+  dom.summaryAttemptsVal = document.querySelector('#summary-attempts-val');
+  dom.summaryAttemptsCard = document.querySelector('#summary-attempts-card');
   dom.summarySubtitle = document.querySelector('#summary-subtitle');
   dom.restartButton = document.querySelector('#restart-button');
+  dom.backButton = document.querySelector('#btn-claw-back');
+  dom.finishSaveModalBtn = document.querySelector('#btn-modal-finish-save');
 }
 
 function setMessage(text, kind = 'primary') {
@@ -458,15 +486,23 @@ function renderClaw() {
       ? document.querySelector(`.tray-column[data-column="${activeSlot.column}"]`)
       : null;
 
-  let leftPercent = 50;
-  if (dom.cabinet && anchorElement) {
-    const cabinetRect = dom.cabinet.getBoundingClientRect();
-    const anchorRect = anchorElement.getBoundingClientRect();
-    leftPercent = ((anchorRect.left + anchorRect.width / 2) - cabinetRect.left) / cabinetRect.width * 100;
-    leftPercent = clamp(leftPercent, 4, 96);
-  } else {
+  const stageEl = dom.stage || document.querySelector('.arcade-stage') || dom.cabinet;
+  let leftPercent = null;
+
+  if (stageEl && anchorElement) {
+    const stageRect = stageEl.getBoundingClientRect();
+    if (stageRect.width > 0) {
+      const anchorRect = anchorElement.getBoundingClientRect();
+      const rawPercent = ((anchorRect.left + anchorRect.width / 2) - stageRect.left) / stageRect.width * 100;
+      if (Number.isFinite(rawPercent)) {
+        leftPercent = clamp(rawPercent, 6, 94);
+      }
+    }
+  }
+
+  if (leftPercent === null || !Number.isFinite(leftPercent)) {
     const totalSlots = Math.max(1, state.slots.length);
-    leftPercent = clamp(((state.activeSlotIndex + 1) / (totalSlots + 1)) * 100, 4, 96);
+    leftPercent = clamp(((state.activeSlotIndex + 0.5) / totalSlots) * 100, 6, 94);
   }
 
   const heldFallback = state.heldObject ? `/static/images/${(state.heldObject.name || state.heldObject.label || '').toLowerCase()}.webp` : '';
@@ -520,8 +556,16 @@ function renderStatus() {
 }
 
 function renderSummary() {
+  const totalObj = Math.max(1, state.objects.length);
+  const accuracyPct = Math.round((state.correctFirstTry / totalObj) * 100);
+  const stars = state.score >= 90 ? 3 : state.score >= 60 ? 2 : 1;
+  const starStr = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+
+  if (dom.summaryStars) {
+    dom.summaryStars.textContent = starStr;
+  }
   if (dom.summaryCorrect) {
-    dom.summaryCorrect.textContent = `${state.correctFirstTry} / ${state.objects.length}`;
+    dom.summaryCorrect.textContent = `${state.correctFirstTry} / ${totalObj} (${accuracyPct}%)`;
   }
   if (dom.summaryWrong) {
     dom.summaryWrong.textContent = String(state.wrongDrops);
@@ -533,8 +577,19 @@ function renderSummary() {
     dom.summaryScore.textContent = `${state.score} / 100 pts`;
   }
   if (dom.summaryTime) {
-    const elapsed = Math.max(0, Math.round((Date.now() - state.startTime) / 1000));
-    dom.summaryTime.textContent = formatTime(elapsed);
+    dom.summaryTime.textContent = formatTime(getActiveElapsedSeconds());
+  }
+  if (dom.summaryAttemptsVal) {
+    const used = state.attemptsToday || 1;
+    const limit = state.attemptLimit || 3;
+    const left = Math.max(0, limit - used);
+    if (used >= limit) {
+      dom.summaryAttemptsVal.textContent = `${used}/${limit} (Limit Reached)`;
+      dom.summaryAttemptsVal.className = 'summary-card-val text-danger';
+    } else {
+      dom.summaryAttemptsVal.textContent = `${used}/${limit} (${left} left)`;
+      dom.summaryAttemptsVal.className = 'summary-card-val text-success';
+    }
   }
 }
 
@@ -585,28 +640,49 @@ async function grabObject() {
   state.isAnimating = true;
   setControlsDisabled(true);
 
-  const targetElement = getTrayObjectElement(targetObject);
-  const grabDepth = getClawDepthForElement(targetElement);
+  // Watchdog timer: safety unfreeze after 3.5s
+  clearTimeout(state.animationWatchdog);
+  state.animationWatchdog = setTimeout(() => {
+    if (state.isAnimating) {
+      console.warn('Claw animation watchdog triggered on grab: resetting controls');
+      state.isAnimating = false;
+      setControlsDisabled(false);
+      setClawMotion('idle', 28);
+      renderClaw();
+    }
+  }, 3500);
 
-  setClawMotion('grabbing', grabDepth);
-  setMessage(`Grabbing ${targetObject.name}...`, 'primary');
-  await wait(650);
+  try {
+    const targetElement = getTrayObjectElement(targetObject);
+    const grabDepth = getClawDepthForElement(targetElement);
 
-  await animateObjectPickup(targetObject);
+    setClawMotion('grabbing', grabDepth);
+    setMessage(`Grabbing ${targetObject.name}...`, 'primary');
+    await wait(650);
 
-  playSound('grab');
-  targetObject.isHeld = true;
-  state.heldObject = targetObject;
-  renderBoard();
-  renderStatus();
+    await animateObjectPickup(targetObject);
 
-  setClawMotion('lifting', 28);
-  await wait(650);
+    playSound('grab');
+    targetObject.isHeld = true;
+    state.heldObject = targetObject;
+    renderBoard();
+    renderStatus();
 
-  setClawMotion('idle', 28);
-  state.isAnimating = false;
-  setControlsDisabled(false);
-  setMessage(`Holding ${targetObject.name}. Move to the matching bin and drop it.`, 'primary');
+    setClawMotion('lifting', 28);
+    await wait(650);
+
+    setClawMotion('idle', 28);
+    setMessage(`Holding ${targetObject.name}. Move to the matching bin and drop it.`, 'primary');
+  } catch (err) {
+    console.error('Error during claw grab:', err);
+    setClawMotion('idle', 28);
+  } finally {
+    clearTimeout(state.animationWatchdog);
+    state.isAnimating = false;
+    setControlsDisabled(false);
+    renderBoard();
+    renderStatus();
+  }
 }
 
 async function dropObject() {
@@ -625,79 +701,93 @@ async function dropObject() {
   state.isAnimating = true;
   setControlsDisabled(true);
 
-  const object = state.heldObject;
-  const sourceElement = getTrayObjectElement(object);
-  const targetElement = getBinElement(slot.bin.id);
-  const dropDepth = getClawDepthForElement(targetElement, 22);
-
-  object.attempts = (object.attempts || 0) + 1;
-  state.totalAttempts += 1;
-
-  setClawMotion('dropping', dropDepth);
-  setMessage(`Dropping ${object.name}...`, 'primary');
-  await wait(650);
-
-  await animateObjectDrop(object, targetElement || sourceElement);
-
-  const isCorrect = slot.bin.id === object.categoryId;
-  
-  // Track object drop attempt for analytics (manuscript §1.2 most-missed objects)
-  state.objectLogs.push({
-    object_id: object.name || object.label || String(object.id),
-    was_correct: isCorrect,
-    attempt_number: 1
-  });
-
-  // Always mark sorted so this object is finished for the round (no immediate retry)
-  object.isSorted = true;
-
-  if (isCorrect) {
-    playSound('correct');
-    playVoicePrompt('claw_correct', 'Correct! Good job!');
-    object.wasCorrect = true;
-    state.streak = (state.streak || 0) + 1;
-    state.correctFirstTry += 1;
-
-    // 8 pts per object + streak bonus (+2 pts at streak 4, +2 pts at streak 8) -> 12 * 8 = 96 + 4 = 100 max
-    let earned = 8;
-    let bonusText = '';
-    if (state.streak === 4 || state.streak === 8) {
-      earned += 2;
-      bonusText = ` (+2 Streak Bonus!)`;
+  // Watchdog timer: safety unfreeze after 3.5s
+  clearTimeout(state.animationWatchdog);
+  state.animationWatchdog = setTimeout(() => {
+    if (state.isAnimating) {
+      console.warn('Claw animation watchdog triggered on drop: resetting controls');
+      state.isAnimating = false;
+      setControlsDisabled(false);
+      setClawMotion('idle', 42);
+      renderClaw();
     }
-    state.score = Math.min(100, state.score + earned);
-    setMessage(`✓ Correct! ${object.name} is a ${slot.bin.label}. (+${earned} pts${bonusText})`, 'success');
-  } else {
-    playSound('wrong');
-    playVoicePrompt('claw_wrong', 'Oops! Try again!');
-    object.wasCorrect = false;
-    state.wrongDrops += 1;
-    state.streak = 0;
-    // -4 pts penalty for wrong bin
-    state.score = Math.max(0, state.score - 4);
-    setMessage(`✗ Incorrect! ${object.name} is a ${getBinLabel(object.categoryId)}, not a ${slot.bin.label}. (-4 pts)`, 'warning');
+  }, 3500);
+
+  try {
+    const object = state.heldObject;
+    const sourceElement = getTrayObjectElement(object);
+    const targetElement = getBinElement(slot.bin.id);
+    const dropDepth = getClawDepthForElement(targetElement, 22);
+
+    object.attempts = (object.attempts || 0) + 1;
+    state.totalAttempts += 1;
+
+    setClawMotion('dropping', dropDepth);
+    setMessage(`Dropping ${object.name}...`, 'primary');
+    await wait(650);
+
+    await animateObjectDrop(object, targetElement || sourceElement);
+
+    const isCorrect = slot.bin.id === object.categoryId;
+    
+    state.objectLogs.push({
+      object_id: object.name || object.label || String(object.id),
+      was_correct: isCorrect,
+      attempt_number: 1
+    });
+
+    object.isSorted = true;
+
+    if (isCorrect) {
+      playSound('correct');
+      playVoicePrompt('claw_correct', 'Correct! Good job!');
+      object.wasCorrect = true;
+      state.streak = (state.streak || 0) + 1;
+      state.correctFirstTry += 1;
+
+      let earned = 8;
+      let bonusText = '';
+      if (state.streak === 4 || state.streak === 8) {
+        earned += 2;
+        bonusText = ` (+2 Streak Bonus!)`;
+      }
+      state.score = Math.min(100, state.score + earned);
+      setMessage(`✓ Correct! ${object.name} is a ${slot.bin.label}. (+${earned} pts${bonusText})`, 'success');
+    } else {
+      playSound('wrong');
+      playVoicePrompt('claw_wrong', 'Oops! Try again!');
+      object.wasCorrect = false;
+      state.wrongDrops += 1;
+      state.streak = 0;
+      state.score = Math.max(0, state.score - 4);
+      setMessage(`✗ Incorrect! ${object.name} is a ${getBinLabel(object.categoryId)}, not a ${slot.bin.label}. (-4 pts)`, 'warning');
+    }
+
+    object.isHeld = false;
+    state.heldObject = null;
+    renderBoard();
+    renderStatus();
+
+    setClawMotion('lifting', 42);
+    await wait(650);
+
+    setClawMotion('idle', 42);
+  } catch (err) {
+    console.error('Error during claw drop:', err);
+    setClawMotion('idle', 42);
+  } finally {
+    clearTimeout(state.animationWatchdog);
+    state.isAnimating = false;
+    setControlsDisabled(false);
+    renderBoard();
+    renderStatus();
+    maybeCompleteRound();
   }
-
-  object.isHeld = false;
-  state.heldObject = null;
-  renderBoard();
-  renderStatus();
-
-  setClawMotion('lifting', 42);
-  await wait(650);
-
-  setClawMotion('idle', 42);
-  state.isAnimating = false;
-  setControlsDisabled(false);
-  renderBoard();
-  renderStatus();
-  maybeCompleteRound();
 }
 
-function maybeCompleteRound() {
-  if (state.completed || getRemainingCount() > 0) {
-    return;
-  }
+function maybeCompleteRound(forceEarly = false) {
+  if (state.completed) return;
+  if (!forceEarly && getRemainingCount() > 0) return;
 
   state.completed = true;
   state.isAnimating = false;
@@ -722,7 +812,7 @@ async function saveProgress() {
   if (state.saving) return;
   state.saving = true;
 
-  const elapsedSeconds = Math.max(0, Math.round((Date.now() - state.startTime) / 1000));
+  const elapsedSeconds = Math.max(1, getActiveElapsedSeconds());
   const payload = {
     activity_id: state.activityId,
     score: state.score,
@@ -831,6 +921,30 @@ function bindControls() {
     dom.restartButton.onclick = () => initGame();
   }
 
+  if (dom.backButton) {
+    dom.backButton.onclick = (e) => {
+      if (!state.completed && state.totalAttempts > 0) {
+        e.preventDefault();
+        const exitModalEl = document.getElementById('exitConfirmModal');
+        if (exitModalEl && window.bootstrap?.Modal) {
+          const modal = window.bootstrap.Modal.getOrCreateInstance(exitModalEl);
+          modal.show();
+        }
+      }
+    };
+  }
+
+  if (dom.finishSaveModalBtn) {
+    dom.finishSaveModalBtn.onclick = () => {
+      const exitModalEl = document.getElementById('exitConfirmModal');
+      if (exitModalEl && window.bootstrap?.Modal) {
+        const modal = window.bootstrap.Modal.getInstance(exitModalEl);
+        modal?.hide();
+      }
+      maybeCompleteRound(true);
+    };
+  }
+
   document.addEventListener('keydown', event => {
     if (event.defaultPrevented) return;
     const tag = (event.target && event.target.tagName || '').toLowerCase();
@@ -930,6 +1044,9 @@ async function initGame() {
   state.completed = false;
   state.saving = false;
   state.objectLogs = [];
+  activeElapsedSeconds = 0;
+  lastTickTime = Date.now();
+  timerPaused = false;
 
   setMessage('Loading sorting round...', 'info');
 

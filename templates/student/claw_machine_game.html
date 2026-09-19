@@ -36,7 +36,7 @@
       <header class="cabinet-marquee">
         <div class="marquee-title">
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <a href="{{ url_for('student.activities') }}" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1 me-1 text-decoration-none fw-bold" title="Back to Activities">
+            <a href="{{ url_for('student.activities') }}" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1 me-1 text-decoration-none fw-bold" id="btn-claw-back" title="Back to Activities">
               <i class="bi bi-arrow-left me-1"></i>Back
             </a>
             <h1 class="mb-0 fs-3">Living vs Non-Living Claw Machine</h1>
@@ -104,30 +104,41 @@
       </section>
 
       <div id="summary-screen" class="d-none summary-panel">
-        <h3>Round Summary</h3>
-        <p class="summary-text" id="summary-subtitle">Nice work! Tap below to play another round if you still have attempts remaining.</p>
+        <div class="text-center mb-3">
+          <div class="summary-stars mb-1 fs-1" id="summary-stars">⭐⭐⭐</div>
+          <h3 class="mb-1" id="summary-title">Round Complete!</h3>
+          <p class="summary-text mb-0" id="summary-subtitle">Nice work! Check your score and achievements below.</p>
+        </div>
 
-        <div id="summary-rating-block" class="summary-rating-block d-none">
+        <div id="summary-rating-block" class="summary-rating-block d-none mb-3">
           <span id="summary-rating" class="summary-rating-badge"></span>
-          <p id="summary-hint" class="summary-hint-text"></p>
+          <p id="summary-hint" class="summary-hint-text mb-0"></p>
         </div>
 
-        <div class="summary-row">
-          <div>
-            <p><strong>Correct:</strong> <span id="summary-correct">0</span></p>
-            <p><strong>Incorrect:</strong> <span id="summary-wrong">0</span></p>
+        <div class="summary-grid mb-3">
+          <div class="summary-card">
+            <span class="summary-card-val text-warning" id="summary-sorted">0 / 100</span>
+            <span class="summary-card-lbl">Final Score</span>
           </div>
-          <div>
-            <p><strong>Score:</strong> <span id="summary-sorted">0 pts</span></p>
-            <p><strong>Time:</strong> <span id="summary-time">0s</span></p>
+          <div class="summary-card">
+            <span class="summary-card-val text-success" id="summary-correct">0 / 12</span>
+            <span class="summary-card-lbl">Sorted Correct</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-card-val text-info" id="summary-time">0s</span>
+            <span class="summary-card-lbl">Time Spent</span>
+          </div>
+          <div class="summary-card" id="summary-attempts-card">
+            <span class="summary-card-val text-primary" id="summary-attempts-val">1 / 3</span>
+            <span class="summary-card-lbl" id="summary-attempts-lbl">Daily Attempts</span>
           </div>
         </div>
 
-        <div class="d-flex justify-content-center align-items-center gap-3 mt-4 flex-wrap">
-          <a href="{{ url_for('student.activities') }}" class="btn btn-outline-light btn-lg px-4 rounded-pill">
-            <i class="bi bi-arrow-left me-1"></i>Back to Activities
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-3 flex-wrap">
+          <a href="{{ url_for('student.activities') }}" class="btn btn-success btn-lg px-4 rounded-pill fw-bold" id="btn-finish-playground">
+            <i class="bi bi-check-circle-fill me-1"></i>Finish & Return to Playground
           </a>
-          <button id="restart-button" class="btn btn-primary btn-lg px-4 rounded-pill">
+          <button id="restart-button" class="btn btn-primary btn-lg px-4 rounded-pill fw-bold">
             <i class="bi bi-arrow-repeat me-1"></i>Play Again
           </button>
         </div>
@@ -144,14 +155,39 @@
     </aside>
   </div>
 
+  <!-- Exit Confirmation Modal -->
+  <div class="modal fade" id="exitConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center p-4 border-dark border-3 rounded-4 shadow-lg">
+        <div class="modal-body">
+          <div class="fs-1 text-warning mb-2"><i class="bi bi-question-circle-fill"></i></div>
+          <h3 class="fw-black text-dark mb-2">Leave Activity?</h3>
+          <p class="text-muted fw-bold mb-4">You have an active sorting round in progress. Do you want to finish and save your score, keep playing, or exit?</p>
+          <div class="d-flex flex-column gap-2">
+            <button type="button" class="btn btn-warning fw-black py-2 rounded-pill shadow-sm" id="btn-modal-finish-save">
+              <i class="bi bi-check-circle-fill me-1"></i>Finish & Save Current Score
+            </button>
+            <button type="button" class="btn btn-primary fw-black py-2 rounded-pill shadow-sm" data-bs-dismiss="modal">
+              <i class="bi bi-play-fill me-1"></i>Keep Playing
+            </button>
+            <a href="{{ url_for('student.activities') }}" class="btn btn-outline-secondary fw-bold py-2 rounded-pill">
+              Exit Without Saving
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <audio id="game-bgm" loop preload="none">
     <source src="{{ url_for('static', filename='audio/Piki - Happy Walking (freetouse.com).mp3') }}" type="audio/mpeg">
   </audio>
 
   <script>window.clawMachineActivityId = {{ activity_id|tojson }};</script>
 
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import { initClawMachineGame } from "{{ url_for('static', filename='js/clawMachineGame.js', v='20260918_1') }}";
+    import { initClawMachineGame } from "{{ url_for('static', filename='js/clawMachineGame.js', v='20260919_1') }}";
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
 
     initClawMachineGame();

@@ -974,6 +974,43 @@ body.arcade-page {
   gap: 12px;
 }
 
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.summary-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(254, 240, 138, 0.4);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.summary-card-val {
+  font-size: clamp(18px, 1.4vw, 24px);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+
+.summary-card-lbl {
+  font-size: clamp(10px, 0.8vw, 12px);
+  opacity: 0.85;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-stars {
+  letter-spacing: 4px;
+}
+
 #restart-button {
   min-width: 220px;
   border-width: 3px;
