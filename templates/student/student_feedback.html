@@ -168,6 +168,23 @@
                       <strong class="fs-6">System Evaluation:</strong>
                     </div>
                     <p class="mb-0 fw-bold fs-6">{{ item.system_feedback }}</p>
+
+                    {% if item.missed_items %}
+                      <div class="mt-2 pt-2 border-top border-2 border-secondary-subtle">
+                        <div class="fw-bold text-dark small mb-1">
+                          <i class="bi bi-search text-warning me-1"></i>Questions or Clues to Review ({{ item.missed_items|length }}):
+                        </div>
+                        <ul class="mb-0 ps-3 small text-dark fw-bold">
+                          {% for missed in item.missed_items %}
+                            <li class="py-1">{{ missed }}</li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                    {% elif item.total_items and item.total_items > 0 %}
+                      <div class="mt-2 pt-1 border-top border-2 border-secondary-subtle small text-success fw-bold">
+                        <i class="bi bi-stars text-warning me-1"></i>Great job! No mistakes recorded on this attempt.
+                      </div>
+                    {% endif %}
                   </div>
                 {% endif %}
 

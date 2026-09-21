@@ -58,6 +58,20 @@ def get_or_create_badge(name, description, icon='🏅'):
     return badge
 
 
+def format_item_name(item_id):
+    """Format raw object IDs or question IDs into clean human readable titles without dashes."""
+    if not item_id:
+        return 'Item'
+    s = str(item_id).strip()
+    if ' ' in s:
+        return s
+    if '_' in s:
+        return s.replace('_', ' ').title()
+    import re
+    spaced = re.sub(r'([a-z])([A-Z])', r'\1 \2', s)
+    return spaced.title()
+
+
 def award_badge_if_earned(student_id, badge_name, description, icon='🏅'):
     """Award a badge to a student if they don't already have it"""
     badge = get_or_create_badge(badge_name, description, icon)
@@ -676,40 +690,98 @@ def feedback():
         has_teacher_note = bool(attempt.teacher_feedback and attempt.teacher_feedback.strip())
         if has_teacher_note:
             teacher_notes_count += 1
-        
-        has_system_fb = bool(attempt.feedback and attempt.feedback.strip())
-        if has_system_fb:
-            system_evaluations_count += 1
+
+        # Analyze granular questions and clues for this attempt
+        obj_logs = attempt.object_logs
+        missed_items = []
+        correct_items = []
+        if obj_logs:
+            seen_objects = {}
+            for obj in obj_logs:
+                oid = obj.object_id
+                if oid not in seen_objects:
+                    seen_objects[oid] = []
+                seen_objects[oid].append(obj.was_correct)
+
+            for oid, corrects in seen_objects.items():
+                name = format_item_name(oid)
+                if not all(corrects):
+                    if name not in missed_items:
+                        missed_items.append(name)
+                else:
+                    if name not in correct_items:
+                        correct_items.append(name)
+
+        total_items = (len(correct_items) + len(missed_items)) if obj_logs else 0
+        correct_count = len(correct_items) if obj_logs else 0
+        missed_count = len(missed_items) if obj_logs else 0
 
         is_lesson_check = ('Slide' in act_title or 'Quick Check' in act_title or 'Lesson' in act_title or 'Question' in act_title)
         activity_groups_dict[act_title]['is_lesson_check'] = is_lesson_check
 
+        score = attempt.score or 0
+
         if is_lesson_check:
-            is_correct = (attempt.score > 0) or ('Correct' in (attempt.feedback or ''))
-            outcome_label = 'Correct Answer' if is_correct else 'Needs Practice'
-            outcome_type = 'correct' if is_correct else 'incorrect'
+            if total_items > 0:
+                if missed_count == 0:
+                    outcome_label = 'All Correct'
+                    outcome_type = 'correct'
+                elif correct_count > 0:
+                    outcome_label = 'Good Progress'
+                    outcome_type = 'good'
+                else:
+                    outcome_label = 'Needs Practice'
+                    outcome_type = 'incorrect'
+            else:
+                is_correct = (score > 0) or ('Correct' in (attempt.feedback or ''))
+                outcome_label = 'Correct Answer' if is_correct else 'Needs Practice'
+                outcome_type = 'correct' if is_correct else 'incorrect'
         else:
-            is_high_score = (attempt.score >= 140)
-            is_good_score = (attempt.score >= 100)
-            if is_high_score:
-                outcome_label = 'Outstanding Sorting'
+            # Scored mini games: standard 100 pt mastery scale
+            if score >= 85 or (total_items > 0 and missed_count == 0):
+                outcome_label = 'Outstanding Mastery'
                 outcome_type = 'correct'
-            elif is_good_score:
-                outcome_label = 'Good Effort'
+            elif score >= 70 or (total_items > 0 and (correct_count / max(total_items, 1)) >= 0.7):
+                outcome_label = 'Good Progress'
                 outcome_type = 'good'
             else:
                 outcome_label = 'Needs Practice'
                 outcome_type = 'incorrect'
+
+        # Generate clear, student friendly system evaluation text
+        if total_items > 0:
+            if missed_count == 0:
+                system_feedback = f"Perfect! Answered all {total_items} questions and clues correctly on the first try."
+            else:
+                accuracy = int(round((correct_count / total_items) * 100))
+                system_feedback = f"Answered {correct_count} of {total_items} questions correctly ({accuracy}% accuracy)."
+        else:
+            raw_fb = (attempt.feedback or '').strip()
+            if raw_fb and not raw_fb.startswith('Correct on first try'):
+                system_feedback = raw_fb
+            elif score >= 85:
+                system_feedback = "Great performance! Excellent understanding of this science topic."
+            elif score >= 70:
+                system_feedback = "Good effort! You showed strong understanding of the core concepts."
+            else:
+                system_feedback = "Keep practicing! Review the lesson slides to master these concepts."
+
+        has_system_fb = bool(system_feedback and system_feedback.strip())
+        if has_system_fb:
+            system_evaluations_count += 1
 
         formatted_date = attempt.created_at.strftime('%b %d, %Y at %I:%M %p') if attempt.created_at else 'Recently'
 
         activity_groups_dict[act_title]['attempts'].append({
             'id': attempt.id,
             'attempt_number': attempt.attempt_number,
-            'score': attempt.score or 0,
+            'score': score,
             'is_lesson_check': is_lesson_check,
             'time_spent': attempt.time_spent or 0,
-            'system_feedback': attempt.feedback,
+            'system_feedback': system_feedback,
+            'missed_items': missed_items,
+            'correct_items': correct_items,
+            'total_items': total_items,
             'teacher_feedback': attempt.teacher_feedback,
             'has_teacher_note': has_teacher_note,
             'has_system_feedback': has_system_fb,
@@ -1507,20 +1579,27 @@ def activity_progress():
         activity_id=activity.id
     ).count()
 
+    object_logs = data.get('object_logs', [])
+    total_objs = len(object_logs)
+    correct_objs = sum(1 for o in object_logs if o.get('was_correct'))
+    if total_objs > 0:
+        feedback_summary = f'Answered {correct_objs} of {total_objs} correctly.'
+    else:
+        feedback_summary = f'Completed with score {score}.'
+
     attempt = AttemptLog(
         student_id=current_user.id,
         activity_id=activity.id,
         attempt_number=total_attempts + 1,
         score=score,
         result='completed',
-        feedback=f'Correct on first try: {correct_first_try}; object attempts: {attempts}',
+        feedback=feedback_summary,
         time_spent=time_spent
     )
     db.session.add(attempt)
     db.session.flush()  # to get attempt.id
 
     # Record granular object-level attempts (manuscript §1.2 analytics)
-    object_logs = data.get('object_logs', [])
     for obj in object_logs:
         obj_log = AttemptObjectLog(
             attempt_log_id=attempt.id,

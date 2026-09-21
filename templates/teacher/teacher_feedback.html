@@ -253,10 +253,20 @@
                       </div>
 
                       <!-- System Feedback Hint -->
-                      {% if att.feedback %}
+                      {% if item.system_feedback %}
                         <div class="bg-light p-2 rounded-3 border small text-dark mt-2">
-                          <strong class="text-secondary d-block"><i class="bi bi-robot me-1"></i>System Assessment:</strong>
-                          {{ att.feedback }}
+                          <strong class="text-secondary d-block mb-1"><i class="bi bi-robot me-1"></i>System Assessment:</strong>
+                          <div class="fw-bold">{{ item.system_feedback }}</div>
+                          {% if item.missed_items %}
+                            <div class="mt-2 pt-2 border-top">
+                              <span class="text-danger fw-bold"><i class="bi bi-exclamation-circle me-1"></i>Questions or Items Needing Review ({{ item.missed_items|length }}):</span>
+                              <ul class="mb-0 ps-3 small text-dark fw-bold mt-1">
+                                {% for missed in item.missed_items %}
+                                  <li>{{ missed }}</li>
+                                {% endfor %}
+                              </ul>
+                            </div>
+                          {% endif %}
                         </div>
                       {% endif %}
                     </div>

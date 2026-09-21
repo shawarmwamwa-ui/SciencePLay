@@ -282,6 +282,20 @@ def build_live_lesson_tracker(online_students_set=None):
 
 
 
+def format_item_name(item_id):
+    """Format raw object IDs or question IDs into clean human readable titles without dashes."""
+    if not item_id:
+        return 'Item'
+    s = str(item_id).strip()
+    if ' ' in s:
+        return s
+    if '_' in s:
+        return s.replace('_', ' ').title()
+    import re
+    spaced = re.sub(r'([a-z])([A-Z])', r'\1 \2', s)
+    return spaced.title()
+
+
 def load_teacher_object_library():
     config_file = Path(__file__).resolve().parent.parent / 'static' / 'data' / 'sortingActivities.json'
     if not config_file.exists():
@@ -432,7 +446,7 @@ def get_struggling_concepts(is_lesson=True, limit=None):
                     obj_name = item.get('label')
                     break
         if not obj_name:
-            obj_name = obj_id
+            obj_name = format_item_name(obj_id)
 
         items.append({
             'name': obj_name,
@@ -1474,12 +1488,53 @@ def feedback():
             activity_id=activity.id
         ).count()
 
+        # Analyze granular questions and clues for this attempt
+        obj_logs = attempt.object_logs
+        missed_items = []
+        correct_items = []
+        if obj_logs:
+            seen_objects = {}
+            for obj in obj_logs:
+                oid = obj.object_id
+                if oid not in seen_objects:
+                    seen_objects[oid] = []
+                seen_objects[oid].append(obj.was_correct)
+            for oid, corrects in seen_objects.items():
+                name = format_item_name(oid)
+                if not all(corrects):
+                    if name not in missed_items:
+                        missed_items.append(name)
+                else:
+                    if name not in correct_items:
+                        correct_items.append(name)
+
+        total_items = (len(correct_items) + len(missed_items)) if obj_logs else 0
+        correct_count = len(correct_items) if obj_logs else 0
+        missed_count = len(missed_items) if obj_logs else 0
+
+        if total_items > 0:
+            if missed_count == 0:
+                system_feedback = f"Perfect! Answered all {total_items} items correctly."
+            else:
+                acc = int(round((correct_count / total_items) * 100))
+                system_feedback = f"Answered {correct_count} of {total_items} items correctly ({acc}% accuracy)."
+        else:
+            raw_fb = (attempt.feedback or '').strip()
+            if raw_fb and not raw_fb.startswith('Correct on first try'):
+                system_feedback = raw_fb
+            else:
+                system_feedback = f"Scored {attempt.score or 0} points."
+
         enriched_attempts.append({
             'attempt': attempt,
             'activity': activity,
             'student': student,
             'has_feedback': has_feedback,
-            'total_attempts': total_for_activity
+            'total_attempts': total_for_activity,
+            'system_feedback': system_feedback,
+            'missed_items': missed_items,
+            'correct_items': correct_items,
+            'total_items': total_items
         })
 
     students_list = User.query.filter_by(role='student').order_by(User.name.asc()).all()
