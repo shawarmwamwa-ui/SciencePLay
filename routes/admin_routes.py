@@ -137,26 +137,68 @@ def create_user():
 @require_role('admin')
 def update_user(user_id):
     user = User.query.get(user_id)
-    if user:
-        user.name = request.form['name'].strip()
-        if 'username' in request.form and request.form['username'].strip():
-            user.username = request.form['username'].strip()
-        user.role = request.form['role']
-        if request.form.get('password'):
-            user.set_password(request.form['password'])
+    if not user:
+        flash("User not found.", "warning")
+        return redirect(url_for('admin.user_management'))
+
+    new_name = request.form.get('name', '').strip()
+    new_username = request.form.get('username', '').strip()
+    new_role = request.form.get('role', '').strip()
+    new_password = request.form.get('password', '').strip()
+
+    if not new_name or not new_username:
+        flash("Name and Username cannot be blank.", "danger")
+        return redirect(url_for('admin.user_management'))
+
+    try:
+        user.name = new_name
+        user.username = new_username
+        if new_role in ['admin', 'teacher', 'student']:
+            user.role = new_role
+        if new_password:
+            user.set_password(new_password)
         db.session.commit()
-        flash("User updated successfully!", "info")
+        flash(f"User '{user.name}' updated successfully!", "info")
+    except IntegrityError:
+        db.session.rollback()
+        flash(f"Username '{new_username}' is already taken. Please choose a different username.", "danger")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to update user: {str(e)}", "danger")
+
     return redirect(url_for('admin.user_management'))
 
 @admin_bp.route('/delete_user/<int:user_id>')
 @require_role('admin')
 def delete_user(user_id):
     user = User.query.get(user_id)
-    if user:
+    if not user:
+        flash("User not found.", "warning")
+        return redirect(url_for('admin.user_management'))
+
+    try:
+        # Clean up related records to prevent foreign key integrity crash
         AccessLog.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+        UserBadge.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+        ProgressLog.query.filter_by(student_id=user.id).delete(synchronize_session=False)
+        LessonProgress.query.filter_by(student_id=user.id).delete(synchronize_session=False)
+        LessonAttemptLog.query.filter_by(student_id=user.id).delete(synchronize_session=False)
+        LessonAssignment.query.filter((LessonAssignment.student_id == user.id) | (LessonAssignment.assigned_by == user.id)).delete(synchronize_session=False)
+        ActivityAssignment.query.filter((ActivityAssignment.student_id == user.id) | (ActivityAssignment.assigned_by == user.id)).delete(synchronize_session=False)
+        
+        # Clean up attempt logs and their child object logs
+        student_attempts = AttemptLog.query.filter_by(student_id=user.id).all()
+        for att in student_attempts:
+            AttemptObjectLog.query.filter_by(attempt_log_id=att.id).delete(synchronize_session=False)
+        AttemptLog.query.filter_by(student_id=user.id).delete(synchronize_session=False)
+
         db.session.delete(user)
         db.session.commit()
         flash(f"User '{user.name}' deleted successfully.", "warning")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete user: {str(e)}", "danger")
+
     return redirect(url_for('admin.user_management'))
 
 @admin_bp.route('/compliance')
