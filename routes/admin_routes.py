@@ -326,20 +326,24 @@ def clear_logs():
     current_user = get_current_user()
     role_target = request.form.get('role_target', 'all').lower()
 
-    if role_target in ('admin', 'teacher', 'student'):
-        user_ids = [u.id for u in User.query.filter_by(role=role_target).all()]
-        if user_ids:
-            deleted_count = AccessLog.query.filter(AccessLog.user_id.in_(user_ids)).delete(synchronize_session=False)
-            db.session.commit()
-            log_access(current_user, 'clear_logs', f'target_role={role_target} count={deleted_count}')
-            flash(f"Successfully cleared {deleted_count} logs for {role_target.capitalize()} users.", "success")
+    try:
+        if role_target in ('admin', 'teacher', 'student'):
+            user_ids = [u.id for u in User.query.filter_by(role=role_target).all()]
+            if user_ids:
+                deleted_count = AccessLog.query.filter(AccessLog.user_id.in_(user_ids)).delete(synchronize_session=False)
+                db.session.commit()
+                log_access(current_user, 'clear_logs', f'target_role={role_target} count={deleted_count}')
+                flash(f"Successfully cleared {deleted_count} logs for {role_target.capitalize()} users.", "success")
+            else:
+                flash(f"No logs found for {role_target.capitalize()} users.", "info")
         else:
-            flash(f"No logs found for {role_target.capitalize()} users.", "info")
-    else:
-        deleted_count = AccessLog.query.delete()
-        db.session.commit()
-        log_access(current_user, 'clear_logs', f'target=all count={deleted_count}')
-        flash(f"Successfully cleared all {deleted_count} compliance access logs.", "success")
+            deleted_count = AccessLog.query.delete(synchronize_session=False)
+            db.session.commit()
+            log_access(current_user, 'clear_logs', f'target=all count={deleted_count}')
+            flash(f"Successfully cleared all {deleted_count} compliance access logs.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to clear logs: {str(e)}", "danger")
 
     return redirect(url_for('admin.compliance'))
 
@@ -349,10 +353,19 @@ def clear_logs():
 def clear_user_logs(target_user_id):
     current_user = get_current_user()
     target_user = User.query.get(target_user_id)
-    if target_user:
+    if not target_user:
+        flash("User not found.", "warning")
+        return redirect(url_for('admin.compliance'))
+
+    try:
         deleted_count = AccessLog.query.filter_by(user_id=target_user_id).delete(synchronize_session=False)
         db.session.commit()
         log_access(current_user, 'clear_user_logs', f'target_user={target_user.username} count={deleted_count}')
         flash(f"Successfully cleared {deleted_count} logs for {target_user.name} (@{target_user.username}).", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to clear user logs: {str(e)}", "danger")
+
     return redirect(url_for('admin.compliance'))
+
 
