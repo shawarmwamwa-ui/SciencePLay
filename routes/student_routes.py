@@ -1693,6 +1693,8 @@ def leaderboard():
     claw_leaderboard = build_game_leaderboard('Claw Machine')
     animal_leaderboard = build_game_leaderboard('Find the Part')
     plant_leaderboard = build_game_leaderboard('Build a Plant')
+    recycle_leaderboard = build_game_leaderboard('recycle')
+    metal_leaderboard = build_game_leaderboard('metal')
 
     # --- My Progress: personal retry history per game (private) ---
     def get_my_attempts(activity_type_fragment):
@@ -1706,7 +1708,7 @@ def leaderboard():
             Activity, Activity.id == AttemptLog.activity_id
         ).filter(
             AttemptLog.student_id == user_id,
-            Activity.type.ilike(f'%{activity_type_fragment}%')
+            (Activity.type.ilike(f'%{activity_type_fragment}%') | Activity.engine.ilike(f'%{activity_type_fragment}%'))
         ).order_by(AttemptLog.attempt_number.asc()).all()
 
         result = []
@@ -1728,6 +1730,8 @@ def leaderboard():
     my_claw_attempts = get_my_attempts('Claw Machine')
     my_animal_attempts = get_my_attempts('Find the Part')
     my_plant_attempts = get_my_attempts('Build a Plant')
+    my_recycle_attempts = get_my_attempts('recycle')
+    my_metal_attempts = get_my_attempts('metal')
 
     # --- My Lesson Attempts & Revisits ---
     lessons_progress = LessonProgress.query.filter_by(student_id=user_id).all()
@@ -1754,9 +1758,13 @@ def leaderboard():
         claw_leaderboard=claw_leaderboard,
         animal_leaderboard=animal_leaderboard,
         plant_leaderboard=plant_leaderboard,
+        recycle_leaderboard=recycle_leaderboard,
+        metal_leaderboard=metal_leaderboard,
         my_claw_attempts=my_claw_attempts,
         my_animal_attempts=my_animal_attempts,
         my_plant_attempts=my_plant_attempts,
+        my_recycle_attempts=my_recycle_attempts,
+        my_metal_attempts=my_metal_attempts,
         my_lesson_attempts=my_lesson_attempts
     )
 

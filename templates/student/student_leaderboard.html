@@ -62,6 +62,16 @@
       </button>
     </li>
     <li class="nav-item" role="presentation">
+      <button class="nav-link" id="recycle-tab" data-bs-toggle="tab" data-bs-target="#recycle" type="button" role="tab">
+        <i class="bi bi-recycle text-success me-1"></i> EcoSwipe Sorter
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="metal-tab" data-bs-toggle="tab" data-bs-target="#metal" type="button" role="tab">
+        <i class="bi bi-shield-shaded text-primary me-1"></i> Metal Detective
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
       <button class="nav-link" id="myprogress-tab" data-bs-toggle="tab" data-bs-target="#myprogress" type="button" role="tab">
         <i class="bi bi-graph-up-arrow text-success me-1"></i> My Progress
       </button>
@@ -272,6 +282,92 @@
       </div>
     </div>
 
+    <!-- ══════════════ ECOSWIPE SORTER (RECYCLING) ══════════════ -->
+    <div class="tab-pane fade" id="recycle" role="tabpanel">
+      <div class="brutal-window" style="background: #a7f3d0;">
+        <div class="brutal-window-header">
+          <div class="brutal-dots">
+            <span class="brutal-dot dot-red"></span>
+            <span class="brutal-dot dot-yellow"></span>
+            <span class="brutal-dot dot-green"></span>
+          </div>
+          <span class="brutal-window-title">ECOSWIPE SORTER — BEST SCORES</span>
+        </div>
+        <div class="brutal-window-body">
+          {% if recycle_leaderboard %}
+            <div class="d-flex flex-column gap-3">
+              {% for entry in recycle_leaderboard %}
+                <div class="brutal-list-item d-flex align-items-center justify-content-between p-3 {% if entry.is_current %}border-warning{% endif %}" style="{% if entry.is_current %}background: #fffdf5; border-width: 4px;{% endif %}">
+                  <div class="d-flex align-items-center gap-3">
+                    <span class="fw-black fs-3 text-center" style="min-width: 40px;">
+                      {% if entry.rank == 1 %}<i class="bi bi-trophy-fill text-warning"></i>
+                      {% elif entry.rank == 2 %}<i class="bi bi-award-fill text-secondary"></i>
+                      {% elif entry.rank == 3 %}<i class="bi bi-award-fill" style="color: #d97706;"></i>
+                      {% else %}#{{ entry.rank }}{% endif %}
+                    </span>
+                    <div>
+                      <span class="fw-black text-dark fs-4">{{ entry.name }}</span>
+                      {% if entry.is_current %}<span class="brutal-badge brutal-badge-pink fs-6 ms-2">YOU</span>{% endif %}
+                    </div>
+                  </div>
+                  <span class="brutal-badge brutal-badge-green fs-5 fw-black">
+                    <i class="bi bi-star-fill text-success me-1"></i>{{ entry.points }} pts
+                  </span>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="brutal-list-item text-center py-5">
+              <p class="text-dark fw-black fs-4 mb-0">No EcoSwipe Sorter scores yet!</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ METAL CLUE DETECTIVE ══════════════ -->
+    <div class="tab-pane fade" id="metal" role="tabpanel">
+      <div class="brutal-window" style="background: #e0e7ff;">
+        <div class="brutal-window-header">
+          <div class="brutal-dots">
+            <span class="brutal-dot dot-red"></span>
+            <span class="brutal-dot dot-yellow"></span>
+            <span class="brutal-dot dot-green"></span>
+          </div>
+          <span class="brutal-window-title">METAL CLUE DETECTIVE — BEST SCORES</span>
+        </div>
+        <div class="brutal-window-body">
+          {% if metal_leaderboard %}
+            <div class="d-flex flex-column gap-3">
+              {% for entry in metal_leaderboard %}
+                <div class="brutal-list-item d-flex align-items-center justify-content-between p-3 {% if entry.is_current %}border-warning{% endif %}" style="{% if entry.is_current %}background: #fffdf5; border-width: 4px;{% endif %}">
+                  <div class="d-flex align-items-center gap-3">
+                    <span class="fw-black fs-3 text-center" style="min-width: 40px;">
+                      {% if entry.rank == 1 %}<i class="bi bi-trophy-fill text-warning"></i>
+                      {% elif entry.rank == 2 %}<i class="bi bi-award-fill text-secondary"></i>
+                      {% elif entry.rank == 3 %}<i class="bi bi-award-fill" style="color: #d97706;"></i>
+                      {% else %}#{{ entry.rank }}{% endif %}
+                    </span>
+                    <div>
+                      <span class="fw-black text-dark fs-4">{{ entry.name }}</span>
+                      {% if entry.is_current %}<span class="brutal-badge brutal-badge-pink fs-6 ms-2">YOU</span>{% endif %}
+                    </div>
+                  </div>
+                  <span class="brutal-badge brutal-badge-blue fs-5 fw-black">
+                    <i class="bi bi-star-fill text-primary me-1"></i>{{ entry.points }} pts
+                  </span>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="brutal-list-item text-center py-5">
+              <p class="text-dark fw-black fs-4 mb-0">No Metal Clue Detective scores yet!</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
     <!-- ══════════════ MY PROGRESS (private) ══════════════ -->
     <div class="tab-pane fade" id="myprogress" role="tabpanel">
       <div class="brutal-window mb-4" style="background: #fce7f3;">
@@ -452,7 +548,85 @@
               </table>
             </div>
           {% else %}
-            <div class="alert alert-light border">No Build a Plant attempts yet. Play the game to see your progress here!</div>
+            <div class="alert alert-light border mb-4">No Build a Plant attempts yet. Play the game to see your progress here!</div>
+          {% endif %}
+
+          <!-- EcoSwipe Sorter Retries -->
+          <h5 class="fw-black mb-3"><i class="bi bi-recycle text-success me-2"></i>EcoSwipe Sorter — My Attempts</h5>
+          {% if my_recycle_attempts %}
+            <div class="table-responsive mb-4">
+              <table class="table table-bordered align-middle">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Attempt</th>
+                    <th>Score</th>
+                    <th>Time</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for a in my_recycle_attempts %}
+                    <tr>
+                      <td><span class="badge bg-secondary">#{{ a.attempt_number }}</span></td>
+                      <td><strong>{{ a.score }} pts</strong></td>
+                      <td><small class="text-muted">{{ a.time_spent }}s</small></td>
+                      <td>
+                        {% if a.delta is none %}
+                          <span class="badge bg-light text-dark border">First Try</span>
+                        {% elif a.delta > 0 %}
+                          <span class="badge bg-success">▲ +{{ a.delta }} pts</span>
+                        {% elif a.delta < 0 %}
+                          <span class="badge bg-danger">▼ {{ a.delta }} pts</span>
+                        {% else %}
+                          <span class="badge bg-light text-dark border">= Same</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="alert alert-light border mb-4">No EcoSwipe Sorter attempts yet. Play the game to see your progress here!</div>
+          {% endif %}
+
+          <!-- Metal Clue Detective Retries -->
+          <h5 class="fw-black mb-3"><i class="bi bi-shield-shaded text-primary me-2"></i>Metal Clue Detective — My Attempts</h5>
+          {% if my_metal_attempts %}
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Attempt</th>
+                    <th>Score</th>
+                    <th>Time</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for a in my_metal_attempts %}
+                    <tr>
+                      <td><span class="badge bg-secondary">#{{ a.attempt_number }}</span></td>
+                      <td><strong>{{ a.score }} pts</strong></td>
+                      <td><small class="text-muted">{{ a.time_spent }}s</small></td>
+                      <td>
+                        {% if a.delta is none %}
+                          <span class="badge bg-light text-dark border">First Try</span>
+                        {% elif a.delta > 0 %}
+                          <span class="badge bg-success">▲ +{{ a.delta }} pts</span>
+                        {% elif a.delta < 0 %}
+                          <span class="badge bg-danger">▼ {{ a.delta }} pts</span>
+                        {% else %}
+                          <span class="badge bg-light text-dark border">= Same</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="alert alert-light border">No Metal Clue Detective attempts yet. Play the game to see your progress here!</div>
           {% endif %}
 
         </div>
