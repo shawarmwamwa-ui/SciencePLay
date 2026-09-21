@@ -273,6 +273,31 @@ function initAdminSlidingIndicator() {
   });
 }
 
+function initClearUserLogsModal() {
+  const modal = document.getElementById('clearUserLogsModal');
+  if (!modal) return;
+
+  modal.addEventListener('show.bs.modal', (event) => {
+    const button = event.relatedTarget;
+    if (!button) return;
+
+    const userId = button.getAttribute('data-user-id');
+    const userName = button.getAttribute('data-user-name');
+    const username = button.getAttribute('data-username');
+    const actionCount = button.getAttribute('data-action-count');
+
+    const form = document.getElementById('clearUserLogsForm');
+    const nameEl = document.getElementById('clearUserLogsTargetName');
+    const usernameEl = document.getElementById('clearUserLogsTargetUsername');
+    const countEl = document.getElementById('clearUserLogsTargetCount');
+
+    if (form) form.action = `/admin/clear_user_logs/${userId}`;
+    if (nameEl) nameEl.textContent = userName || 'this user';
+    if (usernameEl) usernameEl.textContent = username ? `@${username}` : '';
+    if (countEl) countEl.textContent = actionCount || '0';
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initAdminDashboardSkeleton();
   initAdminToasts();
@@ -280,6 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateAdminNavState();
   initActionSummaryFilters();
   initAdminSlidingIndicator();
+  initClearUserLogsModal();
 
   const navLinks = document.querySelectorAll('.admin-sidebar .menu-link[data-nav]');
   navLinks.forEach((link) => {
@@ -293,3 +319,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('hashchange', updateAdminNavState);
 });
+
