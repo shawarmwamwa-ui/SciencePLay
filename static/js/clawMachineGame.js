@@ -808,9 +808,14 @@ function maybeCompleteRound(forceEarly = false) {
   saveProgress();
 }
 
+function getStorageKey() {
+  return `scienceplay_save_clawmachine_${state.activityId || window.clawMachineActivityId || 'default'}`;
+}
+
 async function saveProgress() {
   if (state.saving) return;
   state.saving = true;
+  try { localStorage.removeItem(getStorageKey()); } catch (_) {}
 
   const elapsedSeconds = Math.max(1, getActiveElapsedSeconds());
   const payload = {
@@ -918,7 +923,10 @@ function bindControls() {
     dom.dropButton.onclick = dropObject;
   }
   if (dom.restartButton) {
-    dom.restartButton.onclick = () => initGame();
+    dom.restartButton.onclick = () => {
+      try { localStorage.removeItem(getStorageKey()); } catch (_) {}
+      initGame();
+    };
   }
 
   if (dom.backButton) {
@@ -1064,15 +1072,49 @@ async function initGame() {
     state.title = config.title || 'Sorting Claw Machine';
     state.instructions = config.instructions || 'Sort the objects into the correct bins.';
     state.bins = config.bins || [];
-    state.objects = (config.objects || []).map((object, index) => ({
-      ...object,
-      id: object.id ?? index + 1,
-      name: object.name || object.label || `Object ${index + 1}`,
-      lane: index % LANE_COUNT,
-      attempts: 0,
-      isSorted: false,
-      isHeld: false,
-    }));
+    let resumed = false;
+    try {
+      const rawSaved = localStorage.getItem(getStorageKey());
+      if (rawSaved) {
+        const saved = JSON.parse(rawSaved);
+        if (Array.isArray(saved.objects) && saved.objects.length > 0) {
+          const unsortedCount = saved.objects.filter(o => !o.isSorted).length;
+          if (unsortedCount > 0) {
+            state.objects = saved.objects.map((obj, index) => ({
+              ...obj,
+              lane: (typeof obj.lane === 'number' && obj.lane >= 0 && obj.lane < LANE_COUNT) ? obj.lane : (index % LANE_COUNT),
+              isSorted: Boolean(obj.isSorted),
+              isHeld: false,
+            }));
+            state.score = typeof saved.score === 'number' ? saved.score : 0;
+            state.streak = saved.streak || 0;
+            state.totalAttempts = saved.totalAttempts || 0;
+            state.correctFirstTry = saved.correctFirstTry || 0;
+            state.wrongDrops = saved.wrongDrops || 0;
+            state.objectLogs = Array.isArray(saved.objectLogs) ? saved.objectLogs : [];
+            activeElapsedSeconds = saved.activeElapsedSeconds || 0;
+            lastTickTime = Date.now();
+            timerPaused = false;
+            resumed = true;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error restoring saved claw machine state:', e);
+    }
+
+    if (!resumed) {
+      state.objects = (config.objects || []).map((object, index) => ({
+        ...object,
+        id: object.id ?? index + 1,
+        name: object.name || object.label || `Object ${index + 1}`,
+        lane: index % LANE_COUNT,
+        attempts: 0,
+        isSorted: false,
+        isHeld: false,
+      }));
+    }
+
     state.leftBinCount = Math.ceil(state.bins.length / 2);
     buildSlots();
     state.activeSlotIndex = Math.min(state.leftBinCount, Math.max(0, state.slots.length - 1));
@@ -1094,8 +1136,9 @@ async function initGame() {
         dom.restartButton.classList.add('disabled', 'btn-secondary');
         dom.restartButton.classList.remove('btn-primary');
         dom.restartButton.innerHTML = '<i class="bi bi-lock-fill me-1"></i>Attempts Limit Reached (3/3)';
+      }
     } else {
-      setMessage('Move the claw, grab an object, then drop it into the matching bin.', 'primary');
+      setMessage(resumed ? 'Resumed from where you left off! Move the claw to continue.' : 'Move the claw, grab an object, then drop it into the matching bin.', 'primary');
       playVoicePrompt('claw_intro', 'Move the claw, grab an item, and drop it into a chute!');
     }
     bindExitHandlers();
@@ -1130,15 +1173,26 @@ function bindExitHandlers() {
   });
 
   const btnModalSaveExit = document.getElementById('btn-modal-save-exit');
-  btnModalSaveExit?.addEventListener('click', async () => {
+  btnModalSaveExit?.addEventListener('click', () => {
     btnModalSaveExit.disabled = true;
     btnModalSaveExit.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...`;
-    // Safety floor
-    if (state.correctFirstTry > 0) {
-      state.score = Math.max(20, state.score);
+    
+    // Save state to localStorage without logging an attempt to backend!
+    try {
+      const stateToSave = {
+        objects: state.objects,
+        score: state.score,
+        streak: state.streak,
+        totalAttempts: state.totalAttempts,
+        correctFirstTry: state.correctFirstTry,
+        wrongDrops: state.wrongDrops,
+        objectLogs: state.objectLogs,
+        activeElapsedSeconds: getActiveElapsedSeconds()
+      };
+      localStorage.setItem(getStorageKey(), JSON.stringify(stateToSave));
+    } catch (e) {
+      console.warn('Could not save claw machine state to localStorage', e);
     }
-    state.score = Math.min(100, state.score);
-    await saveProgress();
     window.location.href = '/student/activities';
   });
 }

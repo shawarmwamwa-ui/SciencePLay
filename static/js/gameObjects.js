@@ -64,7 +64,10 @@ function normalizeBin(bin, index) {
 }
 
 function isValidObjectEntry(object) {
-  return object && typeof object.categoryId === 'string';
+  if (!object) return false;
+  if (typeof object.categoryId === 'string') return true;
+  const shared = getObjectByLabel(object.label || object.name || '');
+  return Boolean(shared);
 }
 
 function isValidBinEntry(bin) {

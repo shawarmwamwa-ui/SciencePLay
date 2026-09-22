@@ -676,7 +676,6 @@ export function initMetalLogicGame() {
             ${isPlacedElsewhere ? `<span class="picker-tile-placed-badge" title="Already in Box #${placedInBox}"><i class="bi bi-pin-map-fill"></i> #${placedInBox}</span>` : ''}
           </div>
           <div class="picker-tile-name">${item.name}</div>
-          <div class="picker-tile-badge">${item.badge}</div>
           ${isPlacedElsewhere ? `<div class="picker-tile-in-use-tag"><i class="bi bi-check2-circle me-1"></i>In Box #${placedInBox}</div>` : ''}
           ${isSelected ? `<div class="picker-tile-current-tag"><i class="bi bi-check-circle-fill me-1"></i>Current Choice</div>` : ''}
         `;
@@ -938,11 +937,17 @@ export function initMetalLogicGame() {
       }
     }
 
+    const STORAGE_KEY = `scienceplay_save_metallogic_${window.metalGameActivityId || 'default'}`;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+
     victoryModal?.show();
   }
 
+  const STORAGE_KEY = `scienceplay_save_metallogic_${window.metalGameActivityId || 'default'}`;
+
   btnPlayAgain?.addEventListener("click", () => {
     victoryModal?.hide();
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
     score = 100;
     hintsUsed = 0;
     if (hudScoreVal) hudScoreVal.textContent = score;
@@ -978,13 +983,56 @@ export function initMetalLogicGame() {
   });
 
   const btnModalSaveExit = document.getElementById("btn-modal-save-exit");
-  btnModalSaveExit?.addEventListener("click", async () => {
+  btnModalSaveExit?.addEventListener("click", () => {
     btnModalSaveExit.disabled = true;
     btnModalSaveExit.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...`;
-    await saveProgressToBackend();
+    
+    // Save state to localStorage without logging an attempt to backend!
+    try {
+      const stateToSave = {
+        currentLevelIdx,
+        userAnswers,
+        score,
+        hintsUsed,
+        objectLogs,
+        activeElapsedSeconds: getActiveElapsedSeconds()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+    } catch (e) {
+      console.warn("Could not save metal detective state to localStorage", e);
+    }
     window.location.href = "/student/activities";
   });
 
-  // Start Level 1
-  setupLevel(0);
+  // Resume from saved progress if available, otherwise start Level 1
+  let resumed = false;
+  try {
+    const rawSaved = localStorage.getItem(STORAGE_KEY);
+    if (rawSaved) {
+      const saved = JSON.parse(rawSaved);
+      if (typeof saved.currentLevelIdx === 'number' && saved.currentLevelIdx < LEVELS.length) {
+        currentLevelIdx = saved.currentLevelIdx;
+        score = typeof saved.score === 'number' ? saved.score : 100;
+        hintsUsed = saved.hintsUsed || 0;
+        objectLogs = Array.isArray(saved.objectLogs) ? saved.objectLogs : [];
+        activeElapsedSeconds = saved.activeElapsedSeconds || 0;
+        lastTickTime = Date.now();
+        timerPaused = false;
+        setupLevel(currentLevelIdx);
+        if (saved.userAnswers && typeof saved.userAnswers === 'object') {
+          userAnswers = saved.userAnswers;
+          renderMysteryGrid();
+          renderChoiceShelf();
+        }
+        if (hudScoreVal) hudScoreVal.textContent = score;
+        resumed = true;
+      }
+    }
+  } catch (e) {
+    console.warn("Error restoring saved metal logic state", e);
+  }
+
+  if (!resumed) {
+    setupLevel(0);
+  }
 }

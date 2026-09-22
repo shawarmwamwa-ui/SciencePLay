@@ -531,9 +531,14 @@ function showRoundIntermission() {
   });
 }
 
+function getStorageKey() {
+  return `scienceplay_save_buildaplant_${window.buildAPlantActivityId || 'default'}`;
+}
+
 // ── COMPLETION ────────────────────────────────────────────────────────────────
 
 async function saveResult(silent = false) {
+  try { localStorage.removeItem(getStorageKey()); } catch (_) {}
   const totalStages = getTotalStages();
   if (state.totalFirstTry >= totalStages) {
     state.score = 100;
@@ -680,7 +685,10 @@ function showCompletion(data) {
     </div>`;
 
   if (!exhausted) {
-    $('bap-restart')?.addEventListener('click', () => initBuildAPlant());
+    $('bap-restart')?.addEventListener('click', () => {
+      try { localStorage.removeItem(getStorageKey()); } catch (_) {}
+      initBuildAPlant();
+    });
   }
 }
 
@@ -1143,19 +1151,48 @@ function renderCurrentRound() {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 
 export function initBuildAPlant() {
-  state.currentRoundIdx   = 0;
-  state.currentStageIdx   = 0;
-  state.score             = 0;
-  state.totalFirstTry     = 0;
-  state.attemptsThisStage = 0;
-  state.completed         = false;
-  state.startTime         = performance.now();
-  activeElapsedSeconds    = 0;
-  lastTickTime            = Date.now();
-  timerPaused             = false;
-  state.objectLogs        = [];
-  state.selectedCardId    = null;
-  state.draggedCardId     = null;
+  const STORAGE_KEY = getStorageKey();
+  let resumed = false;
+  try {
+    const rawSaved = localStorage.getItem(STORAGE_KEY);
+    if (rawSaved) {
+      const saved = JSON.parse(rawSaved);
+      if (typeof saved.currentRoundIdx === 'number' && saved.currentRoundIdx < ROUNDS.length) {
+        state.currentRoundIdx   = saved.currentRoundIdx;
+        state.currentStageIdx   = saved.currentStageIdx || 0;
+        state.score             = typeof saved.score === 'number' ? saved.score : 0;
+        state.totalFirstTry     = saved.totalFirstTry || 0;
+        state.attemptsThisStage = 0;
+        state.completed         = false;
+        state.startTime         = performance.now();
+        activeElapsedSeconds    = saved.activeElapsedSeconds || 0;
+        lastTickTime            = Date.now();
+        timerPaused             = false;
+        state.objectLogs        = Array.isArray(saved.objectLogs) ? saved.objectLogs : [];
+        state.selectedCardId    = null;
+        state.draggedCardId     = null;
+        resumed = true;
+      }
+    }
+  } catch (e) {
+    console.warn("Error restoring build a plant state", e);
+  }
+
+  if (!resumed) {
+    state.currentRoundIdx   = 0;
+    state.currentStageIdx   = 0;
+    state.score             = 0;
+    state.totalFirstTry     = 0;
+    state.attemptsThisStage = 0;
+    state.completed         = false;
+    state.startTime         = performance.now();
+    activeElapsedSeconds    = 0;
+    lastTickTime            = Date.now();
+    timerPaused             = false;
+    state.objectLogs        = [];
+    state.selectedCardId    = null;
+    state.draggedCardId     = null;
+  }
 
   if (typeof window.initialAttemptsToday !== 'undefined') {
     state.attemptsToday = Number(window.initialAttemptsToday);
@@ -1163,6 +1200,22 @@ export function initBuildAPlant() {
 
   bindBackConfirmation();
   renderCurrentRound();
+
+  if (resumed && state.currentStageIdx > 0) {
+    // Restore previously revealed parts and placed cards for this round
+    const round = ROUNDS[state.currentRoundIdx];
+    for (let i = 0; i < state.currentStageIdx && i < round.stages.length; i++) {
+      const stage = round.stages[i];
+      revealPlantPart(stage.svgId);
+      const cardEl = $(`bap-card-${stage.id}`);
+      if (cardEl) {
+        cardEl.classList.add('bap-card--placed');
+        cardEl.setAttribute('draggable', 'false');
+      }
+    }
+    positionDropzone(state.currentStageIdx);
+    updateHUD();
+  }
 }
 
 function bindBackConfirmation() {
@@ -1211,11 +1264,25 @@ function showExitModal() {
     overlay.remove();
     saveResult();
   });
-  document.getElementById('bap-exit-save-later-btn')?.addEventListener('click', async (e) => {
+  document.getElementById('bap-exit-save-later-btn')?.addEventListener('click', (e) => {
     const btn = e.currentTarget;
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...`;
-    await saveResult(true);
+    
+    // Save state to localStorage without logging an attempt to backend!
+    try {
+      const stateToSave = {
+        currentRoundIdx: state.currentRoundIdx,
+        currentStageIdx: state.currentStageIdx,
+        score: state.score,
+        totalFirstTry: state.totalFirstTry,
+        objectLogs: state.objectLogs,
+        activeElapsedSeconds: getActiveElapsedSeconds(),
+      };
+      localStorage.setItem(getStorageKey(), JSON.stringify(stateToSave));
+    } catch (e) {
+      console.warn("Could not save build-a-plant state to localStorage", e);
+    }
     window.location.href = '/student/activities';
   });
 }

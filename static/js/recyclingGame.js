@@ -228,7 +228,39 @@ export function initRecyclingGame() {
     return activeElapsedSeconds + Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
   }
 
-  function startNewGame() {
+  const STORAGE_KEY = `scienceplay_save_ecoswipe_${window.recyclingGameActivityId || 'default'}`;
+
+  function startNewGame(forceFresh = false) {
+    if (!forceFresh) {
+      try {
+        const rawSaved = localStorage.getItem(STORAGE_KEY);
+        if (rawSaved) {
+          const saved = JSON.parse(rawSaved);
+          if (Array.isArray(saved.deck) && saved.deck.length > 0 && typeof saved.currentIndex === 'number' && saved.currentIndex < saved.deck.length) {
+            deck = saved.deck;
+            currentIndex = saved.currentIndex;
+            streak = saved.streak || 0;
+            bestStreak = saved.bestStreak || 0;
+            correctCount = saved.correctCount || 0;
+            score = saved.score || 0;
+            activeElapsedSeconds = saved.activeElapsedSeconds || 0;
+            lastTickTime = Date.now();
+            timerPaused = false;
+            objectLogs = Array.isArray(saved.objectLogs) ? saved.objectLogs : [];
+            isAnimating = false;
+
+            updateHUD();
+            loadCard(currentIndex);
+
+            if (feedbackBanner) feedbackBanner.style.display = "none";
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("Error restoring saved EcoSwipe state", e);
+      }
+    }
+
     // Shuffle and pick 12 items
     const shuffled = shuffle(MASTER_ITEMS);
     deck = shuffled.slice(0, ROUND_SIZE);
@@ -631,13 +663,15 @@ export function initRecyclingGame() {
       }
     }
 
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
     playVoicePrompt('level_complete', 'Level complete! Great job!');
     victoryModal?.show();
   }
 
   btnPlayAgain?.addEventListener("click", () => {
     victoryModal?.hide();
-    startNewGame();
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+    startNewGame(true);
   });
 
   // Safe exit confirmation
@@ -664,10 +698,26 @@ export function initRecyclingGame() {
   });
 
   const btnModalSaveExit = document.getElementById("btn-modal-save-exit");
-  btnModalSaveExit?.addEventListener("click", async () => {
+  btnModalSaveExit?.addEventListener("click", () => {
     btnModalSaveExit.disabled = true;
     btnModalSaveExit.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...`;
-    await saveProgressToBackend();
+    
+    // Save state to localStorage without logging an attempt to backend!
+    try {
+      const stateToSave = {
+        currentIndex,
+        deck,
+        score,
+        streak,
+        bestStreak,
+        correctCount,
+        objectLogs,
+        activeElapsedSeconds: getActiveElapsedSeconds()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+    } catch (e) {
+      console.warn("Could not save EcoSwipe state to localStorage", e);
+    }
     window.location.href = "/student/activities";
   });
 

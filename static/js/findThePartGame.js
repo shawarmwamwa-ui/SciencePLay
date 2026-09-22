@@ -195,7 +195,9 @@ async function saveResult(silent = false) {
   if (state.completed) return null;
   state.completed = true;
 
-  const totalZones = ROUNDS.reduce((acc, r) => acc + r.zones.length, 0);
+  try { localStorage.removeItem(getStorageKey()); } catch (_) {}
+
+  const totalZones = getTotalZones();
   if (state.correctFirstTry >= totalZones) {
     state.score = 100;
   } else if (state.matched.size >= totalZones) {
@@ -327,7 +329,10 @@ function showSummary(data) {
     </div>`;
 
   if (!exhausted) {
-    document.getElementById('ftp-restart')?.addEventListener('click', () => initFindThePart());
+    document.getElementById('ftp-restart')?.addEventListener('click', () => {
+      try { localStorage.removeItem(getStorageKey()); } catch (_) {}
+      initFindThePart();
+    });
   }
 }
 
@@ -752,27 +757,82 @@ function bindRoundEvents(round) {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 
 export function initFindThePart() {
-  state.score = 0;
-  state.correctFirstTry = 0;
-  state.currentRound = 0;
-  state.completed = false;
-  state.startTime = performance.now();
-  activeElapsedSeconds = 0;
-  lastTickTime = Date.now();
-  timerPaused = false;
-  state.objectLogs = [];
-  state.selectedLabel = null;
-  state.selectedSlot = null;
-  state.matched = new Set();
-  state.attempts = {};
+  const STORAGE_KEY = getStorageKey();
+  let resumed = false;
+  try {
+    const rawSaved = localStorage.getItem(STORAGE_KEY);
+    if (rawSaved) {
+      const saved = JSON.parse(rawSaved);
+      if (typeof saved.currentRound === 'number' && saved.currentRound < ROUNDS.length) {
+        state.currentRound    = saved.currentRound;
+        state.score           = typeof saved.score === 'number' ? saved.score : 0;
+        state.correctFirstTry = saved.correctFirstTry || 0;
+        state.completed       = false;
+        state.startTime       = performance.now();
+        activeElapsedSeconds  = saved.activeElapsedSeconds || 0;
+        lastTickTime          = Date.now();
+        timerPaused           = false;
+        state.objectLogs      = Array.isArray(saved.objectLogs) ? saved.objectLogs : [];
+        state.selectedLabel   = null;
+        state.selectedSlot    = null;
+        state.matched         = new Set(Array.isArray(saved.matched) ? saved.matched : []);
+        state.attempts        = saved.attempts || {};
+        resumed = true;
+      }
+    }
+  } catch (e) {
+    console.warn('Error restoring find the part state', e);
+  }
+
+  if (!resumed) {
+    state.score = 0;
+    state.correctFirstTry = 0;
+    state.currentRound = 0;
+    state.completed = false;
+    state.startTime = performance.now();
+    activeElapsedSeconds = 0;
+    lastTickTime = Date.now();
+    timerPaused = false;
+    state.objectLogs = [];
+    state.selectedLabel = null;
+    state.selectedSlot = null;
+    state.matched = new Set();
+    state.attempts = {};
+  }
 
   if (typeof window.initialAttemptsToday !== 'undefined') {
     state.attemptsToday = Number(window.initialAttemptsToday);
   }
 
   bindBackConfirmation();
-  renderRound(0);
+  renderRound(state.currentRound);
   updateHUD();
+
+  // If resumed with matches on this round, apply matched visuals
+  if (resumed && state.matched.size > 0) {
+    const round = ROUNDS[state.currentRound];
+    state.matched.forEach(zoneId => {
+      const labelId = round.correct[zoneId];
+      if (labelId) {
+        const chip = document.querySelector(`.ftp-chip[data-label-id="${labelId}"]`);
+        if (chip) {
+          chip.classList.add('ftp-chip-used');
+          chip.setAttribute('draggable', 'false');
+        }
+        const slotEl = document.querySelector(`.ftp-slot[data-zone-id="${zoneId}"]`);
+        if (slotEl) {
+          slotEl.classList.add('ftp-slot-matched');
+          const labelObj = round.labels.find(l => l.id === labelId);
+          slotEl.innerHTML = `
+            <div class="ftp-slot-matched-content">
+              <span class="ftp-slot-matched-icon">✓</span>
+              <span class="ftp-slot-matched-text">${labelObj?.text || labelId}</span>
+            </div>
+          `;
+        }
+      }
+    });
+  }
 }
 
 function bindBackConfirmation() {
@@ -821,11 +881,26 @@ function showExitModal() {
     overlay.remove();
     saveResult();
   });
-  document.getElementById('ftp-exit-save-later-btn')?.addEventListener('click', async (e) => {
+  document.getElementById('ftp-exit-save-later-btn')?.addEventListener('click', (e) => {
     const btn = e.currentTarget;
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...`;
-    await saveResult(true);
+    
+    // Save state to localStorage without logging an attempt to backend!
+    try {
+      const stateToSave = {
+        currentRound: state.currentRound,
+        matched: Array.from(state.matched),
+        attempts: state.attempts,
+        score: state.score,
+        correctFirstTry: state.correctFirstTry,
+        objectLogs: state.objectLogs,
+        activeElapsedSeconds: getActiveElapsedSeconds()
+      };
+      localStorage.setItem(getStorageKey(), JSON.stringify(stateToSave));
+    } catch (e) {
+      console.warn("Could not save find the part state to localStorage", e);
+    }
     window.location.href = '/student/activities';
   });
 }
