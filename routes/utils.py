@@ -1,9 +1,17 @@
 from functools import wraps
+from datetime import timedelta
 from flask import session, flash, redirect, url_for
 from flask_wtf.csrf import CSRFProtect
 from database.models import db, User, AccessLog
 
 csrf = CSRFProtect()
+
+
+def to_ph_time(dt):
+    """Converts UTC datetime to Philippine Standard Time (UTC+8)."""
+    if not dt:
+        return None
+    return dt + timedelta(hours=8)
 
 
 def get_current_user():

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from database.models import db, Lesson, Activity, User, ProgressLog, LessonAssignment, ActivityAssignment, AttemptLog, UserBadge, LessonProgress, LessonAttemptLog, Badge, AttemptObjectLog
-from routes.utils import get_current_user, require_role, log_access, csrf
+from routes.utils import get_current_user, require_role, log_access, csrf, to_ph_time
 
 teacher_bp = Blueprint('teacher', __name__, url_prefix='/teacher')
 
@@ -376,8 +376,8 @@ def get_student_retry_progression():
                     'num': idx + 1,
                     'score': a.score or 0,
                     'time': a.time_spent or 0,
-                    'date': a.created_at.strftime('%b %d') if a.created_at else '',
-                    'date_full': a.created_at.strftime('%b %d, %Y %I:%M %p') if a.created_at else ''
+                    'date': to_ph_time(a.created_at).strftime('%b %d') if a.created_at else '',
+                    'date_full': to_ph_time(a.created_at).strftime('%b %d, %Y %I:%M %p') if a.created_at else ''
                 }
                 for idx, a in enumerate(attempts)
             ]
@@ -1689,7 +1689,7 @@ def _build_lesson_history_data(student_id, lesson_id):
         first_time = log.initial_time_spent or log.time_spent or 0
         pct = log.progress_percent or (100 if log.completed else 0)
         curr_slide = total_slides if log.completed else max(1, min(total_slides, round((pct / 100) * total_slides)))
-        created_str = log.created_at.strftime('%b %d, %Y · %I:%M %p') if log.created_at else 'N/A'
+        created_str = to_ph_time(log.created_at).strftime('%b %d, %Y · %I:%M %p') if log.created_at else 'N/A'
         attempts_list = [{
             'attempt_number': 1,
             'visit_title': 'First Visit (Initial)',
@@ -1708,7 +1708,7 @@ def _build_lesson_history_data(student_id, lesson_id):
             title = 'First Visit (Initial)' if a.attempt_number == 1 else f'Revisit #{a.attempt_number - 1}'
             pct = a.progress_percent or (100 if a.completed else 0)
             curr_slide = total_slides if a.completed else max(1, min(total_slides, round((pct / 100) * total_slides)))
-            created_str = a.created_at.strftime('%b %d, %Y · %I:%M %p') if a.created_at else 'N/A'
+            created_str = to_ph_time(a.created_at).strftime('%b %d, %Y · %I:%M %p') if a.created_at else 'N/A'
             attempts_list.append({
                 'attempt_number': a.attempt_number,
                 'visit_title': title,

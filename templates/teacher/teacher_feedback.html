@@ -249,7 +249,7 @@
                           <span><i class="bi bi-star-fill text-warning me-1"></i><strong>{{ att.score }} pts</strong></span>
                         {% endif %}
                         <span><i class="bi bi-clock me-1"></i>{{ att.time_spent or 0 }}s</span>
-                        <span><i class="bi bi-calendar3 me-1"></i>{{ att.created_at.strftime('%b %d, %Y %I:%M %p') }}</span>
+                        <span><i class="bi bi-calendar3 me-1"></i>{{ att.created_at|to_ph_time('%b %d, %Y %I:%M %p') }}</span>
                       </div>
 
                       <!-- System Feedback Hint -->

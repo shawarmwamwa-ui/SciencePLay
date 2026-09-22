@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, session, request, jsonify
 from database.models import db, Lesson, Activity, ProgressLog, LessonProgress, LessonAttemptLog, User, LessonAssignment, ActivityAssignment, AttemptLog, AttemptObjectLog, UserBadge, Badge
-from routes.utils import get_current_user, require_role, log_access, csrf
+from routes.utils import get_current_user, require_role, log_access, csrf, to_ph_time
 from types import SimpleNamespace
 from datetime import datetime, time
 import json
@@ -770,7 +770,7 @@ def feedback():
         if has_system_fb:
             system_evaluations_count += 1
 
-        formatted_date = attempt.created_at.strftime('%b %d, %Y at %I:%M %p') if attempt.created_at else 'Recently'
+        formatted_date = to_ph_time(attempt.created_at).strftime('%b %d, %Y at %I:%M %p') if attempt.created_at else 'Recently'
 
         activity_groups_dict[act_title]['attempts'].append({
             'id': attempt.id,

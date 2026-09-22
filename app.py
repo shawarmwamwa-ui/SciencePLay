@@ -46,8 +46,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
-# Initialize database
 db.init_app(app)
+
+from routes.utils import to_ph_time
+
+@app.template_filter('to_ph_time')
+def to_ph_time_filter(dt, fmt='%b %d, %Y at %I:%M %p'):
+    if not dt:
+        return ''
+    ph_dt = to_ph_time(dt)
+    return ph_dt.strftime(fmt)
+
+app.jinja_env.globals.update(to_ph_time=to_ph_time)
 
 
 def ensure_attempt_log_teacher_feedback_column():
