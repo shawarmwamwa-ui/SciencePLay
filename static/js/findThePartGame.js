@@ -191,8 +191,8 @@ function updateHUD() {
 
 // ── SAVE RESULT ───────────────────────────────────────────────────────────────
 
-async function saveResult() {
-  if (state.completed) return;
+async function saveResult(silent = false) {
+  if (state.completed) return null;
   state.completed = true;
 
   const totalZones = ROUNDS.reduce((acc, r) => acc + r.zones.length, 0);
@@ -234,7 +234,10 @@ async function saveResult() {
     console.warn('Could not save activity progress:', err);
   }
 
-  showSummary(responseData);
+  if (!silent) {
+    showSummary(responseData);
+  }
+  return responseData;
 }
 
 // ── SUMMARY SCREEN ────────────────────────────────────────────────────────────
@@ -799,15 +802,15 @@ function showExitModal() {
       <h3 class="ftp-overlay-title">Leave Activity?</h3>
       <p class="ftp-overlay-sub">You're currently matching animal parts! What would you like to do?</p>
       <div class="ftp-overlay-actions">
+        <button id="ftp-exit-save-later-btn" class="ftp-btn" style="padding:0.75rem 1.5rem; background:#0284c7; color:#fff; font-weight:800; border-radius:999px; border:2px solid #18181b;">
+          <i class="bi bi-bookmark-check-fill me-1"></i>Exit, Save & Continue Later
+        </button>
         <button id="ftp-exit-save-btn" class="ftp-btn ftp-btn-primary">
-          <i class="bi bi-check-circle-fill me-1"></i>Finish & Save Score (${state.score} pts)
+          <i class="bi bi-trophy-fill me-1"></i>Finish & Save Score (${state.score} pts)
         </button>
         <button id="ftp-exit-cancel-btn" class="ftp-btn ftp-btn-secondary">
           <i class="bi bi-play-fill me-1"></i>Keep Playing
         </button>
-        <a href="/student/activities" class="ftp-btn ftp-btn-ghost">
-          Exit Without Saving
-        </a>
       </div>
     </div>
   `;
@@ -817,6 +820,13 @@ function showExitModal() {
   document.getElementById('ftp-exit-save-btn')?.addEventListener('click', () => {
     overlay.remove();
     saveResult();
+  });
+  document.getElementById('ftp-exit-save-later-btn')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...`;
+    await saveResult(true);
+    window.location.href = '/student/activities';
   });
 }
 

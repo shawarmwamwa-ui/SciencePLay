@@ -1094,15 +1094,53 @@ async function initGame() {
         dom.restartButton.classList.add('disabled', 'btn-secondary');
         dom.restartButton.classList.remove('btn-primary');
         dom.restartButton.innerHTML = '<i class="bi bi-lock-fill me-1"></i>Attempts Limit Reached (3/3)';
-      }
     } else {
       setMessage('Move the claw, grab an object, then drop it into the matching bin.', 'primary');
       playVoicePrompt('claw_intro', 'Move the claw, grab an item, and drop it into a chute!');
     }
+    bindExitHandlers();
   } catch (error) {
     console.error('Failed to initialize claw machine:', error);
     setMessage('Unable to load the sorting game right now. Please refresh and try again.', 'danger');
   }
+}
+
+function bindExitHandlers() {
+  const backBtn = document.getElementById('btn-claw-back');
+  backBtn?.addEventListener('click', (e) => {
+    const hasProgress = !state.completed && (state.totalAttempts > 0 || state.score > 0);
+    if (hasProgress) {
+      e.preventDefault();
+      const exitModalEl = document.getElementById('exitConfirmModal');
+      if (exitModalEl && window.bootstrap?.Modal) {
+        const modal = window.bootstrap.Modal.getOrCreateInstance(exitModalEl);
+        modal.show();
+      }
+    }
+  });
+
+  const btnModalFinishSave = document.getElementById('btn-modal-finish-save');
+  btnModalFinishSave?.addEventListener('click', () => {
+    const exitModalEl = document.getElementById('exitConfirmModal');
+    if (exitModalEl && window.bootstrap?.Modal) {
+      const modal = window.bootstrap.Modal.getInstance(exitModalEl);
+      modal?.hide();
+    }
+    maybeCompleteRound(true);
+  });
+
+  const btnModalSaveExit = document.getElementById('btn-modal-save-exit');
+  btnModalSaveExit?.addEventListener('click', async () => {
+    btnModalSaveExit.disabled = true;
+    btnModalSaveExit.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...`;
+    // Safety floor
+    if (state.correctFirstTry > 0) {
+      state.score = Math.max(20, state.score);
+    }
+    state.score = Math.min(100, state.score);
+    await saveProgress();
+    window.location.href = '/student/activities';
+  });
 }
 
 let gameInitialized = false;

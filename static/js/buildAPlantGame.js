@@ -533,7 +533,7 @@ function showRoundIntermission() {
 
 // ── COMPLETION ────────────────────────────────────────────────────────────────
 
-async function saveResult() {
+async function saveResult(silent = false) {
   const totalStages = getTotalStages();
   if (state.totalFirstTry >= totalStages) {
     state.score = 100;
@@ -545,7 +545,7 @@ async function saveResult() {
 
   const timeSpent = Math.max(1, getActiveElapsedSeconds());
   const actId = window.buildAPlantActivityId;
-  if (!actId) return;
+  if (!actId) return null;
 
   let responseData = null;
   try {
@@ -574,7 +574,10 @@ async function saveResult() {
     console.warn('Could not save activity progress:', err);
   }
 
-  showCompletion(responseData);
+  if (!silent) {
+    showCompletion(responseData);
+  }
+  return responseData;
 }
 
 function launchConfetti() {
@@ -1189,15 +1192,15 @@ function showExitModal() {
       <h2 class="bap-intermission-title">Leave Activity?</h2>
       <p class="bap-intermission-sub">You have plant parts currently growing! What would you like to do?</p>
       <div style="display:flex; flex-direction:column; gap:10px; margin-top:1rem;">
+        <button id="bap-exit-save-later-btn" class="bap-btn" style="padding:0.75rem 1.5rem; background:#16a34a; color:#fff; font-weight:800; border-radius:999px; border:2px solid #18181b;">
+          <i class="bi bi-bookmark-check-fill me-1"></i>Exit, Save & Continue Later
+        </button>
         <button id="bap-exit-save-btn" class="bap-btn bap-btn--primary" style="padding:0.75rem 1.5rem;">
-          <i class="bi bi-check-circle-fill me-1"></i>Finish & Save Score (${state.score} pts)
+          <i class="bi bi-trophy-fill me-1"></i>Finish & Save Score (${state.score} pts)
         </button>
         <button id="bap-exit-cancel-btn" class="bap-btn bap-btn--secondary" style="padding:0.75rem 1.5rem;">
           <i class="bi bi-play-fill me-1"></i>Keep Playing
         </button>
-        <a href="/student/activities" class="bap-btn" style="background:transparent; border:1.5px solid #cbd5e1; color:#64748b; padding:0.6rem 1.5rem;">
-          Exit Without Saving
-        </a>
       </div>
     </div>
   `;
@@ -1207,6 +1210,13 @@ function showExitModal() {
   document.getElementById('bap-exit-save-btn')?.addEventListener('click', () => {
     overlay.remove();
     saveResult();
+  });
+  document.getElementById('bap-exit-save-later-btn')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...`;
+    await saveResult(true);
+    window.location.href = '/student/activities';
   });
 }
 

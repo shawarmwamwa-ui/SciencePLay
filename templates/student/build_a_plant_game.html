@@ -56,7 +56,7 @@
     window.initialAttemptsToday = {{ attempts_today if attempts_today is defined else 0 }};
   </script>
   <script type="module">
-    import { initBuildAPlant } from "{{ url_for('static', filename='js/buildAPlantGame.js', v='20260904_3') }}";
+    import { initBuildAPlant } from "{{ url_for('static', filename='js/buildAPlantGame.js', v='20260922_1') }}";
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     document.addEventListener('DOMContentLoaded', () => {
       initBuildAPlant();

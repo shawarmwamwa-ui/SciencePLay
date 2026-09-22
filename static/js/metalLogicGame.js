@@ -361,15 +361,19 @@ export function initMetalLogicGame() {
       const answeredItemId = userAnswers[item.boxNum];
       const answeredItem = answeredItemId ? ITEMS_BANK[answeredItemId] : null;
 
-      colEl.innerHTML = `
+      const badgeHtml = `
         <div class="mystery-header-badge" style="background:${theme.badgeBg}; border-color:#18181b;" title="Clue #${item.boxNum}">
           ${item.boxNum}
         </div>
+      `;
 
+      const questionHtml = `
         <div class="mystery-question-box" style="background:${theme.qBg}; border-color:${theme.border};">
           <p class="mystery-question-text">"${item.metal.clue}"</p>
         </div>
+      `;
 
+      const answerBoxHtml = `
         <div class="mystery-answer-box ${item.boxNum === activeBoxIndex ? 'active-box' : ''} ${answeredItem ? 'filled-box' : ''}" 
              style="${answeredItem ? '' : `border-color:${theme.dashBorder}; background:#ffffff;`}"
              id="mystery-box-${item.boxNum}" 
@@ -393,6 +397,13 @@ export function initMetalLogicGame() {
           }
         </div>
       `;
+
+      // For Round 2 (6 clues) & Round 3 (9 clues): place the item/icon in the middle, clue at the bottom!
+      if (count > 4) {
+        colEl.innerHTML = badgeHtml + answerBoxHtml + questionHtml;
+      } else {
+        colEl.innerHTML = badgeHtml + questionHtml + answerBoxHtml;
+      }
 
       mysteryGrid.appendChild(colEl);
     });
@@ -852,36 +863,13 @@ export function initMetalLogicGame() {
     setupLevel(currentLevelIdx + 1);
   });
 
-  async function handleVictory() {
-    playVoicePrompt('level_complete', 'Level complete! Great job!');
+  async function saveProgressToBackend() {
     const timeSpent = Math.max(1, getActiveElapsedSeconds());
     const finalScore = Math.min(100, Math.max(25, score));
     const actId = window.metalGameActivityId;
-
-    const modalScore = document.getElementById("modal-final-score");
-    const modalTime = document.getElementById("modal-time-spent");
-    const modalRating = document.getElementById("modal-rating");
-    const modalStars = document.getElementById("modal-stars");
-    const modalAttemptsUsed = document.getElementById("modal-attempts-used");
-
-    const stars = finalScore >= 90 ? 3 : finalScore >= 60 ? 2 : 1;
-    if (modalStars) modalStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
-
-    if (modalScore) modalScore.textContent = finalScore;
-    if (modalTime) modalTime.textContent = `${timeSpent}s`;
-    if (modalRating) {
-      modalRating.textContent =
-        finalScore >= 90
-          ? "Master Detective (Top Score 90%+)"
-          : finalScore >= 75
-          ? "Senior Detective (75%+)"
-          : "Detective (50%+)";
-    }
-
     let attemptsToday = typeof window.initialAttemptsToday !== 'undefined' ? Number(window.initialAttemptsToday) + 1 : 1;
     let attemptsLimit = 3;
 
-    // Save to backend
     if (actId) {
       try {
         const res = await fetch("/student/activity_progress", {
@@ -905,6 +893,33 @@ export function initMetalLogicGame() {
       } catch (err) {
         console.warn("Could not save metal game progress:", err);
       }
+    }
+
+    return { timeSpent, finalScore, attemptsToday, attemptsLimit };
+  }
+
+  async function handleVictory() {
+    playVoicePrompt('level_complete', 'Level complete! Great job!');
+    const { timeSpent, finalScore, attemptsToday, attemptsLimit } = await saveProgressToBackend();
+
+    const modalScore = document.getElementById("modal-final-score");
+    const modalTime = document.getElementById("modal-time-spent");
+    const modalRating = document.getElementById("modal-rating");
+    const modalStars = document.getElementById("modal-stars");
+    const modalAttemptsUsed = document.getElementById("modal-attempts-used");
+
+    const stars = finalScore >= 90 ? 3 : finalScore >= 60 ? 2 : 1;
+    if (modalStars) modalStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+
+    if (modalScore) modalScore.textContent = finalScore;
+    if (modalTime) modalTime.textContent = `${timeSpent}s`;
+    if (modalRating) {
+      modalRating.textContent =
+        finalScore >= 90
+          ? "Master Detective (Top Score 90%+)"
+          : finalScore >= 75
+          ? "Senior Detective (75%+)"
+          : "Detective (50%+)";
     }
 
     const left = Math.max(0, attemptsLimit - attemptsToday);
@@ -960,6 +975,14 @@ export function initMetalLogicGame() {
       modal?.hide();
     }
     handleVictory();
+  });
+
+  const btnModalSaveExit = document.getElementById("btn-modal-save-exit");
+  btnModalSaveExit?.addEventListener("click", async () => {
+    btnModalSaveExit.disabled = true;
+    btnModalSaveExit.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...`;
+    await saveProgressToBackend();
+    window.location.href = "/student/activities";
   });
 
   // Start Level 1

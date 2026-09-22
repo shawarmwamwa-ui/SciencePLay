@@ -286,14 +286,14 @@ body.arcade-page--compact {
   overflow: hidden;
 }
 .grid-cols-6 .mystery-column {
-  padding: 4px 6px;
+  padding: 6px 8px;
   box-sizing: border-box;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: stretch;
-  gap: 2px;
+  gap: 4px;
   border-radius: 12px;
   border-width: 2px;
   box-shadow: 2px 2px 0 #18181b;
@@ -301,52 +301,61 @@ body.arcade-page--compact {
   max-height: 100%;
 }
 .grid-cols-6 .mystery-header-badge {
-  width: 20px;
-  height: 20px;
-  font-size: 0.7rem;
+  width: 22px;
+  height: 22px;
+  font-size: 0.72rem;
   margin: 0 auto;
   flex-shrink: 0;
 }
+.grid-cols-6 .mystery-answer-box {
+  min-height: 0 !important;
+  flex: 1 1 auto;
+  padding: 4px 6px;
+  border-radius: 10px;
+  border-width: 2px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0;
+}
+.grid-cols-6 .mystery-empty-icon {
+  font-size: 1.35rem;
+}
+.grid-cols-6 .mystery-empty-prompt {
+  gap: 2px;
+  font-size: 0.72rem;
+}
+.grid-cols-6 .mystery-filled-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.grid-cols-6 .mystery-filled-img {
+  width: 32px;
+  height: 32px;
+}
+.grid-cols-6 .mystery-filled-name {
+  font-size: 0.8rem;
+  line-height: 1.15;
+}
+.grid-cols-6 .mystery-change-tag {
+  font-size: 0.6rem;
+  padding: 1px 5px;
+}
 .grid-cols-6 .mystery-question-box {
-  padding: 2px 5px;
+  padding: 4px 6px;
   margin: 0;
   border-radius: 8px;
   border: 1.5px solid #e2e8f0;
   flex-shrink: 0;
 }
 .grid-cols-6 .mystery-question-text {
-  font-size: 0.72rem;
-  line-height: 1.22;
+  font-size: 0.74rem;
+  line-height: 1.24;
   margin: 0;
-}
-.grid-cols-6 .mystery-answer-box {
-  min-height: 0 !important;
-  height: 48px;
-  max-height: 52px;
-  padding: 2px 4px;
-  border-radius: 10px;
-  border-width: 2px;
-  box-sizing: border-box;
-  flex: 0 0 auto;
-}
-.grid-cols-6 .mystery-empty-icon {
-  font-size: 1.1rem;
-}
-.grid-cols-6 .mystery-empty-prompt {
-  gap: 1px;
-  font-size: 0.68rem;
-}
-.grid-cols-6 .mystery-filled-img {
-  width: 22px;
-  height: 22px;
-}
-.grid-cols-6 .mystery-filled-name {
-  font-size: 0.72rem;
-  line-height: 1.1;
-}
-.grid-cols-6 .mystery-change-tag {
-  font-size: 0.58rem;
-  padding: 0 4px;
 }
 
 /* 9-Clue Layout (Level 3: 3 rows of 3) */
@@ -360,14 +369,14 @@ body.arcade-page--compact {
   overflow: hidden;
 }
 .grid-cols-9 .mystery-column {
-  padding: 2px 4px;
+  padding: 4px 6px;
   box-sizing: border-box;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: stretch;
-  gap: 2px;
+  gap: 3px;
   border-radius: 10px;
   border-width: 2px;
   box-shadow: 1.5px 1.5px 0 #18181b;
@@ -375,48 +384,61 @@ body.arcade-page--compact {
   max-height: 100%;
 }
 .grid-cols-9 .mystery-header-badge {
-  width: 18px;
-  height: 18px;
-  font-size: 0.65rem;
+  width: 20px;
+  height: 20px;
+  font-size: 0.68rem;
   margin: 0 auto;
   flex-shrink: 0;
 }
+.grid-cols-9 .mystery-answer-box {
+  min-height: 0 !important;
+  flex: 1 1 auto;
+  padding: 2px 4px;
+  border-radius: 8px;
+  border-width: 1.5px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 1px 0;
+}
+.grid-cols-9 .mystery-empty-icon {
+  font-size: 1.15rem;
+}
+.grid-cols-9 .mystery-empty-prompt {
+  gap: 1px;
+  font-size: 0.64rem;
+}
+.grid-cols-9 .mystery-filled-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.grid-cols-9 .mystery-filled-img {
+  width: 26px;
+  height: 26px;
+}
+.grid-cols-9 .mystery-filled-name {
+  font-size: 0.72rem;
+  line-height: 1;
+}
+.grid-cols-9 .mystery-change-tag {
+  font-size: 0.55rem;
+  padding: 0 4px;
+}
 .grid-cols-9 .mystery-question-box {
-  padding: 1px 4px;
+  padding: 3px 5px;
   margin: 0;
   border-radius: 6px;
   border: 1.5px solid #e2e8f0;
   flex-shrink: 0;
 }
 .grid-cols-9 .mystery-question-text {
-  font-size: 0.67rem;
+  font-size: 0.68rem;
   line-height: 1.18;
   margin: 0;
-}
-.grid-cols-9 .mystery-answer-box {
-  min-height: 0 !important;
-  height: 38px;
-  max-height: 42px;
-  padding: 1px 3px;
-  border-radius: 8px;
-  border-width: 1.5px;
-  box-sizing: border-box;
-  flex: 0 0 auto;
-}
-.grid-cols-9 .mystery-empty-icon {
-  font-size: 0.95rem;
-}
-.grid-cols-9 .mystery-empty-prompt {
-  gap: 0;
-  font-size: 0.62rem;
-}
-.grid-cols-9 .mystery-filled-img {
-  width: 18px;
-  height: 18px;
-}
-.grid-cols-9 .mystery-filled-name {
-  font-size: 0.68rem;
-  line-height: 1;
 }
 
 .mystery-column {
@@ -1492,6 +1514,8 @@ body.arcade-page--compact {
   align-items: center;
   justify-content: center;
   width: 100%;
+  position: relative;
+  z-index: 20;
 }
 
 .card-stack {
@@ -1503,6 +1527,7 @@ body.arcade-page--compact {
   align-items: center;
   justify-content: center;
   margin: 0 auto;
+  z-index: 22;
 }
 
 /* Compact & GPU-Accelerated Swipe Card */
@@ -1527,10 +1552,13 @@ body.arcade-page--compact {
   will-change: transform, opacity;
   transform: translate3d(0, 0, 0);
   transition: transform 0.22s ease-out, opacity 0.22s;
+  z-index: 25;
 }
 
-.swipe-card:active {
+.swipe-card:active,
+.swipe-card.is-dragging {
   cursor: grabbing;
+  z-index: 100;
 }
 
 /* Middle Card Swipe Direction Guide */

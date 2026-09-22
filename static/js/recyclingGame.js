@@ -207,28 +207,28 @@ export function initRecyclingGame() {
     return copy;
   }
 
+  let activeElapsedSeconds = 0;
+  let lastTickTime = Date.now();
+  let timerPaused = false;
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        timerPaused = true;
+        activeElapsedSeconds += Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+      } else {
+        timerPaused = false;
+        lastTickTime = Date.now();
+      }
+    });
+  }
+
+  function getActiveElapsedSeconds() {
+    if (timerPaused) return activeElapsedSeconds;
+    return activeElapsedSeconds + Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
+  }
+
   function startNewGame() {
-    let activeElapsedSeconds = 0;
-    let lastTickTime = Date.now();
-    let timerPaused = false;
-
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          timerPaused = true;
-          activeElapsedSeconds += Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
-        } else {
-          timerPaused = false;
-          lastTickTime = Date.now();
-        }
-      });
-    }
-
-    function getActiveElapsedSeconds() {
-      if (timerPaused) return activeElapsedSeconds;
-      return activeElapsedSeconds + Math.max(0, Math.round((Date.now() - lastTickTime) / 1000));
-    }
-
     // Shuffle and pick 12 items
     const shuffled = shuffle(MASTER_ITEMS);
     deck = shuffled.slice(0, ROUND_SIZE);
@@ -433,7 +433,10 @@ export function initRecyclingGame() {
       startY = e.clientY;
       currentX = 0;
       currentY = 0;
-      swipeCard.setPointerCapture(e.pointerId);
+      swipeCard.classList.add("is-dragging");
+      try {
+        swipeCard.setPointerCapture(e.pointerId);
+      } catch (_) {}
       swipeCard.style.transition = "none";
     });
 
@@ -469,6 +472,7 @@ export function initRecyclingGame() {
     const endDrag = (e) => {
       if (!isDragging) return;
       isDragging = false;
+      swipeCard.classList.remove("is-dragging");
       try {
         swipeCard.releasePointerCapture(e.pointerId);
       } catch (_) {}
@@ -488,6 +492,8 @@ export function initRecyclingGame() {
 
     swipeCard.addEventListener("pointerup", endDrag);
     swipeCard.addEventListener("pointercancel", endDrag);
+    window.addEventListener("pointerup", endDrag);
+    window.addEventListener("pointercancel", endDrag);
   }
 
   // Action Stations / Bins Interaction
@@ -548,38 +554,13 @@ export function initRecyclingGame() {
     });
   });
 
-  async function finishGame() {
+  async function saveProgressToBackend() {
     const timeSpent = Math.max(1, getActiveElapsedSeconds());
     const finalScore = Math.min(100, correctCount > 0 ? Math.max(20, score) : 0);
     const actId = window.recyclingGameActivityId;
-
-    const modalScore = document.getElementById("modal-final-score");
-    const modalStreak = document.getElementById("modal-best-streak");
-    const modalTime = document.getElementById("modal-time-spent");
-    const modalRating = document.getElementById("modal-rating");
-    const modalStars = document.getElementById("modal-stars");
-    const modalAttemptsUsed = document.getElementById("modal-attempts-used");
-    const btnPlayAgain = document.getElementById("btn-play-again");
-
-    const stars = finalScore >= 90 ? 3 : finalScore >= 60 ? 2 : 1;
-    if (modalStars) modalStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
-
-    if (modalScore) modalScore.textContent = finalScore;
-    if (modalStreak) modalStreak.textContent = bestStreak;
-    if (modalTime) modalTime.textContent = `${timeSpent}s`;
-    if (modalRating) {
-      modalRating.textContent =
-        finalScore >= 90
-          ? "Eco Master (Outstanding 90%+)"
-          : finalScore >= 75
-          ? "Green Guardian (Very Good 75%+)"
-          : "Junior Recycler (50%+)";
-    }
-
     let attemptsToday = typeof window.initialAttemptsToday !== 'undefined' ? Number(window.initialAttemptsToday) + 1 : 1;
     let attemptsLimit = 3;
 
-    // Save to backend
     if (actId) {
       try {
         const res = await fetch("/student/activity_progress", {
@@ -603,6 +584,35 @@ export function initRecyclingGame() {
       } catch (err) {
         console.warn("Could not save recycling game progress:", err);
       }
+    }
+
+    return { timeSpent, finalScore, attemptsToday, attemptsLimit };
+  }
+
+  async function finishGame() {
+    const { timeSpent, finalScore, attemptsToday, attemptsLimit } = await saveProgressToBackend();
+
+    const modalScore = document.getElementById("modal-final-score");
+    const modalStreak = document.getElementById("modal-best-streak");
+    const modalTime = document.getElementById("modal-time-spent");
+    const modalRating = document.getElementById("modal-rating");
+    const modalStars = document.getElementById("modal-stars");
+    const modalAttemptsUsed = document.getElementById("modal-attempts-used");
+    const btnPlayAgain = document.getElementById("btn-play-again");
+
+    const stars = finalScore >= 90 ? 3 : finalScore >= 60 ? 2 : 1;
+    if (modalStars) modalStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+
+    if (modalScore) modalScore.textContent = finalScore;
+    if (modalStreak) modalStreak.textContent = bestStreak;
+    if (modalTime) modalTime.textContent = `${timeSpent}s`;
+    if (modalRating) {
+      modalRating.textContent =
+        finalScore >= 90
+          ? "Eco Master (Outstanding 90%+)"
+          : finalScore >= 75
+          ? "Green Guardian (Very Good 75%+)"
+          : "Junior Recycler (50%+)";
     }
 
     const left = Math.max(0, attemptsLimit - attemptsToday);
@@ -651,6 +661,14 @@ export function initRecyclingGame() {
       modal?.hide();
     }
     finishGame();
+  });
+
+  const btnModalSaveExit = document.getElementById("btn-modal-save-exit");
+  btnModalSaveExit?.addEventListener("click", async () => {
+    btnModalSaveExit.disabled = true;
+    btnModalSaveExit.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...`;
+    await saveProgressToBackend();
+    window.location.href = "/student/activities";
   });
 
   // Start game on init

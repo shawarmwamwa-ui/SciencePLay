@@ -162,17 +162,17 @@
         <div class="modal-body">
           <div class="fs-1 text-warning mb-2"><i class="bi bi-question-circle-fill"></i></div>
           <h3 class="fw-black text-dark mb-2">Leave Activity?</h3>
-          <p class="text-muted fw-bold mb-4">You have an active sorting round in progress. Do you want to finish and save your score, keep playing, or exit?</p>
+          <p class="text-muted fw-bold mb-4">You have an active sorting round in progress. Do you want to save and continue later, or keep playing?</p>
           <div class="d-flex flex-column gap-2">
-            <button type="button" class="btn btn-warning fw-black py-2 rounded-pill shadow-sm" id="btn-modal-finish-save">
-              <i class="bi bi-check-circle-fill me-1"></i>Finish & Save Current Score
+            <button type="button" class="btn btn-warning fw-black py-2 rounded-pill shadow-sm" id="btn-modal-save-exit">
+              <i class="bi bi-bookmark-check-fill me-1"></i>Exit, Save & Continue Later
+            </button>
+            <button type="button" class="btn btn-outline-dark fw-bold py-2 rounded-pill shadow-sm" id="btn-modal-finish-save">
+              <i class="bi bi-trophy-fill me-1"></i>Finish & Save Current Score
             </button>
             <button type="button" class="btn btn-primary fw-black py-2 rounded-pill shadow-sm" data-bs-dismiss="modal">
               <i class="bi bi-play-fill me-1"></i>Keep Playing
             </button>
-            <a href="{{ url_for('student.activities') }}" class="btn btn-outline-secondary fw-bold py-2 rounded-pill">
-              Exit Without Saving
-            </a>
           </div>
         </div>
       </div>
@@ -187,7 +187,7 @@
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import { initClawMachineGame } from "{{ url_for('static', filename='js/clawMachineGame.js', v='20260919_1') }}";
+    import { initClawMachineGame } from "{{ url_for('static', filename='js/clawMachineGame.js', v='20260922_1') }}";
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
 
     initClawMachineGame();
