@@ -282,12 +282,50 @@
                         </span>
                       </div>
 
-                      <!-- Quick Presets -->
+                      <!-- Quick Presets Header & Clear Button -->
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-magic me-1"></i>Quick Suggestions:</span>
+                        <button type="button" class="btn btn-link btn-sm text-muted p-0 text-decoration-none" style="font-size: 0.75rem;" onclick="clearFeedback({{ att.id }})" title="Clear Note">
+                          <i class="bi bi-x-circle me-1"></i>Clear
+                        </button>
+                      </div>
+
+                      <!-- Topic-Specific Quick Presets -->
                       <div class="d-flex flex-wrap gap-1 mb-2">
-                        <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '⭐ Great job sorting living and non-living objects!')">⭐ Great job!</button>
-                        <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🌱 Excellent work identifying that plants grow and need care!')">🌱 Plants grow!</button>
-                        <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🪨 Remember: non-living objects cannot move or grow by themselves.')">🪨 Non-living traits</button>
-                        <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '👏 Great improvement across attempts! Keep up the effort!')">👏 Great improvement!</button>
+                        {% if act.engine == 'find_the_part' or 'Animal' in act.type %}
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🦅 Great job identifying how wings help birds fly and find food!')">🦅 Wings &amp; Flight</button>
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🐾 Excellent work! Legs help animals move, run, and catch food.')">🐾 Legs &amp; Movement</button>
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '👀 Good observation! The head houses eyes and ears to sense surroundings.')">👀 Head &amp; Senses</button>
+                        {% elif act.engine == 'build_a_plant' or 'Plant' in act.type %}
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '💧 Great job! Roots anchor the plant and absorb water from soil.')">💧 Roots &amp; Soil</button>
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🌿 Excellent! Leaves use sunlight and water to make food.')">🌿 Leaves &amp; Sunlight</button>
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🌸 Perfect! Stems hold up the plant and flowers produce seeds.')">🌸 Flower &amp; Stem</button>
+                        {% elif act.engine == 'metal_logic' or 'Metal' in act.type %}
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '⚡ Excellent! Copper conducts electricity safely inside plastic coating.')">⚡ Electricity Conductor</button>
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🌉 Great job recognizing iron is strong and ideal for bridges.')">🌉 Strong Metal (Iron)</button>
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '✨ Gold and silver shine with brilliant luster and do not rust.')">✨ High Luster (Gold)</button>
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🧲 Remember: magnetic metals like iron are attracted to magnets.')">🧲 Magnetism</button>
+                        {% elif act.engine == 'recycle_sorter' or 'Recycl' in act.type %}
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '♻️ Super sorting! Clean paper, plastic bottles, and metal cans belong in the recycling bin.')">♻️ Dry Recyclables</button>
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🍌 Remember: food scraps like banana peels belong in compost, not dry recycling!')">🍌 Food Waste / Compost</button>
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🌍 Great job protecting our environment by proper waste sorting!')">🌍 Eco Guardian</button>
+                        {% else %}
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '⭐ Great job sorting living and non-living objects!')">⭐ Great job!</button>
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🌱 Excellent work identifying that plants grow and need care!')">🌱 Plants grow!</button>
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🪨 Remember: non-living objects cannot move or grow by themselves.')">🪨 Non-living traits</button>
+                        {% endif %}
+
+                        {% if att.score is not none and att.score < 75 %}
+                          <button type="button" class="quick-chip bg-warning bg-opacity-10 text-dark border-warning" onclick="applyPreset({{ att.id }}, '💡 Good effort! Review the lesson slides and try a second attempt to raise your score!')">💡 Try Again Hint</button>
+                        {% else %}
+                          <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '👏 Great improvement across attempts! Keep up the effort!')">👏 Great effort!</button>
+                        {% endif %}
+
+                        {% if item.missed_items %}
+                          {% for missed in item.missed_items[:2] %}
+                            <button type="button" class="quick-chip bg-danger bg-opacity-10 text-danger border-danger" onclick="applyPreset({{ att.id }}, '🔍 Remember to review the clues for {{ missed }}.')">🔍 Review {{ missed }}</button>
+                          {% endfor %}
+                        {% endif %}
                       </div>
 
                       <textarea class="form-control feedback-input" id="feedback-text-{{ att.id }}" rows="3" placeholder="Write an encouraging note or instruction for {{ stu.name }}...">{{ att.teacher_feedback or '' }}</textarea>

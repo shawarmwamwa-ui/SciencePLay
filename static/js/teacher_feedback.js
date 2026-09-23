@@ -15,6 +15,14 @@ window.applyPreset = function (attemptId, text) {
   textarea.focus();
 };
 
+window.clearFeedback = function (attemptId) {
+  const textarea = document.getElementById(`feedback-text-${attemptId}`);
+  if (textarea) {
+    textarea.value = '';
+    textarea.focus();
+  }
+};
+
 // Dynamic UI counters & badges updater
 function updateCounters() {
   const allCards = document.querySelectorAll('.feedback-submission-card');
