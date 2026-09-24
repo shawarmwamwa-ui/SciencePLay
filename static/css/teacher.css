@@ -1568,12 +1568,26 @@
   display: none;
 }
 
-/* Compact layout for student badges in Most Missed tables */
-#missed-lessons-table .d-flex.align-items-center.gap-1.flex-wrap,
-#missed-activities-table .d-flex.align-items-center.gap-1.flex-wrap {
-  max-height: 68px;
-  overflow-y: auto;
-  scrollbar-width: thin;
+/* Sleek button style for Viewing Struggling Students Modal */
+.open-struggling-students-modal-btn {
+  font-size: 0.8rem;
+  transition: all 0.2s ease-in-out;
+  border-color: #fecdd3 !important;
+  color: #e11d48 !important;
+  background-color: #fff1f2 !important;
+}
+
+.open-struggling-students-modal-btn:hover,
+.open-struggling-students-modal-btn:focus {
+  background-color: #e11d48 !important;
+  border-color: #e11d48 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
+}
+
+.open-struggling-students-modal-btn:hover i {
+  color: #ffffff !important;
 }
 
 /* Prevent accidental horizontal scrollbar under cards on desktop */

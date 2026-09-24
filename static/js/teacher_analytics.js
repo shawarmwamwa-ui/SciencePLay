@@ -60,4 +60,92 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+
+  // Initialize Struggling Students Modal
+  function initStrugglingStudentsModal() {
+    const modalEl = document.getElementById('strugglingStudentsModal');
+    if (!modalEl) return;
+
+    const modal = window.bootstrap && window.bootstrap.Modal ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+    const itemNameEl = document.getElementById('strugglingModalItemName');
+    const contextBadgeEl = document.getElementById('strugglingModalContextBadge');
+    const missesEl = document.getElementById('strugglingModalMisses');
+    const countPillEl = document.getElementById('strugglingModalCountPill');
+    const studentListEl = document.getElementById('strugglingModalStudentList');
+    const searchInput = document.getElementById('strugglingModalSearchInput');
+
+    let currentStudents = [];
+
+    function renderStudents(filter = '') {
+      if (!studentListEl) return;
+      studentListEl.innerHTML = '';
+
+      const query = filter.trim().toLowerCase();
+      const filtered = query ? currentStudents.filter(name => name.toLowerCase().includes(query)) : currentStudents;
+
+      if (filtered.length === 0) {
+        studentListEl.innerHTML = `
+          <div class="col-12 text-center text-muted py-4">
+            <i class="bi bi-search display-6 opacity-50 d-block mb-2"></i>
+            No students found matching "${filter}".
+          </div>`;
+        return;
+      }
+
+      filtered.forEach(name => {
+        const col = document.createElement('div');
+        col.className = 'col-12 col-sm-6';
+        col.innerHTML = `
+          <div class="p-2 rounded-3 border bg-light d-flex align-items-center gap-2 hover-shadow-sm transition-all">
+            <span class="badge bg-danger-subtle text-danger rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <span class="fw-semibold text-dark text-truncate" title="${name}">${name}</span>
+          </div>`;
+        studentListEl.appendChild(col);
+      });
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        renderStudents(e.target.value);
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.open-struggling-students-modal-btn');
+      if (!btn) return;
+      e.preventDefault();
+
+      const itemName = btn.getAttribute('data-item-name') || 'Activity Item';
+      const context = btn.getAttribute('data-context') || 'Exercise';
+      const misses = btn.getAttribute('data-misses') || '0';
+      let students = [];
+      try {
+        students = JSON.parse(btn.getAttribute('data-students') || '[]');
+      } catch (err) {
+        students = [];
+      }
+
+      currentStudents = students;
+
+      if (itemNameEl) itemNameEl.textContent = itemName;
+      if (contextBadgeEl) contextBadgeEl.textContent = context;
+      if (missesEl) missesEl.textContent = `${misses} miss${misses == 1 ? '' : 'es'}`;
+      if (countPillEl) countPillEl.textContent = `${students.length} Student${students.length == 1 ? '' : 's'}`;
+      if (searchInput) searchInput.value = '';
+
+      renderStudents();
+
+      if (modal) {
+        modal.show();
+      } else {
+        modalEl.classList.add('show');
+        modalEl.style.display = 'block';
+        document.body.classList.add('modal-open');
+      }
+    });
+  }
+
+  initStrugglingStudentsModal();
 });
