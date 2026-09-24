@@ -844,6 +844,7 @@ async function saveProgress() {
     const { rating, hint } = data;
 
     state.attemptsToday = Number(data.attempts_today) || (state.attemptsToday + 1);
+    window.initialAttemptsToday = state.attemptsToday;
     if (data.attempts_limit) state.attemptLimit = Number(data.attempts_limit);
     renderStatus();
 
@@ -1006,6 +1007,7 @@ async function loadAttemptStatus() {
     const payload = await response.json();
     state.attemptsToday = Number(payload.used) || 0;
     state.attemptLimit = Number(payload.limit) || DEFAULT_ATTEMPT_LIMIT;
+    window.initialAttemptsToday = state.attemptsToday;
     renderStatus();
     
     if (state.attemptsToday >= state.attemptLimit) {
@@ -1036,6 +1038,9 @@ async function initGame() {
   setControlsDisabled(false);
 
   state.activityId = window.clawMachineActivityId;
+  if (typeof window.initialAttemptsToday !== 'undefined') {
+    state.attemptsToday = Number(window.initialAttemptsToday) || 0;
+  }
   state.title = '';
   state.instructions = '';
   state.bins = [];
@@ -1119,9 +1124,10 @@ async function initGame() {
     buildSlots();
     state.activeSlotIndex = Math.min(state.leftBinCount, Math.max(0, state.slots.length - 1));
 
-    if (attempts) {
+    if (attempts && typeof attempts.used !== 'undefined') {
       state.attemptsToday = Number(attempts.used) || 0;
       state.attemptLimit = Number(attempts.limit) || DEFAULT_ATTEMPT_LIMIT;
+      window.initialAttemptsToday = state.attemptsToday;
     }
 
     renderHeader();

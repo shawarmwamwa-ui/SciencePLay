@@ -43,15 +43,15 @@
       {% set locked = not unlocked and not completed %}
       {% set lesson = activity.lesson %}
       {% if activity.engine == 'claw_machine' %}
-        {% set activity_url = url_for('student.claw_machine') %}
+        {% set activity_url = url_for('student.claw_machine', activity_id=activity.id) %}
       {% elif activity.engine == 'find_the_part' %}
-        {% set activity_url = url_for('student.find_the_part_game') %}
+        {% set activity_url = url_for('student.find_the_part_game', activity_id=activity.id) %}
       {% elif activity.engine == 'build_a_plant' %}
-        {% set activity_url = url_for('student.build_a_plant_game') %}
+        {% set activity_url = url_for('student.build_a_plant_game', activity_id=activity.id) %}
       {% elif activity.engine == 'metal_logic' %}
-        {% set activity_url = url_for('student.materials_game') %}
+        {% set activity_url = url_for('student.materials_game', activity_id=activity.id) %}
       {% elif activity.engine == 'recycle_sorter' %}
-        {% set activity_url = url_for('student.recycling_game') %}
+        {% set activity_url = url_for('student.recycling_game', activity_id=activity.id) %}
       {% else %}
         {% set activity_url = url_for('student.activities') %}
       {% endif %}

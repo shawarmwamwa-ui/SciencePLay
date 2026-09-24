@@ -905,7 +905,10 @@ export function initMetalLogicGame() {
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.attempts_today !== undefined) attemptsToday = Number(data.attempts_today);
+          if (data.attempts_today !== undefined) {
+            attemptsToday = Number(data.attempts_today);
+            window.initialAttemptsToday = Number(data.attempts_today);
+          }
           if (data.attempts_limit !== undefined) attemptsLimit = Number(data.attempts_limit);
         }
       } catch (err) {

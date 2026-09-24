@@ -155,11 +155,11 @@
                       {% set is_unlocked = unlocked_by_activity.get(assignment.activity_id, false) %}
                       {% set act_type = assignment.activity.type if assignment.activity else '' %}
                       {% set act_engine = assignment.activity.engine if assignment.activity else '' %}
-                      {% set target_url = url_for('student.claw_machine') if ('Claw Machine' in act_type or act_engine == 'claw_machine')
-                             else url_for('student.find_the_part_game') if ('Find the Part' in act_type or act_engine == 'find_the_part')
-                             else url_for('student.build_a_plant_game') if ('Build a Plant' in act_type or act_engine == 'build_a_plant')
-                             else url_for('student.materials_game') if ('Metal' in act_type or act_engine == 'metal_logic')
-                             else url_for('student.recycling_game') if ('Recycl' in act_type or act_engine == 'recycle_sorter')
+                      {% set target_url = url_for('student.claw_machine', activity_id=assignment.activity_id) if ('Claw Machine' in act_type or act_engine == 'claw_machine')
+                             else url_for('student.find_the_part_game', activity_id=assignment.activity_id) if ('Find the Part' in act_type or act_engine == 'find_the_part')
+                             else url_for('student.build_a_plant_game', activity_id=assignment.activity_id) if ('Build a Plant' in act_type or act_engine == 'build_a_plant')
+                             else url_for('student.materials_game', activity_id=assignment.activity_id) if ('Metal' in act_type or act_engine == 'metal_logic')
+                             else url_for('student.recycling_game', activity_id=assignment.activity_id) if ('Recycl' in act_type or act_engine == 'recycle_sorter')
                              else url_for('student.activities') %}
                       {% if is_unlocked %}
                         <a href="{{ target_url }}" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold text-dark shadow-sm" style="text-decoration:none;">

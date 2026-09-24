@@ -254,6 +254,7 @@ async function saveResult(silent = false) {
       responseData = await res.json();
       if (responseData.attempts_today !== undefined) {
         state.attemptsToday = Number(responseData.attempts_today);
+        window.initialAttemptsToday = Number(responseData.attempts_today);
       }
       if (responseData.attempts_limit !== undefined) {
         state.attemptsLimit = Number(responseData.attempts_limit);

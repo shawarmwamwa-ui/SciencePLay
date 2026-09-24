@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, flash, redirect, url_for, session,
 from database.models import db, Lesson, Activity, ProgressLog, LessonProgress, LessonAttemptLog, User, LessonAssignment, ActivityAssignment, AttemptLog, AttemptObjectLog, UserBadge, Badge
 from routes.utils import get_current_user, require_role, log_access, csrf, to_ph_time
 from types import SimpleNamespace
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 import json
 from pathlib import Path
 
@@ -360,14 +360,23 @@ def get_or_create_claw_machine_activity():
     lesson = get_or_create_default_lesson()
     activity = Activity.query.filter_by(
         lesson_id=lesson.id,
-        type='Living vs Non-Living Claw Machine'
+        engine='claw_machine'
     ).first()
+    if not activity:
+        activity = Activity.query.filter_by(
+            lesson_id=lesson.id,
+            type='Living vs Non-Living Claw Machine'
+        ).first()
     if activity:
+        if activity.engine != 'claw_machine':
+            activity.engine = 'claw_machine'
+            db.session.commit()
         return activity
 
     activity = Activity(
         lesson_id=lesson.id,
         type='Living vs Non-Living Claw Machine',
+        engine='claw_machine',
         points=100
     )
     db.session.add(activity)
@@ -396,25 +405,41 @@ def get_or_create_quick_check_activity():
 
 
 def get_attempts_today(student_id, activity_id):
-    today_start = datetime.combine(datetime.utcnow().date(), time.min)
-    today_end = datetime.combine(datetime.utcnow().date(), time.max)
-    
-    # Check if there is an active assignment for this student & activity
+    # Server runs in UTC, but users operate in Philippine Standard Time (UTC+8).
+    # Convert Philippine calendar day boundaries to UTC so all attempts logged today (PHT) count.
+    now_ph = datetime.utcnow() + timedelta(hours=8)
+    today_ph = now_ph.date()
+    today_start = datetime.combine(today_ph, time.min) - timedelta(hours=8)
+    today_end = datetime.combine(today_ph, time.max) - timedelta(hours=8)
+
+    act_ids = [activity_id]
+    activity = Activity.query.get(activity_id)
+    if activity:
+        engine = activity.engine
+        if not engine and 'Claw Machine' in (activity.type or ''):
+            engine = 'claw_machine'
+        if engine:
+            matched_acts = Activity.query.filter(
+                (Activity.engine == engine) | (Activity.type.ilike(f'%{activity.type}%'))
+            ).all()
+            act_ids = list({a.id for a in matched_acts} | {activity_id})
+
+    # Check if there is an active assignment for this student & activity (or any matching engine ID)
     assignment = ActivityAssignment.query.filter(
         ActivityAssignment.student_id == student_id,
-        ActivityAssignment.activity_id == activity_id,
+        ActivityAssignment.activity_id.in_(act_ids),
         ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted'])
     ).order_by(ActivityAssignment.assigned_at.desc()).first()
 
-    # If the assignment was assigned recently, count attempts since this assignment began
-    if assignment and assignment.assigned_at:
-        since_time = max(today_start, assignment.assigned_at)
+    # If the assignment was reassigned today, count attempts since that reassignment
+    if assignment and assignment.assigned_at and assignment.assigned_at >= today_start:
+        since_time = assignment.assigned_at
     else:
         since_time = today_start
 
     return AttemptLog.query.filter(
         AttemptLog.student_id == student_id,
-        AttemptLog.activity_id == activity_id,
+        AttemptLog.activity_id.in_(act_ids),
         AttemptLog.created_at >= since_time,
         AttemptLog.created_at <= today_end
     ).count()
@@ -594,15 +619,15 @@ def dashboard():
         act_type = activity.type or ''
         act_engine = activity.engine or ''
         if 'find_the_part' in act_engine or 'Find the Part' in act_type:
-            act_url = url_for('student.find_the_part_game')
+            act_url = url_for('student.find_the_part_game', activity_id=activity.id)
         elif 'build_a_plant' in act_engine or 'Build a Plant' in act_type:
-            act_url = url_for('student.build_a_plant_game')
+            act_url = url_for('student.build_a_plant_game', activity_id=activity.id)
         elif 'metal_logic' in act_engine or 'Metal' in act_type:
-            act_url = url_for('student.materials_game')
+            act_url = url_for('student.materials_game', activity_id=activity.id)
         elif 'recycle_sorter' in act_engine or 'EcoSwipe' in act_type or 'Recycl' in act_type:
-            act_url = url_for('student.recycling_game')
+            act_url = url_for('student.recycling_game', activity_id=activity.id)
         else:
-            act_url = url_for('student.claw_machine')
+            act_url = url_for('student.claw_machine', activity_id=activity.id)
 
         assigned_tasks.append({
             'type': 'Activity',
@@ -1178,7 +1203,11 @@ def characters_lesson():
 @require_role('student')
 def claw_machine():
     current_user = get_current_user()
-    activity = get_or_create_claw_machine_activity()
+    req_act_id = request.args.get('activity_id', type=int)
+    activity = Activity.query.get(req_act_id) if req_act_id else None
+    if not activity or (activity.engine != 'claw_machine' and 'Claw Machine' not in (activity.type or '')):
+        activity = get_or_create_claw_machine_activity()
+
     if not is_activity_unlocked(current_user.id, activity):
         flash('Please complete the Living vs Non-Living lesson before playing the claw machine.', 'warning')
         return redirect(url_for('student.lessons'))
@@ -1188,7 +1217,7 @@ def claw_machine():
         flash("You have already used all 3 attempts for today on this activity. Please check back tomorrow!", "warning")
         return redirect(url_for('student.activities'))
 
-    return render_template('student/claw_machine_game.html', activity_id=activity.id)
+    return render_template('student/claw_machine_game.html', activity_id=activity.id, attempts_today=used_today)
 
 @student_bp.route('/characters_game')
 @student_bp.route('/part_dash')
@@ -1249,7 +1278,10 @@ def animal_body_parts_lesson():
 @require_role('student')
 def find_the_part_game():
     current_user = get_current_user()
-    activity = get_or_create_find_the_part_activity()
+    req_act_id = request.args.get('activity_id', type=int)
+    activity = Activity.query.get(req_act_id) if req_act_id else None
+    if not activity or activity.engine != 'find_the_part':
+        activity = get_or_create_find_the_part_activity()
 
     if not is_activity_unlocked(current_user.id, activity):
         lesson_title = activity.lesson.title if activity.lesson else 'lesson'
@@ -1332,7 +1364,10 @@ def get_or_create_build_a_plant_activity():
 @require_role('student')
 def build_a_plant_game():
     current_user = get_current_user()
-    activity = get_or_create_build_a_plant_activity()
+    req_act_id = request.args.get('activity_id', type=int)
+    activity = Activity.query.get(req_act_id) if req_act_id else None
+    if not activity or activity.engine != 'build_a_plant':
+        activity = get_or_create_build_a_plant_activity()
 
     if not is_activity_unlocked(current_user.id, activity):
         lesson_title = activity.lesson.title if activity.lesson else 'lesson'
@@ -1429,7 +1464,10 @@ def get_or_create_metals_game_activity():
 @require_role('student')
 def materials_game():
     current_user = get_current_user()
-    activity = get_or_create_metals_game_activity()
+    req_act_id = request.args.get('activity_id', type=int)
+    activity = Activity.query.get(req_act_id) if req_act_id else None
+    if not activity or activity.engine != 'metal_logic':
+        activity = get_or_create_metals_game_activity()
     if not activity:
         flash('Metal Clue Detective activity is not available.', 'danger')
         return redirect(url_for('student.activities'))
@@ -1470,7 +1508,10 @@ def get_or_create_recycling_game_activity():
 @require_role('student')
 def recycling_game():
     current_user = get_current_user()
-    activity = get_or_create_recycling_game_activity()
+    req_act_id = request.args.get('activity_id', type=int)
+    activity = Activity.query.get(req_act_id) if req_act_id else None
+    if not activity or activity.engine != 'recycle_sorter':
+        activity = get_or_create_recycling_game_activity()
     if not activity:
         flash('EcoSwipe activity is not available.', 'danger')
         return redirect(url_for('student.activities'))
@@ -1553,26 +1594,37 @@ def activity_progress():
             'error': "You've reached today's attempt limit — try again tomorrow."
         }), 403
 
+    engine = activity.engine or ('claw_machine' if 'Claw Machine' in (activity.type or '') else None)
+    act_ids = [activity.id]
+    if engine:
+        matched_acts = Activity.query.filter(
+            (Activity.engine == engine) | (Activity.type.ilike(f'%{activity.type}%'))
+        ).all()
+        act_ids = list({a.id for a in matched_acts} | {activity.id})
+
+    for aid in act_ids:
+        pl = ProgressLog.query.filter_by(student_id=current_user.id, activity_id=aid).first()
+        if pl:
+            if score > (pl.score or 0):
+                pl.score = score
+                pl.time_spent = time_spent
+            elif score == (pl.score or 0):
+                # If tied score (e.g. 100 == 100), preserve the faster completion time
+                if time_spent < (pl.time_spent or 999999):
+                    pl.time_spent = time_spent
+        else:
+            pl = ProgressLog(
+                student_id=current_user.id,
+                activity_id=aid,
+                score=score,
+                time_spent=time_spent
+            )
+            db.session.add(pl)
+
     progress_log = ProgressLog.query.filter_by(
         student_id=current_user.id,
         activity_id=activity.id
     ).first()
-    if progress_log:
-        if score > (progress_log.score or 0):
-            progress_log.score = score
-            progress_log.time_spent = time_spent
-        elif score == (progress_log.score or 0):
-            # If tied score (e.g. 100 == 100), preserve the faster completion time
-            if time_spent < (progress_log.time_spent or 999999):
-                progress_log.time_spent = time_spent
-    else:
-        progress_log = ProgressLog(
-            student_id=current_user.id,
-            activity_id=activity.id,
-            score=score,
-            time_spent=time_spent
-        )
-        db.session.add(progress_log)
 
     total_attempts = AttemptLog.query.filter_by(
         student_id=current_user.id,
@@ -1611,7 +1663,7 @@ def activity_progress():
 
     db.session.commit()
     print(
-        f'Claw machine saved: student_id={current_user.id} '
+        f'Activity progress saved: student_id={current_user.id} '
         f'activity_id={activity.id} score={score} '
         f'attempt_number={attempt.attempt_number}'
     )
@@ -1632,8 +1684,8 @@ def activity_progress():
     new_status = 'attempts_exhausted' if attempts_used >= 3 else 'completed'
     act_assignments = ActivityAssignment.query.filter(
         ActivityAssignment.student_id == current_user.id,
-        ActivityAssignment.activity_id == activity.id,
-        ActivityAssignment.status.in_(['assigned', 'completed'])
+        ActivityAssignment.activity_id.in_(act_ids),
+        ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted'])
     ).all()
     for aa in act_assignments:
         aa.status = new_status
