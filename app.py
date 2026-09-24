@@ -262,6 +262,14 @@ app.register_blueprint(student_bp)   # student dashboard
 def healthz():
     return "OK", 200
 
+# Loader.io verification token for cloud load testing
+@app.route('/loaderio-f564c7a48db7d8614ab5b73cb7e3d37a/')
+@app.route('/loaderio-f564c7a48db7d8614ab5b73cb7e3d37a')
+@app.route('/loaderio-f564c7a48db7d8614ab5b73cb7e3d37a.txt')
+def loaderio_verify():
+    from flask import Response
+    return Response("loaderio-f564c7a48db7d8614ab5b73cb7e3d37a", mimetype="text/plain")
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True, threaded=True)
