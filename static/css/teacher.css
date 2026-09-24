@@ -87,6 +87,8 @@
 
 /* Ensure Classroom Action Items panels stretch equally and align bottom footers */
 .classroom-action-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
   align-items: stretch !important;
 }
 
@@ -101,10 +103,12 @@
   flex-direction: column !important;
   justify-content: space-between !important;
   height: 100% !important;
+  min-height: 100% !important;
 }
 
 .classroom-action-row .teacher-panel .teacher-panel-footer {
   margin-top: auto !important;
+  padding-top: 1rem !important;
 }
 
 .activity-status-list {

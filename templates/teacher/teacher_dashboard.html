@@ -14,7 +14,7 @@
     rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260924_6') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260924_7') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
 </head>
 
@@ -501,9 +501,9 @@
               <p class="teacher-eyebrow mb-2">Classroom Action Items</p>
               <div class="row g-3 classroom-action-row">
                 <!-- Card 1: Challenging / Most Missed Concepts (Tabbed) -->
-                <div class="col-lg-6">
-                  <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
-                    <div>
+                <div class="col-lg-6 d-flex flex-column">
+                  <div class="dashboard-section teacher-panel flex-fill d-flex flex-column justify-content-between h-100">
+                    <div class="flex-grow-1 d-flex flex-column">
                       <div class="d-flex justify-content-between align-items-center mb-2">
                         <h2 class="h5 mb-0"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Struggling Concepts</h2>
                         <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">Top Misses</span>
@@ -523,7 +523,7 @@
                         </li>
                       </ul>
 
-                      <div class="tab-content" id="missedTabContent">
+                      <div class="tab-content flex-grow-1" id="missedTabContent">
                         <!-- Lessons Missed Tab -->
                         <div class="tab-pane fade show active" id="dt-missed-lessons" role="tabpanel">
                           <ul class="activity-status-list">
@@ -617,9 +617,9 @@
                 </div>
 
                 <!-- Card 2: Classroom Activity & Leaderboards (Tabbed) -->
-                <div class="col-lg-6">
-                  <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
-                    <div>
+                <div class="col-lg-6 d-flex flex-column">
+                  <div class="dashboard-section teacher-panel flex-fill d-flex flex-column justify-content-between h-100">
+                    <div class="flex-grow-1 d-flex flex-column">
                       <div class="d-flex justify-content-between align-items-center mb-2">
                         <h2 class="h5 mb-0"><i class="bi bi-lightning-charge-fill text-primary me-2"></i>Activity &amp; Recognition</h2>
                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Submissions &amp; Ranks</span>
@@ -639,7 +639,7 @@
                         </li>
                       </ul>
 
-                      <div class="tab-content" id="dashActivityTabContent">
+                      <div class="tab-content flex-grow-1" id="dashActivityTabContent">
                         <!-- Tab 1: Recent Activity -->
                         <div class="tab-pane fade show active" id="dt-recent-activity" role="tabpanel">
                           <ul class="activity-status-list">
@@ -889,7 +889,7 @@
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script defer src="{{ url_for('static', filename='js/teacher.js', v='20260924_5') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher.js', v='20260924_7') }}"></script>
   <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 
   {% if retry_progression %}
