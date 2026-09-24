@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <!-- Preload Critical Icon Font with Font-Display Swap to Eliminate 1,840ms Font Display Warning -->
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ url_for('static', filename='css/fonts/bootstrap-icons.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}">
 
   <!-- Preload & Synchronously Load Local Bootstrap to Guarantee 0 Layout Shift & Fast 80ms Delivery -->
