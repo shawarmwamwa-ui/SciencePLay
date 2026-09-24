@@ -1519,6 +1519,31 @@
   transform: none;
 }
 
+.pagination-smooth .page-item.page-indicator .page-link {
+  background: #f8fafc !important;
+  color: #1e293b !important;
+  border-color: #e2e8f0 !important;
+  font-weight: 700 !important;
+  cursor: default !important;
+  transform: none !important;
+}
+
+/* Static Height Spacer Rows: Maintains fixed 5-row table height on last page */
+.table-spacer-row td {
+  height: 57px;
+  padding: 0.95rem 1.1rem !important;
+  border-bottom: 1px solid #edf2fa !important;
+  background: transparent !important;
+  user-select: none;
+}
+
+/* Prevent accidental horizontal scrollbar under cards on desktop */
+@media (min-width: 992px) {
+  .table-shell.teacher-table-shell .table-responsive {
+    overflow-x: clip;
+  }
+}
+
 .table-row-fade {
   animation: fadeInRow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -169,13 +169,16 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
 
   if (!table || !nav) return;
 
-  const rows = Array.from(table.querySelectorAll('tbody tr')).filter(r => !r.querySelector('td[colspan]'));
+  const rows = Array.from(table.querySelectorAll('tbody tr')).filter(r => !r.classList.contains('table-spacer-row') && !r.querySelector('td[colspan]'));
   const totalRows = rows.length;
 
   if (totalRows === 0) {
     if (wrap) wrap.classList.add('d-none');
+    table.querySelectorAll('tbody tr.table-spacer-row').forEach(r => r.remove());
     return;
   }
+
+  const totalPages = Math.ceil(totalRows / itemsPerPage);
 
   if (totalRows <= itemsPerPage) {
     if (info) info.textContent = `Showing 1 to ${totalRows} of ${totalRows} entries`;
@@ -183,23 +186,29 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
     if (wrap) wrap.classList.remove('d-none');
     rows.forEach(r => r.style.display = '');
     table._currentPage = 1;
+    table.querySelectorAll('tbody tr.table-spacer-row').forEach(r => r.remove());
     return;
   }
 
   if (wrap) wrap.classList.remove('d-none');
-  const totalPages = Math.ceil(totalRows / itemsPerPage);
   let currentPage = targetPage ? Math.min(Math.max(1, targetPage), totalPages) : (table._currentPage ? Math.min(table._currentPage, totalPages) : 1);
   table._currentPage = currentPage;
 
   function showPage(page, shouldAnimate = false) {
     currentPage = page;
     table._currentPage = page;
+
+    // Remove any previously injected spacer rows
+    table.querySelectorAll('tbody tr.table-spacer-row').forEach(r => r.remove());
+
     const start = (page - 1) * itemsPerPage;
     const end = start + itemsPerPage;
 
+    let visibleInThisPage = 0;
     rows.forEach((row, idx) => {
       if (idx >= start && idx < end) {
         row.style.display = '';
+        visibleInThisPage++;
         if (shouldAnimate) {
           row.classList.remove('table-row-fade');
           void row.offsetWidth; // Trigger reflow for smooth animation on user click
@@ -212,6 +221,29 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
       }
     });
 
+    // Static height preservation:
+    // If the current page has fewer rows than itemsPerPage, inject empty spacer rows so the table never shrinks!
+    if (visibleInThisPage > 0 && visibleInThisPage < itemsPerPage && totalRows > itemsPerPage) {
+      const tbody = table.querySelector('tbody');
+      const colCount = table.querySelectorAll('thead th').length || 4;
+      const missingCount = itemsPerPage - visibleInThisPage;
+      for (let i = 0; i < missingCount; i++) {
+        const spacer = document.createElement('tr');
+        spacer.className = 'table-spacer-row';
+        spacer.style.pointerEvents = 'none';
+        spacer.setAttribute('aria-hidden', 'true');
+        for (let c = 0; c < colCount; c++) {
+          const td = document.createElement('td');
+          td.innerHTML = '&nbsp;';
+          td.style.height = '57px';
+          td.style.borderBottom = '1px solid #edf2fa';
+          td.style.background = 'transparent';
+          spacer.appendChild(td);
+        }
+        tbody.appendChild(spacer);
+      }
+    }
+
     if (info) {
       info.textContent = `Showing ${Math.min(start + 1, totalRows)} to ${Math.min(end, totalRows)} of ${totalRows} entries`;
     }
@@ -222,34 +254,51 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
   function renderControls() {
     nav.innerHTML = '';
 
+    // First page button (<<)
+    const firstLi = document.createElement('li');
+    firstLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    firstLi.innerHTML = `<button type="button" class="page-link" aria-label="First page" title="First Page"><i class="bi bi-chevron-double-left"></i></button>`;
+    firstLi.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentPage > 1) showPage(1, true);
+    });
+    nav.appendChild(firstLi);
+
+    // Prev page button (<)
     const prevLi = document.createElement('li');
     prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-    prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><i class="bi bi-chevron-left"></i></a>`;
+    prevLi.innerHTML = `<button type="button" class="page-link" aria-label="Previous page" title="Previous Page"><i class="bi bi-chevron-left"></i></button>`;
     prevLi.addEventListener('click', (e) => {
       e.preventDefault();
       if (currentPage > 1) showPage(currentPage - 1, true);
     });
     nav.appendChild(prevLi);
 
-    for (let i = 1; i <= totalPages; i++) {
-      const li = document.createElement('li');
-      li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-      li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-      li.addEventListener('click', (e) => {
-        e.preventDefault();
-        showPage(i, true);
-      });
-      nav.appendChild(li);
-    }
+    // Page indicator pill (Page X of Y)
+    const pageLi = document.createElement('li');
+    pageLi.className = 'page-item disabled page-indicator';
+    pageLi.innerHTML = `<span class="page-link fw-bold text-dark px-3 py-1" style="background:#f8fafc; border-color:#e2e8f0; cursor:default; font-size:0.83rem;">Page ${currentPage} of ${totalPages}</span>`;
+    nav.appendChild(pageLi);
 
+    // Next page button (>)
     const nextLi = document.createElement('li');
     nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-    nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><i class="bi bi-chevron-right"></i></a>`;
+    nextLi.innerHTML = `<button type="button" class="page-link" aria-label="Next page" title="Next Page"><i class="bi bi-chevron-right"></i></button>`;
     nextLi.addEventListener('click', (e) => {
       e.preventDefault();
       if (currentPage < totalPages) showPage(currentPage + 1, true);
     });
     nav.appendChild(nextLi);
+
+    // Last page button (>>)
+    const lastLi = document.createElement('li');
+    lastLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    lastLi.innerHTML = `<button type="button" class="page-link" aria-label="Last page" title="Last Page"><i class="bi bi-chevron-double-right"></i></button>`;
+    lastLi.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentPage < totalPages) showPage(totalPages, true);
+    });
+    nav.appendChild(lastLi);
   }
 
   showPage(currentPage, animate);
