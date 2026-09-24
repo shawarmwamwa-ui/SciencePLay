@@ -163,9 +163,13 @@ def create_user():
 @admin_bp.route('/update_user/<int:user_id>', methods=['POST'])
 @require_role('admin')
 def update_user(user_id):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json
     user = User.query.get(user_id)
     if not user:
-        flash("User not found.", "warning")
+        err_msg = "User not found."
+        if is_ajax:
+            return jsonify({'success': False, 'message': err_msg}), 404
+        flash(err_msg, "warning")
         return redirect(url_for('admin.user_management'))
 
     new_name = request.form.get('name', '').strip()
@@ -174,8 +178,30 @@ def update_user(user_id):
     new_password = request.form.get('password', '').strip()
 
     if not new_name or not new_username:
-        flash("Name and Username cannot be blank.", "danger")
+        err_msg = "Name and Username cannot be blank."
+        if is_ajax:
+            return jsonify({'success': False, 'message': err_msg}), 400
+        flash(err_msg, "danger")
         return redirect(url_for('admin.user_management'))
+
+    # Check password criteria if a new password is provided
+    if new_password:
+        if len(new_password) < 8 or new_password.isalnum():
+            err_msg = "Password must include special characters and be at least 8 characters long."
+            if is_ajax:
+                return jsonify({'success': False, 'message': err_msg}), 400
+            flash(err_msg, "danger")
+            return redirect(url_for('admin.user_management'))
+
+    # Duplicate username check if changing username
+    if new_username != user.username:
+        existing = User.query.filter(User.username == new_username, User.id != user.id).first()
+        if existing:
+            err_msg = f"Username '{new_username}' is already taken. Please choose a different username."
+            if is_ajax:
+                return jsonify({'success': False, 'message': err_msg}), 400
+            flash(err_msg, "danger")
+            return redirect(url_for('admin.user_management'))
 
     try:
         user.name = new_name
@@ -185,13 +211,21 @@ def update_user(user_id):
         if new_password:
             user.set_password(new_password)
         db.session.commit()
+        if is_ajax:
+            return jsonify({'success': True, 'message': f"User '{user.name}' updated successfully!"})
         flash(f"User '{user.name}' updated successfully!", "info")
     except IntegrityError:
         db.session.rollback()
-        flash(f"Username '{new_username}' is already taken. Please choose a different username.", "danger")
+        err_msg = f"Username '{new_username}' is already taken. Please choose a different username."
+        if is_ajax:
+            return jsonify({'success': False, 'message': err_msg}), 400
+        flash(err_msg, "danger")
     except Exception as e:
         db.session.rollback()
-        flash(f"Failed to update user: {str(e)}", "danger")
+        err_msg = f"Failed to update user: {str(e)}"
+        if is_ajax:
+            return jsonify({'success': False, 'message': err_msg}), 400
+        flash(err_msg, "danger")
 
     return redirect(url_for('admin.user_management'))
 

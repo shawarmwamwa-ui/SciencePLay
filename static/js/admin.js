@@ -390,6 +390,90 @@ function initCreateUserModalValidation() {
   });
 }
 
+function initUpdateUserModalValidation() {
+  document.querySelectorAll('form.update-user-form').forEach(form => {
+    const modalEl = form.closest('.modal');
+    const errorAlert = form.querySelector('.update-user-error-alert');
+    const errorText = form.querySelector('.update-user-error-text');
+    const submitBtn = form.querySelector('.update-user-submit-btn');
+    const btnText = form.querySelector('.update-user-btn-text');
+    const spinner = form.querySelector('.update-user-spinner');
+
+    function showError(msg) {
+      if (errorText) errorText.textContent = msg;
+      if (errorAlert) errorAlert.classList.remove('d-none');
+    }
+
+    function clearError() {
+      if (errorText) errorText.textContent = '';
+      if (errorAlert) errorAlert.classList.add('d-none');
+    }
+
+    if (modalEl) {
+      modalEl.addEventListener('hidden.bs.modal', clearError);
+      modalEl.addEventListener('show.bs.modal', clearError);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+
+      const name = form.name?.value?.trim();
+      const username = form.username?.value?.trim();
+      const password = form.password?.value?.trim() || '';
+
+      if (!name || !username) {
+        showError('Name and Username cannot be blank.');
+        return;
+      }
+
+      if (password) {
+        if (password.length < 8) {
+          showError('Password is too short. It must be at least 8 characters long.');
+          form.password?.focus();
+          return;
+        }
+
+        if (/^[a-zA-Z0-9]+$/.test(password)) {
+          showError('Password must include at least one special character (e.g. ! @ # $ % & *).');
+          form.password?.focus();
+          return;
+        }
+      }
+
+      if (submitBtn) submitBtn.disabled = true;
+      if (btnText) btnText.textContent = 'Updating...';
+      if (spinner) spinner.classList.remove('d-none');
+
+      try {
+        const formData = new FormData(form);
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || !data?.success) {
+          const msg = data?.message || 'Failed to update user. Please check your inputs.';
+          showError(msg);
+        } else {
+          window.location.reload();
+        }
+      } catch (err) {
+        showError('Network error while updating user. Please try again.');
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+        if (btnText) btnText.textContent = 'Update User';
+        if (spinner) spinner.classList.add('d-none');
+      }
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initAdminDashboardSkeleton();
   initAdminToasts();
@@ -399,6 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initAdminSlidingIndicator();
   initClearUserLogsModal();
   initCreateUserModalValidation();
+  initUpdateUserModalValidation();
 
   const navLinks = document.querySelectorAll('.admin-sidebar .menu-link[data-nav]');
   navLinks.forEach((link) => {
@@ -412,5 +497,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('hashchange', updateAdminNavState);
 });
+
 
 
