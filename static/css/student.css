@@ -704,12 +704,14 @@ img {
 }
 
 /* Modal and Backdrop Stack */
-.modal.game-exit-modal {
-  z-index: 99999 !important;
-}
-.modal-backdrop.show,
 .modal-backdrop {
-  z-index: 99990 !important;
+  z-index: 1050 !important;
+}
+.modal {
+  z-index: 1055 !important;
+}
+.modal.game-exit-modal {
+  z-index: 1065 !important;
 }
 
 .game-exit-modal .game-exit-modal-card {

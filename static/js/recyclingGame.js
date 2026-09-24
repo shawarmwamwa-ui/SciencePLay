@@ -195,8 +195,15 @@ export function initRecyclingGame() {
   const feedbackText = document.getElementById("feedback-text");
 
   const victoryModalEl = document.getElementById("victoryModal");
-  const victoryModal = victoryModalEl ? new bootstrap.Modal(victoryModalEl) : null;
+  function getVictoryModal() {
+    if (!victoryModalEl) return null;
+    if (window.bootstrap?.Modal) {
+      return window.bootstrap.Modal.getOrCreateInstance(victoryModalEl);
+    }
+    return null;
+  }
   const btnPlayAgain = document.getElementById("btn-play-again");
+  const btnFinishPlayground = document.getElementById("btn-finish-playground");
 
   function shuffle(arr) {
     const copy = [...arr];
@@ -665,13 +672,17 @@ export function initRecyclingGame() {
 
     try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
     playVoicePrompt('level_complete', 'Level complete! Great job!');
-    victoryModal?.show();
+    getVictoryModal()?.show();
   }
 
   btnPlayAgain?.addEventListener("click", () => {
-    victoryModal?.hide();
+    getVictoryModal()?.hide();
     try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
     startNewGame(true);
+  });
+
+  btnFinishPlayground?.addEventListener("click", () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
   });
 
   // Safe exit confirmation

@@ -265,25 +265,23 @@ export function initMetalLogicGame() {
   ];
 
   // Modals
+  const getModal = (el) => (el && window.bootstrap?.Modal ? window.bootstrap.Modal.getOrCreateInstance(el) : null);
   const metalPickerModalEl = document.getElementById("metalPickerModal");
-  const metalPickerModal = metalPickerModalEl ? new bootstrap.Modal(metalPickerModalEl) : null;
   const modalPickerTitle = document.getElementById("modal-picker-title");
   const modalPickerClueText = document.getElementById("modal-picker-clue-text");
   const modalPickerOptions = document.getElementById("modal-picker-options");
 
   const levelUpModalEl = document.getElementById("levelUpModal");
-  const levelUpModal = levelUpModalEl ? new bootstrap.Modal(levelUpModalEl) : null;
   const btnNextLevel = document.getElementById("btn-next-level");
 
   const roundReviewModalEl = document.getElementById("roundReviewModal");
-  const roundReviewModal = roundReviewModalEl ? new bootstrap.Modal(roundReviewModalEl) : null;
   const roundReviewList = document.getElementById("round-review-list");
   const roundReviewSubtitle = document.getElementById("round-review-subtitle");
   const btnReviewContinue = document.getElementById("btn-review-continue");
 
   const victoryModalEl = document.getElementById("victoryModal");
-  const victoryModal = victoryModalEl ? new bootstrap.Modal(victoryModalEl) : null;
   const btnPlayAgain = document.getElementById("btn-play-again");
+  const btnFinishPlayground = document.getElementById("btn-finish-playground");
 
   function shuffle(arr) {
     const copy = [...arr];
@@ -541,30 +539,41 @@ export function initMetalLogicGame() {
           cleanupTouchDrag();
         } else {
           cleanupTouchDrag();
-          // Tapped choice:
-          if (isUsed && assignedBoxEntry) {
-            // Already placed: focus on that box
-            setActiveBox(parseInt(assignedBoxEntry[0], 10));
-            playSound('pop');
-          } else {
-            assignItemToActiveBox(itemId);
-          }
+          // Tapped choice on touch device:
+          lastTouchEndTime = Date.now();
+          handleShelfItemSelect(itemId);
         }
       });
 
       btn.addEventListener("touchcancel", cleanupTouchDrag);
 
-      btn.addEventListener("click", () => {
-        if (isUsed && assignedBoxEntry) {
-          setActiveBox(parseInt(assignedBoxEntry[0], 10));
-          playSound('pop');
-        } else {
-          assignItemToActiveBox(itemId);
-        }
+      btn.addEventListener("click", (e) => {
+        // Prevent duplicate firing on mobile devices where touchend also generates click
+        if (Date.now() - lastTouchEndTime < 400) return;
+        handleShelfItemSelect(itemId);
       });
 
       metalChoiceRow.appendChild(btn);
     });
+  }
+
+  function handleShelfItemSelect(itemId) {
+    const assignedBoxEntry = Object.entries(userAnswers).find(([, id]) => id === itemId);
+    if (assignedBoxEntry) {
+      const placedBoxNum = parseInt(assignedBoxEntry[0], 10);
+      // If student has another box active, move item to that box
+      if (activeBoxIndex && activeBoxIndex !== placedBoxNum) {
+        assignItemToBox(activeBoxIndex, itemId);
+      } else {
+        // Tapping the item currently in active box unassigns it back to shelf
+        delete userAnswers[placedBoxNum];
+        playSound('pop');
+        renderMysteryGrid();
+        renderChoiceShelf();
+      }
+    } else {
+      assignItemToActiveBox(itemId);
+    }
   }
 
   function findBoxUnderTouch(clientX, clientY) {
@@ -620,8 +629,18 @@ export function initMetalLogicGame() {
     }
   }
 
+  let lastTouchEndTime = 0;
+
   function assignItemToActiveBox(itemId) {
-    if (!activeBoxIndex) activeBoxIndex = 1;
+    // If active box is invalid or already filled with another item, find the first empty box
+    if (!activeBoxIndex || userAnswers[activeBoxIndex]) {
+      const firstEmpty = currentLevelData.find((d) => !userAnswers[d.boxNum]);
+      if (firstEmpty) {
+        activeBoxIndex = firstEmpty.boxNum;
+      } else if (!activeBoxIndex) {
+        activeBoxIndex = 1;
+      }
+    }
     assignItemToBox(activeBoxIndex, itemId);
   }
 
@@ -648,7 +667,7 @@ export function initMetalLogicGame() {
           playSound('pop');
           renderMysteryGrid();
           renderChoiceShelf();
-          metalPickerModal.hide();
+          getModal(metalPickerModalEl)?.hide();
         });
         modalPickerOptions.appendChild(removeBtn);
       }
@@ -682,14 +701,14 @@ export function initMetalLogicGame() {
 
         optBtn.addEventListener("click", () => {
           assignItemToBox(boxNum, itemId);
-          metalPickerModal.hide();
+          getModal(metalPickerModalEl)?.hide();
         });
 
         modalPickerOptions.appendChild(optBtn);
       });
     }
 
-    metalPickerModal.show();
+    getModal(metalPickerModalEl)?.show();
   }
 
   btnClearAll?.addEventListener("click", () => {
@@ -840,25 +859,25 @@ export function initMetalLogicGame() {
           btnReviewContinue.innerHTML = `<i class="bi bi-award-fill me-1"></i> See Final Detective Results`;
           btnReviewContinue.className = "btn btn-success btn-lg fw-black px-4 py-2 border-dark border-3 rounded-pill shadow";
           btnReviewContinue.onclick = () => {
-            roundReviewModal.hide();
+            getModal(roundReviewModalEl)?.hide();
             handleVictory();
           };
         } else {
           btnReviewContinue.innerHTML = `<i class="bi bi-arrow-right-circle-fill me-1"></i> Continue to ${LEVELS[currentLevelIdx + 1].name}`;
           btnReviewContinue.className = "btn btn-warning btn-lg fw-black px-4 py-2 border-dark border-3 rounded-pill shadow";
           btnReviewContinue.onclick = () => {
-            roundReviewModal.hide();
+            getModal(roundReviewModalEl)?.hide();
             setupLevel(currentLevelIdx + 1);
           };
         }
       }
 
-      roundReviewModal.show();
+      getModal(roundReviewModalEl)?.show();
     }
   }
 
   btnNextLevel?.addEventListener("click", () => {
-    levelUpModal?.hide();
+    getModal(levelUpModalEl)?.hide();
     setupLevel(currentLevelIdx + 1);
   });
 
@@ -940,13 +959,13 @@ export function initMetalLogicGame() {
     const STORAGE_KEY = `scienceplay_save_metallogic_${window.metalGameActivityId || 'default'}`;
     try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
 
-    victoryModal?.show();
+    getModal(victoryModalEl)?.show();
   }
 
   const STORAGE_KEY = `scienceplay_save_metallogic_${window.metalGameActivityId || 'default'}`;
 
   btnPlayAgain?.addEventListener("click", () => {
-    victoryModal?.hide();
+    getModal(victoryModalEl)?.hide();
     try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
     score = 100;
     hintsUsed = 0;
@@ -956,6 +975,10 @@ export function initMetalLogicGame() {
     timerPaused = false;
     objectLogs = [];
     setupLevel(0);
+  });
+
+  btnFinishPlayground?.addEventListener("click", () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
   });
 
   // Safe exit confirmation
