@@ -1220,51 +1220,28 @@ export function initBuildAPlant() {
 
 function bindBackConfirmation() {
   const backBtn = document.getElementById('bap-back-link');
-  if (!backBtn || backBtn._confirmBound) return;
-  backBtn._confirmBound = true;
+  if (backBtn && !backBtn._confirmBound) {
+    backBtn._confirmBound = true;
+    backBtn.addEventListener('click', (e) => {
+      if (state.completed || (state.currentRoundIdx === 0 && state.currentStageIdx === 0)) {
+        return;
+      }
+      e.preventDefault();
+      showExitModal();
+    });
+  }
 
-  backBtn.addEventListener('click', (e) => {
-    if (state.completed || (state.currentRoundIdx === 0 && state.currentStageIdx === 0)) {
-      return;
-    }
-    e.preventDefault();
-    showExitModal();
-  });
-}
+  const btnKeep = document.getElementById('btn-modal-keep-playing');
+  btnKeep?.addEventListener('click', () => closeExitModal());
 
-function showExitModal() {
-  const existing = document.getElementById('bap-exit-overlay');
-  if (existing) existing.remove();
-
-  const overlay = document.createElement('div');
-  overlay.id = 'bap-exit-overlay';
-  overlay.className = 'bap-intermission-overlay';
-  overlay.innerHTML = `
-    <div class="bap-intermission-card" style="max-width: 440px;">
-      <div class="bap-intermission-icon">🌱</div>
-      <h2 class="bap-intermission-title">Leave Activity?</h2>
-      <p class="bap-intermission-sub">You have plant parts currently growing! What would you like to do?</p>
-      <div style="display:flex; flex-direction:column; gap:10px; margin-top:1rem;">
-        <button id="bap-exit-save-later-btn" class="bap-btn" style="padding:0.75rem 1.5rem; background:#16a34a; color:#fff; font-weight:800; border-radius:999px; border:2px solid #18181b;">
-          <i class="bi bi-bookmark-check-fill me-1"></i>Exit, Save & Continue Later
-        </button>
-        <button id="bap-exit-save-btn" class="bap-btn bap-btn--primary" style="padding:0.75rem 1.5rem;">
-          <i class="bi bi-trophy-fill me-1"></i>Finish & Save Score (${state.score} pts)
-        </button>
-        <button id="bap-exit-cancel-btn" class="bap-btn bap-btn--secondary" style="padding:0.75rem 1.5rem;">
-          <i class="bi bi-play-fill me-1"></i>Keep Playing
-        </button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-
-  document.getElementById('bap-exit-cancel-btn')?.addEventListener('click', () => overlay.remove());
-  document.getElementById('bap-exit-save-btn')?.addEventListener('click', () => {
-    overlay.remove();
+  const btnFinish = document.getElementById('btn-modal-finish-save');
+  btnFinish?.addEventListener('click', () => {
+    closeExitModal();
     saveResult();
   });
-  document.getElementById('bap-exit-save-later-btn')?.addEventListener('click', (e) => {
+
+  const btnSaveExit = document.getElementById('btn-modal-save-exit');
+  btnSaveExit?.addEventListener('click', (e) => {
     const btn = e.currentTarget;
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...`;
@@ -1280,11 +1257,35 @@ function showExitModal() {
         activeElapsedSeconds: getActiveElapsedSeconds(),
       };
       localStorage.setItem(getStorageKey(), JSON.stringify(stateToSave));
-    } catch (e) {
-      console.warn("Could not save build-a-plant state to localStorage", e);
+    } catch (err) {
+      console.warn("Could not save build-a-plant state to localStorage", err);
     }
     window.location.href = '/student/activities';
   });
 }
+
+function showExitModal() {
+  const modalEl = document.getElementById('exitConfirmModal');
+  if (!modalEl) return;
+  if (window.bootstrap?.Modal) {
+    const modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+  } else {
+    modalEl.classList.add('show');
+    modalEl.style.display = 'block';
+  }
+}
+
+function closeExitModal() {
+  const modalEl = document.getElementById('exitConfirmModal');
+  if (!modalEl) return;
+  if (window.bootstrap?.Modal) {
+    const modal = window.bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
+  }
+  modalEl.classList.remove('show');
+  modalEl.style.display = 'none';
+}
+
 
 window.initBuildAPlant = initBuildAPlant;

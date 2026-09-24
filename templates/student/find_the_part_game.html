@@ -11,6 +11,7 @@
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="preload" as="image" href="{{ url_for('static', filename='images/ftp_bird.webp') }}" type="image/webp" fetchpriority="high">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/findThePartGame.css', v='20260903_5') }}">
@@ -21,9 +22,9 @@
     <!-- ── Header ──────────────────────────────────────────────────────────── -->
     <header class="ftp-header">
       <div class="d-flex align-items-center gap-3 flex-wrap">
-        <a href="{{ url_for('student.activities') }}" class="ftp-back-btn" id="ftp-back-link">
-          <i class="bi bi-arrow-left-circle-fill"></i>
-          <span>Back to Activities</span>
+        <a href="{{ url_for('student.activities') }}" class="game-leave-btn ftp-back-btn" id="ftp-back-link" title="Leave Game">
+          <i class="bi bi-arrow-left"></i>
+          <span>Leave Game</span>
         </a>
         <div class="ftp-header-title">
           <h1><i class="bi bi-crosshair2 me-2 text-primary"></i>Find the Part</h1>
@@ -45,6 +46,32 @@
 
   </div>
 
+  <!-- Unified Exit Confirmation Modal -->
+  <div class="modal fade game-exit-modal" id="exitConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center p-4 border-dark border-3 rounded-4 shadow-lg game-exit-modal-card">
+        <div class="modal-body p-1">
+          <div class="game-exit-icon-wrap mb-2">
+            <i class="bi bi-question-circle-fill text-warning"></i>
+          </div>
+          <h3 class="fw-black text-dark mb-2 game-exit-title">Leave Game?</h3>
+          <p class="text-muted fw-bold mb-4 game-exit-subtitle">You have a game in progress! Do you want to save and continue later, or keep playing?</p>
+          <div class="d-flex flex-column gap-2 game-exit-actions">
+            <button type="button" class="btn btn-warning fw-black py-2 rounded-pill shadow-sm game-exit-btn-save-exit" id="btn-modal-save-exit">
+              <i class="bi bi-bookmark-check-fill me-1"></i>Exit, Save & Continue Later
+            </button>
+            <button type="button" class="btn btn-outline-dark fw-bold py-2 rounded-pill shadow-sm game-exit-btn-finish" id="btn-modal-finish-save">
+              <i class="bi bi-trophy-fill me-1"></i>Finish & Save Current Score
+            </button>
+            <button type="button" class="btn btn-primary fw-black py-2 rounded-pill shadow-sm game-exit-btn-keep" data-bs-dismiss="modal" id="btn-modal-keep-playing">
+              <i class="bi bi-play-fill me-1"></i>Keep Playing
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <audio id="game-bgm" loop preload="none">
     <source src="{{ url_for('static', filename='audio/Piki - Happy Walking (freetouse.com).mp3') }}" type="audio/mpeg">
   </audio>
@@ -59,6 +86,7 @@
     initFindThePart();
     initBgmPlayer('game-bgm', { volume: 0.20, storageKey: 'scienceplay_game_bgm_muted' });
   </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 </body>
 </html>

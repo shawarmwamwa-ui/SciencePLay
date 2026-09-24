@@ -1155,19 +1155,40 @@ function bindExitHandlers() {
     if (hasProgress) {
       e.preventDefault();
       const exitModalEl = document.getElementById('exitConfirmModal');
-      if (exitModalEl && window.bootstrap?.Modal) {
-        const modal = window.bootstrap.Modal.getOrCreateInstance(exitModalEl);
-        modal.show();
+      if (exitModalEl) {
+        if (window.bootstrap?.Modal) {
+          const modal = window.bootstrap.Modal.getOrCreateInstance(exitModalEl);
+          modal.show();
+        } else {
+          exitModalEl.classList.add('show');
+          exitModalEl.style.display = 'block';
+        }
       }
+    }
+  });
+
+  const btnModalKeep = document.getElementById('btn-modal-keep-playing');
+  btnModalKeep?.addEventListener('click', () => {
+    const exitModalEl = document.getElementById('exitConfirmModal');
+    if (exitModalEl) {
+      if (window.bootstrap?.Modal) {
+        window.bootstrap.Modal.getInstance(exitModalEl)?.hide();
+      }
+      exitModalEl.classList.remove('show');
+      exitModalEl.style.display = 'none';
     }
   });
 
   const btnModalFinishSave = document.getElementById('btn-modal-finish-save');
   btnModalFinishSave?.addEventListener('click', () => {
     const exitModalEl = document.getElementById('exitConfirmModal');
-    if (exitModalEl && window.bootstrap?.Modal) {
-      const modal = window.bootstrap.Modal.getInstance(exitModalEl);
-      modal?.hide();
+    if (exitModalEl) {
+      if (window.bootstrap?.Modal) {
+        const modal = window.bootstrap.Modal.getInstance(exitModalEl);
+        modal?.hide();
+      }
+      exitModalEl.classList.remove('show');
+      exitModalEl.style.display = 'none';
     }
     maybeCompleteRound(true);
   });

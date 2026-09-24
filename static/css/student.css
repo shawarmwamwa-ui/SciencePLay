@@ -661,3 +661,154 @@ img {
   -webkit-user-drag: none !important;
   user-select: none !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════════ */
+/* Unified Leave Game Button & Exit Confirmation Modal (All 5 Games)     */
+/* ══════════════════════════════════════════════════════════════════════ */
+.game-leave-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  padding: 0.38rem 0.95rem !important;
+  background: #ffffff !important;
+  color: #18181b !important;
+  border: 2.5px solid #18181b !important;
+  border-radius: 9999px !important;
+  font-family: 'Fredoka', 'Plus Jakarta Sans', system-ui, sans-serif !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  text-decoration: none !important;
+  box-shadow: 2px 2px 0 #18181b !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+  cursor: pointer !important;
+}
+
+.game-leave-btn:hover {
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 3.5px 3.5px 0 #18181b !important;
+  background: #fef08a !important;
+  color: #18181b !important;
+}
+
+.game-leave-btn:active {
+  transform: translate(1px, 1px) !important;
+  box-shadow: 1px 1px 0 #18181b !important;
+}
+
+.game-leave-btn i {
+  font-size: 1rem !important;
+  line-height: 1 !important;
+}
+
+/* Modal and Backdrop Stack */
+.modal.game-exit-modal {
+  z-index: 99999 !important;
+}
+.modal-backdrop.show,
+.modal-backdrop {
+  z-index: 99990 !important;
+}
+
+.game-exit-modal .game-exit-modal-card {
+  border: 3.5px solid #18181b !important;
+  border-radius: 24px !important;
+  box-shadow: 8px 8px 0 #18181b !important;
+  background: #ffffff !important;
+  padding: 1.75rem 1.5rem !important;
+  max-width: 440px !important;
+  margin: 0 auto !important;
+}
+
+.game-exit-modal .game-exit-icon-wrap {
+  font-size: 3.5rem !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.game-exit-modal .game-exit-title {
+  font-family: 'Fredoka', 'Plus Jakarta Sans', system-ui, sans-serif !important;
+  font-size: 1.65rem !important;
+  font-weight: 900 !important;
+  color: #18181b !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.4rem !important;
+}
+
+.game-exit-modal .game-exit-subtitle {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  line-height: 1.45 !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.game-exit-modal .game-exit-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.65rem !important;
+}
+
+.game-exit-modal .game-exit-actions .btn {
+  font-family: 'Fredoka', 'Plus Jakarta Sans', system-ui, sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  padding: 0.65rem 1.25rem !important;
+  border-radius: 9999px !important;
+  border: 2px solid #18181b !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.35rem !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
+}
+
+.game-exit-modal .game-exit-actions .btn:hover {
+  transform: translateY(-2px) !important;
+}
+
+.game-exit-modal .game-exit-actions .btn:active {
+  transform: translateY(1px) !important;
+}
+
+.game-exit-modal .game-exit-btn-save-exit {
+  background-color: #f59e0b !important;
+  color: #18181b !important;
+  box-shadow: 0 3px 0 #18181b !important;
+}
+
+.game-exit-modal .game-exit-btn-save-exit:hover {
+  background-color: #d97706 !important;
+  box-shadow: 0 4px 0 #18181b !important;
+  color: #ffffff !important;
+}
+
+.game-exit-modal .game-exit-btn-finish {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+  box-shadow: 0 3px 0 #18181b !important;
+}
+
+.game-exit-modal .game-exit-btn-finish:hover {
+  background-color: #f1f5f9 !important;
+  box-shadow: 0 4px 0 #18181b !important;
+  color: #0f172a !important;
+}
+
+.game-exit-modal .game-exit-btn-keep {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 0 #18181b !important;
+}
+
+.game-exit-modal .game-exit-btn-keep:hover {
+  background-color: #2563eb !important;
+  box-shadow: 0 4px 0 #18181b !important;
+  color: #ffffff !important;
+}
+

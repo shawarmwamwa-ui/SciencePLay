@@ -22,9 +22,9 @@
 
     <!-- Header -->
     <header class="bap-header">
-      <a href="{{ url_for('student.activities') }}" class="bap-back-btn" id="bap-back-link">
+      <a href="{{ url_for('student.activities') }}" class="game-leave-btn bap-back-btn" id="bap-back-link" title="Leave Game">
         <i class="bi bi-arrow-left"></i>
-        <span>Back</span>
+        <span>Leave Game</span>
       </a>
       <div class="bap-header-title">
         <h1><i class="bi bi-flower1 me-1 text-success"></i>Build a Plant</h1>
@@ -45,6 +45,32 @@
     <!-- Game container (rendered by buildAPlantGame.js) -->
     <main id="bap-main" role="main"></main>
 
+  </div>
+ 
+  <!-- Unified Exit Confirmation Modal -->
+  <div class="modal fade game-exit-modal" id="exitConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center p-4 border-dark border-3 rounded-4 shadow-lg game-exit-modal-card">
+        <div class="modal-body p-1">
+          <div class="game-exit-icon-wrap mb-2">
+            <i class="bi bi-question-circle-fill text-warning"></i>
+          </div>
+          <h3 class="fw-black text-dark mb-2 game-exit-title">Leave Game?</h3>
+          <p class="text-muted fw-bold mb-4 game-exit-subtitle">You have a game in progress! Do you want to save and continue later, or keep playing?</p>
+          <div class="d-flex flex-column gap-2 game-exit-actions">
+            <button type="button" class="btn btn-warning fw-black py-2 rounded-pill shadow-sm game-exit-btn-save-exit" id="btn-modal-save-exit">
+              <i class="bi bi-bookmark-check-fill me-1"></i>Exit, Save & Continue Later
+            </button>
+            <button type="button" class="btn btn-outline-dark fw-bold py-2 rounded-pill shadow-sm game-exit-btn-finish" id="btn-modal-finish-save">
+              <i class="bi bi-trophy-fill me-1"></i>Finish & Save Current Score
+            </button>
+            <button type="button" class="btn btn-primary fw-black py-2 rounded-pill shadow-sm game-exit-btn-keep" data-bs-dismiss="modal" id="btn-modal-keep-playing">
+              <i class="bi bi-play-fill me-1"></i>Keep Playing
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <audio id="game-bgm" loop preload="none">
