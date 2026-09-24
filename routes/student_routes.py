@@ -560,123 +560,29 @@ def dashboard():
     completed_tasks_count = completed_lessons_count + completed_activities_count
     student_progress = round((completed_tasks_count / total_tasks_count) * 100) if total_tasks_count else 0
 
-    # Get student's badges and recent feedback
-    user_badges = db.session.query(UserBadge, Badge).join(
-        Badge, Badge.id == UserBadge.badge_id
-    ).filter(UserBadge.user_id == user_id).all()
+    # Get student's badges count for the Badges action card
+    badge_count = UserBadge.query.filter_by(user_id=user_id).count() if user_id else 0
+    user_badges = [True] * badge_count
     
-    feedback_messages = []
-    # 1. Teacher Personalized Notes
-    teacher_notes = db.session.query(AttemptLog, Activity).join(
-        Activity, Activity.id == AttemptLog.activity_id
-    ).filter(
+    # Get student's recent feedback count for the Feedback action card badge
+    teacher_notes_count = AttemptLog.query.filter(
         AttemptLog.student_id == user_id,
-        AttemptLog.teacher_feedback != None,
+        AttemptLog.teacher_feedback.isnot(None),
         AttemptLog.teacher_feedback != ''
-    ).order_by(
-        AttemptLog.created_at.desc()
-    ).limit(5).all()
+    ).count() if user_id else 0
 
-    for attempt, activity in teacher_notes:
-        feedback_messages.append({
-            'activity': activity.type,
-            'rating': None,
-            'text': attempt.teacher_feedback,
-            'source': 'Teacher Note',
-            'is_teacher': True
-        })
-
-    # 2. System Attempt Evaluations (from AttemptLog)
-    system_attempts = db.session.query(AttemptLog, Activity).join(
-        Activity, Activity.id == AttemptLog.activity_id
-    ).filter(
+    system_attempts_count = AttemptLog.query.filter(
         AttemptLog.student_id == user_id,
-        AttemptLog.feedback != None,
+        AttemptLog.feedback.isnot(None),
         AttemptLog.feedback != ''
-    ).order_by(
-        AttemptLog.created_at.desc()
-    ).limit(5).all()
+    ).count() if user_id else 0
 
-    for attempt, activity in system_attempts:
-        feedback_messages.append({
-            'activity': activity.type,
-            'rating': attempt.rating,
-            'text': attempt.hints or attempt.feedback,
-            'source': 'System Evaluation',
-            'is_teacher': False
-        })
+    feedback_count = min(4, teacher_notes_count + system_attempts_count)
+    feedback_messages = [True] * feedback_count
 
-    feedback_messages = feedback_messages[:4]
-
-    # Leaderboard: top 5 students by total score
-    leaderboard_query = db.session.query(
-        User.id,
-        User.name,
-        db.func.coalesce(db.func.sum(ProgressLog.score), 0).label('total_points')
-    ).outerjoin(
-        ProgressLog, (ProgressLog.student_id == User.id)
-    ).filter(
-        User.role == 'student'
-    ).group_by(
-        User.id, User.name
-    ).order_by(
-        db.desc('total_points'), User.name
-    ).limit(5).all()
-
-    leaderboard = [
-        {
-            'rank': idx + 1,
-            'student_id': row.id,
-            'name': row.name,
-            'points': int(row.total_points or 0),
-            'is_current': (row.id == user_id)
-        }
-        for idx, row in enumerate(leaderboard_query)
-    ]
-
+    # Leaderboard and assigned_tasks are not rendered on dashboard (dedicated pages exist)
+    leaderboard = []
     assigned_tasks = []
-    for assignment, lesson in lesson_assignment_rows:
-        due_str = assignment.due_date.strftime('%b %d, %Y at %I:%M %p') if (assignment.due_date and hasattr(assignment.due_date, 'strftime')) else (str(assignment.due_date) if assignment.due_date else 'No due date')
-        title = lesson.title or ''
-        if 'Animal Body Parts' in title or 'Parts of an Animal' in title:
-            lesson_url = url_for('student.animal_body_parts_lesson')
-        elif 'Plant Parts' in title:
-            lesson_url = url_for('student.plant_parts_lesson')
-        else:
-            lesson_url = url_for('student.living_non_living_lesson')
-
-        assigned_tasks.append({
-            'type': 'Lesson',
-            'title': lesson.title,
-            'due_date_display': due_str,
-            'status': assignment.status or 'assigned',
-            'action_url': lesson_url,
-            'assigned_at': assignment.assigned_at
-        })
-    for assignment, activity in activity_assignment_rows:
-        due_str = assignment.due_date.strftime('%b %d, %Y at %I:%M %p') if (assignment.due_date and hasattr(assignment.due_date, 'strftime')) else (str(assignment.due_date) if assignment.due_date else 'No due date')
-        act_type = activity.type or ''
-        act_engine = activity.engine or ''
-        if 'find_the_part' in act_engine or 'Find the Part' in act_type:
-            act_url = url_for('student.find_the_part_game', activity_id=activity.id)
-        elif 'build_a_plant' in act_engine or 'Build a Plant' in act_type:
-            act_url = url_for('student.build_a_plant_game', activity_id=activity.id)
-        elif 'metal_logic' in act_engine or 'Metal' in act_type:
-            act_url = url_for('student.materials_game', activity_id=activity.id)
-        elif 'recycle_sorter' in act_engine or 'EcoSwipe' in act_type or 'Recycl' in act_type:
-            act_url = url_for('student.recycling_game', activity_id=activity.id)
-        else:
-            act_url = url_for('student.claw_machine', activity_id=activity.id)
-
-        assigned_tasks.append({
-            'type': 'Activity',
-            'title': activity.type,
-            'due_date_display': due_str,
-            'status': assignment.status or 'assigned',
-            'action_url': act_url,
-            'assigned_at': assignment.assigned_at
-        })
-    assigned_tasks.sort(key=lambda t: t['assigned_at'] or datetime.min, reverse=True)
 
     return render_template(
         'student/student_dashboard.html',
