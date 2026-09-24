@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from database.models import (
     db, AccessLog, User, AttemptLog, AttemptObjectLog,
     ProgressLog, LessonProgress, LessonAttemptLog,
-    LessonAssignment, ActivityAssignment, UserBadge, Activity
+    LessonAssignment, ActivityAssignment, UserBadge, Activity, Badge
 )
 from routes.utils import get_current_user, require_role, log_access, to_ph_time
 
@@ -428,6 +428,69 @@ def clear_user_logs(target_user_id):
         flash(f"Failed to clear user logs: {str(e)}", "danger")
 
     return redirect(request.referrer or url_for('admin.compliance'))
+
+
+@admin_bp.route('/inspect_all_students_badges')
+def inspect_all_students_badges():
+    try:
+        students = User.query.filter_by(role='student').order_by(User.name.asc()).all()
+        result = []
+        for s in students:
+            badges_data = []
+            user_badges = db.session.query(UserBadge, Badge).join(Badge, Badge.id == UserBadge.badge_id).filter(UserBadge.user_id == s.id).order_by(UserBadge.awarded_at.asc()).all()
+            for ub, b in user_badges:
+                awarded_pht = to_ph_time(ub.awarded_at)
+                created_pht = to_ph_time(ub.created_at)
+                badges_data.append({
+                    'user_badge_id': ub.id,
+                    'badge_id': b.id,
+                    'badge_name': b.name,
+                    'badge_icon': b.icon,
+                    'awarded_at_utc': ub.awarded_at.strftime('%Y-%m-%d %H:%M:%S') if ub.awarded_at else None,
+                    'awarded_at_pht': awarded_pht.strftime('%Y-%m-%d %H:%M:%S') if awarded_pht else None,
+                    'created_at_pht': created_pht.strftime('%Y-%m-%d %H:%M:%S') if created_pht else None,
+                })
+
+            attempts_data = []
+            attempts = AttemptLog.query.filter_by(student_id=s.id).order_by(AttemptLog.created_at.asc()).all()
+            for a in attempts:
+                pht = to_ph_time(a.created_at)
+                attempts_data.append({
+                    'id': a.id,
+                    'activity_id': a.activity_id,
+                    'activity_type': a.activity.type if a.activity else None,
+                    'activity_engine': a.activity.engine if a.activity else None,
+                    'attempt_number': a.attempt_number,
+                    'score': a.score,
+                    'result': a.result,
+                    'time_spent': a.time_spent,
+                    'created_at_pht': pht.strftime('%Y-%m-%d %H:%M:%S') if pht else None
+                })
+
+            l_progress = []
+            for lp in LessonProgress.query.filter_by(student_id=s.id).all():
+                pht = to_ph_time(lp.created_at)
+                l_progress.append({
+                    'lesson_id': lp.lesson_id,
+                    'lesson_title': lp.lesson.title if lp.lesson else None,
+                    'completed': lp.completed,
+                    'completed_at_pht': to_ph_time(lp.completed_at).strftime('%Y-%m-%d %H:%M:%S') if lp.completed_at else None,
+                    'created_at_pht': pht.strftime('%Y-%m-%d %H:%M:%S') if pht else None
+                })
+
+            result.append({
+                'id': s.id,
+                'name': s.name,
+                'username': s.username,
+                'badges': badges_data,
+                'attempts': attempts_data,
+                'lesson_progress': l_progress
+            })
+
+        return jsonify({'students': result})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 
 
