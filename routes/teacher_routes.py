@@ -433,8 +433,18 @@ def get_struggling_concepts(is_lesson=True, limit=None):
             grouped[key] = {'misses': 0, 'students': []}
         grouped[key]['misses'] += r.miss_count
         student_display = r.student_name or r.student_username
-        if student_display and student_display not in grouped[key]['students']:
-            grouped[key]['students'].append(student_display)
+        if student_display:
+            existing = next((s for s in grouped[key]['students'] if s['name'] == student_display), None)
+            if existing:
+                existing['miss_count'] += r.miss_count
+            else:
+                grouped[key]['students'].append({
+                    'name': student_display,
+                    'miss_count': int(r.miss_count or 1)
+                })
+
+    for val in grouped.values():
+        val['students'].sort(key=lambda s: s['miss_count'], reverse=True)
 
     items = []
     for (obj_id_raw, act_type), val in grouped.items():

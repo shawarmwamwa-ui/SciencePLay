@@ -13,7 +13,7 @@
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css', v='20260910_1') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css', v='20260924_4') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
 </head>
 <body class="admin-page">
@@ -355,6 +355,25 @@
   </div>
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script defer src="{{ url_for('static', filename='js/admin.js', v='20260924_1') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/admin.js', v='20260924_4') }}"></script>
+  {% if request.args.get('edit_error_user_id') %}
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const targetModal = document.getElementById('updateUser{{ request.args.get('edit_error_user_id') }}');
+      if (targetModal && window.bootstrap && window.bootstrap.Modal) {
+        const errorAlert = targetModal.querySelector('.update-user-error-alert');
+        const errorText = targetModal.querySelector('.update-user-error-text');
+        if (errorAlert && errorText) {
+          errorText.textContent = {{ request.args.get('edit_error', 'Invalid input')|tojson }};
+          errorAlert.classList.remove('d-none');
+        }
+        const pwd = targetModal.querySelector('input[name="password"]');
+        if (pwd) pwd.classList.add('is-invalid');
+        const m = bootstrap.Modal.getOrCreateInstance(targetModal);
+        m.show();
+      }
+    });
+  </script>
+  {% endif %}
 </body>
 </html>

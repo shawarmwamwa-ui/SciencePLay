@@ -76,39 +76,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentStudents = [];
 
-    function renderStudents(filter = '') {
+    function renderStudents() {
       if (!studentListEl) return;
       studentListEl.innerHTML = '';
 
-      const query = filter.trim().toLowerCase();
-      const filtered = query ? currentStudents.filter(name => name.toLowerCase().includes(query)) : currentStudents;
-
-      if (filtered.length === 0) {
+      if (!currentStudents || currentStudents.length === 0) {
         studentListEl.innerHTML = `
           <div class="col-12 text-center text-muted py-4">
-            <i class="bi bi-search display-6 opacity-50 d-block mb-2"></i>
-            No students found matching "${filter}".
+            <i class="bi bi-check-circle display-6 text-success opacity-75 d-block mb-2"></i>
+            No student misses recorded for this item.
           </div>`;
         return;
       }
 
-      filtered.forEach(name => {
+      currentStudents.forEach(st => {
+        const studentName = typeof st === 'object' && st !== null ? st.name : st;
+        const studentMisses = typeof st === 'object' && st !== null && st.miss_count ? st.miss_count : 1;
+
         const col = document.createElement('div');
         col.className = 'col-12 col-sm-6';
         col.innerHTML = `
-          <div class="p-2 rounded-3 border bg-light d-flex align-items-center gap-2 hover-shadow-sm transition-all">
-            <span class="badge bg-danger-subtle text-danger rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-              <i class="bi bi-person-fill"></i>
+          <div class="p-2 rounded-3 border bg-light d-flex align-items-center justify-content-between gap-2 hover-shadow-sm transition-all">
+            <div class="d-flex align-items-center gap-2 overflow-hidden">
+              <span class="badge bg-danger-subtle text-danger rounded-circle p-2 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;">
+                <i class="bi bi-person-fill"></i>
+              </span>
+              <span class="fw-semibold text-dark text-truncate" title="${studentName}">${studentName}</span>
+            </div>
+            <span class="badge bg-danger text-white rounded-pill px-2 py-1 flex-shrink-0 fw-bold" style="font-size: 0.74rem;">
+              ${studentMisses} miss${studentMisses === 1 ? '' : 'es'}
             </span>
-            <span class="fw-semibold text-dark text-truncate" title="${name}">${name}</span>
           </div>`;
         studentListEl.appendChild(col);
-      });
-    }
-
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        renderStudents(e.target.value);
       });
     }
 
@@ -133,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (contextBadgeEl) contextBadgeEl.textContent = context;
       if (missesEl) missesEl.textContent = `${misses} miss${misses == 1 ? '' : 'es'}`;
       if (countPillEl) countPillEl.textContent = `${students.length} Student${students.length == 1 ? '' : 's'}`;
-      if (searchInput) searchInput.value = '';
 
       renderStudents();
 

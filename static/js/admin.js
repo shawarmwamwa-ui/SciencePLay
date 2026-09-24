@@ -390,23 +390,71 @@ function initCreateUserModalValidation() {
   });
 }
 
+function showAdminNotification(message, type = 'danger') {
+  let stack = document.querySelector('.admin-toast-stack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.className = 'alerts-container admin-toast-stack';
+    stack.style.cssText = 'position:fixed; top:24px; right:24px; z-index:99999; max-width:420px; width:calc(100% - 48px);';
+    document.body.appendChild(stack);
+  }
+  const alert = document.createElement('div');
+  alert.className = `alert alert-${type} alert-dismissible fade show shadow-lg admin-toast border-2 mb-2`;
+  alert.style.cssText = 'border-radius: 12px; font-weight: 600; font-size: 0.9rem; animation: adminShakeAnim 0.4s ease;';
+  alert.setAttribute('role', 'alert');
+  alert.innerHTML = `
+    <div class="d-flex align-items-center">
+      <i class="bi bi-exclamation-triangle-fill fs-5 me-2 flex-shrink-0"></i>
+      <div class="flex-grow-1">${message}</div>
+      <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `;
+  stack.appendChild(alert);
+  setTimeout(() => {
+    alert.classList.remove('show');
+    alert.classList.add('fade');
+    setTimeout(() => alert.remove(), 350);
+  }, 5000);
+}
+
 function initUpdateUserModalValidation() {
   document.querySelectorAll('form.update-user-form').forEach(form => {
     const modalEl = form.closest('.modal');
+    const modalContent = form.closest('.modal-content');
     const errorAlert = form.querySelector('.update-user-error-alert');
     const errorText = form.querySelector('.update-user-error-text');
     const submitBtn = form.querySelector('.update-user-submit-btn');
     const btnText = form.querySelector('.update-user-btn-text');
     const spinner = form.querySelector('.update-user-spinner');
+    const passwordInput = form.querySelector('input[name="password"]');
 
     function showError(msg) {
       if (errorText) errorText.textContent = msg;
       if (errorAlert) errorAlert.classList.remove('d-none');
+      if (passwordInput) {
+        passwordInput.classList.add('is-invalid');
+        passwordInput.focus();
+      }
+      if (modalContent) {
+        modalContent.classList.remove('shake-card');
+        void modalContent.offsetWidth; // Reflow for instant shake animation
+        modalContent.classList.add('shake-card');
+      }
+      showAdminNotification(`<strong>Password Error:</strong> ${msg}`, 'danger');
     }
 
     function clearError() {
       if (errorText) errorText.textContent = '';
       if (errorAlert) errorAlert.classList.add('d-none');
+      if (passwordInput) passwordInput.classList.remove('is-invalid');
+    }
+
+    if (passwordInput) {
+      passwordInput.addEventListener('input', () => {
+        if (passwordInput.classList.contains('is-invalid')) {
+          passwordInput.classList.remove('is-invalid');
+        }
+      });
     }
 
     if (modalEl) {
@@ -430,13 +478,11 @@ function initUpdateUserModalValidation() {
       if (password) {
         if (password.length < 8) {
           showError('Password is too short. It must be at least 8 characters long.');
-          form.password?.focus();
           return;
         }
 
         if (/^[a-zA-Z0-9]+$/.test(password)) {
           showError('Password must include at least one special character (e.g. ! @ # $ % & *).');
-          form.password?.focus();
           return;
         }
       }

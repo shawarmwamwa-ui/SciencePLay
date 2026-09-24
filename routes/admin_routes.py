@@ -182,7 +182,7 @@ def update_user(user_id):
         if is_ajax:
             return jsonify({'success': False, 'message': err_msg}), 400
         flash(err_msg, "danger")
-        return redirect(url_for('admin.user_management'))
+        return redirect(url_for('admin.user_management', edit_error_user_id=user_id, edit_error=err_msg))
 
     # Check password criteria if a new password is provided
     if new_password:
@@ -191,7 +191,7 @@ def update_user(user_id):
             if is_ajax:
                 return jsonify({'success': False, 'message': err_msg}), 400
             flash(err_msg, "danger")
-            return redirect(url_for('admin.user_management'))
+            return redirect(url_for('admin.user_management', edit_error_user_id=user_id, edit_error=err_msg))
 
     # Duplicate username check if changing username
     if new_username != user.username:
@@ -201,7 +201,7 @@ def update_user(user_id):
             if is_ajax:
                 return jsonify({'success': False, 'message': err_msg}), 400
             flash(err_msg, "danger")
-            return redirect(url_for('admin.user_management'))
+            return redirect(url_for('admin.user_management', edit_error_user_id=user_id, edit_error=err_msg))
 
     try:
         user.name = new_name
