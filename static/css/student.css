@@ -922,3 +922,60 @@ img {
   color: #ffffff !important;
 }
 
+/* Critical Layout Utilities for Instant First Paint */
+.d-flex { display: flex !important; }
+.flex-column { flex-direction: column !important; }
+.justify-content-between { justify-content: space-between !important; }
+.align-items-center { align-items: center !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.gap-2 { gap: 0.5rem !important; }
+.gap-3 { gap: 1rem !important; }
+.h-100 { height: 100% !important; }
+.text-decoration-none { text-decoration: none !important; }
+.d-block { display: block !important; }
+.mb-0 { margin-bottom: 0 !important; }
+.mb-2 { margin-bottom: 0.5rem !important; }
+.mb-4 { margin-bottom: 1.5rem !important; }
+.mt-1 { margin-top: 0.25rem !important; }
+.mt-2 { margin-top: 0.5rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+.p-3 { padding: 1rem !important; }
+@media (min-width: 768px) {
+  .p-md-4 { padding: 1.5rem !important; }
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+}
+.row > * {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+}
+.g-3 {
+  margin-right: -0.5rem;
+  margin-left: -0.5rem;
+}
+.g-3 > * {
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+  margin-bottom: 1rem;
+}
+.g-4 {
+  margin-right: -0.75rem;
+  margin-left: -0.75rem;
+}
+.g-4 > * {
+  padding-right: 0.75rem;
+  padding-left: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.col { flex: 1 0 0%; }
+@media (min-width: 576px) {
+  .row-cols-sm-2 > * { flex: 0 0 auto; width: 50%; }
+}
+@media (min-width: 1200px) {
+  .row-cols-xl-4 > * { flex: 0 0 auto; width: 25%; }
+}
+
+
