@@ -457,6 +457,19 @@ def is_activity_unlocked(user_id, activity):
     return True
 
 
+_ALL_LESSONS_CACHE = None
+_ALL_LESSONS_CACHE_TIME = 0
+
+def _get_cached_all_lessons():
+    global _ALL_LESSONS_CACHE, _ALL_LESSONS_CACHE_TIME
+    import time
+    now = time.time()
+    if _ALL_LESSONS_CACHE is None or (now - _ALL_LESSONS_CACHE_TIME) > 60:
+        _ALL_LESSONS_CACHE = Lesson.query.all()
+        _ALL_LESSONS_CACHE_TIME = now
+    return _ALL_LESSONS_CACHE
+
+
 @student_bp.route('/dashboard')
 @require_role('student')
 def dashboard():
@@ -495,8 +508,8 @@ def dashboard():
     total_score = sum((log.score or 0) for log in progress_logs)
 
     # Batch query user lesson progress, attempts, and all lessons in single round-trips
-    # This replaces 40+ sequential queries across the network with 3 batched in-memory lookups
-    all_lessons = Lesson.query.all()
+    # This replaces 40+ sequential queries across the network with batched in-memory lookups
+    all_lessons = _get_cached_all_lessons()
     from collections import defaultdict
     lessons_by_title = defaultdict(list)
     for l in all_lessons:
@@ -564,20 +577,14 @@ def dashboard():
     badge_count = UserBadge.query.filter_by(user_id=user_id).count() if user_id else 0
     user_badges = [True] * badge_count
     
-    # Get student's recent feedback count for the Feedback action card badge
-    teacher_notes_count = AttemptLog.query.filter(
+    # Get student's recent feedback count for the Feedback action card badge in 1 query
+    feedback_count = min(4, AttemptLog.query.filter(
         AttemptLog.student_id == user_id,
-        AttemptLog.teacher_feedback.isnot(None),
-        AttemptLog.teacher_feedback != ''
-    ).count() if user_id else 0
-
-    system_attempts_count = AttemptLog.query.filter(
-        AttemptLog.student_id == user_id,
-        AttemptLog.feedback.isnot(None),
-        AttemptLog.feedback != ''
-    ).count() if user_id else 0
-
-    feedback_count = min(4, teacher_notes_count + system_attempts_count)
+        (
+            (AttemptLog.teacher_feedback.isnot(None) & (AttemptLog.teacher_feedback != '')) |
+            (AttemptLog.feedback.isnot(None) & (AttemptLog.feedback != ''))
+        )
+    ).count()) if user_id else 0
     feedback_messages = [True] * feedback_count
 
     # Leaderboard and assigned_tasks are not rendered on dashboard (dedicated pages exist)

@@ -1,6 +1,6 @@
 from functools import wraps
 from datetime import timedelta
-from flask import session, flash, redirect, url_for
+from flask import session, flash, redirect, url_for, g
 from flask_wtf.csrf import CSRFProtect
 from database.models import db, User, AccessLog
 
@@ -18,7 +18,11 @@ def get_current_user():
     user_id = session.get('user_id')
     if not user_id:
         return None
-    return User.query.get(user_id)
+    if hasattr(g, '_cached_current_user') and g._cached_current_user and g._cached_current_user.id == user_id:
+        return g._cached_current_user
+    user = User.query.get(user_id)
+    g._cached_current_user = user
+    return user
 
 
 def require_role(expected_role):
