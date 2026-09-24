@@ -499,7 +499,7 @@
             <!-- Section 3: Actionable Insights & Recent Activity -->
             <div class="mb-4">
               <p class="teacher-eyebrow mb-2">Classroom Action Items</p>
-              <div class="row g-3">
+              <div class="row g-3 classroom-action-row">
                 <!-- Card 1: Challenging / Most Missed Concepts (Tabbed) -->
                 <div class="col-lg-6">
                   <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between">
@@ -606,7 +606,7 @@
                       </div>
                     </div>
 
-                    <div class="pt-3 border-top mt-3 d-flex justify-content-end">
+                    <div class="pt-3 border-top mt-auto d-flex justify-content-end teacher-panel-footer">
                       <a href="{{ url_for('teacher.analytics') }}#struggling-concepts-section" class="btn btn-sm btn-outline-warning text-dark rounded-pill px-3 fw-semibold">
                         <i class="bi bi-bar-chart-line me-1"></i>
                         <span>Full Struggle Breakdown</span>
@@ -645,12 +645,13 @@
                           <ul class="activity-status-list">
                             {% if recent_activity %}
                             {% for log, student_name, activity_type in recent_activity %}
-                            <li class="py-2 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
-                              <div>
-                                <span class="status-label fw-bold text-dark">{{ student_name }}</span>
-                                <span class="text-muted small">&bull; completed <strong>{{ activity_type }}</strong></span>
+                            <li class="py-2.5 border-bottom d-flex justify-content-between align-items-center gap-2">
+                              <div class="flex-grow-1 overflow-hidden" style="min-width: 0;">
+                                <span class="status-label fw-bold text-dark d-block text-truncate" title="{{ student_name }} &bull; completed {{ activity_type }}">
+                                  {{ student_name }} <span class="text-muted fw-normal small">&bull; completed <strong>{{ activity_type }}</strong></span>
+                                </span>
                               </div>
-                              <div class="d-flex align-items-center gap-1">
+                              <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto">
                                 <span class="badge bg-light text-dark border fw-bold">{{ log.score }} pts</span>
                                 {% if log.feedback %}
                                 <span class="badge bg-success">Reviewed</span>
@@ -667,12 +668,6 @@
                             </div>
                             {% endif %}
                           </ul>
-                          <div class="pt-3 border-top mt-3 d-flex justify-content-end">
-                            <a href="{{ url_for('teacher.analytics') }}#attempts-section" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                              <span>View All Activity Logs</span>
-                              <i class="bi bi-arrow-right ms-1"></i>
-                            </a>
-                          </div>
                         </div>
 
                         <!-- Tab 2: Leaderboards -->
@@ -827,17 +822,15 @@
                                 {% endif %}
                               </div>
                             </div>
-                          </div>
-
-                          <div class="pt-3 border-top mt-3 d-flex justify-content-end">
-                            <a href="{{ url_for('teacher.analytics') }}#top-students-section" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
-                              <i class="bi bi-graph-up me-1"></i>
-                              <span>Full Rankings &amp; Retries</span>
-                              <i class="bi bi-arrow-right ms-1"></i>
-                            </a>
-                          </div>
                         </div>
                       </div>
+                    </div>
+
+                    <div class="pt-3 border-top mt-auto d-flex justify-content-end teacher-panel-footer">
+                      <a id="dashActivityFooterBtn" href="{{ url_for('teacher.analytics') }}#attempts-section" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
+                        <span id="dashActivityFooterBtnText">View All Activity Logs</span>
+                        <i class="bi bi-arrow-right ms-1"></i>
+                      </a>
                     </div>
                   </div>
                 </div>

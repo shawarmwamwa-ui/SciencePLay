@@ -85,6 +85,28 @@
   box-shadow: 0 18px 42px rgba(15, 23, 42, 0.07);
 }
 
+/* Ensure Classroom Action Items panels stretch equally and align bottom footers */
+.classroom-action-row {
+  align-items: stretch !important;
+}
+
+.classroom-action-row > [class*="col-"] {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.classroom-action-row .teacher-panel {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  height: 100% !important;
+}
+
+.classroom-action-row .teacher-panel .teacher-panel-footer {
+  margin-top: auto !important;
+}
+
 .activity-status-list {
   list-style: none;
   padding: 0;

@@ -669,6 +669,28 @@ function initSharedStrugglingStudentsModal() {
   });
 }
 
+function initDashboardActionFooters() {
+  const footerBtn = document.getElementById('dashActivityFooterBtn');
+  const footerBtnText = document.getElementById('dashActivityFooterBtnText');
+  const recTab = document.getElementById('dt-recent-activity-tab');
+  const lbTab = document.getElementById('dt-leaderboards-tab');
+
+  if (footerBtn && footerBtnText) {
+    if (recTab) {
+      recTab.addEventListener('shown.bs.tab', () => {
+        footerBtn.href = window.location.pathname.replace(/\/$/, '').replace(/\/dashboard$/, '') + '/analytics#attempts-section';
+        footerBtnText.textContent = 'View All Activity Logs';
+      });
+    }
+    if (lbTab) {
+      lbTab.addEventListener('shown.bs.tab', () => {
+        footerBtn.href = window.location.pathname.replace(/\/$/, '').replace(/\/dashboard$/, '') + '/analytics#top-students-section';
+        footerBtnText.textContent = 'Full Rankings & Retries';
+      });
+    }
+  }
+}
+
 function setupTeacherPortal() {
   initTeacherNavigation();
   initTeacherSlidingIndicator();
@@ -677,6 +699,7 @@ function setupTeacherPortal() {
   initLiveStopwatchTicker();
   initLiveTrackerSync();
   initSharedStrugglingStudentsModal();
+  initDashboardActionFooters();
   window.addEventListener('hashchange', initHashTabSwitching);
 }
 
