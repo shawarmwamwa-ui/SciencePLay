@@ -94,16 +94,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const studentMisses = typeof st === 'object' && st !== null && st.miss_count ? st.miss_count : 1;
 
         const col = document.createElement('div');
-        col.className = 'col-12 col-sm-6';
+        col.className = 'col-12 col-md-6';
         col.innerHTML = `
-          <div class="p-2 rounded-3 border bg-light d-flex align-items-center justify-content-between gap-2 hover-shadow-sm transition-all">
-            <div class="d-flex align-items-center gap-2 overflow-hidden">
-              <span class="badge bg-danger-subtle text-danger rounded-circle p-2 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;">
+          <div class="p-2.5 px-3 rounded-3 border bg-light d-flex align-items-center justify-content-between gap-3 hover-shadow-sm transition-all" style="min-height: 50px;">
+            <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 0;">
+              <span class="badge bg-danger-subtle text-danger rounded-circle p-2 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px;">
                 <i class="bi bi-person-fill"></i>
               </span>
-              <span class="fw-semibold text-dark text-truncate" title="${studentName}">${studentName}</span>
+              <span class="fw-semibold text-dark" style="font-size: 0.88rem; line-height: 1.25; word-break: break-word;">${studentName}</span>
             </div>
-            <span class="badge bg-danger text-white rounded-pill px-2 py-1 flex-shrink-0 fw-bold" style="font-size: 0.74rem;">
+            <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 flex-shrink-0 fw-bold" style="font-size: 0.74rem;">
               ${studentMisses} miss${studentMisses === 1 ? '' : 'es'}
             </span>
           </div>`;
