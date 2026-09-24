@@ -48,5 +48,16 @@ document.addEventListener('DOMContentLoaded', () => {
     setupTablePagination('#retry-table', '#retry-pagination-wrap', '#retry-page-info', '#retry-pagination-nav', 8);
     setupTablePagination('#tracker-table', '#tracker-pagination-wrap', '#tracker-page-info', '#tracker-pagination-nav', 5);
     setupTablePagination('#attempts-table', '#attempts-pagination-wrap', '#attempts-page-info', '#attempts-pagination-nav', 5);
+
+    // Re-verify stationary heights when switching tabs
+    document.querySelectorAll('button[data-bs-toggle="pill"]').forEach(tab => {
+      tab.addEventListener('shown.bs.tab', () => {
+        document.querySelectorAll('.tab-pane.active table[id]').forEach(t => {
+          if (t._currentPage && typeof t._showPage === 'function') {
+            t._showPage(t._currentPage, false);
+          }
+        });
+      });
+    });
   }
 });

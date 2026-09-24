@@ -227,20 +227,44 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
       const tbody = table.querySelector('tbody');
       const colCount = table.querySelectorAll('thead th').length || 4;
       const missingCount = itemsPerPage - visibleInThisPage;
+
+      // Determine real row height dynamically or fall back to 64px
+      let targetRowHeight = 64;
+      const sampleRow = rows.find(r => r.style.display !== 'none');
+      if (sampleRow && sampleRow.offsetHeight > 40) {
+        targetRowHeight = sampleRow.offsetHeight;
+      }
+
       for (let i = 0; i < missingCount; i++) {
         const spacer = document.createElement('tr');
         spacer.className = 'table-spacer-row';
         spacer.style.pointerEvents = 'none';
+        spacer.style.height = `${targetRowHeight}px`;
         spacer.setAttribute('aria-hidden', 'true');
         for (let c = 0; c < colCount; c++) {
           const td = document.createElement('td');
-          td.innerHTML = '&nbsp;';
-          td.style.height = '57px';
+          td.className = 'table-spacer-cell';
+          td.style.height = `${targetRowHeight}px`;
+          td.style.padding = '0 1.1rem';
           td.style.borderBottom = '1px solid #edf2fa';
           td.style.background = 'transparent';
+          // Non-collapsing invisible inner div guarantees the browser's table engine maintains exact height
+          td.innerHTML = `<div style="height:${targetRowHeight}px; visibility:hidden; pointer-events:none; line-height:${targetRowHeight}px;">&nbsp;</div>`;
           spacer.appendChild(td);
         }
         tbody.appendChild(spacer);
+      }
+    }
+
+    // Lock stationary height on the table-responsive wrapper so container NEVER shifts or bounces
+    const tableWrap = table.closest('.table-responsive');
+    if (tableWrap) {
+      const currentHeight = table.offsetHeight;
+      if (currentHeight > 0) {
+        if (!table._stationaryHeight || currentHeight > table._stationaryHeight) {
+          table._stationaryHeight = currentHeight;
+        }
+        tableWrap.style.minHeight = `${table._stationaryHeight}px`;
       }
     }
 
@@ -250,6 +274,8 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
 
     renderControls();
   }
+
+  table._showPage = showPage;
 
   function renderControls() {
     nav.innerHTML = '';

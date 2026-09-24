@@ -1528,13 +1528,52 @@
   transform: none !important;
 }
 
-/* Static Height Spacer Rows: Maintains fixed 5-row table height on last page */
+/* Static Height Spacer Rows: Maintains exact stationary table height on last page */
+.teacher-dashboard-page .table tbody tr {
+  height: 64px;
+}
+
+.teacher-dashboard-page .table tbody td {
+  height: 64px;
+  vertical-align: middle;
+}
+
+.table-spacer-row {
+  height: 64px !important;
+}
+
 .table-spacer-row td {
-  height: 57px;
-  padding: 0.95rem 1.1rem !important;
+  height: 64px !important;
+  padding: 0 1.1rem !important;
   border-bottom: 1px solid #edf2fa !important;
   background: transparent !important;
   user-select: none;
+  vertical-align: middle;
+}
+
+.table-spacer-cell div {
+  height: 64px !important;
+  line-height: 64px !important;
+}
+
+/* Prevent attempts badges from vertically inflating rows in retry table */
+#retry-table .d-flex.gap-1.flex-wrap {
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  max-width: 260px;
+  scrollbar-width: none;
+}
+
+#retry-table .d-flex.gap-1.flex-wrap::-webkit-scrollbar {
+  display: none;
+}
+
+/* Compact layout for student badges in Most Missed tables */
+#missed-lessons-table .d-flex.align-items-center.gap-1.flex-wrap,
+#missed-activities-table .d-flex.align-items-center.gap-1.flex-wrap {
+  max-height: 68px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 /* Prevent accidental horizontal scrollbar under cards on desktop */
