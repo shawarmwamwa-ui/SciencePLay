@@ -42,6 +42,24 @@ function playSound(type) {
   } catch (_) {}
 }
 
+function playTone(freq, dur = 0.15) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    osc.start(now);
+    osc.stop(now + dur);
+  } catch (_) {}
+}
+
+
 // ── GAME DATA: 3 Rounds with Callout Pins & Slots ─────────────────────────────
 
 const ROUNDS = [
@@ -190,6 +208,15 @@ function updateHUD() {
 }
 
 // ── SAVE RESULT ───────────────────────────────────────────────────────────────
+
+function getStorageKey() {
+  const actId = window.findThePartActivityId || state.activityId || 'default';
+  return `scienceplay_find_the_part_progress_${actId}`;
+}
+
+function getTotalZones() {
+  return ROUNDS.reduce((acc, r) => acc + r.zones.length, 0);
+}
 
 async function saveResult(silent = false) {
   if (state.completed) return null;
@@ -812,25 +839,27 @@ export function initFindThePart() {
   if (resumed && state.matched.size > 0) {
     const round = ROUNDS[state.currentRound];
     state.matched.forEach(zoneId => {
-      const labelId = round.correct[zoneId];
-      if (labelId) {
-        const chip = document.querySelector(`.ftp-chip[data-label-id="${labelId}"]`);
-        if (chip) {
-          chip.classList.add('ftp-chip-used');
-          chip.setAttribute('draggable', 'false');
-        }
-        const slotEl = document.querySelector(`.ftp-slot[data-zone-id="${zoneId}"]`);
-        if (slotEl) {
-          slotEl.classList.add('ftp-slot-matched');
-          const labelObj = round.labels.find(l => l.id === labelId);
-          slotEl.innerHTML = `
-            <div class="ftp-slot-matched-content">
-              <span class="ftp-slot-matched-icon">✓</span>
-              <span class="ftp-slot-matched-text">${labelObj?.text || labelId}</span>
-            </div>
-          `;
-        }
+      const zone = round.zones.find(z => z.id === zoneId);
+      const chip = document.querySelector(`.ftp-chip[data-label-id="${zoneId}"]`);
+      if (chip) {
+        chip.classList.add('ftp-chip-used');
+        chip.disabled = true;
+        chip.draggable = false;
       }
+      const slotEl = document.querySelector(`.ftp-slot[data-zone-id="${zoneId}"]`);
+      if (slotEl && zone) {
+        slotEl.className = 'ftp-slot ftp-slot-matched';
+        slotEl.innerHTML = `
+          <span class="ftp-slot-badge"><i class="bi bi-check-lg"></i></span>
+          <span class="ftp-slot-label">${zone.label}</span>
+        `;
+      }
+      const line = document.querySelector(`.ftp-leader-line[data-line-id="${zoneId}"]`);
+      if (line) line.classList.add('ftp-leader-matched');
+      const halo = document.querySelector(`.ftp-pin-halo[data-halo-id="${zoneId}"]`);
+      if (halo) halo.classList.add('ftp-pin-halo-matched');
+      const dot = document.querySelector(`.ftp-pin-dot[data-pin-id="${zoneId}"]`);
+      if (dot) dot.classList.add('ftp-pin-dot-matched');
     });
   }
 }

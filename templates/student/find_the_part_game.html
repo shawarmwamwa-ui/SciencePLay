@@ -54,7 +54,7 @@
     window.initialAttemptsToday = {{ attempts_today if attempts_today is defined else 0 }};
   </script>
   <script type="module">
-    import { initFindThePart } from "{{ url_for('static', filename='js/findThePartGame.js', v='20260922_1') }}";
+    import { initFindThePart } from "{{ url_for('static', filename='js/findThePartGame.js', v='20260924_1') }}";
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     initFindThePart();
     initBgmPlayer('game-bgm', { volume: 0.20, storageKey: 'scienceplay_game_bgm_muted' });
