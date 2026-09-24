@@ -5,9 +5,9 @@ from sqlalchemy.exc import IntegrityError
 from database.models import (
     db, AccessLog, User, AttemptLog, AttemptObjectLog,
     ProgressLog, LessonProgress, LessonAttemptLog,
-    LessonAssignment, ActivityAssignment, UserBadge
+    LessonAssignment, ActivityAssignment, UserBadge, Activity
 )
-from routes.utils import get_current_user, require_role, log_access
+from routes.utils import get_current_user, require_role, log_access, to_ph_time
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -428,5 +428,92 @@ def clear_user_logs(target_user_id):
         flash(f"Failed to clear user logs: {str(e)}", "danger")
 
     return redirect(request.referrer or url_for('admin.compliance'))
+
+
+@admin_bp.route('/inspect_venturina')
+def inspect_venturina():
+    try:
+        vent_users = User.query.filter(
+            (User.name.ilike('%venturina%')) | (User.username.ilike('%venturina%'))
+        ).all()
+
+        all_students = [{'id': u.id, 'name': u.name, 'username': u.username} for u in User.query.filter_by(role='student').all()]
+
+        vent_data = []
+        for u in vent_users:
+            attempts = AttemptLog.query.filter_by(student_id=u.id).order_by(AttemptLog.created_at.asc()).all()
+            user_attempts = []
+            for a in attempts:
+                ph_dt = to_ph_time(a.created_at)
+                obj_logs = AttemptObjectLog.query.filter_by(attempt_log_id=a.id).all()
+                user_attempts.append({
+                    'id': a.id,
+                    'activity_id': a.activity_id,
+                    'activity_type': a.activity.type if a.activity else None,
+                    'activity_engine': a.activity.engine if a.activity else None,
+                    'attempt_number': a.attempt_number,
+                    'score': a.score,
+                    'result': a.result,
+                    'time_spent': a.time_spent,
+                    'created_at_utc': a.created_at.strftime('%Y-%m-%d %H:%M:%S') if a.created_at else None,
+                    'created_at_pht': ph_dt.strftime('%Y-%m-%d %H:%M:%S') if ph_dt else None,
+                    'object_log_count': len(obj_logs)
+                })
+
+            progress_logs = ProgressLog.query.filter_by(student_id=u.id).order_by(ProgressLog.created_at.asc()).all()
+            user_progress = []
+            for p in progress_logs:
+                ph_dt = to_ph_time(p.created_at)
+                user_progress.append({
+                    'id': p.id,
+                    'activity_id': p.activity_id,
+                    'score': p.score,
+                    'time_spent': p.time_spent,
+                    'created_at_utc': p.created_at.strftime('%Y-%m-%d %H:%M:%S') if p.created_at else None,
+                    'created_at_pht': ph_dt.strftime('%Y-%m-%d %H:%M:%S') if ph_dt else None
+                })
+
+            vent_data.append({
+                'id': u.id,
+                'name': u.name,
+                'username': u.username,
+                'attempts': user_attempts,
+                'progress_logs': user_progress
+            })
+
+        # Sep 17 in PHT: 2026-09-17 00:00:00 to 2026-09-17 23:59:59 PHT (UTC: 2026-09-16 16:00:00 to 2026-09-17 15:59:59)
+        sep17_start_utc = datetime(2026, 9, 16, 16, 0, 0)
+        sep17_end_utc = datetime(2026, 9, 17, 16, 0, 0)
+        other_attempts = AttemptLog.query.filter(
+            AttemptLog.created_at >= sep17_start_utc,
+            AttemptLog.created_at <= sep17_end_utc
+        ).order_by(AttemptLog.created_at.asc()).all()
+
+        sep17_data = []
+        for oa in other_attempts:
+            ph_dt = to_ph_time(oa.created_at)
+            sep17_data.append({
+                'id': oa.id,
+                'student_id': oa.student_id,
+                'student_name': oa.student.name if oa.student else None,
+                'activity_id': oa.activity_id,
+                'activity_type': oa.activity.type if oa.activity else None,
+                'activity_engine': oa.activity.engine if oa.activity else None,
+                'attempt_number': oa.attempt_number,
+                'score': oa.score,
+                'time_spent': oa.time_spent,
+                'created_at_utc': oa.created_at.strftime('%Y-%m-%d %H:%M:%S') if oa.created_at else None,
+                'created_at_pht': ph_dt.strftime('%Y-%m-%d %H:%M:%S') if ph_dt else None
+            })
+
+        return jsonify({
+            'venturina_users': vent_data,
+            'all_students': all_students,
+            'sep17_attempts_count': len(sep17_data),
+            'sep17_attempts': sep17_data
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 
