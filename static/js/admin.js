@@ -84,7 +84,17 @@ function initAdminToasts() {
 }
 
 function initAdminDashboardSkeleton() {
-  document.body.classList.add('dashboard-loaded');
+  const skeleton = document.getElementById('admin-skeleton-view');
+  const realContent = document.getElementById('admin-real-content');
+
+  if (!skeleton || !realContent) {
+    document.body.classList.add('dashboard-loaded');
+    return;
+  }
+
+  setTimeout(() => {
+    document.body.classList.add('dashboard-loaded');
+  }, 500);
 }
 
 function initActionSummaryFilters() {
