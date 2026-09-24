@@ -1557,12 +1557,50 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════ */
-/* Student Retry Improvement: Compact Full-Fit Layout                    */
+/* Consistent Stationary Columns for Paginated Tables                    */
+/* (Locks columns in place so headers/cells never shift left/right)       */
 /* ══════════════════════════════════════════════════════════════════════ */
+
+/* Top Student Performance Rankings Table */
+#top-students-table {
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+
+#top-students-table th:nth-child(1),
+#top-students-table td:nth-child(1) {
+  width: 12% !important;
+  min-width: 70px;
+  text-align: center;
+}
+
+#top-students-table th:nth-child(2),
+#top-students-table td:nth-child(2) {
+  width: 44% !important;
+}
+
+#top-students-table th:nth-child(3),
+#top-students-table td:nth-child(3) {
+  width: 24% !important;
+}
+
+#top-students-table th:nth-child(4),
+#top-students-table td:nth-child(4) {
+  width: 20% !important;
+}
+
+#top-students-table td a.btn {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Student Retry Improvement Table */
 #retry-table {
+  table-layout: fixed !important;
   width: 100% !important;
   min-width: 0 !important;
-  table-layout: auto;
 }
 
 #retry-table thead th {
@@ -1577,12 +1615,52 @@
   font-size: 0.84rem !important;
 }
 
+/* Specific locked column percentage widths: Total = 100% */
+#retry-table th:nth-child(1), #retry-table td:nth-child(1) { width: 20% !important; }
+#retry-table th:nth-child(2), #retry-table td:nth-child(2) { width: 23% !important; }
+#retry-table th:nth-child(3), #retry-table td:nth-child(3) { width: 7% !important; text-align: center; }
+#retry-table th:nth-child(4), #retry-table td:nth-child(4) { width: 7% !important; text-align: center; }
+#retry-table th:nth-child(5), #retry-table td:nth-child(5) { width: 7% !important; text-align: center; }
+#retry-table th:nth-child(6), #retry-table td:nth-child(6) { width: 7% !important; text-align: center; }
+#retry-table th:nth-child(7), #retry-table td:nth-child(7) { width: 11% !important; }
+#retry-table th:nth-child(8), #retry-table td:nth-child(8) { width: 18% !important; }
+
+/* Missed Concepts Tables */
+#missed-lessons-table,
+#missed-activities-table {
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+
+#missed-lessons-table th:nth-child(1), #missed-lessons-table td:nth-child(1),
+#missed-activities-table th:nth-child(1), #missed-activities-table td:nth-child(1) {
+  width: 32% !important;
+}
+
+#missed-lessons-table th:nth-child(2), #missed-lessons-table td:nth-child(2),
+#missed-activities-table th:nth-child(2), #missed-activities-table td:nth-child(2) {
+  width: 28% !important;
+}
+
+#missed-lessons-table th:nth-child(3), #missed-lessons-table td:nth-child(3),
+#missed-activities-table th:nth-child(3), #missed-activities-table td:nth-child(3) {
+  width: 25% !important;
+}
+
+#missed-lessons-table th:nth-child(4), #missed-lessons-table td:nth-child(4),
+#missed-activities-table th:nth-child(4), #missed-activities-table td:nth-child(4) {
+  width: 15% !important;
+  text-align: end;
+}
+
 /* Compact Student button */
 #retry-table .student-retry-btn {
   font-size: 0.79rem !important;
   padding: 0.22rem 0.6rem !important;
-  max-width: 165px;
+  max-width: 100%;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #retry-table .student-name-text {

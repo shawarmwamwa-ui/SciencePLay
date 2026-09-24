@@ -14,7 +14,7 @@
     rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260913_2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260924_6') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
 </head>
 
@@ -528,23 +528,34 @@
                         <div class="tab-pane fade show active" id="dt-missed-lessons" role="tabpanel">
                           <ul class="activity-status-list">
                             {% if most_missed_lessons %}
-                            {% for obj in most_missed_lessons[:3] %}
-                            <li class="py-2 border-bottom">
-                              <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                  <span class="status-label fw-bold text-dark">{{ obj.name }}</span>
+                            {% for obj in most_missed_lessons[:4] %}
+                            <li class="py-2.5 border-bottom">
+                              <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                  <span class="status-label fw-bold text-dark d-block text-truncate" title="{{ obj.name }}">{{ obj.name }}</span>
                                   <small class="text-muted d-block">({{ obj.activity_type }})</small>
                                 </div>
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">{{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold flex-shrink-0">{{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}</span>
                               </div>
-                              {% if obj.students %}
-                              <div class="d-flex align-items-center gap-1 flex-wrap mt-1">
-                                <small class="text-muted" style="font-size: 0.76rem;"><i class="bi bi-people me-1"></i>Students:</small>
-                                {% for st in obj.students %}
-                                <span class="badge bg-light text-dark border px-2 py-0" style="font-size: 0.74rem;">{{ st }}</span>
-                                {% endfor %}
+                              <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted" style="font-size: 0.78rem;">
+                                  <i class="bi bi-people me-1"></i>Struggling Students:
+                                </small>
+                                {% if obj.students %}
+                                <button type="button" class="btn btn-sm open-struggling-students-modal-btn rounded-pill px-2.5 py-0.5 d-inline-flex align-items-center gap-1 fw-semibold shadow-sm"
+                                  data-item-name="{{ obj.name }}"
+                                  data-context="{{ obj.activity_type }}"
+                                  data-misses="{{ obj.misses }}"
+                                  data-students='{{ obj.students|tojson|safe }}'
+                                  title="View struggling students">
+                                  <i class="bi bi-people-fill text-danger"></i>
+                                  <span>{{ obj.students|length }} Student{% if obj.students|length != 1 %}s{% endif %}</span>
+                                  <i class="bi bi-chevron-right ms-1" style="font-size: 0.7rem;"></i>
+                                </button>
+                                {% else %}
+                                <span class="badge bg-light text-muted border">None</span>
+                                {% endif %}
                               </div>
-                              {% endif %}
                             </li>
                             {% endfor %}
                             {% else %}
@@ -557,23 +568,34 @@
                         <div class="tab-pane fade" id="dt-missed-games" role="tabpanel">
                           <ul class="activity-status-list">
                             {% if most_missed_activities %}
-                            {% for obj in most_missed_activities[:3] %}
-                            <li class="py-2 border-bottom">
-                              <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                  <span class="status-label fw-bold text-dark">{{ obj.name }}</span>
+                            {% for obj in most_missed_activities[:4] %}
+                            <li class="py-2.5 border-bottom">
+                              <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                  <span class="status-label fw-bold text-dark d-block text-truncate" title="{{ obj.name }}">{{ obj.name }}</span>
                                   <small class="text-muted d-block">({{ obj.activity_type }})</small>
                                 </div>
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">{{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold flex-shrink-0">{{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}</span>
                               </div>
-                              {% if obj.students %}
-                              <div class="d-flex align-items-center gap-1 flex-wrap mt-1">
-                                <small class="text-muted" style="font-size: 0.76rem;"><i class="bi bi-people me-1"></i>Students:</small>
-                                {% for st in obj.students %}
-                                <span class="badge bg-light text-dark border px-2 py-0" style="font-size: 0.74rem;">{{ st }}</span>
-                                {% endfor %}
+                              <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted" style="font-size: 0.78rem;">
+                                  <i class="bi bi-people me-1"></i>Struggling Students:
+                                </small>
+                                {% if obj.students %}
+                                <button type="button" class="btn btn-sm open-struggling-students-modal-btn rounded-pill px-2.5 py-0.5 d-inline-flex align-items-center gap-1 fw-semibold shadow-sm"
+                                  data-item-name="{{ obj.name }}"
+                                  data-context="{{ obj.activity_type }}"
+                                  data-misses="{{ obj.misses }}"
+                                  data-students='{{ obj.students|tojson|safe }}'
+                                  title="View struggling students">
+                                  <i class="bi bi-people-fill text-danger"></i>
+                                  <span>{{ obj.students|length }} Student{% if obj.students|length != 1 %}s{% endif %}</span>
+                                  <i class="bi bi-chevron-right ms-1" style="font-size: 0.7rem;"></i>
+                                </button>
+                                {% else %}
+                                <span class="badge bg-light text-muted border">None</span>
+                                {% endif %}
                               </div>
-                              {% endif %}
                             </li>
                             {% endfor %}
                             {% else %}
@@ -831,9 +853,50 @@
   </div>
   </div>
 
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- Modal: Struggling Students Details Modal                               -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="modal fade" id="strugglingStudentsModal" tabindex="-1" aria-labelledby="strugglingStudentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg" style="max-width: 760px;">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+        <div class="modal-header border-bottom py-3 px-4" style="background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);">
+          <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="badge bg-danger rounded-pill px-2 py-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>Struggle Insight</span>
+              <span id="strugglingModalContextBadge" class="badge bg-white text-secondary border rounded-pill"></span>
+            </div>
+            <h4 class="modal-title h5 fw-bold text-dark mb-0" id="strugglingStudentsModalLabel">Students Who Struggled</h4>
+            <div id="strugglingModalItemName" class="small text-muted fw-semibold mt-1"></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="small text-muted">
+              Total Recorded Misses: <strong id="strugglingModalMisses" class="badge bg-danger-subtle text-danger border border-danger-subtle fs-6 py-1 px-2">0</strong>
+            </span>
+            <span class="badge bg-light text-dark border rounded-pill px-3 py-1 fw-bold" id="strugglingModalCountPill">0 Students</span>
+          </div>
+
+          <div class="row g-2" id="strugglingModalStudentList" style="max-height: 380px; overflow-y: auto;">
+            <!-- Dynamically populated via JavaScript -->
+          </div>
+
+          <div class="alert alert-info py-2 px-3 small mt-3 mb-0 rounded-3 border-0 bg-info-subtle text-dark">
+            <i class="bi bi-lightbulb-fill text-warning me-1"></i>
+            <strong>Teaching Tip:</strong> Consider reviewing this specific question or game mechanics with these students during follow-up instruction.
+          </div>
+        </div>
+        <div class="modal-footer border-top py-2 px-4 bg-light">
+          <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script defer src="{{ url_for('static', filename='js/teacher.js', v='20260810') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher.js', v='20260924_5') }}"></script>
   <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
 
   {% if retry_progression %}
