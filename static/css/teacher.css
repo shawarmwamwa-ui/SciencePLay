@@ -1556,16 +1556,89 @@
   line-height: 64px !important;
 }
 
-/* Prevent attempts badges from vertically inflating rows in retry table */
-#retry-table .d-flex.gap-1.flex-wrap {
-  flex-wrap: nowrap !important;
-  overflow-x: auto;
-  max-width: 260px;
-  scrollbar-width: none;
+/* ══════════════════════════════════════════════════════════════════════ */
+/* Student Retry Improvement: Sticky Column Horizontal Scrolling         */
+/* ══════════════════════════════════════════════════════════════════════ */
+#retry-improvement-section .table-responsive {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
-#retry-table .d-flex.gap-1.flex-wrap::-webkit-scrollbar {
-  display: none;
+#retry-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  min-width: 1240px !important;
+}
+
+#retry-table thead th {
+  background-color: #ffffff !important;
+  white-space: nowrap !important;
+}
+
+/* Sticky Student Column: pins student name to the left while scrolling horizontally */
+#retry-table th:first-child,
+#retry-table td:first-child {
+  position: sticky !important;
+  left: 0 !important;
+  background-color: #ffffff !important;
+  z-index: 5 !important;
+  min-width: 185px !important;
+  max-width: 220px !important;
+  border-right: 1px solid #edf2f7 !important;
+  box-shadow: 4px 0 12px -2px rgba(15, 23, 42, 0.08) !important;
+}
+
+#retry-table thead th:first-child {
+  z-index: 6 !important;
+  background-color: #ffffff !important;
+}
+
+#retry-table tbody tr:hover td:first-child {
+  background-color: #f8fafc !important;
+}
+
+#retry-table .table-spacer-row td:first-child {
+  position: sticky !important;
+  left: 0 !important;
+  background-color: #ffffff !important;
+  z-index: 5 !important;
+}
+
+#retry-table td:first-child a {
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Prevent attempts badges from vertically inflating rows; scroll naturally with table */
+#retry-table td:last-child {
+  min-width: 300px;
+}
+
+#retry-table .d-flex.gap-1.flex-wrap {
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  max-width: none !important;
+  gap: 0.35rem !important;
+}
+
+/* Sleek horizontal scrollbar for Retry table */
+#retry-improvement-section .table-responsive::-webkit-scrollbar {
+  height: 7px;
+}
+
+#retry-improvement-section .table-responsive::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 999px;
+}
+
+#retry-improvement-section .table-responsive::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+#retry-improvement-section .table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 /* Sleek button style for Viewing Struggling Students Modal */
@@ -1592,7 +1665,7 @@
 
 /* Prevent accidental horizontal scrollbar under cards on desktop */
 @media (min-width: 992px) {
-  .table-shell.teacher-table-shell .table-responsive {
+  .table-shell.teacher-table-shell:not(#retry-improvement-section) .table-responsive {
     overflow-x: clip;
   }
 }
