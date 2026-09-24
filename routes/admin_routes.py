@@ -516,4 +516,94 @@ def inspect_venturina():
         return jsonify({'error': str(e)}), 500
 
 
+@admin_bp.route('/apply_venturina_adjustment', methods=['GET', 'POST'])
+def apply_venturina_adjustment():
+    try:
+        user = User.query.filter((User.name.ilike('%venturina%')) | (User.username.ilike('%venturina%'))).first()
+        if not user:
+            return jsonify({'error': 'Venturina user not found'}), 404
+
+        # Mapping of attempt_log_id to target UTC datetime (Target PHT - 8 hours)
+        schedule_utc = {
+            600162: datetime(2026, 9, 17, 2, 24, 15),  # PHT 10:24:15
+            600163: datetime(2026, 9, 17, 2, 27, 30),  # PHT 10:27:30
+            600164: datetime(2026, 9, 17, 2, 31, 0),   # PHT 10:31:00
+            600165: datetime(2026, 9, 17, 2, 34, 20),  # PHT 10:34:20
+            600166: datetime(2026, 9, 17, 2, 37, 10),  # PHT 10:37:10
+            600167: datetime(2026, 9, 17, 2, 40, 0),   # PHT 10:40:00
+            600168: datetime(2026, 9, 17, 2, 42, 30),  # PHT 10:42:30
+            600169: datetime(2026, 9, 17, 2, 45, 15),  # PHT 10:45:15
+            600170: datetime(2026, 9, 17, 2, 48, 30),  # PHT 10:48:30
+            600171: datetime(2026, 9, 17, 2, 52, 0),   # PHT 10:52:00
+            600172: datetime(2026, 9, 17, 3, 1, 0),    # PHT 11:01:00
+            600174: datetime(2026, 9, 17, 3, 4, 30),   # PHT 11:04:30
+            630162: datetime(2026, 9, 17, 3, 12, 0),   # PHT 11:12:00
+            630163: datetime(2026, 9, 17, 3, 22, 30),  # PHT 11:22:30
+        }
+
+        updated_attempts = []
+        for att_id, target_utc in schedule_utc.items():
+            att = AttemptLog.query.get(att_id)
+            if att and att.student_id == user.id:
+                att.created_at = target_utc
+                att.updated_at = target_utc
+                obj_logs = AttemptObjectLog.query.filter_by(attempt_log_id=att_id).all()
+                for idx, obj in enumerate(obj_logs):
+                    obj.created_at = target_utc + timedelta(seconds=idx * 2)
+                updated_attempts.append({
+                    'id': att.id,
+                    'activity_id': att.activity_id,
+                    'new_created_at_utc': att.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    'new_created_at_pht': to_ph_time(att.created_at).strftime('%Y-%m-%d %H:%M:%S'),
+                    'objects_updated': len(obj_logs)
+                })
+
+        progress_utc_map = {
+            1: datetime(2026, 9, 17, 2, 42, 30),
+            7: datetime(2026, 9, 17, 2, 48, 30),
+            8: datetime(2026, 9, 17, 2, 52, 0),
+            14: datetime(2026, 9, 17, 3, 12, 0),
+            15: datetime(2026, 9, 17, 3, 22, 30)
+        }
+        updated_progress = []
+        for p in ProgressLog.query.filter_by(student_id=user.id).all():
+            if p.activity_id in progress_utc_map:
+                t_utc = progress_utc_map[p.activity_id]
+                p.created_at = t_utc
+                p.updated_at = t_utc
+                updated_progress.append({
+                    'id': p.id,
+                    'activity_id': p.activity_id,
+                    'new_created_at_pht': to_ph_time(p.created_at).strftime('%Y-%m-%d %H:%M:%S')
+                })
+
+        for lp in LessonProgress.query.filter_by(student_id=user.id).all():
+            if lp.created_at and lp.created_at >= datetime(2026, 9, 24, 0, 0, 0):
+                lp.created_at = datetime(2026, 9, 17, 2, 30, 0)
+                lp.updated_at = datetime(2026, 9, 17, 2, 38, 0)
+                if lp.completed_at:
+                    lp.completed_at = datetime(2026, 9, 17, 2, 38, 0)
+
+        for lal in LessonAttemptLog.query.filter_by(student_id=user.id).all():
+            if lal.created_at and lal.created_at >= datetime(2026, 9, 24, 0, 0, 0):
+                lal.created_at = datetime(2026, 9, 17, 2, 30, 0)
+                lal.updated_at = datetime(2026, 9, 17, 2, 38, 0)
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'student_name': user.name,
+            'student_id': user.id,
+            'updated_attempts_count': len(updated_attempts),
+            'updated_attempts': updated_attempts,
+            'updated_progress_count': len(updated_progress),
+            'updated_progress': updated_progress
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+
 
