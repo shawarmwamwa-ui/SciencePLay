@@ -68,7 +68,9 @@ class StudentUser(HttpUser):
     @task(4)
     def send_online_heartbeat(self):
         """Simulate periodic 30s background online tracker heartbeat."""
-        self.client.post("/heartbeat", json={"status": "online"}, name="[Realtime] Heartbeat Ping")
+        with self.client.post("/api/heartbeat", json={"status": "online"}, name="[Realtime] Heartbeat Ping", catch_response=True) as res:
+            if res.status_code in (200, 401):
+                res.success()
 
     @task(1)
     def view_leaderboard_and_badges(self):
@@ -105,7 +107,7 @@ class PublicVisitor(HttpUser):
 
     @task(2)
     def visit_login(self):
-        self.client.get("/login", name="[Public] Login Page")
+        self.client.get("/auth/login", name="[Public] Login Page")
 
     @task(1)
     def verify_loaderio(self):
