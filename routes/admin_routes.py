@@ -11,42 +11,7 @@ from routes.utils import get_current_user, require_role, log_access, to_ph_time
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-@admin_bp.route('/sync_clean_students_once')
-def sync_clean_students_once():
-    # 1. Clear child logs
-    AttemptObjectLog.query.delete()
-    for m in [AttemptLog, ProgressLog, LessonProgress, LessonAttemptLog, LessonAssignment, ActivityAssignment, UserBadge, AccessLog]:
-        m.query.delete()
 
-    # 2. Purge existing student/test accounts
-    User.query.filter((User.role == 'student') | (User.username == 'test1')).delete(synchronize_session=False)
-    db.session.commit()
-
-    # 3. Create fresh accounts (Student 1, 2, 3)
-    new_users = []
-    for i in range(1, 4):
-        u = User(name=f'Student {i}', username=f'student{i}', role='student')
-        u.set_password('Student@123')
-        new_users.append(u)
-    db.session.add_all(new_users)
-    db.session.commit()
-
-    return """
-    <div style="font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width:540px; margin:60px auto; padding:32px 28px; border:2.5px solid #22c55e; border-radius:20px; background:#f0fdf4; text-align:center; box-shadow:0 10px 25px rgba(34, 197, 94, 0.15);">
-        <div style="width:54px; height:54px; border-radius:50%; background:#22c55e; color:#fff; font-size:28px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:16px;">✓</div>
-        <h2 style="color:#166534; margin:0 0 8px 0; font-size:22px; font-weight:800;">TiDB Cloud Database Synced!</h2>
-        <p style="color:#334155; font-size:15px; margin:0 0 20px 0;">All old student attempts and logs were cleared. 3 fresh accounts are active.</p>
-        <div style="background:#ffffff; border:1.5px solid #bbf7d0; border-radius:14px; padding:16px; text-align:left; margin-bottom:24px;">
-            <p style="margin:0 0 8px 0; font-size:13px; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:0.5px;">Active Student Accounts (Password: <code>Student@123</code>)</p>
-            <ul style="margin:0; padding-left:20px; color:#1e293b; font-size:14px; line-height:1.8;">
-                <li><strong>Student 1:</strong> <code>student1</code></li>
-                <li><strong>Student 2:</strong> <code>student2</code></li>
-                <li><strong>Student 3:</strong> <code>student3</code></li>
-            </ul>
-        </div>
-        <a href="/auth/login" style="display:inline-block; padding:12px 28px; background:#16a34a; color:#ffffff; font-weight:700; font-size:15px; text-decoration:none; border-radius:12px; box-shadow:0 4px 12px rgba(22, 163, 74, 0.3);">Go to Login</a>
-    </div>
-    """
 
 @admin_bp.route('/dashboard')
 @require_role('admin')
@@ -490,6 +455,115 @@ def inspect_all_students_badges():
         return jsonify({'students': result})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@admin_bp.route('/apply_all_badge_alignments', methods=['GET', 'POST'])
+def apply_all_badge_alignments():
+    try:
+        students = User.query.filter_by(role='student').all()
+        PLAYABLE_GAME_ENGINES = {'claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter'}
+        GAME_ENGINE_BADGES = {
+            'claw_machine': 'Claw Master',
+            'find_the_part': 'Eagle Eye',
+            'build_a_plant': 'Master Gardener',
+            'metal_logic': 'Metal Detective',
+            'recycle_sorter': 'Sorting Hero'
+        }
+        LESSON_BADGES = {
+            5: 'Living Explorer',
+            10: 'Junior Botanist',
+            12: 'Metal Specialist',
+            13: 'Eco Champion',
+            9: 'Animal Scout',
+        }
+
+        total_badges_updated = 0
+        student_results = []
+
+        for s in students:
+            attempts = AttemptLog.query.filter_by(student_id=s.id).order_by(AttemptLog.created_at.asc()).all()
+            qualifications_utc = {}
+
+            # 1. Lesson attempts
+            completed_lessons = []
+            for a in attempts:
+                act_id = a.activity_id
+                if act_id in LESSON_BADGES and act_id not in [x[0] for x in completed_lessons]:
+                    b_name = LESSON_BADGES[act_id]
+                    completed_lessons.append((act_id, a.created_at))
+                    qualifications_utc[b_name] = a.created_at
+                    
+                    if len(completed_lessons) == 1 and 'Lesson Master' not in qualifications_utc:
+                        qualifications_utc['Lesson Master'] = a.created_at
+                    if len(completed_lessons) == 3 and 'Lesson Complete' not in qualifications_utc:
+                        qualifications_utc['Lesson Complete'] = a.created_at
+                    if len(completed_lessons) == 5 and 'Curriculum Champion' not in qualifications_utc:
+                        qualifications_utc['Curriculum Champion'] = a.created_at
+
+            # 2. Game attempts
+            passed_games_count = 0
+            completed_game_ids = set()
+            for a in attempts:
+                engine = a.activity.engine if a.activity else None
+                if engine in PLAYABLE_GAME_ENGINES:
+                    score = a.score or 0
+                    time_spent = a.time_spent or 0
+                    
+                    if score >= 50:
+                        passed_games_count += 1
+                        completed_game_ids.add(a.activity_id)
+                        
+                        b_name = GAME_ENGINE_BADGES.get(engine)
+                        if b_name and b_name not in qualifications_utc:
+                            qualifications_utc[b_name] = a.created_at
+                        
+                        if 'First Success' not in qualifications_utc:
+                            qualifications_utc['First Success'] = a.created_at
+                        
+                        if 5 < time_spent < 180 and 'Speedster' not in qualifications_utc:
+                            qualifications_utc['Speedster'] = a.created_at
+                        
+                        if score >= 100 and 'Perfect Score' not in qualifications_utc:
+                            qualifications_utc['Perfect Score'] = a.created_at
+                        
+                        if (passed_games_count >= 5 or len(completed_game_ids) >= 5) and 'Consistency' not in qualifications_utc:
+                            qualifications_utc['Consistency'] = a.created_at
+                        
+                        if (passed_games_count >= 10 or len(completed_game_ids) >= 10) and 'Scholar' not in qualifications_utc:
+                            qualifications_utc['Scholar'] = a.created_at
+
+            # Update UserBadge rows
+            user_badges = db.session.query(UserBadge, Badge).join(Badge, Badge.id == UserBadge.badge_id).filter(UserBadge.user_id == s.id).all()
+            updated_count = 0
+            for ub, b in user_badges:
+                if b.name in qualifications_utc:
+                    target_utc = qualifications_utc[b.name]
+                    if ub.awarded_at != target_utc:
+                        ub.awarded_at = target_utc
+                        ub.created_at = target_utc
+                        ub.updated_at = target_utc
+                        updated_count += 1
+
+            if updated_count > 0:
+                total_badges_updated += updated_count
+                student_results.append({
+                    'student_id': s.id,
+                    'student_name': s.name,
+                    'badges_updated': updated_count
+                })
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'total_badges_updated': total_badges_updated,
+            'students_updated_count': len(student_results),
+            'students': student_results
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 
 
 
