@@ -157,5 +157,34 @@
         refreshOnlineUsers();
       }
     });
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Tablet Touch & Kiosk Mode: Lock Context Menus, Copy/Paste Popups & Text Selection
+    // ══════════════════════════════════════════════════════════════════════
+    function isEditableElement(el) {
+      if (!el) return false;
+      const tag = (el.tagName || '').toUpperCase();
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return true;
+      if (el.isContentEditable) return true;
+      return false;
+    }
+
+    // Prevent right-click and long-press context menu on tablets
+    document.addEventListener('contextmenu', function (e) {
+      if (isEditableElement(e.target)) return;
+      e.preventDefault();
+    }, { passive: false });
+
+    // Prevent selection triggering copy/paste bubbles on tablets
+    document.addEventListener('selectstart', function (e) {
+      if (isEditableElement(e.target)) return;
+      e.preventDefault();
+    }, { passive: false });
+
+    // Prevent accidental copy triggers on touch screens
+    document.addEventListener('copy', function (e) {
+      if (isEditableElement(e.target)) return;
+      e.preventDefault();
+    });
   });
 })();

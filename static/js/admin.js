@@ -498,5 +498,33 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('hashchange', updateAdminNavState);
 });
 
+// ══════════════════════════════════════════════════════════════════════
+// Tablet Touch & Kiosk Mode: Lock Context Menus, Copy/Paste Popups & Text Selection
+// ══════════════════════════════════════════════════════════════════════
+(function () {
+  function isEditableElement(el) {
+    if (!el) return false;
+    const tag = (el.tagName || '').toUpperCase();
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return true;
+    if (el.isContentEditable) return true;
+    return false;
+  }
+
+  document.addEventListener('contextmenu', function (e) {
+    if (isEditableElement(e.target)) return;
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('selectstart', function (e) {
+    if (isEditableElement(e.target)) return;
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('copy', function (e) {
+    if (isEditableElement(e.target)) return;
+    e.preventDefault();
+  });
+})();
+
 
 
