@@ -304,6 +304,114 @@ body.student-page.container {
 .brutal-badge-pink   { background-color: var(--brutal-pink); }
 .brutal-badge-purple { background-color: var(--brutal-purple); }
 
+/* ── Reward Stickers & Badges Cards ────────────────────────────── */
+.reward-sticker-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border: 3.5px solid var(--brutal-ink) !important;
+  border-radius: 22px !important;
+  box-shadow: 5px 5px 0px var(--brutal-ink) !important;
+  padding: 1.5rem 1.25rem !important;
+  background: #ffffff !important;
+  min-height: 310px;
+  height: 100%;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.reward-sticker-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 7px 7px 0px var(--brutal-ink) !important;
+}
+
+.reward-card-top {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 0 auto;
+}
+
+.reward-icon-wrapper {
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.badge-emoji-sticker {
+  font-size: 3.5rem;
+  line-height: 1;
+  display: inline-block;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+.reward-card-title {
+  font-family: 'Fredoka', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 900;
+  font-size: 1.35rem;
+  color: #18181b;
+  margin-bottom: 0.35rem;
+  line-height: 1.25;
+  text-align: center;
+  min-height: 2.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reward-card-desc {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #475569;
+  line-height: 1.35;
+  margin-bottom: 0.75rem;
+  text-align: center;
+  min-height: 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reward-card-bottom {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.reward-unlocked-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 185px;
+  max-width: 220px;
+  width: auto;
+  padding: 0.45rem 1.15rem !important;
+  font-family: 'Fredoka', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 0.95rem !important;
+  white-space: nowrap !important;
+  border-radius: 999px !important;
+  border: 2.5px solid var(--brutal-ink) !important;
+  box-shadow: 2px 2px 0px var(--brutal-ink) !important;
+  background-color: var(--brutal-green) !important;
+  color: var(--brutal-ink) !important;
+  text-align: center;
+}
+
+.reward-date-text {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 800;
+  margin-top: 0.45rem;
+  white-space: nowrap;
+}
+
 /* Brutalist Buttons */
 .brutal-btn {
   display: inline-flex;

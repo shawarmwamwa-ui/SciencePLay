@@ -42,22 +42,28 @@
     <div class="row g-4">
       {% for user_badge in badges %}
       <div class="col-12 col-sm-6 col-md-4">
-        <div class="brutal-card text-center p-4 h-100" style="background: #ffffff;">
-          <div class="display-1 mb-2">
-            {% if user_badge.badge.icon and user_badge.badge.icon != '🏅' %}
-              <span class="badge-emoji-sticker" style="font-size: 3.5rem; display: inline-block; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); line-height: 1;">{{ user_badge.badge.icon }}</span>
-            {% else %}
-              <i class="bi bi-patch-check-fill text-warning"></i>
-            {% endif %}
+        <div class="brutal-card reward-sticker-card">
+          <div class="reward-card-top">
+            <div class="reward-icon-wrapper">
+              {% if user_badge.badge.icon and user_badge.badge.icon != '🏅' %}
+                <span class="badge-emoji-sticker">{{ user_badge.badge.icon }}</span>
+              {% else %}
+                <i class="bi bi-patch-check-fill text-warning" style="font-size: 3.2rem;"></i>
+              {% endif %}
+            </div>
+            <h3 class="reward-card-title">{{ user_badge.badge.name }}</h3>
+            <p class="reward-card-desc">{{ user_badge.badge.description or 'Achievement unlocked!' }}</p>
           </div>
-          <div class="fw-black text-dark fs-3 mb-2">{{ user_badge.badge.name }}</div>
-          <p class="text-dark fw-bold fs-6 mb-3">{{ user_badge.badge.description or 'Achievement unlocked!' }}</p>
-          <div class="mb-3">
-            <span class="brutal-badge brutal-badge-green fs-6 fw-black">
-              <i class="bi bi-patch-check-fill text-success me-1"></i>Unlocked Reward
-            </span>
+          <div class="reward-card-bottom">
+            <div class="d-flex justify-content-center w-100">
+              <span class="brutal-badge brutal-badge-green reward-unlocked-badge">
+                <i class="bi bi-patch-check-fill text-success me-1"></i>Unlocked Reward
+              </span>
+            </div>
+            <div class="reward-date-text">
+              <i class="bi bi-calendar3 me-1"></i>Earned: {{ user_badge.awarded_at|to_ph_time('%b %d, %Y') if user_badge.awarded_at else 'Recently' }}
+            </div>
           </div>
-          <div class="fw-extrabold text-muted small"><i class="bi bi-calendar3 me-1"></i>Earned: {{ user_badge.awarded_at|to_ph_time('%b %d, %Y') if user_badge.awarded_at else 'Recently' }}</div>
         </div>
       </div>
       {% endfor %}
