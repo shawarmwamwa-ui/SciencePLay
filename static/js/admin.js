@@ -298,6 +298,98 @@ function initClearUserLogsModal() {
   });
 }
 
+function initCreateUserModalValidation() {
+  const form = document.getElementById('createUserForm');
+  if (!form) return;
+
+  const errorAlert = document.getElementById('createUserErrorAlert');
+  const errorText = document.getElementById('createUserErrorText');
+  const submitBtn = document.getElementById('createUserSubmitBtn');
+  const btnText = document.getElementById('createUserBtnText');
+  const spinner = document.getElementById('createUserSpinner');
+  const modalEl = document.getElementById('createUserModal');
+
+  function showError(msg) {
+    if (errorText) errorText.textContent = msg;
+    if (errorAlert) {
+      errorAlert.classList.remove('d-none');
+    }
+  }
+
+  function clearError() {
+    if (errorText) errorText.textContent = '';
+    if (errorAlert) errorAlert.classList.add('d-none');
+  }
+
+  if (modalEl) {
+    modalEl.addEventListener('hidden.bs.modal', clearError);
+    modalEl.addEventListener('show.bs.modal', clearError);
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
+
+    const name = form.name?.value?.trim();
+    const username = form.username?.value?.trim();
+    const password = form.password?.value || '';
+    const confirmPassword = form.confirm_password?.value || '';
+
+    if (!name || !username) {
+      showError('Please enter both Name and Username.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showError('Passwords do not match! Please check and re-type your confirm password.');
+      form.confirm_password?.focus();
+      return;
+    }
+
+    if (password.length < 8) {
+      showError('Password is too short. It must be at least 8 characters long.');
+      form.password?.focus();
+      return;
+    }
+
+    if (/^[a-zA-Z0-9]+$/.test(password)) {
+      showError('Password must include at least one special character (e.g. ! @ # $ % & *).');
+      form.password?.focus();
+      return;
+    }
+
+    if (submitBtn) submitBtn.disabled = true;
+    if (btnText) btnText.textContent = 'Creating...';
+    if (spinner) spinner.classList.remove('d-none');
+
+    try {
+      const formData = new FormData(form);
+      const res = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        const msg = data?.message || 'Failed to create user. Please check your inputs.';
+        showError(msg);
+      } else {
+        window.location.reload();
+      }
+    } catch (err) {
+      showError('Network error while creating user. Please try again.');
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+      if (btnText) btnText.textContent = 'Create';
+      if (spinner) spinner.classList.add('d-none');
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initAdminDashboardSkeleton();
   initAdminToasts();
@@ -306,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initActionSummaryFilters();
   initAdminSlidingIndicator();
   initClearUserLogsModal();
+  initCreateUserModalValidation();
 
   const navLinks = document.querySelectorAll('.admin-sidebar .menu-link[data-nav]');
   navLinks.forEach((link) => {
@@ -319,4 +412,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('hashchange', updateAdminNavState);
 });
+
 

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from sqlalchemy.exc import IntegrityError
 from database.models import (
     db, AccessLog, User, AttemptLog, AttemptObjectLog,
@@ -99,37 +99,64 @@ def user_management():
 @admin_bp.route('/create_user', methods=['POST'])
 @require_role('admin')
 def create_user():
-    name = request.form['name'].strip()
-    username = request.form['username'].strip()
-    role = request.form['role']
-    password = request.form['password']
-    confirm_password = request.form['confirm_password']
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json
+
+    name = request.form.get('name', '').strip()
+    username = request.form.get('username', '').strip()
+    role = request.form.get('role', 'student')
+    password = request.form.get('password', '')
+    confirm_password = request.form.get('confirm_password', '')
+
+    if not name or not username or not password:
+        err_msg = "Please fill in all required fields."
+        if is_ajax:
+            return jsonify({'success': False, 'message': err_msg}), 400
+        flash(err_msg, "danger")
+        return redirect(url_for('admin.user_management'))
 
     # Duplicate username check
-    existing_user = User.query.filter(
-        User.username == username
-    ).first()
+    existing_user = User.query.filter(User.username == username).first()
     if existing_user:
-        flash("Username already exists. Please use a different username.", "danger")
-        return redirect(url_for('admin.dashboard'))
+        err_msg = "Username already exists. Please use a different username."
+        if is_ajax:
+            return jsonify({'success': False, 'message': err_msg}), 400
+        flash(err_msg, "danger")
+        return redirect(url_for('admin.user_management'))
 
     if password != confirm_password:
-        flash("Passwords do not match!", "danger")
-        return redirect(url_for('admin.dashboard'))
+        err_msg = "Passwords do not match!"
+        if is_ajax:
+            return jsonify({'success': False, 'message': err_msg}), 400
+        flash(err_msg, "danger")
+        return redirect(url_for('admin.user_management'))
 
     if len(password) < 8 or password.isalnum():
-        flash("Password must include special characters and be at least 8 characters long.", "danger")
-        return redirect(url_for('admin.dashboard'))
+        err_msg = "Password must include special characters and be at least 8 characters long."
+        if is_ajax:
+            return jsonify({'success': False, 'message': err_msg}), 400
+        flash(err_msg, "danger")
+        return redirect(url_for('admin.user_management'))
 
     try:
         user = User(name=name, username=username, role=role)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        flash("User created successfully!", "success")
+        if is_ajax:
+            return jsonify({'success': True, 'message': f"User '{name}' created successfully!"})
+        flash(f"User '{name}' created successfully!", "success")
     except IntegrityError:
         db.session.rollback()
-        flash("Username already exists. Please use a different username.", "danger")
+        err_msg = "Username already exists. Please use a different username."
+        if is_ajax:
+            return jsonify({'success': False, 'message': err_msg}), 400
+        flash(err_msg, "danger")
+    except Exception as e:
+        db.session.rollback()
+        err_msg = f"Failed to create user: {str(e)}"
+        if is_ajax:
+            return jsonify({'success': False, 'message': err_msg}), 400
+        flash(err_msg, "danger")
 
     return redirect(url_for('admin.user_management'))
 
@@ -345,7 +372,7 @@ def clear_logs():
         db.session.rollback()
         flash(f"Failed to clear logs: {str(e)}", "danger")
 
-    return redirect(url_for('admin.compliance'))
+    return redirect(request.referrer or url_for('admin.compliance'))
 
 
 @admin_bp.route('/clear_user_logs/<int:target_user_id>', methods=['POST'])
@@ -355,7 +382,7 @@ def clear_user_logs(target_user_id):
     target_user = User.query.get(target_user_id)
     if not target_user:
         flash("User not found.", "warning")
-        return redirect(url_for('admin.compliance'))
+        return redirect(request.referrer or url_for('admin.compliance'))
 
     try:
         deleted_count = AccessLog.query.filter_by(user_id=target_user_id).delete(synchronize_session=False)
@@ -366,6 +393,6 @@ def clear_user_logs(target_user_id):
         db.session.rollback()
         flash(f"Failed to clear user logs: {str(e)}", "danger")
 
-    return redirect(url_for('admin.compliance'))
+    return redirect(request.referrer or url_for('admin.compliance'))
 
 
