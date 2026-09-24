@@ -32,7 +32,9 @@ elif raw_db_uri.startswith('mysql://'):
 engine_options = {
     'pool_pre_ping': True,
     'pool_recycle': 280,
-    'pool_timeout': 20,
+    'pool_timeout': 30,
+    'pool_size': 10,
+    'max_overflow': 20,
 }
 
 # If connecting to Cloud MySQL (Aiven, TiDB, etc.), clean query string and enable SSL
