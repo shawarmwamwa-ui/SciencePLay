@@ -13,11 +13,16 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 
 
-@admin_bp.route('/dashboard')
-@require_role('admin')
-def dashboard():
-    current_user = get_current_user()
-    log_access(current_user, 'page_view', 'admin_dashboard')
+_ADMIN_DASHBOARD_CACHE = None
+_ADMIN_DASHBOARD_CACHE_TIME = 0
+
+def _get_admin_dashboard_data():
+    global _ADMIN_DASHBOARD_CACHE, _ADMIN_DASHBOARD_CACHE_TIME
+    import time
+    now = time.time()
+    if _ADMIN_DASHBOARD_CACHE is not None and (now - _ADMIN_DASHBOARD_CACHE_TIME) < 20:
+        return _ADMIN_DASHBOARD_CACHE
+
     users = User.query.all()
     week_ago = datetime.utcnow() - timedelta(days=7)
     online_threshold = datetime.utcnow() - timedelta(minutes=3)
@@ -36,6 +41,18 @@ def dashboard():
         'online_count': len(online_users),
         'total_audit_logs': AccessLog.query.count()
     }
+    
+    _ADMIN_DASHBOARD_CACHE = (online_users, dashboard_stats, online_threshold)
+    _ADMIN_DASHBOARD_CACHE_TIME = now
+    return _ADMIN_DASHBOARD_CACHE
+
+
+@admin_bp.route('/dashboard')
+@require_role('admin')
+def dashboard():
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', 'admin_dashboard')
+    online_users, dashboard_stats, online_threshold = _get_admin_dashboard_data()
 
     return render_template(
         'admin/admin_dashboard.html',

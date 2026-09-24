@@ -84,16 +84,7 @@ function initAdminToasts() {
 }
 
 function initAdminDashboardSkeleton() {
-  const skeleton = document.querySelector('.dashboard-skeleton-wrap');
-  const realContent = document.querySelector('.dashboard-real-content');
-  if (!skeleton || !realContent) {
-    document.body.classList.add('dashboard-loaded');
-    return;
-  }
-
-  setTimeout(() => {
-    document.body.classList.add('dashboard-loaded');
-  }, 550);
+  document.body.classList.add('dashboard-loaded');
 }
 
 function initActionSummaryFilters() {

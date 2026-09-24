@@ -7,13 +7,23 @@
   <meta name="description" content="SciencePlay Admin Dashboard: System monitoring, user stats, and platform health.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=optional" rel="stylesheet">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
+  </noscript>
   
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css', v='20260910_1') }}">
+
+  <!-- Preload Critical Icon Font with Swap to Eliminate 3,000ms Font Display Warning -->
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}">
+
+  <!-- Fast Local Bootstrap to Eliminate 1,384ms Render Blocking -->
+  <link rel="preload" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" as="style">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css', v='20260925_1') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
 </head>
 <body class="admin-page">
@@ -235,7 +245,7 @@
                               <small class="text-muted">{{ u.email }}</small>
                             </div>
                           </div>
-                          <span class="badge bg-{{ 'primary' if u.role == 'teacher' else ('info' if u.role == 'student' else 'dark') }}">
+                          <span class="badge bg-{{ 'primary' if u.role == 'teacher' else ('info text-dark' if u.role == 'student' else 'dark') }}">
                             {{ u.role|capitalize }}
                           </span>
                         </div>
