@@ -484,7 +484,8 @@ def dashboard():
     progress_logs = []
     completed_by_activity = {}
 
-    current_user = User.query.get(user_id) if user_id else None
+    if not current_user and user_id:
+        current_user = User.query.get(user_id)
     if user_id:
         progress_logs = ProgressLog.query.filter_by(student_id=user_id).all()
         completed_by_activity = {log.activity_id: log for log in progress_logs}
@@ -493,15 +494,53 @@ def dashboard():
     total_activities = len(activities)
     total_score = sum((log.score or 0) for log in progress_logs)
 
+    # Batch query user lesson progress, attempts, and all lessons in single round-trips
+    # This replaces 40+ sequential queries across the network with 3 batched in-memory lookups
+    all_lessons = Lesson.query.all()
+    from collections import defaultdict
+    lessons_by_title = defaultdict(list)
+    for l in all_lessons:
+        if l.title:
+            lessons_by_title[l.title.strip().lower()].append(l.id)
+
+    user_lps = LessonProgress.query.filter_by(student_id=user_id).all() if user_id else []
+    user_attempts = LessonAttemptLog.query.filter_by(student_id=user_id).all() if user_id else []
+
+    completed_lesson_ids = set()
+    lp_by_lesson_id = {}
+    for lp in user_lps:
+        lp_by_lesson_id[lp.lesson_id] = lp
+        if (lp.completed_at is not None or lp.completed or (lp.revisit_count or 0) > 0 or (lp.progress_percent or 0) >= 100):
+            completed_lesson_ids.add(lp.lesson_id)
+
+    for att in user_attempts:
+        if (att.completed or (att.progress_percent or 0) >= 100):
+            completed_lesson_ids.add(att.lesson_id)
+
+    for assignment, lesson in lesson_assignment_rows:
+        if assignment.status == 'completed':
+            completed_lesson_ids.add(assignment.lesson_id)
+
+    # Support title matching fallback (identical to has_student_completed_lesson)
+    for title_norm, l_ids in lessons_by_title.items():
+        if any(lid in completed_lesson_ids for lid in l_ids):
+            for lid in l_ids:
+                completed_lesson_ids.add(lid)
+
     lesson_progress = []
     for lesson in lessons:
         lesson_activities = [activity for activity in activities if activity.lesson_id == lesson.id]
-        is_done = has_student_completed_lesson(user_id, lesson.id)
-        matching_lesson_ids = [l.id for l in Lesson.query.filter(Lesson.title.ilike(lesson.title.strip())).all()]
-        log = LessonProgress.query.filter(
-            LessonProgress.student_id == user_id,
-            LessonProgress.lesson_id.in_(matching_lesson_ids)
-        ).first() if user_id else None
+        is_done = lesson.id in completed_lesson_ids
+        
+        # Check direct progress record or matching title records
+        norm_t = (lesson.title or '').strip().lower()
+        matching_ids = lessons_by_title.get(norm_t, [lesson.id])
+        
+        log = None
+        for mid in matching_ids:
+            if mid in lp_by_lesson_id:
+                log = lp_by_lesson_id[mid]
+                break
 
         pct = 100 if is_done else ((log.progress_percent or 0) if log else 0)
         lesson_progress.append({
