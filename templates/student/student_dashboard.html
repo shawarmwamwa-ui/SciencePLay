@@ -11,7 +11,7 @@
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <!-- Preload Critical Icon Font with Font-Display Swap to Eliminate 1,840ms Font Display Warning -->
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}">
 
   <!-- Preload & Synchronously Load Bootstrap Grid & Base Styles to Guarantee 0 Layout Shift (CLS = 0) -->
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style">
@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800;900&family=Nunito:wght@700;800;900&display=swap">
 
   <!-- Core Student Stylesheet -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css', v='20260925_2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css', v='20260925_3') }}">
 </head>
 <body class="student-page container mt-3 mb-4">
 
@@ -309,18 +309,19 @@
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
   <script type="module">
-    import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     const startDashboardBgm = () => {
-      initBgmPlayer('dashboard-bgm', { 
-        volume: 0.22, 
-        storageKey: 'scienceplay_dashboard_bgm_muted',
-        timeKey: 'scienceplay_hub_bgm_time'
-      });
+      import("{{ url_for('static', filename='js/bgmPlayer.js') }}").then(({ initBgmPlayer }) => {
+        initBgmPlayer('dashboard-bgm', { 
+          volume: 0.22, 
+          storageKey: 'scienceplay_dashboard_bgm_muted',
+          timeKey: 'scienceplay_hub_bgm_time'
+        });
+      }).catch(() => {});
     };
     if ('requestIdleCallback' in window) {
       requestIdleCallback(startDashboardBgm);
     } else {
-      setTimeout(startDashboardBgm, 250);
+      setTimeout(startDashboardBgm, 350);
     }
   </script>
 </body>
