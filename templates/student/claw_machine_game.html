@@ -10,7 +10,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/clawMachineGame.css', v='20260810') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/clawMachineGame.css', v='20260929_1') }}">
 </head>
 <body class="arcade-page">
   <div class="game-screen-wrapper">
@@ -80,27 +80,26 @@
       </section>
 
       <section class="control-panel" aria-label="Claw controls">
-        <div class="move-controls" aria-label="Move controls">
-          <button id="move-left" class="arcade-btn move-btn" aria-label="Move left">
-            <span class="btn-icon" aria-hidden="true">◀</span>
-            <span class="btn-text">Left</span>
-          </button>
-          <button id="move-right" class="arcade-btn move-btn" aria-label="Move right">
-            <span class="btn-icon" aria-hidden="true">▶</span>
-            <span class="btn-text">Right</span>
-          </button>
-        </div>
+        <button id="move-left" class="arcade-btn move-btn" aria-label="Move left">
+          <span class="btn-icon" aria-hidden="true">◀</span>
+          <span class="btn-text">Left</span>
+        </button>
 
         <div class="action-controls" aria-label="Action controls">
-          <button id="grab-button" class="arcade-btn grab-btn" aria-label="Grab object">
+          <button id="grab-button" class="arcade-btn grab-btn action-btn" aria-label="Grab object">
             <span class="btn-icon" aria-hidden="true">🦾</span>
             <span class="btn-text">Grab</span>
           </button>
-          <button id="drop-button" class="arcade-btn drop-btn" aria-label="Drop object">
+          <button id="drop-button" class="arcade-btn drop-btn action-btn d-none" aria-label="Drop object">
             <span class="btn-icon" aria-hidden="true">⬇</span>
-            <span class="btn-text">DROP</span>
+            <span class="btn-text">Drop</span>
           </button>
         </div>
+
+        <button id="move-right" class="arcade-btn move-btn" aria-label="Move right">
+          <span class="btn-icon" aria-hidden="true">▶</span>
+          <span class="btn-text">Right</span>
+        </button>
       </section>
 
       <div id="summary-screen" class="d-none summary-panel">
@@ -149,7 +148,7 @@
       <div id="game-message" class="game-notification">Grab an object to begin.</div>
 
       <div class="first-action-cue" aria-live="polite">
-        <span class="cue-text">Tap an object, press GRAB, then hit the giant DROP button.</span>
+        <span class="cue-text">Move or tap an object, press GRAB, then move to a chute and DROP.</span>
         <span class="cue-arrow" aria-hidden="true">↓</span>
       </div>
     </aside>
@@ -192,7 +191,7 @@
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import { initClawMachineGame } from "{{ url_for('static', filename='js/clawMachineGame.js', v='20260922_1') }}";
+    import { initClawMachineGame } from "{{ url_for('static', filename='js/clawMachineGame.js', v='20260929_1') }}";
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
 
     initClawMachineGame();

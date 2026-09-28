@@ -553,6 +553,15 @@ function renderStatus() {
   if (dom.progressNote) {
     dom.progressNote.textContent = `${getSortedCount()} sorted of ${state.objects.length} objects`;
   }
+  if (dom.grabButton && dom.dropButton) {
+    if (state.heldObject) {
+      dom.grabButton.classList.add('d-none');
+      dom.dropButton.classList.remove('d-none');
+    } else {
+      dom.grabButton.classList.remove('d-none');
+      dom.dropButton.classList.add('d-none');
+    }
+  }
 }
 
 function renderSummary() {
