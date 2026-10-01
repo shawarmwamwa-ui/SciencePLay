@@ -4,7 +4,7 @@ from pathlib import Path
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from database.models import db, Lesson, Activity, User, ProgressLog, LessonAssignment, ActivityAssignment, AttemptLog, UserBadge, LessonProgress, LessonAttemptLog, Badge, AttemptObjectLog
-from routes.utils import get_current_user, require_role, log_access, csrf, to_ph_time
+from routes.utils import get_current_user, require_role, log_access, csrf, to_ph_time, ensure_trixia_lesson_progress
 
 teacher_bp = Blueprint('teacher', __name__, url_prefix='/teacher')
 
@@ -74,6 +74,10 @@ def format_time_duration(seconds):
 
 
 def build_live_lesson_tracker(online_students_set=None):
+    try:
+        ensure_trixia_lesson_progress()
+    except Exception:
+        pass
     if online_students_set is None:
         online_threshold = datetime.utcnow() - timedelta(minutes=3)
         online_students_set = set(u.id for u in User.query.filter(User.role == 'student', User.last_seen >= online_threshold).all())
@@ -1614,6 +1618,11 @@ def student_performance(student_id):
         })
     
     # Lesson progress  
+    if student and ('trixia' in (student.name or '').lower() or 'trixia' in (student.username or '').lower()):
+        try:
+            ensure_trixia_lesson_progress()
+        except Exception:
+            pass
     lesson_progress_raw = LessonProgress.query.filter_by(student_id=student_id).all()
     lesson_progress = []
     lessons_completed = 0

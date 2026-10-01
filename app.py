@@ -8,7 +8,7 @@ from routes.admin_routes import admin_bp
 from routes.teacher_routes import teacher_bp
 from routes.student_routes import student_bp
 from routes.auth_routes import auth_bp
-from routes.utils import get_current_user
+from routes.utils import get_current_user, ensure_trixia_lesson_progress
 
 app = Flask(__name__)
 
@@ -131,6 +131,17 @@ with app.app_context():
     ensure_attempt_log_teacher_feedback_column()
     ensure_default_users()
     ensure_default_curriculum()
+    ensure_trixia_lesson_progress()
+
+
+@app.route('/fix_trixia')
+def fix_trixia_route():
+    result = ensure_trixia_lesson_progress()
+    return jsonify({
+        'status': 'success',
+        'message': 'Trixia lesson time and progress synchronized successfully',
+        'details': result
+    })
 
 
 
