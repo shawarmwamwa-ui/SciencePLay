@@ -1747,9 +1747,16 @@ def leaderboard():
         for idx, row in enumerate(leaderboard_query)
     ]
 
-    # --- Per-game leaderboards (best score = ProgressLog.score) ---
-    def build_game_leaderboard(activity_type_fragment):
-        rows = db.session.query(
+    # --- Per-game leaderboards (best score = max of ProgressLog and AttemptLog) ---
+    def build_game_leaderboard(engine_or_type_fragments):
+        fragments = [engine_or_type_fragments] if isinstance(engine_or_type_fragments, str) else list(engine_or_type_fragments)
+        conditions = []
+        for frag in fragments:
+            conditions.append(Activity.type.ilike(f'%{frag}%'))
+            conditions.append(Activity.engine.ilike(f'%{frag}%'))
+
+        # Query scores from ProgressLog
+        pl_rows = db.session.query(
             User.id,
             User.name,
             db.func.max(ProgressLog.score).label('best_score')
@@ -1759,28 +1766,58 @@ def leaderboard():
             Activity, Activity.id == ProgressLog.activity_id
         ).filter(
             User.role == 'student',
-            Activity.type.ilike(f'%{activity_type_fragment}%')
-        ).group_by(User.id, User.name).order_by(db.desc('best_score'), User.name).all()
+            db.or_(*conditions)
+        ).group_by(User.id, User.name).all()
+
+        # Query scores from AttemptLog as fallback/supplement
+        att_rows = db.session.query(
+            User.id,
+            User.name,
+            db.func.max(AttemptLog.score).label('best_score')
+        ).join(
+            AttemptLog, AttemptLog.student_id == User.id
+        ).join(
+            Activity, Activity.id == AttemptLog.activity_id
+        ).filter(
+            User.role == 'student',
+            db.or_(*conditions)
+        ).group_by(User.id, User.name).all()
+
+        user_scores = {}
+        for r in pl_rows:
+            user_scores[r.id] = {'name': r.name, 'score': int(r.best_score or 0)}
+        for r in att_rows:
+            s = int(r.best_score or 0)
+            if r.id not in user_scores or s > user_scores[r.id]['score']:
+                user_scores[r.id] = {'name': r.name, 'score': s}
+
+        sorted_users = sorted(user_scores.items(), key=lambda x: (x[1]['score'], x[1]['name']), reverse=True)
 
         return [
             {
                 'rank': idx + 1,
-                'student_id': row.id,
-                'name': row.name,
-                'points': int(row.best_score or 0),
-                'is_current': (row.id == user_id)
+                'student_id': uid,
+                'name': data['name'],
+                'points': data['score'],
+                'is_current': (uid == user_id)
             }
-            for idx, row in enumerate(rows)
+            for idx, (uid, data) in enumerate(sorted_users)
         ]
 
-    claw_leaderboard = build_game_leaderboard('Claw Machine')
-    animal_leaderboard = build_game_leaderboard('Find the Part')
-    plant_leaderboard = build_game_leaderboard('Build a Plant')
-    recycle_leaderboard = build_game_leaderboard('recycle')
-    metal_leaderboard = build_game_leaderboard('metal')
+    claw_leaderboard = build_game_leaderboard(['claw_machine', 'Claw Machine'])
+    animal_leaderboard = build_game_leaderboard(['find_the_part', 'Find the Part', 'animal'])
+    plant_leaderboard = build_game_leaderboard(['build_a_plant', 'Build a Plant', 'plant'])
+    recycle_leaderboard = build_game_leaderboard(['recycle', 'recycle_sorter', 'EcoSwipe', 'sorter'])
+    metal_leaderboard = build_game_leaderboard(['metal_logic', 'metal', 'Metal Clue'])
 
     # --- My Progress: personal retry history per game (private) ---
-    def get_my_attempts(activity_type_fragment):
+    def get_my_attempts(engine_or_type_fragments):
+        fragments = [engine_or_type_fragments] if isinstance(engine_or_type_fragments, str) else list(engine_or_type_fragments)
+        conditions = []
+        for frag in fragments:
+            conditions.append(Activity.type.ilike(f'%{frag}%'))
+            conditions.append(Activity.engine.ilike(f'%{frag}%'))
+
         attempts = db.session.query(
             AttemptLog.attempt_number,
             AttemptLog.score,
@@ -1791,7 +1828,7 @@ def leaderboard():
             Activity, Activity.id == AttemptLog.activity_id
         ).filter(
             AttemptLog.student_id == user_id,
-            (Activity.type.ilike(f'%{activity_type_fragment}%') | Activity.engine.ilike(f'%{activity_type_fragment}%'))
+            db.or_(*conditions)
         ).order_by(AttemptLog.attempt_number.asc()).all()
 
         result = []
@@ -1810,11 +1847,11 @@ def leaderboard():
             prev_score = a.score or 0
         return result
 
-    my_claw_attempts = get_my_attempts('Claw Machine')
-    my_animal_attempts = get_my_attempts('Find the Part')
-    my_plant_attempts = get_my_attempts('Build a Plant')
-    my_recycle_attempts = get_my_attempts('recycle')
-    my_metal_attempts = get_my_attempts('metal')
+    my_claw_attempts = get_my_attempts(['claw_machine', 'Claw Machine'])
+    my_animal_attempts = get_my_attempts(['find_the_part', 'Find the Part', 'animal'])
+    my_plant_attempts = get_my_attempts(['build_a_plant', 'Build a Plant', 'plant'])
+    my_recycle_attempts = get_my_attempts(['recycle', 'recycle_sorter', 'EcoSwipe', 'sorter'])
+    my_metal_attempts = get_my_attempts(['metal_logic', 'metal', 'Metal Clue'])
 
     # --- My Lesson Attempts & Revisits ---
     lessons_progress = LessonProgress.query.filter_by(student_id=user_id).all()

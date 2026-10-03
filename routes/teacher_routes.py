@@ -574,7 +574,13 @@ def dashboard():
     plant_leaderboard = []
 
     def get_teacher_game_leaderboard(activity_name_fragment):
-        return db.session.query(
+        fragments = [activity_name_fragment] if isinstance(activity_name_fragment, str) else list(activity_name_fragment)
+        conditions = []
+        for frag in fragments:
+            conditions.append(Activity.type.ilike(f'%{frag}%'))
+            conditions.append(Activity.engine.ilike(f'%{frag}%'))
+
+        pl_rows = db.session.query(
             User.id.label('id'),
             User.name.label('name'),
             db.func.max(ProgressLog.score).label('best_score'),
@@ -583,16 +589,42 @@ def dashboard():
         ).join(Activity, Activity.id == ProgressLog.activity_id
         ).filter(
             User.role == 'student',
-            Activity.type.ilike(f'%{activity_name_fragment}%')
-        ).group_by(User.id, User.name).order_by(
-            db.desc('best_score'), User.name
-        ).limit(10).all()
+            db.or_(*conditions)
+        ).group_by(User.id, User.name).all()
 
-    claw_leaderboard = get_teacher_game_leaderboard('Claw Machine')
-    animal_leaderboard = get_teacher_game_leaderboard('Find the Part')
-    plant_leaderboard = get_teacher_game_leaderboard('Build a Plant')
-    metal_leaderboard = get_teacher_game_leaderboard('Metal Clue')
-    recycling_leaderboard = get_teacher_game_leaderboard('EcoSwipe')
+        att_rows = db.session.query(
+            User.id.label('id'),
+            User.name.label('name'),
+            db.func.max(AttemptLog.score).label('best_score'),
+            db.func.min(AttemptLog.time_spent).label('time_spent')
+        ).join(AttemptLog, User.id == AttemptLog.student_id
+        ).join(Activity, Activity.id == AttemptLog.activity_id
+        ).filter(
+            User.role == 'student',
+            db.or_(*conditions)
+        ).group_by(User.id, User.name).all()
+
+        user_map = {}
+        for r in pl_rows:
+            user_map[r.id] = {'id': r.id, 'name': r.name, 'best_score': int(r.best_score or 0), 'time_spent': int(r.time_spent or 0)}
+        for r in att_rows:
+            s = int(r.best_score or 0)
+            t = int(r.time_spent or 0)
+            if r.id not in user_map:
+                user_map[r.id] = {'id': r.id, 'name': r.name, 'best_score': s, 'time_spent': t}
+            else:
+                if s > user_map[r.id]['best_score']:
+                    user_map[r.id]['best_score'] = s
+                    user_map[r.id]['time_spent'] = t
+
+        sorted_list = sorted(user_map.values(), key=lambda x: (x['best_score'], -x['time_spent']), reverse=True)
+        return sorted_list[:10]
+
+    claw_leaderboard = get_teacher_game_leaderboard(['claw_machine', 'Claw Machine'])
+    animal_leaderboard = get_teacher_game_leaderboard(['find_the_part', 'Find the Part', 'animal'])
+    plant_leaderboard = get_teacher_game_leaderboard(['build_a_plant', 'Build a Plant', 'plant'])
+    metal_leaderboard = get_teacher_game_leaderboard(['metal_logic', 'metal', 'Metal Clue'])
+    recycling_leaderboard = get_teacher_game_leaderboard(['recycle', 'recycle_sorter', 'EcoSwipe', 'sorter'])
 
     top_students = db.session.query(
         User.id.label('id'),
