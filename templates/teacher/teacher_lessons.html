@@ -402,49 +402,49 @@
                           <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">{{ activity_assignments|length }} Assigned</span>
                         </div>
                         <div class="table-responsive">
-                          <table class="table align-middle mb-0">
+                          <table class="table align-middle mb-0" style="font-size: 0.88rem;">
                             <thead>
                               <tr>
-                                <th>Activity</th>
-                                <th>Student</th>
-                                <th>Status</th>
-                                <th>Due Date</th>
-                                <th class="text-end">Action</th>
+                                <th style="min-width: 120px;">Activity</th>
+                                <th style="min-width: 80px;">Student</th>
+                                <th style="min-width: 95px;">Status</th>
+                                <th style="min-width: 85px;">Due Date</th>
+                                <th class="text-end text-nowrap" style="min-width: 95px;">Action</th>
                               </tr>
                             </thead>
                             <tbody>
                               {% for assignment in activity_assignments %}
                                 <tr>
-                                  <td><strong class="text-dark">{{ assignment.activity.type if assignment.activity else assignment.activity_id }}</strong></td>
-                                  <td>{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
+                                  <td style="max-width: 135px; overflow-wrap: break-word;"><strong class="text-dark">{{ assignment.activity.type if assignment.activity else assignment.activity_id }}</strong></td>
+                                  <td class="text-nowrap">{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
                                   <td>
                                     {% if assignment.status == 'completed' %}
-                                      <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
+                                      <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold text-nowrap"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
                                     {% elif assignment.status == 'attempts_exhausted' %}
-                                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill fw-semibold"><i class="bi bi-slash-circle me-1"></i>Attempts Exhausted (3/3)</span>
+                                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill fw-semibold text-nowrap"><i class="bi bi-slash-circle me-1"></i>Exhausted (3/3)</span>
                                     {% else %}
-                                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold"><i class="bi bi-hourglass-split me-1"></i>In Progress</span>
+                                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold text-nowrap"><i class="bi bi-hourglass-split me-1"></i>In Progress</span>
                                     {% endif %}
                                   </td>
                                   <td>
-                                    <small class="text-muted">
+                                    <small class="text-muted text-nowrap">
                                       {% if assignment.due_date %}
-                                        {{ assignment.due_date.strftime('%b %d, %Y at %I:%M %p') if assignment.due_date.strftime is defined else assignment.due_date }}
+                                        {{ assignment.due_date.strftime('%b %d, %Y') if assignment.due_date.strftime is defined else assignment.due_date }}
                                       {% else %}
                                         No due date
                                       {% endif %}
                                     </small>
                                   </td>
-                                  <td class="text-end">
+                                  <td class="text-end text-nowrap">
                                     {% if assignment.status in ['attempts_exhausted', 'completed'] %}
                                       <form method="POST" action="{{ url_for('teacher.reassign_activity', assignment_id=assignment.id) }}" class="d-inline">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold shadow-sm" title="Reassign this activity with 3 fresh attempts">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 fw-semibold shadow-sm text-nowrap" style="font-size: 0.8rem;" title="Reassign this activity with 3 fresh attempts">
                                           <i class="bi bi-arrow-repeat me-1"></i>Reassign
                                         </button>
                                       </form>
                                     {% else %}
-                                      <span class="badge bg-light text-secondary border rounded-pill px-2 py-1">Active</span>
+                                      <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 text-nowrap">Active</span>
                                     {% endif %}
                                   </td>
                                 </tr>

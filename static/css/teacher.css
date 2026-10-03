@@ -1726,10 +1726,10 @@
   color: #ffffff !important;
 }
 
-/* Prevent accidental horizontal scrollbar under cards on desktop */
+/* Allow smooth horizontal scroll when tables have multiple columns on desktop */
 @media (min-width: 992px) {
   .table-shell.teacher-table-shell .table-responsive {
-    overflow-x: clip;
+    overflow-x: auto;
   }
 }
 

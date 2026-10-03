@@ -485,14 +485,55 @@ def dashboard():
     lessons = [lesson for _, lesson in lesson_assignment_rows]
     lesson_due_dates = {lesson.id: assignment.due_date for assignment, lesson in lesson_assignment_rows}
 
+    # Auto-sync core curriculum activities for enrolled student
+    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
+    core_activities = Activity.query.filter(Activity.engine.in_(playable_engines)).all()
+    engine_to_act = {}
+    for a in core_activities:
+        if a.engine not in engine_to_act:
+            engine_to_act[a.engine] = a
+
+    existing_aa_list = ActivityAssignment.query.filter_by(student_id=user_id).all() if user_id else []
+    existing_act_ids = {aa.activity_id for aa in existing_aa_list}
+    existing_engines = {aa.activity.engine for aa in existing_aa_list if aa.activity and aa.activity.engine}
+
+    teacher_id = 1
+    if lesson_assignment_rows and lesson_assignment_rows[0][0].assigned_by:
+        teacher_id = lesson_assignment_rows[0][0].assigned_by
+
+    needed_commit = False
+    for engine, act in engine_to_act.items():
+        if engine not in existing_engines and act.id not in existing_act_ids:
+            db.session.add(ActivityAssignment(
+                activity_id=act.id,
+                student_id=user_id,
+                assigned_by=teacher_id,
+                status='assigned'
+            ))
+            needed_commit = True
+    if needed_commit:
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
     activity_assignment_rows = db.session.query(ActivityAssignment, Activity).join(
         Activity, Activity.id == ActivityAssignment.activity_id
     ).filter(
         ActivityAssignment.student_id == user_id,
-        ActivityAssignment.status.in_(['assigned', 'completed']),
-        Activity.engine.in_(['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter'])
+        ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted']),
+        Activity.engine.in_(playable_engines)
     ).all()
-    activities = [activity for _, activity in activity_assignment_rows]
+
+    # Deduplicate activities by engine so each unique game is counted exactly once
+    seen_engines = set()
+    activities = []
+    for _, activity in activity_assignment_rows:
+        eng = activity.engine or activity.type
+        if eng not in seen_engines:
+            seen_engines.add(eng)
+            activities.append(activity)
+
     activity_due_dates = {activity.id: assignment.due_date for assignment, activity in activity_assignment_rows}
     progress_logs = []
     completed_by_activity = {}
@@ -503,7 +544,16 @@ def dashboard():
         progress_logs = ProgressLog.query.filter_by(student_id=user_id).all()
         completed_by_activity = {log.activity_id: log for log in progress_logs}
 
-    completed_activities = len(completed_by_activity)
+    # Count completed activities: match direct activity_id or any progress under the same engine
+    completed_activities_count = 0
+    for act in activities:
+        has_prog = (act.id in completed_by_activity) or any(
+            p.activity and p.activity.engine == act.engine for p in progress_logs
+        )
+        if has_prog:
+            completed_activities_count += 1
+
+    completed_activities = completed_activities_count
     total_activities = len(activities)
     total_score = sum((log.score or 0) for log in progress_logs)
 
