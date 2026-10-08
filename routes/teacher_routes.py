@@ -2071,7 +2071,7 @@ def content_management():
             'category': 'Classification & Categorization',
             'icon': 'bi-joystick',
             'accent': '#4318ff',
-            'description': 'Students control an arcade claw to sort science objects into 2 customizable chutes (Left & Right). Great for Living vs Non-Living, Solid vs Liquid, and Herbivore vs Carnivore.',
+            'description': 'An interactive arcade claw game where students sort and classify items into two customizable categories.',
             'status': 'Ready to Customize',
             'is_available': True
         },
@@ -2177,7 +2177,7 @@ def save_claw_machine():
     activity_id = request.form.get('activity_id', type=int)
     title = request.form.get('title', 'Custom Sorting Game').strip()
     instructions = request.form.get('instructions', 'Sort each object into the correct chute.').strip()
-    points = request.form.get('points', 20, type=int)
+    points = request.form.get('points', 100, type=int)
     round_size = request.form.get('round_size', 8, type=int)
     lesson_id = request.form.get('lesson_id', type=int)
 

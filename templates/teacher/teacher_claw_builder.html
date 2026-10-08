@@ -207,6 +207,174 @@
       font-size: 0.75rem;
       color: #64748b;
     }
+    .live-simulator-card {
+      background: linear-gradient(180deg, #0b1120 0%, #1e293b 100%);
+      border: 2px solid #334155;
+      border-radius: 1.25rem;
+      padding: 1.35rem;
+      color: #ffffff;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 16px 36px -10px rgba(15, 23, 42, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    .simulator-marquee {
+      background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+      border: 1.5px solid #6366f1;
+      border-radius: 0.85rem;
+      padding: 0.75rem 1rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+    }
+    .simulator-marquee-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 0.15rem;
+      letter-spacing: -0.01em;
+    }
+    .simulator-marquee-instructions {
+      font-size: 0.78rem;
+      color: #c7d2fe;
+      margin-bottom: 0;
+    }
+    .simulator-stage-grid {
+      display: grid;
+      grid-template-columns: 130px 1fr 130px;
+      gap: 0.85rem;
+      min-height: 160px;
+      margin-bottom: 1rem;
+      align-items: stretch;
+    }
+    @media (max-width: 768px) {
+      .simulator-stage-grid {
+        grid-template-columns: 1fr;
+        gap: 0.65rem;
+      }
+    }
+    .simulator-chute-box {
+      border-radius: 0.85rem;
+      padding: 0.75rem 0.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+      border: 2.5px solid rgba(255, 255, 255, 0.2);
+      box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.3), 0 6px 14px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+    }
+    .simulator-chute-icon {
+      font-size: 2rem;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+    .simulator-chute-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      line-height: 1.15;
+    }
+    .simulator-chute-pocket {
+      width: 90%;
+      height: 18px;
+      border-radius: 0 0 9999px 9999px;
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.5));
+    }
+    .simulator-center-bay {
+      background: rgba(15, 23, 42, 0.65);
+      border: 2px solid #334155;
+      border-radius: 0.85rem;
+      padding: 0.65rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .simulator-crane-rail {
+      height: 32px;
+      border-bottom: 2px solid #475569;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      margin-bottom: 0.4rem;
+      position: relative;
+    }
+    .simulator-claw-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      top: -2px;
+    }
+    .simulator-claw-cable {
+      width: 3px;
+      height: 10px;
+      background: #94a3b8;
+    }
+    .simulator-claw-head {
+      font-size: 1.2rem;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+    .simulator-items-carousel {
+      display: flex;
+      gap: 0.55rem;
+      overflow-x: auto;
+      padding: 0.25rem 0.2rem 0.5rem;
+      scrollbar-width: thin;
+    }
+    .simulator-item-pill {
+      background: #ffffff;
+      border-radius: 0.65rem;
+      padding: 0.35rem 0.4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 68px;
+      max-width: 76px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+      transition: transform 0.15s ease;
+    }
+    .simulator-item-pill:hover {
+      transform: translateY(-2px);
+    }
+    .simulator-item-pill img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      margin-bottom: 0.2rem;
+    }
+    .simulator-item-name {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.1;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .simulator-item-cat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-top: 3px;
+    }
+    .simulator-footer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
   </style>
 </head>
 
@@ -337,7 +505,8 @@
                   </div>
                   <div class="col-6 col-md-3">
                     <label class="form-label fw-bold text-dark small">Points for Completion</label>
-                    <input type="number" class="form-control rounded-3" name="points" value="{{ activity.points if activity else 20 }}" min="5" max="100">
+                    <input type="number" class="form-control rounded-3 fw-bold" name="points" value="{{ activity.points if activity else 100 }}" min="5" max="100">
+                    <small class="text-muted fw-bold" style="font-size: 0.7rem;">Default: 100 max score</small>
                   </div>
                   <div class="col-6 col-md-3">
                     <label class="form-label fw-bold text-dark small">Round Size (Objects per run)</label>
@@ -357,6 +526,65 @@
                       </ul>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <!-- REAL-TIME LIVE ARCADE STAGE SIMULATOR CANVAS -->
+              <div class="live-simulator-card">
+                <div class="simulator-top-bar">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold">
+                      <i class="bi bi-broadcast me-1"></i>Real-Time Stage Canvas
+                    </span>
+                    <span class="text-white-50 small fw-bold">Live Simulation Preview</span>
+                  </div>
+                  <span class="badge bg-dark text-info border border-secondary small">
+                    <i class="bi bi-controller me-1"></i>Interactive Arcade View
+                  </span>
+                </div>
+
+                <!-- Marquee Cabinet Banner -->
+                <div class="simulator-marquee">
+                  <div class="simulator-marquee-title" id="canvasMarqueeTitle">Solid vs Liquid Sorting</div>
+                  <p class="simulator-marquee-instructions" id="canvasMarqueeInstructions">Sort each object into the correct chute to win stars.</p>
+                </div>
+
+                <!-- Stage Grid: Left Chute, Center Conveyor / Object Bay with Claw, Right Chute -->
+                <div class="simulator-stage-grid">
+                  <!-- Left Chute -->
+                  <div class="simulator-chute-box" id="canvasLeftChute">
+                    <span class="simulator-chute-icon" id="canvasLeftIcon">🧊</span>
+                    <div class="simulator-chute-title" id="canvasLeftTitle">Solid</div>
+                    <div class="simulator-chute-pocket"></div>
+                  </div>
+
+                  <!-- Center Object Bay -->
+                  <div class="simulator-center-bay">
+                    <div class="simulator-crane-rail">
+                      <div class="simulator-claw-unit">
+                        <div class="simulator-claw-cable"></div>
+                        <div class="simulator-claw-head">🦾</div>
+                      </div>
+                    </div>
+                    <!-- Objects on Conveyor -->
+                    <div class="simulator-items-carousel" id="canvasItemsCarousel">
+                      <!-- Rendered live via JS -->
+                    </div>
+                  </div>
+
+                  <!-- Right Chute -->
+                  <div class="simulator-chute-box" id="canvasRightChute">
+                    <span class="simulator-chute-icon" id="canvasRightIcon">💧</span>
+                    <div class="simulator-chute-title" id="canvasRightTitle">Liquid</div>
+                    <div class="simulator-chute-pocket"></div>
+                  </div>
+                </div>
+
+                <!-- Simulator Live Footer Stats -->
+                <div class="simulator-footer-bar">
+                  <span id="canvasHudScore"><i class="bi bi-calculator me-1"></i>Score: <strong>100 Pts Total</strong> (Calculated dynamically per item)</span>
+                  <span id="canvasHudRound"><i class="bi bi-stars text-warning me-1"></i>Round Size: 8 objects</span>
+                  <span><i class="bi bi-volume-up text-info me-1"></i>Auto Voice Synthesizer: <strong>Enabled</strong></span>
                 </div>
               </div>
 
@@ -712,7 +940,7 @@
           <!-- Label -->
           <div>
             <label class="form-label text-muted small fw-bold d-lg-none mb-1">Label</label>
-            <input type="text" class="form-control rounded-3 fw-bold" value="${obj.label || ''}" onchange="updateObjectField(${idx}, 'label', this.value)" required placeholder="e.g. Ice Cube">
+            <input type="text" class="form-control rounded-3 fw-bold" value="${obj.label || ''}" oninput="updateObjectField(${idx}, 'label', this.value)" required placeholder="e.g. Ice Cube">
           </div>
 
           <!-- Chute Selector (Chute 1 vs Chute 2) -->
@@ -726,7 +954,7 @@
           <!-- Science Explanation -->
           <div>
             <label class="form-label text-muted small fw-bold d-lg-none mb-1">Explanation (Spoken aloud by TTS)</label>
-            <input type="text" class="form-control rounded-3" value="${obj.explanation || ''}" onchange="updateObjectField(${idx}, 'explanation', this.value)" placeholder="e.g. Ice has a fixed shape and volume as a solid.">
+            <input type="text" class="form-control rounded-3" value="${obj.explanation || ''}" oninput="updateObjectField(${idx}, 'explanation', this.value)" placeholder="e.g. Ice has a fixed shape and volume as a solid.">
           </div>
 
           <!-- Delete Object -->
@@ -740,6 +968,8 @@
         `;
         container.appendChild(row);
       });
+
+      updateLiveCanvas();
     }
 
     function addObject() {
@@ -765,6 +995,7 @@
 
     function updateObjectField(idx, field, value) {
       objects[idx][field] = value;
+      updateLiveCanvas();
     }
 
     // STRICT FILE UPLOAD VALIDATION: Only PNG, JPG, JPEG, WEBP; Non-images are blocked
@@ -791,6 +1022,7 @@
         reader.onload = function(e) {
           document.getElementById(`thumb_preview_${idx}`).src = e.target.result;
           objects[idx].image = e.target.result; // temporary preview
+          updateLiveCanvas();
         };
         reader.readAsDataURL(file);
       }
@@ -811,6 +1043,76 @@
       }
       const modalEl = document.getElementById('presetImageModal');
       bootstrap.Modal.getInstance(modalEl)?.hide();
+      updateLiveCanvas();
+    }
+
+    // REAL-TIME ARCADE STAGE CANVAS SYNCHRONIZATION
+    function updateLiveCanvas() {
+      const title = document.getElementById('activityTitleInput')?.value || 'Custom Sorting Game';
+      const instructions = document.getElementById('activityInstructionsInput')?.value || 'Sort each object into the correct chute to win stars.';
+      const roundSize = document.getElementById('roundSizeInput')?.value || '8';
+
+      const titleEl = document.getElementById('canvasMarqueeTitle');
+      if (titleEl) titleEl.textContent = title;
+      const instrEl = document.getElementById('canvasMarqueeInstructions');
+      if (instrEl) instrEl.textContent = instructions;
+
+      // Left Chute
+      if (chutes[0]) {
+        const leftEl = document.getElementById('canvasLeftChute');
+        const color0 = chutes[0].color || '#4ade80';
+        if (leftEl) leftEl.style.background = `linear-gradient(180deg, ${color0} 0%, rgba(15, 23, 42, 0.5) 140%), ${color0}`;
+        const leftIco = document.getElementById('canvasLeftIcon');
+        if (leftIco) leftIco.textContent = chutes[0].icon || '📦';
+        const leftLbl = document.getElementById('canvasLeftTitle');
+        if (leftLbl) leftLbl.textContent = chutes[0].label || 'Chute 1';
+      }
+
+      // Right Chute
+      if (chutes[1]) {
+        const rightEl = document.getElementById('canvasRightChute');
+        const color1 = chutes[1].color || '#fb923c';
+        if (rightEl) rightEl.style.background = `linear-gradient(180deg, ${color1} 0%, rgba(15, 23, 42, 0.5) 140%), ${color1}`;
+        const rightIco = document.getElementById('canvasRightIcon');
+        if (rightIco) rightIco.textContent = chutes[1].icon || '📦';
+        const rightLbl = document.getElementById('canvasRightTitle');
+        if (rightLbl) rightLbl.textContent = chutes[1].label || 'Chute 2';
+      }
+
+      // Objects in Center Bay Conveyor
+      const carousel = document.getElementById('canvasItemsCarousel');
+      if (carousel) {
+        carousel.innerHTML = '';
+        if (objects.length === 0) {
+          carousel.innerHTML = '<span class="text-white-50 small py-3 px-2">No objects configured yet. Click "+ Add Object" to insert items.</span>';
+        } else {
+          objects.forEach(obj => {
+            const itemPill = document.createElement('div');
+            itemPill.className = 'simulator-item-pill';
+            const assignedChute = chutes.find(c => c.id === obj.categoryId);
+            const dotColor = assignedChute ? (assignedChute.color || '#4318ff') : '#94a3b8';
+            const imgSrc = obj.image || '/static/images/rock.webp';
+            itemPill.innerHTML = `
+              <img src="${imgSrc}" alt="${obj.label || 'Object'}" onerror="this.src='/static/images/rock.webp'">
+              <span class="simulator-item-name" title="${obj.label || ''}">${obj.label || 'Object'}</span>
+              <span class="simulator-item-cat-dot" style="background-color: ${dotColor};" title="Category: ${assignedChute ? assignedChute.label : 'None'}"></span>
+            `;
+            carousel.appendChild(itemPill);
+          });
+        }
+      }
+
+      // Dynamic Normalized Scoring calculation (always 100 points max)
+      const totalObj = Math.max(1, objects.length);
+      const ptsPerObj = (100 / totalObj).toFixed(1);
+      const hudScore = document.getElementById('canvasHudScore');
+      if (hudScore) {
+        hudScore.innerHTML = `<i class="bi bi-calculator me-1"></i>Score: <strong class="text-white">100 Pts Normalized</strong> (${ptsPerObj} pts / item for ${totalObj} objects)`;
+      }
+      const hudRound = document.getElementById('canvasHudRound');
+      if (hudRound) {
+        hudRound.innerHTML = `<i class="bi bi-stars text-warning me-1"></i>Round Size: <strong>${roundSize} objects</strong>`;
+      }
     }
 
     // FORM SUBMISSION & VALIDATION
@@ -864,9 +1166,14 @@
     document.getElementById('btn-save-activity')?.addEventListener('click', submitBuilderForm);
     document.getElementById('btn-save-activity-bottom')?.addEventListener('click', submitBuilderForm);
 
-    // Initial render
+    // Initial render & listeners
     document.addEventListener('DOMContentLoaded', () => {
       renderChutes();
+      updateLiveCanvas();
+
+      document.getElementById('activityTitleInput')?.addEventListener('input', updateLiveCanvas);
+      document.getElementById('activityInstructionsInput')?.addEventListener('input', updateLiveCanvas);
+      document.getElementById('roundSizeInput')?.addEventListener('input', updateLiveCanvas);
     });
   </script>
 </body>

@@ -754,22 +754,19 @@ async function dropObject() {
       state.streak = (state.streak || 0) + 1;
       state.correctFirstTry += 1;
 
-      let earned = 8;
-      let bonusText = '';
-      if (state.streak === 4 || state.streak === 8) {
-        earned += 2;
-        bonusText = ` (+2 Streak Bonus!)`;
-      }
-      state.score = Math.min(100, state.score + earned);
-      setMessage(`✓ Correct! ${object.name} is a ${slot.bin.label}. (+${earned} pts${bonusText})`, 'success');
+      const totalObjects = Math.max(1, state.objects.length);
+      const earned = Math.round(100 / totalObjects);
+
+      // Score dynamically scales to 100 based on total objects
+      state.score = Math.min(100, Math.round((state.correctFirstTry / totalObjects) * 100));
+      setMessage(`✓ Correct! ${object.name} is a ${slot.bin.label}. (+${earned} pts)`, 'success');
     } else {
       playSound('wrong');
       playVoicePrompt('claw_wrong', 'Oops! Try again!');
       object.wasCorrect = false;
       state.wrongDrops += 1;
       state.streak = 0;
-      state.score = Math.max(0, state.score - 4);
-      setMessage(`✗ Incorrect! ${object.name} is a ${getBinLabel(object.categoryId)}, not a ${slot.bin.label}. (-4 pts)`, 'warning');
+      setMessage(`✗ Incorrect! ${object.name} is a ${getBinLabel(object.categoryId)}, not a ${slot.bin.label}. (0 pts)`, 'warning');
     }
 
     object.isHeld = false;
@@ -802,11 +799,9 @@ function maybeCompleteRound(forceEarly = false) {
   state.isAnimating = false;
   setControlsDisabled(true);
 
-  // Safety floor: guarantee at least 20 pts if at least one object was sorted correctly
-  if (state.correctFirstTry > 0) {
-    state.score = Math.max(20, state.score);
-  }
-  state.score = Math.min(100, state.score);
+  const totalObjects = Math.max(1, state.objects.length);
+  // Total score is strictly normalized to 100 max: (correct / total) * 100
+  state.score = Math.min(100, Math.max(0, Math.round((state.correctFirstTry / totalObjects) * 100)));
 
   renderSummary();
   if (dom.summary) {
