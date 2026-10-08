@@ -456,14 +456,14 @@
               </div>
 
               <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('teacher.content_management') }}" class="btn btn-outline-secondary rounded-pill px-3 fw-bold">
+                  <i class="bi bi-arrow-left me-1"></i>Cancel
+                </a>
                 {% if activity %}
-                  <a href="{{ url_for('teacher.preview_activity', activity_id=activity.id) }}" target="_blank" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
+                  <a href="{{ url_for('teacher.preview_activity', activity_id=activity.id) }}" target="_blank" class="btn btn-outline-dark rounded-pill px-3 fw-bold">
                     <i class="bi bi-play-circle-fill me-1"></i>Test Play
                   </a>
                 {% endif %}
-                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btn-save-activity">
-                  <i class="bi bi-cloud-arrow-up-fill me-1"></i>Save &amp; Publish Game
-                </button>
               </div>
             </div>
 
@@ -487,11 +487,11 @@
                 </div>
 
                 <div class="row g-3">
-                  <div class="col-12 col-md-8">
+                  <div class="col-12 col-md-7">
                     <label class="form-label fw-bold text-dark small">Game Title <span class="text-danger">*</span></label>
                     <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="activityTitleInput" value="{{ config.title or (activity.type if activity else 'Solid vs Liquid Sorting') }}" required placeholder="e.g. Solid vs Liquid Sorting">
                   </div>
-                  <div class="col-12 col-md-4">
+                  <div class="col-12 col-md-5">
                     <label class="form-label fw-bold text-dark small">Link to Curriculum Lesson</label>
                     <select class="form-select form-select-lg rounded-3" name="lesson_id">
                       {% for l in all_lessons %}
@@ -504,19 +504,33 @@
                     <input type="text" class="form-control rounded-3" name="instructions" id="activityInstructionsInput" value="{{ config.instructions or 'Sort each object into the correct chute to win stars.' }}" placeholder="e.g. Sort each object into the correct chute to win stars.">
                   </div>
                   <div class="col-6 col-md-3">
+                    <label class="form-label fw-bold text-dark small">Difficulty Level</label>
+                    <select class="form-select rounded-3 fw-bold" name="difficulty" id="difficultyLevelInput" onchange="updateLiveCanvas()">
+                      <option value="Level 1 — Easy" {% if config.difficulty == 'Level 1 — Easy' or not config.difficulty %}selected{% endif %}>🟢 Level 1 — Easy</option>
+                      <option value="Level 2 — Medium" {% if config.difficulty == 'Level 2 — Medium' %}selected{% endif %}>🟡 Level 2 — Medium</option>
+                      <option value="Level 3 — Hard" {% if config.difficulty == 'Level 3 — Hard' %}selected{% endif %}>🔴 Level 3 — Hard</option>
+                    </select>
+                    <small class="text-muted fw-bold" style="font-size: 0.7rem;">Curriculum challenge tier</small>
+                  </div>
+                  <div class="col-6 col-md-3">
                     <label class="form-label fw-bold text-dark small">Points for Completion</label>
                     <input type="number" class="form-control rounded-3 fw-bold" name="points" value="{{ activity.points if activity else 100 }}" min="5" max="100">
                     <small class="text-muted fw-bold" style="font-size: 0.7rem;">Default: 100 max score</small>
                   </div>
                   <div class="col-6 col-md-3">
-                    <label class="form-label fw-bold text-dark small">Round Size (Objects per run)</label>
-                    <input type="number" class="form-control rounded-3" name="round_size" id="roundSizeInput" value="{{ config.round_size or 8 }}" min="3" max="20">
+                    <label class="form-label fw-bold text-dark small d-flex justify-content-between align-items-center">
+                      <span>Round Size</span>
+                      <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0" style="font-size: 0.65rem;" id="roundSizeAutoTag">Auto-synced</span>
+                    </label>
+                    <input type="number" class="form-control rounded-3 fw-bold" name="round_size" id="roundSizeInput" value="{{ config.round_size or 8 }}" min="2" max="50">
+                    <small class="text-muted fw-bold" style="font-size: 0.7rem;" id="roundSizeHelp">Objects in run (matches items)</small>
                   </div>
-                  <div class="col-12 col-md-6 d-flex align-items-end">
+                  <div class="col-6 col-md-3 d-flex flex-column justify-content-end">
                     <!-- Quick Preset Loader -->
+                    <label class="form-label fw-bold text-dark small d-none d-md-block">&nbsp;</label>
                     <div class="dropdown w-100">
                       <button class="btn btn-outline-secondary dropdown-toggle w-100 rounded-3 py-2 fw-bold" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-magic me-1"></i>Load Topic Preset Template
+                        <i class="bi bi-magic me-1"></i>Topic Presets
                       </button>
                       <ul class="dropdown-menu shadow-lg border-0 rounded-3 w-100">
                         <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadTopicPreset('living_vs_nonliving'); return false;">🌱 Living vs Non-Living (2 Chutes)</a></li>
@@ -545,7 +559,10 @@
 
                 <!-- Marquee Cabinet Banner -->
                 <div class="simulator-marquee">
-                  <div class="simulator-marquee-title" id="canvasMarqueeTitle">Solid vs Liquid Sorting</div>
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                    <div class="simulator-marquee-title" id="canvasMarqueeTitle">Solid vs Liquid Sorting</div>
+                    <span class="badge bg-warning-subtle text-dark border fw-bold" id="canvasDifficultyBadge">🟢 Level 1 — Easy</span>
+                  </div>
                   <p class="simulator-marquee-instructions" id="canvasMarqueeInstructions">Sort each object into the correct chute to win stars.</p>
                 </div>
 
@@ -620,11 +637,11 @@
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-semibold small">
-                      <i class="bi bi-file-earmark-image me-1"></i>Images only: PNG, JPG, JPEG, WEBP (Max 5MB)
+                      <i class="bi bi-file-earmark-image me-1"></i>Images: PNG, JPG, JPEG, WEBP (No size limit)
                     </span>
-                    <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="addObject()">
-                      <i class="bi bi-plus-circle-fill me-1"></i>Add Object
-                    </button>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill fw-bold" id="objectsCountBadge">
+                      {{ (config.objects|length) if config and config.objects else 3 }} Objects
+                    </span>
                   </div>
                 </div>
 
@@ -642,8 +659,8 @@
                 </div>
 
                 <div class="mt-3 text-center">
-                  <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold" onclick="addObject()">
-                    <i class="bi bi-plus-lg me-1"></i>Add Another Object
+                  <button type="button" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="addObject()">
+                    <i class="bi bi-plus-circle-fill me-1"></i>Add Object
                   </button>
                 </div>
               </div>
@@ -1011,6 +1028,17 @@
         container.appendChild(row);
       });
 
+      // Keep round size automatically synchronized to total objects created
+      const roundInput = document.getElementById('roundSizeInput');
+      if (roundInput) {
+        roundInput.value = objects.length;
+        roundInput.max = Math.max(50, objects.length);
+      }
+      const countBadge = document.getElementById('objectsCountBadge');
+      if (countBadge) {
+        countBadge.textContent = `${objects.length} Objects`;
+      }
+
       updateLiveCanvas();
     }
 
@@ -1040,7 +1068,7 @@
       updateLiveCanvas();
     }
 
-    // STRICT FILE UPLOAD VALIDATION: Only PNG, JPG, JPEG, WEBP; Non-images are blocked
+    // STRICT FILE UPLOAD VALIDATION: Only PNG, JPG, JPEG, WEBP; No file size cap
     function handleFileUpload(idx, input) {
       if (input.files && input.files[0]) {
         const file = input.files[0];
@@ -1050,12 +1078,6 @@
 
         if (!validExtensions.includes(ext) || !isImageMime) {
           showBuilderToast("Only image files (.png, .jpg, .jpeg, .webp) are supported.", "danger");
-          input.value = '';
-          return;
-        }
-
-        if (file.size > 5 * 1024 * 1024) {
-          showBuilderToast("Image file exceeds the 5MB size limit. Please upload an image under 5MB.", "warning");
           input.value = '';
           return;
         }
@@ -1092,12 +1114,18 @@
     function updateLiveCanvas() {
       const title = document.getElementById('activityTitleInput')?.value || 'Custom Sorting Game';
       const instructions = document.getElementById('activityInstructionsInput')?.value || 'Sort each object into the correct chute to win stars.';
-      const roundSize = document.getElementById('roundSizeInput')?.value || '8';
+      const roundSize = document.getElementById('roundSizeInput')?.value || objects.length || '8';
+      const diffInput = document.getElementById('difficultyLevelInput');
 
       const titleEl = document.getElementById('canvasMarqueeTitle');
       if (titleEl) titleEl.textContent = title;
       const instrEl = document.getElementById('canvasMarqueeInstructions');
       if (instrEl) instrEl.textContent = instructions;
+
+      const diffBadge = document.getElementById('canvasDifficultyBadge');
+      if (diffBadge && diffInput) {
+        diffBadge.textContent = diffInput.value;
+      }
 
       // Left Chute
       if (chutes[0]) {
@@ -1205,7 +1233,6 @@
       document.getElementById('activityBuilderForm').submit();
     }
 
-    document.getElementById('btn-save-activity')?.addEventListener('click', submitBuilderForm);
     document.getElementById('btn-save-activity-bottom')?.addEventListener('click', submitBuilderForm);
 
     // Initial render & listeners
@@ -1216,6 +1243,7 @@
       document.getElementById('activityTitleInput')?.addEventListener('input', updateLiveCanvas);
       document.getElementById('activityInstructionsInput')?.addEventListener('input', updateLiveCanvas);
       document.getElementById('roundSizeInput')?.addEventListener('input', updateLiveCanvas);
+      document.getElementById('difficultyLevelInput')?.addEventListener('change', updateLiveCanvas);
     });
   </script>
 </body>

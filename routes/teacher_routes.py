@@ -2177,6 +2177,7 @@ def save_claw_machine():
     activity_id = request.form.get('activity_id', type=int)
     title = request.form.get('title', 'Custom Sorting Game').strip()
     instructions = request.form.get('instructions', 'Sort each object into the correct chute.').strip()
+    difficulty = request.form.get('difficulty', 'Level 1 — Easy').strip()
     points = request.form.get('points', 100, type=int)
     round_size = request.form.get('round_size', 8, type=int)
     lesson_id = request.form.get('lesson_id', type=int)
@@ -2211,7 +2212,6 @@ def save_claw_machine():
     os.makedirs(upload_dir, exist_ok=True)
 
     ALLOWED_IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp'}
-    MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
     rejected_files = []
 
     for idx, obj in enumerate(objects):
@@ -2223,18 +2223,13 @@ def save_claw_machine():
                 mimetype = (file.mimetype or '').lower()
                 
                 # Strict check: only raster web images allowed; non-image files are blocked
+                # No file size cap so teachers can upload high-resolution images freely
                 if ext in ALLOWED_IMAGE_EXTS and mimetype.startswith('image/'):
-                    file.seek(0, os.SEEK_END)
-                    fsize = file.tell()
-                    file.seek(0)
-                    if fsize <= MAX_IMAGE_SIZE:
-                        unique_name = f"{uuid.uuid4().hex[:12]}{ext}"
-                        filepath = os.path.join(upload_dir, unique_name)
-                        file.save(filepath)
-                        obj['image'] = f"/static/uploads/activities/{unique_name}"
-                        obj['icon'] = obj['image']
-                    else:
-                        rejected_files.append(f"{file.filename} (over 5MB)")
+                    unique_name = f"{uuid.uuid4().hex[:12]}{ext}"
+                    filepath = os.path.join(upload_dir, unique_name)
+                    file.save(filepath)
+                    obj['image'] = f"/static/uploads/activities/{unique_name}"
+                    obj['icon'] = obj['image']
                 else:
                     rejected_files.append(f"{file.filename} (unsupported format; only PNG, JPG, JPEG, WEBP allowed)")
 
@@ -2244,6 +2239,7 @@ def save_claw_machine():
     config_payload = {
         "title": title,
         "instructions": instructions,
+        "difficulty": difficulty,
         "round_size": round_size,
         "bins": bins,
         "objects": objects

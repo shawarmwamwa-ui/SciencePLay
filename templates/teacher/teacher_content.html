@@ -301,7 +301,10 @@
                         {% if card.is_default %}
                           <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">Default Game</span>
                         {% endif %}
-                        <span class="activity-meta-badge"><i class="bi bi-star-fill text-warning"></i>{{ card.activity.points or 20 }} pts</span>
+                        {% if card.config and card.config.difficulty %}
+                          <span class="badge bg-warning-subtle text-dark border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">{{ card.config.difficulty }}</span>
+                        {% endif %}
+                        <span class="activity-meta-badge"><i class="bi bi-star-fill text-warning"></i>{{ card.activity.points or 100 }} pts</span>
                       </div>
                       <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
                       <p class="text-muted small mb-2 text-truncate" title="{{ card.instructions }}">
