@@ -45,7 +45,7 @@
     }
     .chute-config-card {
       background: #f8fafc;
-      border: 2px dashed #cbd5e1;
+      border: 2px solid #cbd5e1;
       border-radius: 1rem;
       padding: 1.25rem;
       position: relative;
@@ -63,7 +63,7 @@
       padding: 1rem;
       margin-bottom: 0.85rem;
       display: grid;
-      grid-template-columns: 70px 1.5fr 1fr 2fr 40px;
+      grid-template-columns: 75px 1.5fr 1fr 2fr 40px;
       gap: 1rem;
       align-items: center;
       transition: all 0.2s ease;
@@ -119,6 +119,10 @@
       height: 48px;
       object-fit: contain;
       margin-bottom: 0.35rem;
+    }
+    .file-type-note {
+      font-size: 0.75rem;
+      color: #64748b;
     }
   </style>
 </head>
@@ -197,7 +201,7 @@
                 <h1 class="page-title fw-black text-dark mb-1">
                   {% if activity %}Edit Sorting Activity: {{ activity.type }}{% else %}New Sorting Game Builder{% endif %}
                 </h1>
-                <p class="page-subtitle text-muted mb-0">Engine Template: <strong>Arcade Sorting Claw Machine</strong>. Configure chutes, objects, and science voice feedback.</p>
+                <p class="page-subtitle text-muted mb-0">Engine Template: <strong>Arcade Dual-Chute Claw Machine</strong> (Left Chute vs Right Chute).</p>
               </div>
 
               <div class="d-flex align-items-center gap-2">
@@ -227,14 +231,14 @@
                   <span class="step-number-badge">1</span>
                   <div>
                     <h2 class="h5 fw-bold text-dark mb-0">Activity Overview &amp; Settings</h2>
-                    <span class="text-muted small">Define game title, instructions, and target lesson</span>
+                    <span class="text-muted small">Define game title, instructions, and target curriculum lesson</span>
                   </div>
                 </div>
 
                 <div class="row g-3">
                   <div class="col-12 col-md-8">
                     <label class="form-label fw-bold text-dark small">Game Title <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="activityTitleInput" value="{{ config.title or (activity.type if activity else 'States of Matter Sorting') }}" required placeholder="e.g. States of Matter Sorting">
+                    <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="activityTitleInput" value="{{ config.title or (activity.type if activity else 'Solid vs Liquid Sorting') }}" required placeholder="e.g. Solid vs Liquid Sorting">
                   </div>
                   <div class="col-12 col-md-4">
                     <label class="form-label fw-bold text-dark small">Link to Curriculum Lesson</label>
@@ -245,7 +249,7 @@
                     </select>
                   </div>
                   <div class="col-12">
-                    <label class="form-label fw-bold text-dark small">Player Instructions (Shown on marquee banner)</label>
+                    <label class="form-label fw-bold text-dark small">Player Instructions (Shown on cabinet marquee)</label>
                     <input type="text" class="form-control rounded-3" name="instructions" id="activityInstructionsInput" value="{{ config.instructions or 'Sort each object into the correct chute to win stars.' }}" placeholder="e.g. Sort each object into the correct chute to win stars.">
                   </div>
                   <div class="col-6 col-md-3">
@@ -263,32 +267,33 @@
                         <i class="bi bi-magic me-1"></i>Load Topic Preset Template
                       </button>
                       <ul class="dropdown-menu shadow-lg border-0 rounded-3 w-100">
-                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadTopicPreset('states_of_matter'); return false;">🧊 States of Matter (Solid, Liquid, Gas)</a></li>
                         <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadTopicPreset('living_vs_nonliving'); return false;">🌱 Living vs Non-Living (2 Chutes)</a></li>
-                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadTopicPreset('waste_sorting'); return false;">♻️ Waste &amp; Recycling (Recyclable, Organic, Residual)</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadTopicPreset('states_of_matter'); return false;">🧊 Solid vs Liquid (2 Chutes)</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadTopicPreset('waste_sorting'); return false;">♻️ Organic vs Recyclable (2 Chutes)</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadTopicPreset('herbivore_vs_carnivore'); return false;">🌿 Herbivore vs Carnivore (2 Chutes)</a></li>
                       </ul>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- STEP 2: Configure Chutes (2 to 4 Bins) -->
+              <!-- STEP 2: Configure 2 Chutes (Left & Right Drop Zones) -->
               <div class="builder-step-card">
-                <div class="builder-step-header d-flex justify-content-between align-items-center">
+                <div class="builder-step-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                   <div class="d-flex align-items-center gap-2">
                     <span class="step-number-badge">2</span>
                     <div>
-                      <h2 class="h5 fw-bold text-dark mb-0">Sorting Chutes (Categories)</h2>
-                      <span class="text-muted small">Choose 2 to 4 chutes where students drop objects</span>
+                      <h2 class="h5 fw-bold text-dark mb-0">Sorting Chutes (Left &amp; Right Drop Zones)</h2>
+                      <span class="text-muted small">The claw machine arcade stage has 2 physical drop zones: Left Chute and Right Chute.</span>
                     </div>
                   </div>
-                  <button type="button" class="btn btn-sm btn-outline-primary rounded-pill fw-bold" id="btn-add-chute" onclick="addChute()">
-                    <i class="bi bi-plus-circle me-1"></i>Add Chute
-                  </button>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-bold">
+                    <i class="bi bi-layout-split me-1"></i>Dual-Chute Arcade Setup (2 Zones)
+                  </span>
                 </div>
 
                 <div class="row g-3" id="chutesContainer">
-                  <!-- Populated via JS -->
+                  <!-- Populated via JS: exactly 2 chute cards -->
                 </div>
               </div>
 
@@ -302,13 +307,18 @@
                       <span class="text-muted small">Upload custom images or pick presets. Explanations are read out loud automatically by synthetic speech!</span>
                     </div>
                   </div>
-                  <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="addObject()">
-                    <i class="bi bi-plus-circle-fill me-1"></i>Add Object
-                  </button>
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-semibold small">
+                      <i class="bi bi-file-earmark-image me-1"></i>Images only: PNG, JPG, JPEG, WEBP (Max 5MB)
+                    </span>
+                    <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="addObject()">
+                      <i class="bi bi-plus-circle-fill me-1"></i>Add Object
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Column headers for Desktop -->
-                <div class="d-none d-lg-grid px-3 py-2 text-muted fw-bold small" style="grid-template-columns: 70px 1.5fr 1fr 2fr 40px; gap: 1rem;">
+                <div class="d-none d-lg-grid px-3 py-2 text-muted fw-bold small" style="grid-template-columns: 75px 1.5fr 1fr 2fr 40px; gap: 1rem;">
                   <span>Image</span>
                   <span>Object Label</span>
                   <span>Correct Chute</span>
@@ -357,7 +367,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body p-4">
-          <p class="text-muted small mb-3">Click any image to attach it to this object, or close to keep your uploaded file.</p>
+          <p class="text-muted small mb-3">Click any science icon to attach it to this object, or upload your own PNG/JPG/WEBP image.</p>
           <div class="preset-picker-grid" id="presetGrid">
             {% for img in preset_images %}
             <div class="preset-picker-item" onclick="choosePresetImage('{{ img.src }}', '{{ img.label }}')">
@@ -373,71 +383,92 @@
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Initial data from server
-    let chutes = {{ (config.bins if config and config.bins else [
+    // Initial data from server: strictly 2 chutes
+    let rawBins = {{ (config.bins if config and config.bins else [
       {"id": "solid", "label": "Solid", "icon": "🧊", "color": "#60a5fa"},
-      {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"},
-      {"id": "gas", "label": "Gas", "icon": "💨", "color": "#cbd5e1"}
+      {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"}
     ])|tojson }};
 
+    let chutes = Array.isArray(rawBins) && rawBins.length >= 2 
+      ? rawBins.slice(0, 2) 
+      : [
+          {"id": "solid", "label": "Solid", "icon": "🧊", "color": "#60a5fa"},
+          {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"}
+        ];
+
     let objects = {{ (config.objects if config and config.objects else [
-      {"id": 1, "label": "Ice Cube", "categoryId": "solid", "explanation": "Ice has a fixed shape and volume.", "image": "/static/images/rock.webp"},
-      {"id": 2, "label": "Water", "categoryId": "liquid", "explanation": "Water flows and takes the shape of its container.", "image": "/static/images/puddle.webp"},
-      {"id": 3, "label": "Balloon Air", "categoryId": "gas", "explanation": "Air spreads out and fills any container.", "image": "/static/images/butterfly.webp"}
+      {"id": 1, "label": "Ice Cube", "categoryId": "solid", "explanation": "Ice has a fixed shape and volume as a solid.", "image": "/static/images/rock.webp"},
+      {"id": 2, "label": "Water Puddle", "categoryId": "liquid", "explanation": "Water flows and takes the shape of its container.", "image": "/static/images/puddle.webp"},
+      {"id": 3, "label": "Wooden Chair", "categoryId": "solid", "explanation": "A chair is solid and keeps its own rigid shape.", "image": "/static/images/chair.webp"}
     ])|tojson }};
 
     let activeObjectPickerIndex = null;
 
-    // TOPIC PRESETS
+    // TOPIC PRESETS (Strictly 2 chutes: Left vs Right)
     const TOPIC_PRESETS = {
-      states_of_matter: {
-        title: "States of Matter Sorting",
-        instructions: "Sort each object into Solid, Liquid, or Gas to win stars.",
-        round_size: 6,
-        bins: [
-          { id: "solid", label: "Solid", icon: "🧊", color: "#60a5fa" },
-          { id: "liquid", label: "Liquid", icon: "💧", color: "#38bdf8" },
-          { id: "gas", label: "Gas", icon: "💨", color: "#94a3b8" }
-        ],
-        objects: [
-          { label: "Ice Cube", categoryId: "solid", explanation: "Ice holds its shape firmly as a solid.", image: "/static/images/rock.webp" },
-          { label: "Water Puddle", categoryId: "liquid", explanation: "Water flows and takes the shape of what holds it.", image: "/static/images/puddle.webp" },
-          { label: "Balloon Gas", categoryId: "gas", explanation: "Gas spreads out freely in all directions.", image: "/static/images/butterfly.webp" },
-          { label: "Wooden Chair", categoryId: "solid", explanation: "A chair is solid and keeps its shape.", image: "/static/images/chair.webp" },
-          { label: "Bicycle", categoryId: "solid", explanation: "A bicycle is made of solid metal parts.", image: "/static/images/bicycle.webp" }
-        ]
-      },
       living_vs_nonliving: {
         title: "Living vs Non-Living Sorting",
-        instructions: "Sort objects into Living and Non-Living chutes.",
+        instructions: "Sort objects into Living and Non-Living chutes to win stars.",
         round_size: 8,
         bins: [
           { id: "living", label: "Living", icon: "🌱", color: "#4ade80" },
           { id: "non-living", label: "Non-Living", icon: "🪨", color: "#fb923c" }
         ],
         objects: [
-          { label: "Dog", categoryId: "living", explanation: "Dogs breathe, grow, and need food.", image: "/static/images/dog.webp" },
-          { label: "Cat", categoryId: "living", explanation: "Cats are living animals that reproduce and grow.", image: "/static/images/cat.webp" },
-          { label: "Tree", categoryId: "living", explanation: "Trees grow, take in sunlight, and need water.", image: "/static/images/tree.webp" },
-          { label: "Flower", categoryId: "living", explanation: "Flowers are living plants that absorb nutrients.", image: "/static/images/flower.webp" },
-          { label: "Rock", categoryId: "non-living", explanation: "Rocks do not eat, breathe, or grow.", image: "/static/images/rock.webp" },
-          { label: "Bicycle", categoryId: "non-living", explanation: "A bicycle is a manufactured object and is not alive.", image: "/static/images/bicycle.webp" }
+          { label: "Dog", categoryId: "living", explanation: "Dogs are living animals that breathe, eat, and grow.", image: "/static/images/dog.webp" },
+          { label: "Cat", categoryId: "living", explanation: "Cats are living animals that grow and reproduce.", image: "/static/images/cat.webp" },
+          { label: "Tree", categoryId: "living", explanation: "Trees are living plants that absorb water and sunlight.", image: "/static/images/tree.webp" },
+          { label: "Flower", categoryId: "living", explanation: "Flowers are living organisms that need sunlight and water.", image: "/static/images/flower.webp" },
+          { label: "Rock", categoryId: "non-living", explanation: "Rocks do not eat, breathe, or reproduce.", image: "/static/images/rock.webp" },
+          { label: "Wooden Chair", categoryId: "non-living", explanation: "A manufactured chair is an inanimate object.", image: "/static/images/chair.webp" },
+          { label: "Bicycle", categoryId: "non-living", explanation: "A bicycle is a manufactured machine and is not alive.", image: "/static/images/bicycle.webp" },
+          { label: "Rubber Ball", categoryId: "non-living", explanation: "A rubber ball is non-living.", image: "/static/images/ball.webp" }
+        ]
+      },
+      states_of_matter: {
+        title: "Solid vs Liquid Sorting",
+        instructions: "Sort each object into the Solid or Liquid chute.",
+        round_size: 6,
+        bins: [
+          { id: "solid", label: "Solid", icon: "🧊", color: "#60a5fa" },
+          { id: "liquid", label: "Liquid", icon: "💧", color: "#38bdf8" }
+        ],
+        objects: [
+          { label: "Ice Cube", categoryId: "solid", explanation: "Ice holds a fixed shape firmly as a solid.", image: "/static/images/rock.webp" },
+          { label: "Water Puddle", categoryId: "liquid", explanation: "Water flows and takes the shape of its container.", image: "/static/images/puddle.webp" },
+          { label: "Wooden Chair", categoryId: "solid", explanation: "A chair is solid and keeps its own rigid shape.", image: "/static/images/chair.webp" },
+          { label: "Rock", categoryId: "solid", explanation: "Rocks have definite shapes and volumes as solids.", image: "/static/images/rock.webp" },
+          { label: "Bicycle", categoryId: "solid", explanation: "A bicycle is made of solid parts that keep their shape.", image: "/static/images/bicycle.webp" }
         ]
       },
       waste_sorting: {
         title: "Eco Waste & Recycling Sort",
-        instructions: "Sort materials into Organic, Recyclable, or Residual chutes.",
+        instructions: "Sort materials into Organic Compost or Recyclable chutes.",
         round_size: 6,
         bins: [
           { id: "organic", label: "Organic Compost", icon: "🍂", color: "#84cc16" },
-          { id: "recyclable", label: "Recyclable", icon: "♻️", color: "#06b6d4" },
-          { id: "residual", label: "Residual Trash", icon: "🗑️", color: "#64748b" }
+          { id: "recyclable", label: "Recyclable", icon: "♻️", color: "#06b6d4" }
         ],
         objects: [
           { label: "Fallen Leaves", categoryId: "organic", explanation: "Leaves decompose naturally into rich garden compost.", image: "/static/images/plant.webp" },
+          { label: "Tree Branch", categoryId: "organic", explanation: "Wood branches are organic matter that break down naturally.", image: "/static/images/tree.webp" },
           { label: "Plastic Bottle", categoryId: "recyclable", explanation: "Clean plastic can be melted and reprocessed into new goods.", image: "/static/images/puddle.webp" },
-          { label: "Tree Branch", categoryId: "organic", explanation: "Wood branches are organic matter that breakdown naturally.", image: "/static/images/tree.webp" },
-          { label: "Rubber Ball", categoryId: "residual", explanation: "Broken rubber items go to non-recyclable residual disposal.", image: "/static/images/ball.webp" }
+          { label: "Plant", categoryId: "organic", explanation: "Plant materials decompose organically in compost bins.", image: "/static/images/plant.webp" }
+        ]
+      },
+      herbivore_vs_carnivore: {
+        title: "Herbivore vs Carnivore Animals",
+        instructions: "Sort animals by their diet into Herbivore or Carnivore.",
+        round_size: 6,
+        bins: [
+          { id: "herbivore", label: "Herbivore (Plant Eater)", icon: "🌿", color: "#22c55e" },
+          { id: "carnivore", label: "Carnivore (Meat Eater)", icon: "🥩", color: "#ef4444" }
+        ],
+        objects: [
+          { label: "Butterfly", categoryId: "herbivore", explanation: "Butterflies feed on plant nectar.", image: "/static/images/butterfly.webp" },
+          { label: "Cat", categoryId: "carnivore", explanation: "Cats are carnivores that hunt and eat meat.", image: "/static/images/cat.webp" },
+          { label: "Fish", categoryId: "carnivore", explanation: "Predatory fish feed on smaller animals.", image: "/static/images/fish.webp" },
+          { label: "Bird", categoryId: "herbivore", explanation: "Many birds feed primarily on seeds and berries.", image: "/static/images/bird.webp" }
         ]
       }
     };
@@ -455,41 +486,51 @@
       objects = JSON.parse(JSON.stringify(p.objects));
 
       renderChutes();
-      renderObjects();
     }
 
-    // RENDER CHUTES
+    // RENDER EXACTLY 2 CHUTES (LEFT & RIGHT)
     function renderChutes() {
       const container = document.getElementById('chutesContainer');
       container.innerHTML = '';
 
+      if (chutes.length < 2) {
+        chutes = [
+          { id: "category_1", label: "Left Category", icon: "🌱", color: "#4ade80" },
+          { id: "category_2", label: "Right Category", icon: "🪨", color: "#fb923c" }
+        ];
+      } else if (chutes.length > 2) {
+        chutes = chutes.slice(0, 2);
+      }
+
+      const zoneNames = ["Chute 1: Left Drop Zone", "Chute 2: Right Drop Zone"];
+      const zonePositions = ["Position: Left Cabinet Chute", "Position: Right Cabinet Chute"];
+      const zoneIcons = ["bi-arrow-left-circle-fill", "bi-arrow-right-circle-fill"];
+
       chutes.forEach((chute, idx) => {
         const col = document.createElement('div');
-        col.className = 'col-12 col-md-6 col-lg-3';
+        col.className = 'col-12 col-md-6';
         col.innerHTML = `
-          <div class="chute-config-card">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="badge bg-white text-dark border fw-bold">Chute ${idx + 1}</span>
-              ${chutes.length > 2 ? `
-                <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1" onclick="removeChute(${idx})" title="Remove Chute">
-                  <i class="bi bi-x-circle-fill"></i>
-                </button>
-              ` : ''}
+          <div class="chute-config-card" style="border-left: 6px solid ${chute.color || '#4318ff'};">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="badge bg-white text-dark border fw-bold d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1">
+                <i class="bi ${zoneIcons[idx]} text-primary"></i> ${zoneNames[idx]}
+              </span>
+              <span class="badge bg-secondary-subtle text-secondary small fw-semibold">${zonePositions[idx]}</span>
             </div>
 
-            <div class="mb-2">
-              <label class="form-label text-muted small fw-bold mb-1">Label</label>
-              <input type="text" class="form-control form-control-sm fw-bold" value="${chute.label}" onchange="updateChuteField(${idx}, 'label', this.value)" required placeholder="e.g. Solid">
+            <div class="mb-3">
+              <label class="form-label text-muted small fw-bold mb-1">Chute Label <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-lg fw-bold rounded-3" value="${chute.label}" onchange="updateChuteField(${idx}, 'label', this.value)" required placeholder="e.g. Living or Solid">
             </div>
 
             <div class="row g-2">
               <div class="col-6">
-                <label class="form-label text-muted small fw-bold mb-1">Emoji</label>
-                <input type="text" class="form-control form-control-sm text-center fs-5" value="${chute.icon || '📦'}" onchange="updateChuteField(${idx}, 'icon', this.value)" maxlength="4">
+                <label class="form-label text-muted small fw-bold mb-1">Emoji / Icon Badge</label>
+                <input type="text" class="form-control text-center fs-4 rounded-3" value="${chute.icon || '📦'}" onchange="updateChuteField(${idx}, 'icon', this.value)" maxlength="4" placeholder="📦">
               </div>
               <div class="col-6">
-                <label class="form-label text-muted small fw-bold mb-1">Color</label>
-                <input type="color" class="form-control form-control-sm form-control-color w-100" value="${chute.color || '#60a5fa'}" onchange="updateChuteField(${idx}, 'color', this.value)">
+                <label class="form-label text-muted small fw-bold mb-1">Chute Glow Color</label>
+                <input type="color" class="form-control form-control-color w-100 rounded-3" value="${chute.color || (idx === 0 ? '#4ade80' : '#fb923c')}" onchange="updateChuteField(${idx}, 'color', this.value)">
               </div>
             </div>
           </div>
@@ -497,54 +538,14 @@
         container.appendChild(col);
       });
 
-      const addBtn = document.getElementById('btn-add-chute');
-      if (addBtn) {
-        addBtn.disabled = chutes.length >= 4;
-        addBtn.style.opacity = chutes.length >= 4 ? '0.5' : '1';
-      }
-
-      // Re-render objects to sync chute category dropdowns
+      // Synchronize category dropdowns on objects
       renderObjects();
-    }
-
-    function addChute() {
-      if (chutes.length >= 4) {
-        alert("A sorting activity can have a maximum of 4 chutes.");
-        return;
-      }
-      const palette = ["#60a5fa", "#38bdf8", "#34d399", "#f59e0b", "#ec4899", "#8b5cf6"];
-      const nextId = "category_" + (chutes.length + 1);
-      chutes.push({
-        id: nextId,
-        label: "Category " + (chutes.length + 1),
-        icon: "📦",
-        color: palette[chutes.length % palette.length]
-      });
-      renderChutes();
-    }
-
-    function removeChute(idx) {
-      if (chutes.length <= 2) {
-        alert("A sorting activity requires at least 2 chutes.");
-        return;
-      }
-      const removedId = chutes[idx].id;
-      chutes.splice(idx, 1);
-      
-      // If any object had this category, reassign to first remaining chute
-      objects.forEach(obj => {
-        if (obj.categoryId === removedId) {
-          obj.categoryId = chutes[0].id;
-        }
-      });
-
-      renderChutes();
     }
 
     function updateChuteField(idx, field, value) {
       chutes[idx][field] = value;
       if (field === 'label') {
-        chutes[idx].id = value.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        chutes[idx].id = value.toLowerCase().replace(/[^a-z0-9]/g, '_') || `category_${idx + 1}`;
       }
       renderObjects();
     }
@@ -554,10 +555,17 @@
       const container = document.getElementById('objectsContainer');
       container.innerHTML = '';
 
+      const validCategoryIds = new Set(chutes.map(c => c.id));
+
       objects.forEach((obj, idx) => {
         const row = document.createElement('div');
         row.className = 'object-item-row';
         const currentImg = obj.image || '/static/images/rock.webp';
+
+        // Ensure categoryId matches one of the 2 chutes
+        if (!validCategoryIds.has(obj.categoryId) && chutes.length > 0) {
+          obj.categoryId = chutes[0].id;
+        }
 
         const categoryOptions = chutes.map(c => `
           <option value="${c.id}" ${obj.categoryId === c.id ? 'selected' : ''}>
@@ -568,10 +576,10 @@
         row.innerHTML = `
           <!-- Image Picker Thumbnail -->
           <div class="text-center">
-            <img src="${currentImg}" alt="${obj.label || 'Object'}" class="object-thumb-preview" id="thumb_preview_${idx}" onclick="openPresetPicker(${idx})" title="Click to pick preset image">
-            <label class="btn btn-link btn-sm p-0 mt-1 text-decoration-none small" style="font-size: 0.7rem; cursor: pointer;">
-              Upload
-              <input type="file" name="object_file_${idx}" accept="image/*" class="d-none" onchange="handleFileUpload(${idx}, this)">
+            <img src="${currentImg}" alt="${obj.label || 'Object'}" class="object-thumb-preview" id="thumb_preview_${idx}" onclick="openPresetPicker(${idx})" title="Click to pick science icon">
+            <label class="btn btn-link btn-sm p-0 mt-1 text-decoration-none small text-primary fw-bold" style="font-size: 0.72rem; cursor: pointer;">
+              <i class="bi bi-upload me-1"></i>Upload
+              <input type="file" name="object_file_${idx}" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" class="d-none" onchange="handleFileUpload(${idx}, this)">
             </label>
           </div>
 
@@ -581,9 +589,9 @@
             <input type="text" class="form-control rounded-3 fw-bold" value="${obj.label || ''}" onchange="updateObjectField(${idx}, 'label', this.value)" required placeholder="e.g. Ice Cube">
           </div>
 
-          <!-- Chute Selector -->
+          <!-- Chute Selector (Chute 1 vs Chute 2) -->
           <div>
-            <label class="form-label text-muted small fw-bold d-lg-none mb-1">Chute</label>
+            <label class="form-label text-muted small fw-bold d-lg-none mb-1">Target Chute</label>
             <select class="form-select rounded-3 fw-semibold" onchange="updateObjectField(${idx}, 'categoryId', this.value)">
               ${categoryOptions}
             </select>
@@ -591,8 +599,8 @@
 
           <!-- Science Explanation -->
           <div>
-            <label class="form-label text-muted small fw-bold d-lg-none mb-1">Explanation</label>
-            <input type="text" class="form-control rounded-3" value="${obj.explanation || ''}" onchange="updateObjectField(${idx}, 'explanation', this.value)" placeholder="e.g. Ice has a fixed shape and volume.">
+            <label class="form-label text-muted small fw-bold d-lg-none mb-1">Explanation (Spoken aloud by TTS)</label>
+            <input type="text" class="form-control rounded-3" value="${obj.explanation || ''}" onchange="updateObjectField(${idx}, 'explanation', this.value)" placeholder="e.g. Ice has a fixed shape and volume as a solid.">
           </div>
 
           <!-- Delete Object -->
@@ -633,14 +641,32 @@
       objects[idx][field] = value;
     }
 
+    // STRICT FILE UPLOAD VALIDATION: Only PNG, JPG, JPEG, WEBP; Non-images are blocked
     function handleFileUpload(idx, input) {
       if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const validExtensions = ['png', 'jpg', 'jpeg', 'webp'];
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        const isImageMime = file.type.startsWith('image/');
+
+        if (!validExtensions.includes(ext) || !isImageMime) {
+          alert("Invalid file format!\n\nOnly images (.png, .jpg, .jpeg, .webp) are supported.\nDocuments, PDFs, executables, or other file types cannot be uploaded.");
+          input.value = '';
+          return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+          alert("Image file exceeds the 5MB size limit. Please upload an image under 5MB.");
+          input.value = '';
+          return;
+        }
+
         const reader = new FileReader();
         reader.onload = function(e) {
           document.getElementById(`thumb_preview_${idx}`).src = e.target.result;
           objects[idx].image = e.target.result; // temporary preview
         };
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
       }
     }
 
@@ -670,8 +696,14 @@
         return;
       }
 
-      if (chutes.length < 2 || chutes.length > 4) {
-        alert("A game must have between 2 and 4 chutes.");
+      if (chutes.length !== 2) {
+        alert("The claw machine sorting game requires exactly 2 chutes (Left and Right).");
+        return;
+      }
+
+      // Ensure both chutes have labels
+      if (!chutes[0].label.trim() || !chutes[1].label.trim()) {
+        alert("Please provide labels for both Chute 1 and Chute 2.");
         return;
       }
 
@@ -688,10 +720,9 @@
         }
       }
 
-      // Clean IDs
-      chutes.forEach((c, idx) => {
-        if (!c.id) c.id = "chute_" + (idx + 1);
-      });
+      // Assign chute sequential clean IDs
+      chutes[0].id = chutes[0].label.toLowerCase().replace(/[^a-z0-9]/g, '_') || "category_1";
+      chutes[1].id = chutes[1].label.toLowerCase().replace(/[^a-z0-9]/g, '_') || "category_2";
 
       // Assign object sequential IDs
       objects.forEach((obj, idx) => {
@@ -710,7 +741,6 @@
     // Initial render
     document.addEventListener('DOMContentLoaded', () => {
       renderChutes();
-      renderObjects();
     });
   </script>
 </body>

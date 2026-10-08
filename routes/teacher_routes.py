@@ -2071,7 +2071,7 @@ def content_management():
             'category': 'Classification & Categorization',
             'icon': 'bi-joystick',
             'accent': '#4318ff',
-            'description': 'Students control an arcade claw to sort science objects into 2–4 customizable chutes. Great for States of Matter, Living/Non-Living, Animals, and Waste Sorting.',
+            'description': 'Students control an arcade claw to sort science objects into 2 customizable chutes (Left & Right). Great for Living vs Non-Living, Solid vs Liquid, and Herbivore vs Carnivore.',
             'status': 'Ready to Customize',
             'is_available': True
         },
@@ -2119,20 +2119,20 @@ def claw_machine_builder(activity_id=None):
         activity = Activity.query.get_or_404(activity_id)
         config = load_sorting_activity_config(activity.id)
     else:
-        # Default starter configuration for a brand new sorting game
+        # Default starter configuration for a brand new sorting game (strictly 2 chutes for claw machine)
         config = {
-            "title": "States of Matter Sorting",
+            "title": "Solid vs Liquid Sorting",
             "instructions": "Sort each object into the correct chute to win stars.",
             "round_size": 8,
             "bins": [
                 {"id": "solid", "label": "Solid", "icon": "🧊", "color": "#60a5fa"},
-                {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"},
-                {"id": "gas", "label": "Gas", "icon": "💨", "color": "#cbd5e1"}
+                {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"}
             ],
             "objects": [
-                {"id": 1, "label": "Ice Cube", "categoryId": "solid", "explanation": "Ice has a fixed shape and volume.", "image": "/static/images/rock.webp"},
+                {"id": 1, "label": "Ice Cube", "categoryId": "solid", "explanation": "Ice has a fixed shape and volume as a solid.", "image": "/static/images/rock.webp"},
                 {"id": 2, "label": "Water", "categoryId": "liquid", "explanation": "Water flows and takes the shape of its container.", "image": "/static/images/puddle.webp"},
-                {"id": 3, "label": "Balloon Air", "categoryId": "gas", "explanation": "Air spreads out and fills any container.", "image": "/static/images/butterfly.webp"}
+                {"id": 3, "label": "Wooden Chair", "categoryId": "solid", "explanation": "A chair is solid and keeps its own shape.", "image": "/static/images/chair.webp"},
+                {"id": 4, "label": "Rock", "categoryId": "solid", "explanation": "Rocks are rigid solids that do not flow.", "image": "/static/images/rock.webp"}
             ]
         }
 
@@ -2178,7 +2178,7 @@ def save_claw_machine():
     title = request.form.get('title', 'Custom Sorting Game').strip()
     instructions = request.form.get('instructions', 'Sort each object into the correct chute.').strip()
     points = request.form.get('points', 20, type=int)
-    round_size = request.form.get('round_size', 10, type=int)
+    round_size = request.form.get('round_size', 8, type=int)
     lesson_id = request.form.get('lesson_id', type=int)
 
     bins_json = request.form.get('bins_data', '[]')
@@ -2191,8 +2191,28 @@ def save_claw_machine():
         flash(f"Invalid activity configuration: {e}", "danger")
         return redirect(url_for('teacher.content_management'))
 
+    # Claw machine physical arcade cabinet strictly requires exactly 2 chutes (Left & Right)
+    if len(bins) != 2:
+        flash("The Claw Machine sorting game requires exactly 2 chutes (Left chute and Right chute).", "warning")
+        if len(bins) > 2:
+            bins = bins[:2]
+        elif len(bins) < 2:
+            bins = [
+                {"id": "category_1", "label": "Chute 1", "icon": "📦", "color": "#60a5fa"},
+                {"id": "category_2", "label": "Chute 2", "icon": "📦", "color": "#f59e0b"}
+            ]
+
+    valid_bin_ids = {b['id'] for b in bins}
+    for obj in objects:
+        if obj.get('categoryId') not in valid_bin_ids and bins:
+            obj['categoryId'] = bins[0]['id']
+
     upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'activities')
     os.makedirs(upload_dir, exist_ok=True)
+
+    ALLOWED_IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp'}
+    MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+    rejected_files = []
 
     for idx, obj in enumerate(objects):
         file_key = f"object_file_{idx}"
@@ -2200,12 +2220,26 @@ def save_claw_machine():
             file = request.files[file_key]
             if file and file.filename:
                 ext = os.path.splitext(file.filename)[1].lower()
-                if ext in ('.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif'):
-                    unique_name = f"{uuid.uuid4().hex[:12]}{ext}"
-                    filepath = os.path.join(upload_dir, unique_name)
-                    file.save(filepath)
-                    obj['image'] = f"/static/uploads/activities/{unique_name}"
-                    obj['icon'] = obj['image']
+                mimetype = (file.mimetype or '').lower()
+                
+                # Strict check: only raster web images allowed; non-image files are blocked
+                if ext in ALLOWED_IMAGE_EXTS and mimetype.startswith('image/'):
+                    file.seek(0, os.SEEK_END)
+                    fsize = file.tell()
+                    file.seek(0)
+                    if fsize <= MAX_IMAGE_SIZE:
+                        unique_name = f"{uuid.uuid4().hex[:12]}{ext}"
+                        filepath = os.path.join(upload_dir, unique_name)
+                        file.save(filepath)
+                        obj['image'] = f"/static/uploads/activities/{unique_name}"
+                        obj['icon'] = obj['image']
+                    else:
+                        rejected_files.append(f"{file.filename} (over 5MB)")
+                else:
+                    rejected_files.append(f"{file.filename} (unsupported format; only PNG, JPG, JPEG, WEBP allowed)")
+
+    if rejected_files:
+        flash(f"Note: Some files could not be uploaded: {', '.join(rejected_files)}", "warning")
 
     config_payload = {
         "title": title,

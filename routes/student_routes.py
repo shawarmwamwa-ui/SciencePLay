@@ -1549,8 +1549,18 @@ def sorting_activity_config(activity_id):
     bins = config.get('bins') if isinstance(config.get('bins'), list) else []
     objects = config.get('objects') if isinstance(config.get('objects'), list) else []
 
-    if len(bins) < 2 or len(bins) > 4:
-        return jsonify({'error': 'Activity config must have 2-4 bins'}), 400
+    if len(bins) < 2:
+        bins = [
+            {"id": "category_1", "label": "Chute 1", "icon": "🌱", "color": "#4ade80"},
+            {"id": "category_2", "label": "Chute 2", "icon": "🪨", "color": "#fb923c"}
+        ]
+    elif len(bins) > 2:
+        bins = bins[:2]
+
+    valid_ids = {b['id'] for b in bins}
+    for obj in objects:
+        if obj.get('categoryId') not in valid_ids and bins:
+            obj['categoryId'] = bins[0]['id']
 
     return jsonify({
         'title': config.get('title') or activity.type or 'Sorting Activity',
