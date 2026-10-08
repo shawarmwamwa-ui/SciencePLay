@@ -268,7 +268,7 @@ def restore_user(user_id):
         db.session.rollback()
         flash(f"Failed to restore user: {str(e)}", "danger")
 
-    return redirect(url_for('admin.user_management'))
+    return redirect(request.referrer or url_for('admin.archive', tab='users'))
 
 @admin_bp.route('/compliance')
 @require_role('admin')
@@ -380,26 +380,6 @@ def compliance():
 
     detailed_pagination = detailed_query.order_by(AccessLog.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
-    # Archive queries (Archived Logs and Archived Users)
-    archived_users = User.query.filter(User.is_archived == True).order_by(User.deleted_at.desc()).all()
-    try:
-        archived_logs_query = db.session.query(AccessLog, User).join(User, User.id == AccessLog.user_id).filter(
-            AccessLog.is_archived == True
-        )
-        if role_filter in ('admin', 'teacher', 'student'):
-            archived_logs_query = archived_logs_query.filter(User.role == role_filter)
-        if search_query:
-            archived_logs_query = archived_logs_query.filter(
-                (User.name.ilike(f'%{search_query}%')) | 
-                (User.username.ilike(f'%{search_query}%'))
-            )
-        archived_logs = archived_logs_query.order_by(AccessLog.deleted_at.desc(), AccessLog.created_at.desc()).all()
-        archived_logs_count = AccessLog.query.filter(AccessLog.is_archived == True).count()
-    except Exception:
-        db.session.rollback()
-        archived_logs = []
-        archived_logs_count = 0
-
     return render_template(
         'admin/admin_compliance.html',
         current_user=current_user,
@@ -411,11 +391,62 @@ def compliance():
         search_query=search_query,
         start_date=start_date_str,
         end_date=end_date_str,
-        role_counts=role_counts,
+        role_counts=role_counts
+    )
+
+
+@admin_bp.route('/archive')
+@require_role('admin')
+def archive():
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', 'admin_archive')
+
+    role_filter = request.args.get('role', 'all').lower()
+    search_query = request.args.get('search', '').strip()
+    active_tab = request.args.get('tab', 'logs').lower()
+
+    # 1. Archived Users
+    users_query = User.query.filter(User.is_archived == True)
+    if role_filter in ('admin', 'teacher', 'student'):
+        users_query = users_query.filter(User.role == role_filter)
+    if search_query:
+        users_query = users_query.filter(
+            (User.name.ilike(f'%{search_query}%')) | 
+            (User.username.ilike(f'%{search_query}%'))
+        )
+    archived_users = users_query.order_by(User.deleted_at.desc()).all()
+
+    # 2. Archived Compliance Logs
+    try:
+        logs_query = db.session.query(AccessLog, User).join(User, User.id == AccessLog.user_id).filter(
+            AccessLog.is_archived == True
+        )
+        if role_filter in ('admin', 'teacher', 'student'):
+            logs_query = logs_query.filter(User.role == role_filter)
+        if search_query:
+            logs_query = logs_query.filter(
+                (User.name.ilike(f'%{search_query}%')) | 
+                (User.username.ilike(f'%{search_query}%')) |
+                (AccessLog.event_type.ilike(f'%{search_query}%')) |
+                (AccessLog.event_details.ilike(f'%{search_query}%'))
+            )
+        archived_logs = logs_query.order_by(AccessLog.deleted_at.desc(), AccessLog.created_at.desc()).all()
+        archived_logs_count = len(archived_logs)
+    except Exception:
+        db.session.rollback()
+        archived_logs = []
+        archived_logs_count = 0
+
+    return render_template(
+        'admin/admin_archive.html',
+        current_user=current_user,
+        archived_users=archived_users,
         archived_logs=archived_logs,
         archived_logs_count=archived_logs_count,
-        archived_users=archived_users,
-        archived_total=archived_logs_count + len(archived_users)
+        archived_users_count=len(archived_users),
+        selected_role=role_filter,
+        search_query=search_query,
+        active_tab=active_tab
     )
 
 
@@ -507,7 +538,7 @@ def restore_logs():
         db.session.rollback()
         flash(f"Failed to restore logs: {str(e)}", "danger")
 
-    return redirect(url_for('admin.compliance', view='archive'))
+    return redirect(url_for('admin.archive', tab='logs'))
 
 
 @admin_bp.route('/restore_single_log/<int:log_id>', methods=['POST'])
@@ -517,7 +548,7 @@ def restore_single_log(log_id):
     log = AccessLog.query.get(log_id)
     if not log:
         flash("Log record not found.", "warning")
-        return redirect(url_for('admin.compliance', view='archive'))
+        return redirect(url_for('admin.archive', tab='logs'))
 
     try:
         log.is_archived = False
@@ -529,7 +560,7 @@ def restore_single_log(log_id):
         db.session.rollback()
         flash(f"Failed to restore log record: {str(e)}", "danger")
 
-    return redirect(url_for('admin.compliance', view='archive'))
+    return redirect(url_for('admin.archive', tab='logs'))
 
 
 
