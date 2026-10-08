@@ -953,3 +953,68 @@ img {
   background-image: none !important;
   box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
 }
+
+/* System Archive Underline Tabs & Controls */
+.archive-nav-tabs {
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.archive-tab-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.25rem 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.archive-tab-link:hover {
+  color: #1e293b;
+}
+
+.archive-tab-link.active {
+  color: #0f172a;
+  font-weight: 700;
+  border-bottom-color: #4318ff;
+}
+
+.archive-count-pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.archive-tab-link.active .archive-count-pill {
+  background: #ede9fe;
+  color: #4318ff;
+}
+
+.btn-quiet-danger {
+  color: #94a3b8;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 0.35rem 0.5rem;
+  line-height: 1;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-quiet-danger:hover {
+  color: #dc2626;
+  background-color: #fee2e2;
+}

@@ -563,6 +563,66 @@ def restore_single_log(log_id):
     return redirect(url_for('admin.archive', tab='logs'))
 
 
+@admin_bp.route('/purge_log/<int:log_id>', methods=['POST'])
+@require_role('admin')
+def purge_log(log_id):
+    current_user = get_current_user()
+    log = AccessLog.query.get(log_id)
+    if not log:
+        flash("Log record not found.", "warning")
+        return redirect(url_for('admin.archive', tab='logs'))
+
+    try:
+        db.session.delete(log)
+        db.session.commit()
+        log_access(current_user, 'purge_log', f'purged_log_id={log_id}')
+        flash("Archived log record permanently deleted.", "info")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete log: {str(e)}", "danger")
+
+    return redirect(url_for('admin.archive', tab='logs'))
+
+
+@admin_bp.route('/purge_user/<int:user_id>', methods=['POST'])
+@require_role('admin')
+def purge_user(user_id):
+    current_user = get_current_user()
+    user = User.query.get(user_id)
+    if not user:
+        flash("User not found.", "warning")
+        return redirect(url_for('admin.archive', tab='users'))
+
+    if user.id == current_user.id:
+        flash("You cannot delete your own account.", "danger")
+        return redirect(url_for('admin.archive', tab='users'))
+
+    try:
+        uname = user.username
+        AccessLog.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+        UserBadge.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+        ProgressLog.query.filter_by(student_id=user.id).delete(synchronize_session=False)
+        LessonProgress.query.filter_by(student_id=user.id).delete(synchronize_session=False)
+        LessonAttemptLog.query.filter_by(student_id=user.id).delete(synchronize_session=False)
+        LessonAssignment.query.filter((LessonAssignment.student_id == user.id) | (LessonAssignment.assigned_by == user.id)).delete(synchronize_session=False)
+        ActivityAssignment.query.filter((ActivityAssignment.student_id == user.id) | (ActivityAssignment.assigned_by == user.id)).delete(synchronize_session=False)
+
+        student_attempts = AttemptLog.query.filter_by(student_id=user.id).all()
+        for att in student_attempts:
+            AttemptObjectLog.query.filter_by(attempt_log_id=att.id).delete(synchronize_session=False)
+        AttemptLog.query.filter_by(student_id=user.id).delete(synchronize_session=False)
+
+        db.session.delete(user)
+        db.session.commit()
+        log_access(current_user, 'purge_user', f'target_user={uname}')
+        flash(f"User account '@{uname}' permanently purged from database.", "warning")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to permanently delete user: {str(e)}", "danger")
+
+    return redirect(url_for('admin.archive', tab='users'))
+
+
 
 
 

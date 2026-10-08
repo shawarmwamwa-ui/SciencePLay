@@ -60,19 +60,16 @@
 
       <main class="col-12 col-lg-9 col-xl-10">
         <section class="admin-content">
-          <div class="content-center-wrap">
-
-            <!-- Page Header -->
+          <div class="content-center-wrap">            <!-- Page Header -->
             <header class="page-header mb-4">
               <div>
                 <p class="eyebrow mb-1">Data Protection & Recovery</p>
                 <h1 class="mb-1 h2"><i class="bi bi-archive-fill text-warning me-2"></i>System Archive</h1>
-                <p class="mb-0 text-muted">Safely manage and restore soft-deleted compliance access logs and user accounts.</p>
-              </div>
-              <div class="d-flex gap-2 align-items-center">
-                <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 rounded-pill fw-bold">
-                  <i class="bi bi-shield-check me-1 text-success"></i>Reversible Storage
-                </span>
+                <div class="d-flex align-items-center flex-wrap gap-2 text-muted small mt-1">
+                  <span>Safely manage and restore soft-deleted compliance access logs and user accounts.</span>
+                  <span>•</span>
+                  <span><i class="bi bi-shield-check me-1"></i>Reversible storage</span>
+                </div>
               </div>
             </header>
 
@@ -89,79 +86,86 @@
               {% endif %}
             {% endwith %}
 
-            <!-- Filter Controls Bar -->
-            <div class="compliance-filter-bar mb-4">
-              <form method="GET" action="{{ url_for('admin.archive') }}">
-                <input type="hidden" name="tab" value="{{ active_tab }}">
-                <div class="row g-3 align-items-center">
-                  <div class="col-12 col-md-6">
-                    <label class="form-label small fw-bold text-muted mb-1 d-block"><i class="bi bi-funnel-fill me-1"></i>Filter by Role:</label>
-                    <div class="btn-group flex-wrap" role="group">
-                      <a href="{{ url_for('admin.archive', role='all', tab=active_tab, search=search_query) }}" class="btn btn-sm btn-outline-secondary px-3 {{ 'active fw-bold' if selected_role == 'all' }}">
-                        All Roles
-                      </a>
-                      <a href="{{ url_for('admin.archive', role='admin', tab=active_tab, search=search_query) }}" class="btn btn-sm btn-outline-danger px-3 {{ 'active fw-bold' if selected_role == 'admin' }}">
-                        Admins
-                      </a>
-                      <a href="{{ url_for('admin.archive', role='teacher', tab=active_tab, search=search_query) }}" class="btn btn-sm btn-outline-primary px-3 {{ 'active fw-bold' if selected_role == 'teacher' }}">
-                        Teachers
-                      </a>
-                      <a href="{{ url_for('admin.archive', role='student', tab=active_tab, search=search_query) }}" class="btn btn-sm btn-outline-success px-3 {{ 'active fw-bold' if selected_role == 'student' }}">
-                        Students
-                      </a>
+            <!-- Tab Navigation: Underline Style with Count -->
+            <nav class="archive-nav-tabs d-flex gap-4 mb-2" aria-label="Archive navigation">
+              <a class="archive-tab-link {{ 'active' if active_tab != 'users' else '' }}" 
+                 href="{{ url_for('admin.archive', tab='logs', role=selected_role, search=search_query) }}">
+                <i class="bi bi-clipboard-data me-1"></i>Deleted Compliance Logs
+                <span class="archive-count-pill">{{ archived_logs_count }}</span>
+              </a>
+              <a class="archive-tab-link {{ 'active' if active_tab == 'users' else '' }}" 
+                 href="{{ url_for('admin.archive', tab='users', role=selected_role, search=search_query) }}">
+                <i class="bi bi-people me-1"></i>Deleted Users
+                <span class="archive-count-pill">{{ archived_users_count }}</span>
+              </a>
+            </nav>
+
+            <!-- Short description line under tabs -->
+            <p class="text-muted small mb-3">
+              {% if active_tab != 'users' %}
+                Logs soft-deleted from the active timeline. Fully preserved for audits and reporting.
+              {% else %}
+                User accounts soft-deleted from User Management. All logs and student records remain preserved.
+              {% endif %}
+            </p>
+
+            <!-- Single Card: Filter Toolbar + Table + Empty State -->
+            <section class="table-shell mb-4">
+              <!-- Integrated Filter / Search Toolbar -->
+              <div class="p-3 border-bottom bg-light-subtle">
+                <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+                  <form method="GET" action="{{ url_for('admin.archive') }}" class="d-flex flex-wrap align-items-end gap-3 flex-grow-1">
+                    <input type="hidden" name="tab" value="{{ active_tab }}">
+                    <div>
+                      <label class="form-label small fw-bold text-muted mb-1 d-block">Filter by Role:</label>
+                      <div class="btn-group btn-group-sm" role="group" aria-label="Role Filter">
+                        <a href="{{ url_for('admin.archive', role='all', tab=active_tab, search=search_query) }}" 
+                           class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'all' else '' }}">
+                          All Roles
+                        </a>
+                        <a href="{{ url_for('admin.archive', role='admin', tab=active_tab, search=search_query) }}" 
+                           class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'admin' else '' }}">
+                          <span style="color: #ef4444; font-size: 0.75rem;">●</span> Admins
+                        </a>
+                        <a href="{{ url_for('admin.archive', role='teacher', tab=active_tab, search=search_query) }}" 
+                           class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'teacher' else '' }}">
+                          <span style="color: #4318ff; font-size: 0.75rem;">●</span> Teachers
+                        </a>
+                        <a href="{{ url_for('admin.archive', role='student', tab=active_tab, search=search_query) }}" 
+                           class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'student' else '' }}">
+                          <span style="color: #10b981; font-size: 0.75rem;">●</span> Students
+                        </a>
+                      </div>
                     </div>
-                  </div>
 
-                  <div class="col-12 col-md-6">
-                    <label class="form-label small fw-bold text-muted mb-1 d-block"><i class="bi bi-search me-1"></i>Search Records:</label>
-                    <div class="input-group input-group-sm">
-                      <input type="text" name="search" class="form-control" placeholder="Search by name, username, or details..." value="{{ search_query }}">
-                      <button class="btn btn-primary fw-bold" type="submit"><i class="bi bi-search me-1"></i>Search</button>
-                      {% if search_query or selected_role != 'all' %}
-                        <a href="{{ url_for('admin.archive', tab=active_tab) }}" class="btn btn-outline-secondary" title="Reset Filters"><i class="bi bi-x-circle"></i></a>
-                      {% endif %}
+                    <div class="flex-grow-1" style="min-width: 240px; max-width: 420px;">
+                      <label class="form-label small fw-bold text-muted mb-1 d-block">Search Records:</label>
+                      <div class="input-group input-group-sm">
+                        <input type="text" name="search" class="form-control" placeholder="Search by name, username, or details..." value="{{ search_query }}">
+                        <button class="btn btn-primary fw-bold" type="submit"><i class="bi bi-search me-1"></i>Search</button>
+                        {% if search_query or selected_role != 'all' %}
+                          <a href="{{ url_for('admin.archive', tab=active_tab) }}" class="btn btn-outline-secondary" title="Reset Filters"><i class="bi bi-x-circle"></i></a>
+                        {% endif %}
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </form>
-            </div>
+                  </form>
 
-            <!-- Tab Navigation for Archived Logs vs Archived Users -->
-            <ul class="nav nav-pills mb-4 gap-2" id="archiveTabs" role="tablist">
-              <li class="nav-item" role="presentation">
-                <a class="nav-link fw-bold px-4 rounded-pill {{ 'active' if active_tab != 'users' else '' }}" 
-                   href="{{ url_for('admin.archive', tab='logs', role=selected_role, search=search_query) }}">
-                  <i class="bi bi-clipboard-data-fill me-2"></i>Deleted Compliance Logs ({{ archived_logs_count }})
-                </a>
-              </li>
-              <li class="nav-item" role="presentation">
-                <a class="nav-link fw-bold px-4 rounded-pill {{ 'active' if active_tab == 'users' else '' }}" 
-                   href="{{ url_for('admin.archive', tab='users', role=selected_role, search=search_query) }}">
-                  <i class="bi bi-people-fill me-2"></i>Deleted Users ({{ archived_users_count }})
-                </a>
-              </li>
-            </ul>
-
-            <!-- Tab Panes -->
-            {% if active_tab != 'users' %}
-              <!-- PANE 1: DELETED COMPLIANCE LOGS -->
-              <section class="table-shell mb-4">
-                <div class="table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                  <div>
-                    <h2 class="h5 fw-bold mb-0"><i class="bi bi-journal-text me-2 text-warning"></i>Deleted Compliance Logs History</h2>
-                    <p class="mb-0 text-muted small">Logs soft-deleted from the active timeline. Fully preserved for audits and reporting.</p>
-                  </div>
-                  {% if archived_logs %}
-                    <form method="POST" action="{{ url_for('admin.restore_logs') }}" onsubmit="return confirm('Restore all archived compliance logs back to the active timeline?');">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <input type="hidden" name="role_target" value="{{ selected_role }}">
-                      <button type="submit" class="btn btn-sm btn-success fw-bold px-3 shadow-sm">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i>Restore All Logs ({{ archived_logs|length }})
-                      </button>
-                    </form>
+                  {% if active_tab != 'users' and archived_logs %}
+                    <div>
+                      <form method="POST" action="{{ url_for('admin.restore_logs') }}" onsubmit="return confirm('Restore all archived compliance logs back to the active timeline?');" class="m-0">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="role_target" value="{{ selected_role }}">
+                        <button type="submit" class="btn btn-sm btn-outline-success fw-bold">
+                          <i class="bi bi-arrow-counterclockwise me-1"></i>Restore All Logs ({{ archived_logs|length }})
+                        </button>
+                      </form>
+                    </div>
                   {% endif %}
                 </div>
+              </div>
 
+              {% if active_tab != 'users' %}
+                <!-- Pane 1: Deleted Compliance Logs Table -->
                 <div class="table-responsive">
                   <table class="table align-middle mb-0">
                     <thead>
@@ -180,8 +184,8 @@
                         {% set r_class = log_user.role if log_user else 'admin' %}
                         <tr>
                           <td class="small">{{ log.created_at|to_ph_time('%b %d, %Y %I:%M %p') if log.created_at else 'N/A' }}</td>
-                          <td class="small text-warning fw-semibold">
-                            <i class="bi bi-archive me-1"></i>{{ log.deleted_at|to_ph_time('%b %d, %Y %I:%M %p') if log.deleted_at else 'Archived' }}
+                          <td class="small text-muted fw-semibold">
+                            {{ log.deleted_at|to_ph_time('%b %d, %Y %I:%M %p') if log.deleted_at else 'Archived' }}
                           </td>
                           <td>
                             <strong>{{ log_user.name if log_user else 'Unknown' }}</strong>
@@ -191,19 +195,27 @@
                           <td><span class="badge bg-secondary">{{ log.event_type }}</span></td>
                           <td class="small text-muted">{{ log.event_details or 'No details' }}</td>
                           <td class="text-end">
-                            <form method="POST" action="{{ url_for('admin.restore_single_log', log_id=log.id) }}" style="display: inline-block;">
-                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                              <button type="submit" class="btn btn-sm btn-outline-success fw-bold px-2.5 py-1" title="Restore this log to active timeline">
-                                <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
-                              </button>
-                            </form>
+                            <div class="d-inline-flex align-items-center justify-content-end gap-1">
+                              <form method="POST" action="{{ url_for('admin.restore_single_log', log_id=log.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-primary fw-semibold px-2.5 py-1" title="Restore log to active timeline">
+                                  <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+                                </button>
+                              </form>
+                              <form method="POST" action="{{ url_for('admin.purge_log', log_id=log.id) }}" class="d-inline" onsubmit="return confirm('Permanently delete this archived log record? This action cannot be undone.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-quiet-danger" title="Permanently Delete">
+                                  <i class="bi bi-trash3"></i>
+                                </button>
+                              </form>
+                            </div>
                           </td>
                         </tr>
                       {% else %}
                         <tr>
                           <td colspan="7" class="text-center text-muted py-5">
                             <i class="bi bi-archive fs-1 d-block mb-2 text-secondary opacity-50"></i>
-                            <p class="mb-0 fw-semibold">No deleted compliance logs found in Archive.</p>
+                            <p class="mb-1 fw-semibold text-dark">No deleted compliance logs found in Archive.</p>
                             <small class="text-muted">Cleared logs from the Compliance Logs page will appear here.</small>
                           </td>
                         </tr>
@@ -211,26 +223,16 @@
                     </tbody>
                   </table>
                 </div>
-              </section>
-            {% else %}
-              <!-- PANE 2: DELETED USERS -->
-              <section class="table-shell mb-4">
-                <div class="table-header">
-                  <div>
-                    <h2 class="h5 fw-bold mb-0"><i class="bi bi-people-fill me-2 text-warning"></i>Deleted User Accounts</h2>
-                    <p class="mb-0 text-muted small">Accounts soft-deleted from User Management. All activity logs, quiz attempts, and scores are preserved.</p>
-                  </div>
-                </div>
-
+              {% else %}
+                <!-- Pane 2: Deleted Users Table -->
                 <div class="table-responsive">
                   <table class="table align-middle mb-0">
                     <thead>
                       <tr>
-                        <th>User</th>
-                        <th>Role</th>
+                        <th>Name</th>
                         <th>Username</th>
-                        <th>Archived Date</th>
-                        <th>Registered Date</th>
+                        <th>Role</th>
+                        <th>Archived On</th>
                         <th class="text-end">Action</th>
                       </tr>
                     </thead>
@@ -240,31 +242,41 @@
                         <tr>
                           <td>
                             <div class="d-flex align-items-center gap-2">
-                              <div class="user-avatar-badge avatar-{{ role_class }}" style="width: 34px; height: 34px; font-size: 0.9rem;">
+                              <div class="user-avatar-badge avatar-{{ role_class }}" style="width: 32px; height: 32px; font-size: 0.85rem;">
                                 <i class="bi {{ 'bi-shield-check' if u.role == 'admin' else 'bi-person-badge-fill' if u.role == 'teacher' else 'bi-mortarboard-fill' }}"></i>
                               </div>
                               <strong>{{ u.name }}</strong>
                             </div>
                           </td>
-                          <td><span class="role-pill role-{{ role_class }}">{{ u.role|title }}</span></td>
                           <td class="small fw-semibold text-muted">@{{ u.username }}</td>
-                          <td class="small text-danger fw-semibold">
-                            <i class="bi bi-clock-history me-1"></i>{{ u.deleted_at|to_ph_time('%b %d, %Y %I:%M %p') if u.deleted_at else 'Archived' }}
+                          <td><span class="role-pill role-{{ role_class }}">{{ u.role|title }}</span></td>
+                          <td class="small text-muted fw-semibold">
+                            {{ u.deleted_at|to_ph_time('%b %d, %Y %I:%M %p') if u.deleted_at else 'Archived' }}
                           </td>
-                          <td class="small text-muted">{{ u.created_at|to_ph_time('%b %d, %Y') if u.created_at else 'N/A' }}</td>
                           <td class="text-end">
-                            <a href="{{ url_for('admin.restore_user', user_id=u.id) }}" 
-                               class="btn btn-sm btn-outline-success fw-bold px-3 py-1 shadow-sm" 
-                               onclick="return confirm('Restore user account \'{{ u.name }}\' back to active users?');">
-                              <i class="bi bi-person-check-fill me-1"></i>Restore Account
-                            </a>
+                            <div class="d-inline-flex align-items-center justify-content-end gap-1">
+                              <a href="{{ url_for('admin.restore_user', user_id=u.id) }}" 
+                                 class="btn btn-sm btn-primary fw-semibold px-2.5 py-1" 
+                                 onclick="return confirm('Restore user account \'{{ u.name }}\' back to active users?');"
+                                 title="Restore user account">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+                              </a>
+                              {% if u.id != current_user.id %}
+                                <form method="POST" action="{{ url_for('admin.purge_user', user_id=u.id) }}" class="d-inline" onsubmit="return confirm('Permanently delete user @{{ u.username }} and all associated data? This action cannot be undone.');">
+                                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                  <button type="submit" class="btn-quiet-danger" title="Permanently Delete">
+                                    <i class="bi bi-trash3"></i>
+                                  </button>
+                                </form>
+                              {% endif %}
+                            </div>
                           </td>
                         </tr>
                       {% else %}
                         <tr>
-                          <td colspan="6" class="text-center text-muted py-5">
-                            <i class="bi bi-person-x fs-1 d-block mb-2 text-secondary opacity-50"></i>
-                            <p class="mb-0 fw-semibold">No deleted users found in Archive.</p>
+                          <td colspan="5" class="text-center text-muted py-5">
+                            <i class="bi bi-people fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            <p class="mb-1 fw-semibold text-dark">No deleted users found in Archive.</p>
                             <small class="text-muted">Deleted teachers, students, or admins will appear here for recovery.</small>
                           </td>
                         </tr>
@@ -272,8 +284,8 @@
                     </tbody>
                   </table>
                 </div>
-              </section>
-            {% endif %}
+              {% endif %}
+            </section>
 
           </div>
         </section>
