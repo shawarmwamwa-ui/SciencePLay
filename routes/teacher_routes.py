@@ -4,7 +4,7 @@ from pathlib import Path
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from database.models import db, Lesson, Activity, User, ProgressLog, LessonAssignment, ActivityAssignment, AttemptLog, UserBadge, LessonProgress, LessonAttemptLog, Badge, AttemptObjectLog
-from routes.utils import get_current_user, require_role, log_access, csrf, to_ph_time, ensure_trixia_lesson_progress
+from routes.utils import get_current_user, require_role, log_access, csrf, to_ph_time, ensure_trixia_lesson_progress, format_relative_time
 
 teacher_bp = Blueprint('teacher', __name__, url_prefix='/teacher')
 
@@ -266,11 +266,22 @@ def build_live_lesson_tracker(online_students_set=None):
                 f'<i class="bi bi-clock-history me-1"></i>First Visit <i class="bi bi-chevron-right ms-1"></i></a>'
             )
 
+        if lp.student and lp.student.is_archived:
+            continue
+
+        s_last_seen = lp.student.last_seen if lp.student else None
+        is_stud_online = lp.student_id in online_students_set
+        s_rel = format_relative_time(s_last_seen) if not is_stud_online else 'Online Now'
+        s_fmt = to_ph_time(s_last_seen).strftime('%b %d, %Y at %I:%M %p') if s_last_seen else 'Never active'
+
         live_lesson_tracker.append({
             'student_id': lp.student_id,
             'student_name': lp.student.name if lp.student else f'Student #{lp.student_id}',
             'student_username': lp.student.username if lp.student else '',
-            'is_online': lp.student_id in online_students_set,
+            'is_online': is_stud_online,
+            'last_seen': s_last_seen,
+            'last_seen_relative': s_rel,
+            'last_seen_formatted': s_fmt,
             'lesson_title': lp.lesson.title if lp.lesson else f'Lesson #{lp.lesson_id}',
             'status': status_text,
             'status_badge_class': status_badge_class,
@@ -727,9 +738,12 @@ def students():
     online_count = 0
     total_class_progress = 0
 
+    active_students_data = []
+    archived_students_data = []
+
     for s in student_users:
         is_online = bool(s.last_seen and s.last_seen >= online_threshold)
-        if is_online:
+        if is_online and not s.is_archived:
             online_count += 1
 
         s_lps = lp_by_student.get(s.id, [])
@@ -750,7 +764,9 @@ def students():
             overall_pct = 100
         else:
             overall_pct = 0
-        total_class_progress += overall_pct
+
+        if not s.is_archived:
+            total_class_progress += overall_pct
 
         total_points = sum((p.score or 0) for p in s_progs)
         badge_count = len(badges_by_student.get(s.id, []))
@@ -759,12 +775,19 @@ def students():
         latest_attempt_date = max((a.created_at for a in s_attempts if a.created_at), default=None)
         latest_active = latest_attempt_date or s.last_seen or s.created_at
 
-        students_data.append({
+        s_rel = format_relative_time(s.last_seen) if not is_online else 'Online Now'
+        s_fmt = to_ph_time(s.last_seen).strftime('%b %d, %Y at %I:%M %p') if s.last_seen else 'Never active'
+
+        item = {
             'id': s.id,
             'name': s.name,
             'username': s.username,
             'is_online': is_online,
+            'is_archived': bool(s.is_archived),
+            'deleted_at': s.deleted_at,
             'last_seen': s.last_seen,
+            'last_seen_relative': s_rel,
+            'last_seen_formatted': s_fmt,
             'latest_active': latest_active,
             'completed_lessons': completed_lessons,
             'assigned_lessons': assigned_lessons,
@@ -773,18 +796,25 @@ def students():
             'overall_progress': overall_pct,
             'total_points': total_points,
             'badge_count': badge_count
-        })
+        }
 
-    avg_class_progress = round(total_class_progress / len(students_data)) if students_data else 0
-    online_students_set = set(s.id for s in student_users if s.last_seen and s.last_seen >= online_threshold)
+        if s.is_archived:
+            archived_students_data.append(item)
+        else:
+            active_students_data.append(item)
+
+    avg_class_progress = round(total_class_progress / len(active_students_data)) if active_students_data else 0
+    online_students_set = set(s.id for s in student_users if not s.is_archived and s.last_seen and s.last_seen >= online_threshold)
     live_lesson_tracker = build_live_lesson_tracker(online_students_set)
 
     return render_template(
         'teacher/teacher_students.html',
         current_user=current_user,
-        students=students_data,
+        students=active_students_data,
+        archived_students=archived_students_data,
         live_lesson_tracker=live_lesson_tracker,
-        total_students=len(students_data),
+        total_students=len(active_students_data),
+        archived_count=len(archived_students_data),
         online_count=online_count,
         avg_class_progress=avg_class_progress,
         search_query=search_query,
@@ -854,9 +884,17 @@ def lessons():
     except Exception:
         db.session.rollback()
 
+    active_lesson_assignments = [la for la in lesson_assignments if not la.is_archived]
+    archived_lesson_assignments = [la for la in lesson_assignments if la.is_archived]
+
+    active_activity_assignments = [aa for aa in activity_assignments if not aa.is_archived]
+    archived_activity_assignments = [aa for aa in activity_assignments if aa.is_archived]
+
+    active_students = [s for s in students if not s.is_archived]
+
     existing_assignments = {
-        'lessons': [{'student_id': la.student_id, 'lesson_id': la.lesson_id} for la in lesson_assignments],
-        'activities': [{'student_id': aa.student_id, 'activity_id': aa.activity_id, 'status': aa.status} for aa in activity_assignments]
+        'lessons': [{'student_id': la.student_id, 'lesson_id': la.lesson_id} for la in active_lesson_assignments],
+        'activities': [{'student_id': aa.student_id, 'activity_id': aa.activity_id, 'status': aa.status} for aa in active_activity_assignments]
     }
 
     return render_template(
@@ -864,9 +902,11 @@ def lessons():
         current_user=current_user,
         lessons=lessons,
         activities=activities,
-        students=students,
-        lesson_assignments=lesson_assignments,
-        activity_assignments=activity_assignments,
+        students=active_students,
+        lesson_assignments=active_lesson_assignments,
+        archived_lesson_assignments=archived_lesson_assignments,
+        activity_assignments=active_activity_assignments,
+        archived_activity_assignments=archived_activity_assignments,
         lesson_activity_map=lesson_activity_map,
         existing_assignments=existing_assignments,
         completed_lessons=completed_lessons,
@@ -1160,14 +1200,110 @@ def reassign_activity(assignment_id):
     return redirect(request.referrer or url_for('teacher.lessons'))
 
 
+@teacher_bp.route('/archive_assignment/<string:assign_type>/<int:assignment_id>', methods=['POST'])
+@require_role('teacher')
+def archive_assignment(assign_type, assignment_id):
+    current_user = get_current_user()
+    try:
+        if assign_type == 'lesson':
+            assign = LessonAssignment.query.get(assignment_id)
+        else:
+            assign = ActivityAssignment.query.get(assignment_id)
+
+        if not assign:
+            flash("Assignment not found.", "warning")
+            return redirect(url_for('teacher.lessons'))
+
+        assign.is_archived = True
+        assign.deleted_at = datetime.utcnow()
+        db.session.commit()
+        log_access(current_user, 'archive_assignment', f'type={assign_type} id={assignment_id}')
+        flash(f"{assign_type.capitalize()} assignment has been moved to archive. You can restore it anytime from the Archived view.", "warning")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to archive assignment: {str(e)}", "danger")
+
+    return redirect(url_for('teacher.lessons'))
+
+
+@teacher_bp.route('/restore_assignment/<string:assign_type>/<int:assignment_id>', methods=['POST'])
+@require_role('teacher')
+def restore_assignment(assign_type, assignment_id):
+    current_user = get_current_user()
+    try:
+        if assign_type == 'lesson':
+            assign = LessonAssignment.query.get(assignment_id)
+        else:
+            assign = ActivityAssignment.query.get(assignment_id)
+
+        if not assign:
+            flash("Assignment not found.", "warning")
+            return redirect(url_for('teacher.lessons'))
+
+        assign.is_archived = False
+        assign.deleted_at = None
+        db.session.commit()
+        log_access(current_user, 'restore_assignment', f'type={assign_type} id={assignment_id}')
+        flash(f"{assign_type.capitalize()} assignment restored to active coursework list.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to restore assignment: {str(e)}", "danger")
+
+    return redirect(url_for('teacher.lessons'))
+
+
+@teacher_bp.route('/archive_student/<int:student_id>', methods=['POST'])
+@require_role('teacher')
+def archive_student(student_id):
+    current_user = get_current_user()
+    student = User.query.filter_by(id=student_id, role='student').first()
+    if not student:
+        flash("Student not found.", "warning")
+        return redirect(url_for('teacher.students'))
+
+    try:
+        student.is_archived = True
+        student.deleted_at = datetime.utcnow()
+        db.session.commit()
+        log_access(current_user, 'archive_student', f'target_student={student.username}')
+        flash(f"Student '{student.name}' (@{student.username}) has been moved to archive. All coursework and attempts are preserved.", "warning")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to archive student: {str(e)}", "danger")
+
+    return redirect(url_for('teacher.students'))
+
+
+@teacher_bp.route('/restore_student/<int:student_id>', methods=['POST'])
+@require_role('teacher')
+def restore_student(student_id):
+    current_user = get_current_user()
+    student = User.query.filter_by(id=student_id, role='student').first()
+    if not student:
+        flash("Student not found.", "warning")
+        return redirect(url_for('teacher.students', tab='archived'))
+
+    try:
+        student.is_archived = False
+        student.deleted_at = None
+        db.session.commit()
+        log_access(current_user, 'restore_student', f'target_student={student.username}')
+        flash(f"Student '{student.name}' (@{student.username}) has been restored to active classroom roster.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to restore student: {str(e)}", "danger")
+
+    return redirect(url_for('teacher.students', tab='archived'))
+
+
 @teacher_bp.route('/analytics')
 @require_role('teacher')
 def analytics():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'teacher_analytics')
     
-    lesson_assignments = LessonAssignment.query.all()
-    activity_assignments = ActivityAssignment.query.all()
+    lesson_assignments = LessonAssignment.query.filter((LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)).all()
+    activity_assignments = ActivityAssignment.query.filter((ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None)).all()
     
     activity_attempts = AttemptLog.query.join(
         Activity, Activity.id == AttemptLog.activity_id
@@ -1312,14 +1448,21 @@ def analytics():
             student_time_map[lp.student_id] = (lp.total_time_spent or lp.time_spent or 0)
 
     students_time_list = []
-    for s in User.query.filter_by(role='student').order_by(User.name.asc()).all():
+    for s in User.query.filter(User.role == 'student', (User.is_archived == False) | (User.is_archived == None)).order_by(User.name.asc()).all():
         s_sec = student_time_map.get(s.id, 0)
+        is_online = bool(s.last_seen and s.last_seen >= online_threshold)
+        s_rel = format_relative_time(s.last_seen) if not is_online else 'Online Now'
+        s_fmt = to_ph_time(s.last_seen).strftime('%b %d, %Y at %I:%M %p') if s.last_seen else 'Never active'
         students_time_list.append({
             'student_id': s.id,
             'name': s.name,
             'username': s.username,
             'time_seconds': s_sec,
-            'time_formatted': format_time_duration(s_sec)
+            'time_formatted': format_time_duration(s_sec),
+            'last_seen': s.last_seen,
+            'is_online': is_online,
+            'last_seen_relative': s_rel,
+            'last_seen_formatted': s_fmt
         })
     students_time_list.sort(key=lambda x: x['time_seconds'], reverse=True)
     avg_per_student_sec = round(total_time_task_seconds / max(total_students_count, 1))
@@ -1336,23 +1479,31 @@ def analytics():
         User.id.label('id'),
         User.name.label('name'),
         User.username.label('username'),
+        User.last_seen.label('last_seen'),
         db.func.coalesce(db.func.sum(ProgressLog.score), 0).label('total_score'),
         db.func.count(db.func.distinct(ProgressLog.activity_id)).label('activities_completed')
     ).outerjoin(ProgressLog, User.id == ProgressLog.student_id).filter(
-        User.role == 'student'
-    ).group_by(User.id, User.name, User.username).order_by(db.desc('total_score'), User.name.asc()).all()
+        User.role == 'student',
+        (User.is_archived == False) | (User.is_archived == None)
+    ).group_by(User.id, User.name, User.username, User.last_seen).order_by(db.desc('total_score'), User.name.asc()).all()
 
-    all_top_students = [
-        {
+    all_top_students = []
+    for idx, row in enumerate(all_top_students_raw):
+        is_online = bool(row.last_seen and row.last_seen >= online_threshold)
+        s_rel = format_relative_time(row.last_seen) if not is_online else 'Online Now'
+        s_fmt = to_ph_time(row.last_seen).strftime('%b %d, %Y at %I:%M %p') if row.last_seen else 'Never active'
+        all_top_students.append({
             'rank': idx + 1,
             'id': row.id,
             'name': row.name,
             'username': row.username,
             'total_score': int(row.total_score or 0),
-            'activities_completed': int(row.activities_completed or 0)
-        }
-        for idx, row in enumerate(all_top_students_raw)
-    ]
+            'activities_completed': int(row.activities_completed or 0),
+            'last_seen': row.last_seen,
+            'is_online': is_online,
+            'last_seen_relative': s_rel,
+            'last_seen_formatted': s_fmt
+        })
 
     # Active students count for Participation Rate calculation
     active_student_ids = set(
@@ -1698,10 +1849,18 @@ def student_performance(student_id):
     # Overall stats
     total_score = sum((log.score or 0) for log in raw_progress_logs)
     avg_score = round(total_score / len(raw_progress_logs)) if raw_progress_logs else 0
-    
+
+    online_threshold = datetime.utcnow() - timedelta(minutes=3)
+    is_online = bool(student.last_seen and student.last_seen >= online_threshold)
+    last_seen_relative = format_relative_time(student.last_seen) if not is_online else 'Online Now'
+    last_seen_formatted = to_ph_time(student.last_seen).strftime('%b %d, %Y at %I:%M %p') if student.last_seen else 'Never active'
+
     return render_template(
         'teacher/student_performance.html',
         student=student,
+        is_online=is_online,
+        last_seen_relative=last_seen_relative,
+        last_seen_formatted=last_seen_formatted,
         progress_logs=raw_progress_logs,
         activity_performance=activity_performance,
         activity_map=activity_map,

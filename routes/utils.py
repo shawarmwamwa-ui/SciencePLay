@@ -14,6 +14,32 @@ def to_ph_time(dt):
     return dt + timedelta(hours=8)
 
 
+def format_relative_time(dt):
+    """Converts a UTC datetime into a human-readable relative string."""
+    if not dt:
+        return 'Never active'
+    now = datetime.utcnow()
+    diff = now - dt
+    total_seconds = int(diff.total_seconds())
+
+    if total_seconds < 0 or total_seconds < 60:
+        return 'Just now'
+    if total_seconds < 3600:
+        minutes = total_seconds // 60
+        return f'{minutes}m ago'
+    if total_seconds < 86400:
+        hours = total_seconds // 3600
+        return f'{hours}h ago'
+    if total_seconds < 172800:
+        ph_dt = to_ph_time(dt)
+        return f'Yesterday at {ph_dt.strftime("%I:%M %p")}'
+    if diff.days < 7:
+        return f'{diff.days}d ago'
+
+    ph_dt = to_ph_time(dt)
+    return ph_dt.strftime('%b %d, %Y')
+
+
 def get_current_user():
     user_id = session.get('user_id')
     if not user_id:

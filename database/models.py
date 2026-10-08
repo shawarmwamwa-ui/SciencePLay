@@ -9,6 +9,15 @@ class BaseModel(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     deleted_at = db.Column(db.DateTime, nullable=True)
+    is_archived = db.Column(db.Boolean, default=False, nullable=True)
+
+    def archive(self):
+        self.is_archived = True
+        self.deleted_at = datetime.utcnow()
+
+    def restore(self):
+        self.is_archived = False
+        self.deleted_at = None
 
 
 class User(BaseModel):

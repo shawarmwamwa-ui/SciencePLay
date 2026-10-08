@@ -69,11 +69,13 @@ def user_management():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'admin_user_management')
     online_threshold = datetime.utcnow() - timedelta(minutes=3)
-    users = User.query.order_by(User.created_at.desc()).all()
+    active_users = User.query.filter((User.is_archived == False) | (User.is_archived == None)).order_by(User.created_at.desc()).all()
+    archived_users = User.query.filter(User.is_archived == True).order_by(User.deleted_at.desc()).all()
 
     return render_template(
         'admin/admin_users.html',
-        users=users,
+        users=active_users,
+        archived_users=archived_users,
         current_user=current_user,
         online_threshold=online_threshold
     )
@@ -220,27 +222,36 @@ def delete_user(user_id):
         return redirect(url_for('admin.user_management'))
 
     try:
-        # Clean up related records to prevent foreign key integrity crash
-        AccessLog.query.filter_by(user_id=user.id).delete(synchronize_session=False)
-        UserBadge.query.filter_by(user_id=user.id).delete(synchronize_session=False)
-        ProgressLog.query.filter_by(student_id=user.id).delete(synchronize_session=False)
-        LessonProgress.query.filter_by(student_id=user.id).delete(synchronize_session=False)
-        LessonAttemptLog.query.filter_by(student_id=user.id).delete(synchronize_session=False)
-        LessonAssignment.query.filter((LessonAssignment.student_id == user.id) | (LessonAssignment.assigned_by == user.id)).delete(synchronize_session=False)
-        ActivityAssignment.query.filter((ActivityAssignment.student_id == user.id) | (ActivityAssignment.assigned_by == user.id)).delete(synchronize_session=False)
-        
-        # Clean up attempt logs and their child object logs
-        student_attempts = AttemptLog.query.filter_by(student_id=user.id).all()
-        for att in student_attempts:
-            AttemptObjectLog.query.filter_by(attempt_log_id=att.id).delete(synchronize_session=False)
-        AttemptLog.query.filter_by(student_id=user.id).delete(synchronize_session=False)
-
-        db.session.delete(user)
+        # Soft delete: archive user and maintain all audit logs and student records intact
+        user.is_archived = True
+        user.deleted_at = datetime.utcnow()
         db.session.commit()
-        flash(f"User '{user.name}' deleted successfully.", "warning")
+        log_access(get_current_user(), 'archive_user', f'target_user={user.username}')
+        flash(f"User '{user.name}' (@{user.username}) has been moved to Archive. All activity logs and student records are preserved and can be restored anytime.", "warning")
     except Exception as e:
         db.session.rollback()
-        flash(f"Failed to delete user: {str(e)}", "danger")
+        flash(f"Failed to archive user: {str(e)}", "danger")
+
+    return redirect(url_for('admin.user_management'))
+
+
+@admin_bp.route('/restore_user/<int:user_id>')
+@require_role('admin')
+def restore_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        flash("User not found.", "warning")
+        return redirect(url_for('admin.user_management'))
+
+    try:
+        user.is_archived = False
+        user.deleted_at = None
+        db.session.commit()
+        log_access(get_current_user(), 'restore_user', f'target_user={user.username}')
+        flash(f"User '{user.name}' (@{user.username}) has been successfully restored to active users.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to restore user: {str(e)}", "danger")
 
     return redirect(url_for('admin.user_management'))
 

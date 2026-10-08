@@ -78,8 +78,19 @@
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap teacher-head-row">
               <div>
                 <p class="teacher-eyebrow mb-2">Student Performance Report</p>
-                <h1 class="page-title">{{ student.name }}</h1>
-                <p class="page-subtitle">Individual coursework mastery, revisit timelines, and feedback history.</p>
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                  <h1 class="page-title mb-0">{{ student.name }}</h1>
+                  {% if is_online %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1.5 rounded-pill fw-bold">
+                      <span class="status-pulse-dot me-1"></span> Online Now
+                    </span>
+                  {% else %}
+                    <span class="badge bg-light text-secondary border px-3 py-1.5 rounded-pill" title="{{ last_seen_formatted }}">
+                      <i class="bi bi-clock-history me-1 text-muted"></i> Last Active: {{ last_seen_relative }}
+                    </span>
+                  {% endif %}
+                </div>
+                <p class="page-subtitle mt-1">@{{ student.username }} &bull; Individual coursework mastery, revisit timelines, and feedback history.</p>
               </div>
               <div class="dashboard-actions d-flex gap-2 flex-wrap align-items-center teacher-actions">
                 <a href="{{ url_for('teacher.students') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-semibold">

@@ -50,7 +50,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
 db.init_app(app)
 
-from routes.utils import to_ph_time
+from routes.utils import to_ph_time, format_relative_time
 
 @app.template_filter('to_ph_time')
 def to_ph_time_filter(dt, fmt='%b %d, %Y at %I:%M %p'):
@@ -59,24 +59,66 @@ def to_ph_time_filter(dt, fmt='%b %d, %Y at %I:%M %p'):
     ph_dt = to_ph_time(dt)
     return ph_dt.strftime(fmt)
 
-app.jinja_env.globals.update(to_ph_time=to_ph_time)
+@app.template_filter('relative_time')
+def relative_time_filter(dt):
+    return format_relative_time(dt)
+
+app.jinja_env.globals.update(to_ph_time=to_ph_time, format_relative_time=format_relative_time)
 
 
-def ensure_attempt_log_teacher_feedback_column():
+def ensure_database_schema_migrations():
+    """Self-healing migration to ensure legacy/production databases have soft-delete and required columns."""
     with app.app_context():
-        inspector = db.inspect(db.engine)
-        columns = [column['name'] for column in inspector.get_columns('attempt_log')]
-        if 'teacher_feedback' not in columns:
-            db.session.execute(text('ALTER TABLE attempt_log ADD COLUMN teacher_feedback TEXT NULL'))
-            db.session.commit()
+        try:
+            inspector = db.inspect(db.engine)
+            existing_tables = set(inspector.get_table_names())
 
-        lp_columns = [column['name'] for column in inspector.get_columns('lesson_progress')]
-        if 'initial_time_spent' not in lp_columns:
-            db.session.execute(text('ALTER TABLE lesson_progress ADD COLUMN initial_time_spent INT DEFAULT 0'))
-            db.session.commit()
-        if 'total_time_spent' not in lp_columns:
-            db.session.execute(text('ALTER TABLE lesson_progress ADD COLUMN total_time_spent INT DEFAULT 0'))
-            db.session.commit()
+            # 1. Soft-delete / Archive columns across core models
+            archive_target_tables = ['user', 'lesson', 'activity', 'lesson_assignment', 'activity_assignment']
+            for tbl in archive_target_tables:
+                if tbl in existing_tables:
+                    cols = {column['name'] for column in inspector.get_columns(tbl)}
+                    if 'deleted_at' not in cols:
+                        try:
+                            db.session.execute(text(f'ALTER TABLE {tbl} ADD COLUMN deleted_at TIMESTAMP NULL'))
+                            db.session.commit()
+                        except Exception as e:
+                            db.session.rollback()
+                            print(f"[Migration] deleted_at on {tbl}: {e}")
+                    if 'is_archived' not in cols:
+                        try:
+                            db.session.execute(text(f'ALTER TABLE {tbl} ADD COLUMN is_archived BOOLEAN DEFAULT FALSE'))
+                            db.session.commit()
+                        except Exception as e:
+                            db.session.rollback()
+                            print(f"[Migration] is_archived on {tbl}: {e}")
+
+            # 2. Existing columns checks
+            if 'attempt_log' in existing_tables:
+                cols = {column['name'] for column in inspector.get_columns('attempt_log')}
+                if 'teacher_feedback' not in cols:
+                    try:
+                        db.session.execute(text('ALTER TABLE attempt_log ADD COLUMN teacher_feedback TEXT NULL'))
+                        db.session.commit()
+                    except Exception as e:
+                        db.session.rollback()
+
+            if 'lesson_progress' in existing_tables:
+                lp_cols = {column['name'] for column in inspector.get_columns('lesson_progress')}
+                if 'initial_time_spent' not in lp_cols:
+                    try:
+                        db.session.execute(text('ALTER TABLE lesson_progress ADD COLUMN initial_time_spent INT DEFAULT 0'))
+                        db.session.commit()
+                    except Exception as e:
+                        db.session.rollback()
+                if 'total_time_spent' not in lp_cols:
+                    try:
+                        db.session.execute(text('ALTER TABLE lesson_progress ADD COLUMN total_time_spent INT DEFAULT 0'))
+                        db.session.commit()
+                    except Exception as e:
+                        db.session.rollback()
+        except Exception as e:
+            print("[Migration Notice]:", e)
 
 
 def ensure_default_users():
@@ -128,7 +170,7 @@ def ensure_default_curriculum():
 
 with app.app_context():
     db.create_all()
-    ensure_attempt_log_teacher_feedback_column()
+    ensure_database_schema_migrations()
     ensure_default_users()
     ensure_default_curriculum()
     ensure_trixia_lesson_progress()

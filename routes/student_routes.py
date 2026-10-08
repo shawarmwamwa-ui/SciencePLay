@@ -480,7 +480,8 @@ def dashboard():
     lesson_assignment_rows = db.session.query(LessonAssignment, Lesson).join(
         Lesson, Lesson.id == LessonAssignment.lesson_id
     ).filter(
-        LessonAssignment.student_id == user_id
+        LessonAssignment.student_id == user_id,
+        (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)
     ).all()
     lessons = [lesson for _, lesson in lesson_assignment_rows]
     lesson_due_dates = {lesson.id: assignment.due_date for assignment, lesson in lesson_assignment_rows}
@@ -521,6 +522,7 @@ def dashboard():
         Activity, Activity.id == ActivityAssignment.activity_id
     ).filter(
         ActivityAssignment.student_id == user_id,
+        (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None),
         ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted']),
         Activity.engine.in_(playable_engines)
     ).all()
@@ -838,14 +840,16 @@ def lessons():
         lesson_assignment_rows = db.session.query(LessonAssignment, Lesson).join(
             Lesson, Lesson.id == LessonAssignment.lesson_id
         ).filter(
-            LessonAssignment.student_id == user_id
+            LessonAssignment.student_id == user_id,
+            (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)
         ).all()
         lessons = [lesson for _, lesson in lesson_assignment_rows]
 
         activity_assignment_rows = db.session.query(ActivityAssignment, Activity).join(
             Activity, Activity.id == ActivityAssignment.activity_id
         ).filter(
-            ActivityAssignment.student_id == user_id
+            ActivityAssignment.student_id == user_id,
+            (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None)
         ).all()
         activities = [activity for _, activity in activity_assignment_rows]
     else:

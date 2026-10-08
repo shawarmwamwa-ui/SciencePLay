@@ -319,7 +319,7 @@
               </form>
             </div>
 
-            <!-- Interactive View Tabs: Active Assignments vs Catalog Libraries -->
+            <!-- Interactive View Tabs: Active Assignments vs Catalog Libraries vs Archived -->
             <ul class="nav nav-pills lessons-view-pills mb-4 gap-2" id="lessonsViewTabs" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tab-active-assignments" data-bs-toggle="pill" data-bs-target="#pane-active-assignments" type="button" role="tab" aria-controls="pane-active-assignments" aria-selected="true">
@@ -331,6 +331,12 @@
                 <button class="nav-link" id="tab-curriculum-library" data-bs-toggle="pill" data-bs-target="#pane-curriculum-library" type="button" role="tab" aria-controls="pane-curriculum-library" aria-selected="false">
                   <i class="bi bi-collection-play me-2"></i>Curriculum &amp; Activity Library
                   <span class="badge rounded-pill ms-2">{{ lessons|length }} Lessons &bull; {{ activities|length }} Games</span>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-archived-assignments" data-bs-toggle="pill" data-bs-target="#pane-archived-assignments" type="button" role="tab" aria-controls="pane-archived-assignments" aria-selected="false">
+                  <i class="bi bi-archive me-2 text-warning"></i>Archived Assignments
+                  <span class="badge rounded-pill ms-2 bg-secondary-subtle text-secondary">{{ (archived_lesson_assignments|length) + (archived_activity_assignments|length) }}</span>
                 </button>
               </li>
             </ul>
@@ -357,6 +363,7 @@
                                 <th>Student</th>
                                 <th>Status</th>
                                 <th>Due Date</th>
+                                <th class="text-end text-nowrap" style="min-width: 90px;">Action</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -374,16 +381,24 @@
                                   <td>
                                     <small class="text-muted">
                                       {% if assignment.due_date %}
-                                        {{ assignment.due_date.strftime('%b %d, %Y at %I:%M %p') if assignment.due_date.strftime is defined else assignment.due_date }}
+                                        {{ assignment.due_date.strftime('%b %d, %Y') if assignment.due_date.strftime is defined else assignment.due_date }}
                                       {% else %}
                                         No due date
                                       {% endif %}
                                     </small>
                                   </td>
+                                  <td class="text-end text-nowrap">
+                                    <form method="POST" action="{{ url_for('teacher.archive_assignment', assign_type='lesson', assignment_id=assignment.id) }}" class="d-inline" onsubmit="return confirm('Send this lesson assignment to archive? It can be restored anytime.');">
+                                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                      <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 text-nowrap" style="font-size: 0.8rem;" title="Archive assignment">
+                                        <i class="bi bi-archive me-1"></i>Archive
+                                      </button>
+                                    </form>
+                                  </td>
                                 </tr>
                               {% else %}
                                 <tr>
-                                  <td colspan="4" class="text-center text-muted py-4">No lesson assignments found. Use the quick form above to assign a lesson.</td>
+                                  <td colspan="5" class="text-center text-muted py-4">No lesson assignments found. Use the quick form above to assign a lesson.</td>
                                 </tr>
                               {% endfor %}
                             </tbody>
@@ -437,15 +452,21 @@
                                   </td>
                                   <td class="text-end text-nowrap">
                                     {% if assignment.status in ['attempts_exhausted', 'completed'] %}
-                                      <form method="POST" action="{{ url_for('teacher.reassign_activity', assignment_id=assignment.id) }}" class="d-inline">
+                                      <form method="POST" action="{{ url_for('teacher.reassign_activity', assignment_id=assignment.id) }}" class="d-inline me-1">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 fw-semibold shadow-sm text-nowrap" style="font-size: 0.8rem;" title="Reassign this activity with 3 fresh attempts">
                                           <i class="bi bi-arrow-repeat me-1"></i>Reassign
                                         </button>
                                       </form>
                                     {% else %}
-                                      <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 text-nowrap">Active</span>
+                                      <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 text-nowrap me-1">Active</span>
                                     {% endif %}
+                                    <form method="POST" action="{{ url_for('teacher.archive_assignment', assign_type='activity', assignment_id=assignment.id) }}" class="d-inline" onsubmit="return confirm('Send this activity assignment to archive? It can be restored anytime.');">
+                                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                      <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 text-nowrap" style="font-size: 0.8rem;" title="Archive assignment">
+                                        <i class="bi bi-archive"></i>
+                                      </button>
+                                    </form>
                                   </td>
                                 </tr>
                               {% else %}
@@ -544,6 +565,116 @@
                                 <td colspan="3" class="text-muted text-center py-4">No activities configured yet</td>
                               </tr>
                               {% endif %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 3: Archived Assignments (Soft-deleted records with 1-click restore) -->
+              <div class="tab-pane fade" id="pane-archived-assignments" role="tabpanel" aria-labelledby="tab-archived-assignments">
+                <div class="alert alert-warning-subtle border border-warning-subtle rounded-3 d-flex align-items-center gap-2 mb-4">
+                  <i class="bi bi-info-circle-fill text-warning fs-5"></i>
+                  <span class="small text-dark">
+                    Archived assignments are hidden from student dashboards to keep coursework clean. All past attempt scores, time logs, and completion records are preserved and can be restored anytime.
+                  </span>
+                </div>
+
+                <div class="row g-4">
+                  <!-- Archived Lesson Assignments -->
+                  <div class="col-lg-6">
+                    <section class="table-shell teacher-table-shell h-100 d-flex flex-column justify-content-between" id="archived-lesson-assignments-section">
+                      <div>
+                        <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+                          <h2 class="h5 mb-0"><i class="bi bi-journal-x me-2 text-warning"></i>Archived Lesson Assignments</h2>
+                          <span class="badge bg-secondary-subtle text-secondary border rounded-pill">{{ archived_lesson_assignments|length }} Archived</span>
+                        </div>
+                        <div class="table-responsive">
+                          <table class="table align-middle mb-0" style="font-size: 0.88rem;">
+                            <thead>
+                              <tr>
+                                <th>Lesson</th>
+                                <th>Student</th>
+                                <th>Archived Date</th>
+                                <th class="text-end">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for assignment in archived_lesson_assignments %}
+                                <tr>
+                                  <td><strong class="text-dark">{{ assignment.lesson.title if assignment.lesson else assignment.lesson_id }}</strong></td>
+                                  <td>{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
+                                  <td>
+                                    <small class="text-muted">
+                                      {{ assignment.deleted_at.strftime('%b %d, %Y') if assignment.deleted_at else 'Archived' }}
+                                    </small>
+                                  </td>
+                                  <td class="text-end">
+                                    <form method="POST" action="{{ url_for('teacher.restore_assignment', assign_type='lesson', assignment_id=assignment.id) }}" class="d-inline">
+                                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                      <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-2.5 py-1 fw-semibold shadow-sm text-nowrap" style="font-size: 0.8rem;" title="Restore this lesson assignment">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+                                      </button>
+                                    </form>
+                                  </td>
+                                </tr>
+                              {% else %}
+                                <tr>
+                                  <td colspan="4" class="text-center text-muted py-4">No archived lesson assignments.</td>
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+
+                  <!-- Archived Activity Assignments -->
+                  <div class="col-lg-6">
+                    <section class="table-shell teacher-table-shell h-100 d-flex flex-column justify-content-between" id="archived-activity-assignments-section">
+                      <div>
+                        <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
+                          <h2 class="h5 mb-0"><i class="bi bi-controller me-2 text-warning"></i>Archived Activity Assignments</h2>
+                          <span class="badge bg-secondary-subtle text-secondary border rounded-pill">{{ archived_activity_assignments|length }} Archived</span>
+                        </div>
+                        <div class="table-responsive">
+                          <table class="table align-middle mb-0" style="font-size: 0.88rem;">
+                            <thead>
+                              <tr>
+                                <th>Activity</th>
+                                <th>Student</th>
+                                <th>Archived Date</th>
+                                <th class="text-end">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for assignment in archived_activity_assignments %}
+                                <tr>
+                                  <td><strong class="text-dark">{{ assignment.activity.type if assignment.activity else assignment.activity_id }}</strong></td>
+                                  <td>{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
+                                  <td>
+                                    <small class="text-muted">
+                                      {{ assignment.deleted_at.strftime('%b %d, %Y') if assignment.deleted_at else 'Archived' }}
+                                    </small>
+                                  </td>
+                                  <td class="text-end">
+                                    <form method="POST" action="{{ url_for('teacher.restore_assignment', assign_type='activity', assignment_id=assignment.id) }}" class="d-inline">
+                                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                      <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-2.5 py-1 fw-semibold shadow-sm text-nowrap" style="font-size: 0.8rem;" title="Restore this activity assignment">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+                                      </button>
+                                    </form>
+                                  </td>
+                                </tr>
+                              {% else %}
+                                <tr>
+                                  <td colspan="4" class="text-center text-muted py-4">No archived activity assignments.</td>
+                                </tr>
+                              {% endfor %}
                             </tbody>
                           </table>
                         </div>

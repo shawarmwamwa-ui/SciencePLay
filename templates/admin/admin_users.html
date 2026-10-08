@@ -175,9 +175,12 @@
                           <span class="p-1 bg-success rounded-circle"></span> Online
                         </span>
                       {% else %}
-                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle d-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill">
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle d-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill mb-1">
                           <span class="p-1 bg-secondary rounded-circle"></span> Offline
                         </span>
+                        <div class="text-secondary small fw-medium" style="font-size: 0.74rem;" title="{{ user.last_seen | to_ph_time }}">
+                          <i class="bi bi-clock-history me-1 text-muted"></i>{{ user.last_seen | relative_time }}
+                        </div>
                       {% endif %}
                     </td>
                     <td class="text-end">
@@ -186,9 +189,9 @@
                           <i class="bi bi-pencil-square"></i>
                           <span>Update</span>
                         </button>
-                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUser{{ user.id }}">
-                          <i class="bi bi-trash3"></i>
-                          <span>Delete</span>
+                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUser{{ user.id }}">
+                          <i class="bi bi-archive"></i>
+                          <span>Archive</span>
                         </button>
                       </div>
                     </td>
@@ -198,6 +201,52 @@
               </table>
             </div>
           </section>
+
+          {% if archived_users %}
+          <section class="table-shell mt-4" id="archived-user-management">
+            <div class="table-header d-flex justify-content-between align-items-center">
+              <div>
+                <h2 class="h5 mb-0 text-secondary"><i class="bi bi-archive-fill me-2 text-warning"></i>Archived Accounts</h2>
+                <p class="mb-0 text-muted">{{ archived_users|length }} user account(s) safely archived.</p>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Archived Date</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for user in archived_users %}
+                  <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }}</td>
+                    <td><strong class="text-secondary">@{{ user.username }}</strong></td>
+                    <td><span class="role-pill role-{{ user.role }}">{{ user.role|title }}</span></td>
+                    <td>
+                      <small class="text-muted">
+                        {{ user.deleted_at.strftime('%b %d, %Y') if user.deleted_at else 'Archived' }}
+                      </small>
+                    </td>
+                    <td class="text-end">
+                      <a href="{{ url_for('admin.restore_user', user_id=user.id) }}" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          {% endif %}
           </div>
           <!-- End .dashboard-real-content -->
 
@@ -264,22 +313,22 @@
       </div>
     </div>
 
-    <!-- Delete Modal -->
+    <!-- Archive Modal -->
     <div class="modal fade" id="deleteUser{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserLabel{{ user.id }}" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h3 class="modal-title h5 mb-0 text-danger" id="deleteUserLabel{{ user.id }}">
-              <i class="bi bi-exclamation-triangle-fill me-1"></i>Confirm Delete
+              <i class="bi bi-archive-fill me-1"></i>Confirm Archive User
             </h3>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            Are you sure you want to delete <strong>{{ user.name }}</strong> (<code>{{ user.username }}</code>)? This action cannot be undone.
+            Are you sure you want to send <strong>{{ user.name }}</strong> (<code>{{ user.username }}</code>) to archive? Their account will be deactivated from active rosters, but all learning logs, attempt scores, and audit events are safely preserved and can be restored anytime.
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger">Delete User</a>
+            <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger">Archive User</a>
           </div>
         </div>
       </div>

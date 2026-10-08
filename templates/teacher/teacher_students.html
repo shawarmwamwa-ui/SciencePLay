@@ -123,10 +123,10 @@
               </div>
             </div>
 
-            <!-- ══════ View Toggle Tabs (Image 3 Style) ══════ -->
+            <!-- ══════ View Toggle Tabs (Classroom Roster, Live Tracker, Archived) ══════ -->
             <ul class="nav nav-pills students-view-pills mb-4 gap-2" id="studentsViewTabs" role="tablist">
               <li class="nav-item" role="presentation">
-                <button class="nav-link {% if active_tab != 'live-tracker' %}active{% endif %}" id="tab-roster" data-bs-toggle="pill" data-bs-target="#pane-roster" type="button" role="tab" aria-controls="pane-roster" aria-selected="{% if active_tab != 'live-tracker' %}true{% else %}false{% endif %}">
+                <button class="nav-link {% if active_tab not in ['live-tracker', 'archived'] %}active{% endif %}" id="tab-roster" data-bs-toggle="pill" data-bs-target="#pane-roster" type="button" role="tab" aria-controls="pane-roster" aria-selected="{% if active_tab not in ['live-tracker', 'archived'] %}true{% else %}false{% endif %}">
                   <i class="bi bi-person-lines-fill me-2"></i>Classroom Roster
                   <span class="badge bg-light text-dark border ms-1 rounded-pill">{{ students|length }}</span>
                 </button>
@@ -139,13 +139,19 @@
                   </span>
                 </button>
               </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'archived' %}active{% endif %}" id="tab-archived" data-bs-toggle="pill" data-bs-target="#pane-archived" type="button" role="tab" aria-controls="pane-archived" aria-selected="{% if active_tab == 'archived' %}true{% else %}false{% endif %}">
+                  <i class="bi bi-archive me-2 text-warning"></i>Archived Students
+                  <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-1 rounded-pill">{{ archived_count }}</span>
+                </button>
+              </li>
             </ul>
 
             <!-- ══════ Tab Panes ══════ -->
             <div class="tab-content" id="studentsViewTabContent">
 
               <!-- TAB 1: Classroom Roster -->
-              <div class="tab-pane fade {% if active_tab != 'live-tracker' %}show active{% endif %}" id="pane-roster" role="tabpanel" aria-labelledby="tab-roster">
+              <div class="tab-pane fade {% if active_tab not in ['live-tracker', 'archived'] %}show active{% endif %}" id="pane-roster" role="tabpanel" aria-labelledby="tab-roster">
                 <section class="table-shell teacher-table-shell mb-4">
                   <div class="table-header teacher-table-header d-flex justify-content-between align-items-center flex-wrap gap-3">
                     <div class="d-flex align-items-center gap-2">
@@ -165,12 +171,12 @@
                       <thead>
                         <tr>
                           <th style="width: 260px;">Student</th>
-                          <th>Status</th>
+                          <th>Status &amp; Last Active</th>
                           <th style="min-width: 170px;">Coursework Progress</th>
                           <th>Lessons Done</th>
                           <th>Activities Done</th>
                           <th>Total Score</th>
-                          <th class="text-end" style="width: 200px;">Actions</th>
+                          <th class="text-end" style="width: 210px;">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -191,9 +197,12 @@
                                   <span class="status-pulse-dot me-1"></span> Online Now
                                 </span>
                               {% else %}
-                                <span class="badge bg-light text-muted border px-2 py-1 rounded-pill">
+                                <span class="badge bg-light text-muted border px-2 py-1 rounded-pill mb-1">
                                   <i class="bi bi-clock me-1"></i> Offline
                                 </span>
+                                <div class="text-secondary small fw-medium text-nowrap" style="font-size: 0.78rem;" title="{{ s.last_seen_formatted }}">
+                                  <i class="bi bi-clock-history me-1 text-muted"></i>{{ s.last_seen_relative }}
+                                </div>
                               {% endif %}
                             </td>
                             <td>
@@ -220,10 +229,18 @@
                               </span>
                             </td>
                             <td class="text-end">
-                              <a href="{{ url_for('teacher.student_performance', student_id=s.id) }}" class="btn btn-sm btn-primary rounded-pill px-3 py-1 fw-bold shadow-sm d-inline-flex align-items-center gap-1">
-                                <span>View Profile</span>
-                                <i class="bi bi-arrow-right-short fs-6"></i>
-                              </a>
+                              <div class="d-inline-flex gap-1.5 align-items-center">
+                                <a href="{{ url_for('teacher.student_performance', student_id=s.id) }}" class="btn btn-sm btn-primary rounded-pill px-3 py-1 fw-bold shadow-sm d-inline-flex align-items-center gap-1" title="View Full Student Profile">
+                                  <span>View Profile</span>
+                                  <i class="bi bi-arrow-right-short fs-6"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('teacher.archive_student', student_id=s.id) }}" class="d-inline" onsubmit="return confirm('Send student {{ s.name }} to archive? All attempts and history are preserved.');">
+                                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                  <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 text-nowrap" title="Archive student (reversible)">
+                                    <i class="bi bi-archive"></i>
+                                  </button>
+                                </form>
+                              </div>
                             </td>
                           </tr>
                         {% else %}
@@ -307,6 +324,91 @@
                     <nav>
                       <ul id="tracker-pagination-nav" class="pagination pagination-smooth mb-0"></ul>
                     </nav>
+                  </div>
+                </section>
+              </div>
+
+              <!-- TAB 3: Archived Students (Reversible soft-delete) -->
+              <div class="tab-pane fade {% if active_tab == 'archived' %}show active{% endif %}" id="pane-archived" role="tabpanel" aria-labelledby="tab-archived">
+                <section class="table-shell teacher-table-shell mb-4">
+                  <div class="table-header teacher-table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                      <h2 class="h5 mb-0"><i class="bi bi-archive-fill me-2 text-warning"></i>Archived Students Roster</h2>
+                      <span class="badge bg-secondary-subtle text-secondary border rounded-pill">{{ archived_students|length }} archived</span>
+                    </div>
+                  </div>
+
+                  <div class="p-3 bg-light-subtle border-bottom">
+                    <p class="small text-muted mb-0">
+                      <i class="bi bi-shield-check text-success me-1"></i>
+                      Archived students are excluded from active class dashboards and analytics. All their past scores, attempt logs, and lesson times remain permanently saved and can be restored at any time.
+                    </p>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                      <thead>
+                        <tr>
+                          <th style="width: 260px;">Student</th>
+                          <th>Last Active</th>
+                          <th>Archived On</th>
+                          <th>Progress</th>
+                          <th>Total Points</th>
+                          <th class="text-end" style="width: 180px;">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for s in archived_students %}
+                          <tr>
+                            <td>
+                              <div class="d-flex align-items-center gap-2">
+                                <span class="student-avatar-circle" style="background-color: #94a3b8;">{{ s.name[0]|upper if s.name else 'S' }}</span>
+                                <div>
+                                  <strong class="text-dark d-block fs-6">{{ s.name }}</strong>
+                                  <span class="text-muted small">@{{ s.username }}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <span class="text-secondary small fw-medium" title="{{ s.last_seen_formatted }}">
+                                <i class="bi bi-clock-history me-1 text-muted"></i>{{ s.last_seen_relative }}
+                              </span>
+                            </td>
+                            <td>
+                              <small class="text-muted">
+                                {{ s.deleted_at.strftime('%b %d, %Y') if s.deleted_at else 'Archived' }}
+                              </small>
+                            </td>
+                            <td>
+                              <span class="badge bg-secondary-subtle text-secondary border rounded-pill">
+                                {{ s.overall_progress }}% Completed
+                              </span>
+                            </td>
+                            <td>
+                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1 rounded-pill fw-semibold">
+                                ⭐ {{ s.total_points }} pts
+                              </span>
+                            </td>
+                            <td class="text-end">
+                              <form method="POST" action="{{ url_for('teacher.restore_student', student_id=s.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold shadow-sm d-inline-flex align-items-center gap-1">
+                                  <i class="bi bi-arrow-counterclockwise"></i>
+                                  <span>Restore</span>
+                                </button>
+                              </form>
+                            </td>
+                          </tr>
+                        {% else %}
+                          <tr>
+                            <td colspan="6" class="text-center text-muted py-5">
+                              <i class="bi bi-archive fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                              <p class="mb-0 fw-semibold">No archived students found.</p>
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
                   </div>
                 </section>
               </div>
