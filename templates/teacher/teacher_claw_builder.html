@@ -692,6 +692,19 @@
     </div>
   </div>
 
+  <!-- Modern In-App Notification Toast Container -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+    <div id="builderToast" class="toast align-items-center text-white border-0 shadow-lg rounded-4 overflow-hidden" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex p-3 align-items-center">
+        <span class="fs-4 me-3" id="builderToastIcon">✨</span>
+        <div class="toast-body p-0 fw-bold" id="builderToastMessage" style="font-size: 0.92rem; line-height: 1.35;">
+          Topic preset loaded!
+        </div>
+        <button type="button" class="btn-close btn-close-white ms-auto me-1" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // Initial data from server: strictly 2 chutes
@@ -784,10 +797,38 @@
       }
     };
 
+    // MODERN IN-APP TOAST SYSTEM (Replaces disruptive browser alerts/confirms)
+    function showBuilderToast(message, type = 'success') {
+      const toastEl = document.getElementById('builderToast');
+      const msgEl = document.getElementById('builderToastMessage');
+      const iconEl = document.getElementById('builderToastIcon');
+      if (!toastEl || !msgEl) return;
+
+      msgEl.textContent = message;
+
+      if (type === 'success') {
+        toastEl.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+        if (iconEl) iconEl.textContent = '✨';
+      } else if (type === 'warning') {
+        toastEl.style.background = 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)';
+        if (iconEl) iconEl.textContent = '⚠️';
+      } else if (type === 'danger' || type === 'error') {
+        toastEl.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
+        if (iconEl) iconEl.textContent = '⛔';
+      } else {
+        toastEl.style.background = 'linear-gradient(135deg, #1e293b 0%, #334155 100%)';
+        if (iconEl) iconEl.textContent = 'ℹ️';
+      }
+
+      if (window.bootstrap?.Toast) {
+        const bsToast = window.bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3500 });
+        bsToast.show();
+      }
+    }
+
     function loadTopicPreset(presetKey) {
       const p = TOPIC_PRESETS[presetKey];
       if (!p) return;
-      if (!confirm(`Load preset "${p.title}"? This will update chutes and items.`)) return;
 
       document.getElementById('activityTitleInput').value = p.title;
       document.getElementById('activityInstructionsInput').value = p.instructions;
@@ -797,6 +838,7 @@
       objects = JSON.parse(JSON.stringify(p.objects));
 
       renderChutes();
+      showBuilderToast(`Loaded preset template: "${p.title}"`, 'success');
     }
 
     // RENDER EXACTLY 2 CHUTES (LEFT & RIGHT)
@@ -986,7 +1028,7 @@
 
     function removeObject(idx) {
       if (objects.length <= 2) {
-        alert("A sorting activity needs at least 2 objects to play.");
+        showBuilderToast("A sorting activity needs at least 2 objects to play.", "warning");
         return;
       }
       objects.splice(idx, 1);
@@ -1007,13 +1049,13 @@
         const isImageMime = file.type.startsWith('image/');
 
         if (!validExtensions.includes(ext) || !isImageMime) {
-          alert("Invalid file format!\n\nOnly images (.png, .jpg, .jpeg, .webp) are supported.\nDocuments, PDFs, executables, or other file types cannot be uploaded.");
+          showBuilderToast("Only image files (.png, .jpg, .jpeg, .webp) are supported.", "danger");
           input.value = '';
           return;
         }
 
         if (file.size > 5 * 1024 * 1024) {
-          alert("Image file exceeds the 5MB size limit. Please upload an image under 5MB.");
+          showBuilderToast("Image file exceeds the 5MB size limit. Please upload an image under 5MB.", "warning");
           input.value = '';
           return;
         }
@@ -1119,31 +1161,31 @@
     function submitBuilderForm() {
       const title = document.getElementById('activityTitleInput').value.trim();
       if (!title) {
-        alert("Please enter an activity title.");
+        showBuilderToast("Please enter an activity title.", "warning");
         document.getElementById('activityTitleInput').focus();
         return;
       }
 
       if (chutes.length !== 2) {
-        alert("The claw machine sorting game requires exactly 2 chutes (Left and Right).");
+        showBuilderToast("The claw machine sorting game requires exactly 2 chutes (Left and Right).", "danger");
         return;
       }
 
       // Ensure both chutes have labels
       if (!chutes[0].label.trim() || !chutes[1].label.trim()) {
-        alert("Please provide labels for both Chute 1 and Chute 2.");
+        showBuilderToast("Please provide labels for both Chute 1 and Chute 2.", "warning");
         return;
       }
 
       if (objects.length < 2) {
-        alert("Please add at least 2 objects to sort.");
+        showBuilderToast("Please add at least 2 objects to sort.", "warning");
         return;
       }
 
       // Check object labels
       for (let i = 0; i < objects.length; i++) {
         if (!objects[i].label || !objects[i].label.trim()) {
-          alert(`Object #${i + 1} is missing a label.`);
+          showBuilderToast(`Object #${i + 1} is missing a label.`, "warning");
           return;
         }
       }
