@@ -105,7 +105,7 @@
               {% if active_tab != 'users' %}
                 Logs soft-deleted from the active timeline. Fully preserved for audits and reporting.
               {% else %}
-                User accounts soft-deleted from User Management. All logs and student records remain preserved.
+                <i class="bi bi-archive-fill me-1 text-warning"></i>{{ archived_users_count }} user account(s) safely archived.
               {% endif %}
             </p>
 
@@ -228,7 +228,7 @@
                               <div class="d-inline-flex align-items-center justify-content-end gap-1">
                                 <form method="POST" action="{{ url_for('admin.restore_user_logs', target_user_id=u.id) }}" class="d-inline" onsubmit="return confirm('Restore all {{ item.archived_count }} archived logs for {{ u.name }}?');">
                                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                  <button type="submit" class="btn btn-sm btn-primary fw-semibold px-2.5 py-1" title="Restore all {{ item.archived_count }} logs for {{ u.name }}">
+                                  <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold text-nowrap" title="Restore all {{ item.archived_count }} logs for {{ u.name }}">
                                     <i class="bi bi-arrow-counterclockwise me-1"></i>Restore ({{ item.archived_count }})
                                   </button>
                                 </form>
@@ -338,7 +338,7 @@
                               <div class="d-inline-flex align-items-center justify-content-end gap-1">
                                 <form method="POST" action="{{ url_for('admin.restore_single_log', log_id=log.id) }}" class="d-inline">
                                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                  <button type="submit" class="btn btn-sm btn-primary fw-semibold px-2.5 py-1" title="Restore log to active timeline">
+                                  <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold text-nowrap" title="Restore log to active timeline">
                                     <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
                                   </button>
                                 </form>
@@ -370,17 +370,19 @@
                   <table class="table align-middle mb-0">
                     <thead>
                       <tr>
-                        <th>Name</th>
-                        <th>Username</th>
-                        <th>Role</th>
-                        <th>Archived On</th>
-                        <th class="text-end">Action</th>
+                        <th style="width: 10%;">ID</th>
+                        <th style="width: 25%;">NAME</th>
+                        <th style="width: 20%;">USERNAME</th>
+                        <th style="width: 15%;">ROLE</th>
+                        <th style="width: 18%;">ARCHIVED DATE</th>
+                        <th style="width: 12%;" class="text-end">ACTIONS</th>
                       </tr>
                     </thead>
                     <tbody>
                       {% for u in archived_users %}
                         {% set role_class = 'admin' if u.role == 'admin' else 'teacher' if u.role == 'teacher' else 'student' %}
                         <tr>
+                          <td class="small fw-semibold text-muted">{{ u.id }}</td>
                           <td>
                             <div class="d-flex align-items-center gap-2">
                               <div class="user-avatar-badge avatar-{{ role_class }}" style="width: 32px; height: 32px; font-size: 0.85rem;">
@@ -389,15 +391,17 @@
                               <strong>{{ u.name }}</strong>
                             </div>
                           </td>
-                          <td class="small fw-semibold text-muted">@{{ u.username }}</td>
+                          <td><strong class="text-secondary">@{{ u.username }}</strong></td>
                           <td><span class="role-pill role-{{ role_class }}">{{ u.role|title }}</span></td>
-                          <td class="small text-muted fw-semibold">
-                            {{ u.deleted_at|to_ph_time('%b %d, %Y %I:%M %p') if u.deleted_at else 'Archived' }}
+                          <td>
+                            <small class="text-muted">
+                              {{ u.deleted_at.strftime('%b %d, %Y') if u.deleted_at else 'Archived' }}
+                            </small>
                           </td>
                           <td class="text-end">
                             <div class="d-inline-flex align-items-center justify-content-end gap-1">
                               <a href="{{ url_for('admin.restore_user', user_id=u.id) }}" 
-                                 class="btn btn-sm btn-primary fw-semibold px-2.5 py-1" 
+                                 class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold text-nowrap" 
                                  onclick="return confirm('Restore user account \'{{ u.name }}\' back to active users?');"
                                  title="Restore user account">
                                 <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
@@ -415,7 +419,7 @@
                         </tr>
                       {% else %}
                         <tr>
-                          <td colspan="5" class="text-center text-muted py-5">
+                          <td colspan="6" class="text-center text-muted py-5">
                             <i class="bi bi-people fs-1 d-block mb-2 text-secondary opacity-50"></i>
                             <p class="mb-1 fw-semibold text-dark">No deleted users found in Archive.</p>
                             <small class="text-muted">Deleted teachers, students, or admins will appear here for recovery.</small>
