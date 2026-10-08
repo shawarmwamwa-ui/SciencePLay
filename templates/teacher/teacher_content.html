@@ -165,30 +165,18 @@
             {% endif %}
             {% endwith %}
 
-            <!-- Header Row -->
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 teacher-head-row">
-              <div>
-                <p class="teacher-eyebrow mb-1 text-primary fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.8rem;">
-                  <i class="bi bi-palette-fill me-1"></i>Content Studio Workspace
-                </p>
-                <h1 class="page-title fw-black text-dark mb-1">Content Studio &amp; Workspaces</h1>
-                <p class="page-subtitle text-muted mb-0">Choose what you want to create: build interactive arcade games or design slide lessons with a live canvas preview.</p>
-              </div>
-
-              <div class="d-flex align-items-center gap-2">
-                <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-outline-primary rounded-pill px-3 py-2 fw-bold shadow-sm d-flex align-items-center gap-2">
-                  <i class="bi bi-joystick fs-5"></i>
-                  <span>New Game</span>
-                </a>
-                <a href="{{ url_for('teacher.lesson_builder') }}" class="btn btn-primary rounded-pill px-3 py-2 fw-bold shadow-sm d-flex align-items-center gap-2">
-                  <i class="bi bi-easel-fill fs-5"></i>
-                  <span>New Lesson</span>
-                </a>
-              </div>
+            <!-- Header Row: Clean, uncluttered, no redundant buttons -->
+            <div class="mb-4 teacher-head-row">
+              <p class="teacher-eyebrow mb-1 text-primary fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.8rem;">
+                <i class="bi bi-palette-fill me-1"></i>Content Studio Gateway
+              </p>
+              <h1 class="page-title fw-black text-dark mb-1">Content Studio &amp; Workspaces</h1>
+              <p class="page-subtitle text-muted mb-0">Select a dedicated workspace to explore reusable game engines or craft interactive slide lessons with live canvas previews.</p>
             </div>
 
-            <!-- Studio Choice Gateway: Make a Game vs Make a Lesson -->
+            <!-- Studio Choice Gateway: Dedicated Doors for Game Studio & Lesson Studio -->
             <div class="row g-4 mb-4">
+              <!-- Arcade Game Studio Card -->
               <div class="col-12 col-md-6">
                 <div class="studio-engine-card shadow-sm border-primary border-opacity-25" style="background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);">
                   <div>
@@ -202,26 +190,33 @@
                     </div>
 
                     <div class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.05em;">
-                      Interactive Sorting Games
+                      Engines &amp; Sorting Activities
                     </div>
-                    <h2 class="h4 fw-bold text-dark mb-2">Make / Customize a Game</h2>
-                    <p class="text-muted small mb-4" style="line-height: 1.55;">
-                      Turn the Sorting Claw Machine into your own custom activity. Customize chute labels, upload unlimited images with zero file-size restrictions, configure difficulty tiers, and enjoy automatic 100-point scoring.
+                    <h2 class="h4 fw-bold text-dark mb-2">Arcade Game Studio</h2>
+                    <p class="text-muted small mb-3" style="line-height: 1.6;">
+                      Manage reusable arcade game engines and create custom sorting activities. Customize chutes, upload high-resolution science images with zero size caps, set difficulty tiers, and enjoy auto-calculated 100-point scoring.
                     </p>
+
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                      <span class="badge bg-light text-dark border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-cpu text-primary me-1"></i>1 Engine Ready
+                      </span>
+                      <span class="badge bg-light text-dark border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-controller text-primary me-1"></i>{{ games_count }} Custom Games
+                      </span>
+                    </div>
                   </div>
 
-                  <div class="mt-auto pt-3 border-top d-flex gap-2">
-                    <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
-                      <i class="bi bi-plus-circle-fill"></i>
-                      <span>Open Game Studio</span>
-                    </a>
-                    <a href="#games-catalog" class="btn btn-outline-dark rounded-pill fw-bold py-2 px-3 text-nowrap">
-                      <span>Browse ({{ activity_cards|length }})</span>
+                  <div class="mt-auto pt-3 border-top">
+                    <a href="{{ url_for('teacher.game_studio') }}" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                      <span>Enter Game Studio</span>
+                      <i class="bi bi-arrow-right"></i>
                     </a>
                   </div>
                 </div>
               </div>
 
+              <!-- Slide Lesson Studio Card -->
               <div class="col-12 col-md-6">
                 <div class="studio-engine-card shadow-sm border-success border-opacity-25" style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);">
                   <div>
@@ -237,19 +232,25 @@
                     <div class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.05em;">
                       Slide Canvas &amp; Narration
                     </div>
-                    <h2 class="h4 fw-bold text-dark mb-2">Make / Customize a Lesson</h2>
-                    <p class="text-muted small mb-4" style="line-height: 1.55;">
-                      Design custom slide decks with a dedicated Slide Canvas editor. Preview slides in real time, test speech read-aloud voice narration, and add check-for-understanding quick questions for any science topic.
+                    <h2 class="h4 fw-bold text-dark mb-2">Slide Lesson Studio</h2>
+                    <p class="text-muted small mb-3" style="line-height: 1.6;">
+                      Design custom science slideshows with a dedicated visual Slide Canvas editor. Preview slides in real time, test built-in speech read-aloud voice narration, and add check-for-understanding quick questions for any science topic.
                     </p>
+
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                      <span class="badge bg-light text-dark border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-volume-up text-success me-1"></i>Read-Aloud Speech
+                      </span>
+                      <span class="badge bg-light text-dark border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-journal-bookmark text-success me-1"></i>{{ lessons_count }} Lessons
+                      </span>
+                    </div>
                   </div>
 
-                  <div class="mt-auto pt-3 border-top d-flex gap-2">
-                    <a href="{{ url_for('teacher.lesson_builder') }}" class="btn btn-success text-white w-100 rounded-pill fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
-                      <i class="bi bi-plus-circle-fill"></i>
-                      <span>Open Lesson Studio</span>
-                    </a>
-                    <a href="#lessons-catalog" class="btn btn-outline-dark rounded-pill fw-bold py-2 px-3 text-nowrap">
-                      <span>Browse ({{ lesson_cards|length }})</span>
+                  <div class="mt-auto pt-3 border-top">
+                    <a href="{{ url_for('teacher.lesson_studio') }}" class="btn btn-success text-white w-100 rounded-pill fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                      <span>Enter Lesson Studio</span>
+                      <i class="bi bi-arrow-right"></i>
                     </a>
                   </div>
                 </div>
@@ -261,14 +262,14 @@
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">
                   <div class="metric-label">Custom Games</div>
-                  <div class="metric-value">{{ activity_cards|length }}</div>
+                  <div class="metric-value">{{ games_count }}</div>
                 </div>
                 <span class="teacher-summary-icon ts-purple"><i class="bi bi-controller"></i></span>
               </div>
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">
                   <div class="metric-label">Curriculum Lessons</div>
-                  <div class="metric-value">{{ lesson_cards|length }}</div>
+                  <div class="metric-value">{{ lessons_count }}</div>
                 </div>
                 <span class="teacher-summary-icon ts-green"><i class="bi bi-journal-bookmark-fill"></i></span>
               </div>
@@ -285,252 +286,6 @@
                   <div class="metric-value">Zero Audio Setup</div>
                 </div>
                 <span class="teacher-summary-icon ts-amber"><i class="bi bi-volume-up-fill"></i></span>
-              </div>
-            </div>
-
-            <!-- Configured Lessons Catalog -->
-            <div class="dashboard-section teacher-panel p-4 mb-5" id="lessons-catalog">
-              <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                <div>
-                  <h2 class="h5 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                    <i class="bi bi-easel-fill text-success"></i>
-                    <span>Configured Lessons in Curriculum</span>
-                  </h2>
-                  <p class="teacher-panel-note mb-0 text-muted">Slide presentations with voice read-aloud and quick check-for-understanding quizzes.</p>
-                </div>
-                <a href="{{ url_for('teacher.lesson_builder') }}" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold">
-                  <i class="bi bi-plus-circle me-1"></i>New Lesson
-                </a>
-              </div>
-
-              {% if lesson_cards %}
-                <div class="activity-catalog-list">
-                  {% for card in lesson_cards %}
-                  <div class="activity-row-card">
-                    <div style="min-width: 260px; max-width: 480px;">
-                      <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                        <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
-                          <i class="bi bi-easel me-1"></i>Slide Presentation
-                        </span>
-                        {% if card.has_custom_slides %}
-                          <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
-                            <i class="bi bi-magic me-1"></i>Custom Deck
-                          </span>
-                        {% else %}
-                          <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">Default Core</span>
-                        {% endif %}
-                        <span class="badge bg-light text-dark border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">{{ card.grade_level }}</span>
-                      </div>
-                      <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
-                      <p class="text-muted small mb-2 text-truncate" title="{{ card.description }}">
-                        {{ card.description or 'Interactive science lesson slides with voice read-aloud and quiz checks.' }}
-                      </p>
-                    </div>
-
-                    <!-- Meta stats -->
-                    <div class="d-flex align-items-center gap-4 text-center">
-                      <div>
-                        <div class="fw-bold text-dark fs-5">{{ card.slides_count }}</div>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Slides</div>
-                      </div>
-                      <div>
-                        <div class="fw-bold text-dark fs-5"><i class="bi bi-volume-up text-success"></i></div>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Read Aloud</div>
-                      </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="d-flex align-items-center gap-2">
-                      <a href="{{ url_for('teacher.preview_lesson', lesson_id=card.lesson.id) }}" target="_blank" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Preview Lesson as Student">
-                        <i class="bi bi-play-circle-fill"></i>
-                        <span>Test Play</span>
-                      </a>
-                      <a href="{{ url_for('teacher.lesson_builder', lesson_id=card.lesson.id) }}" class="btn btn-success text-white btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
-                        <i class="bi bi-pencil-square"></i>
-                        <span>Edit Slides</span>
-                      </a>
-                      {% if card.has_custom_slides and card.lesson.id != 1 %}
-                      <form method="POST" action="{{ url_for('teacher.delete_lesson', lesson_id=card.lesson.id) }}" onsubmit="return confirm('Archive lesson \'{{ card.title }}\'?');" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Lesson">
-                          <i class="bi bi-trash3"></i>
-                        </button>
-                      </form>
-                      {% endif %}
-                    </div>
-                  </div>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <div class="text-center py-4">
-                  <h4 class="fw-bold text-dark mb-2">No Lessons Configured</h4>
-                  <p class="text-muted mb-3">Create your first custom slide lesson deck.</p>
-                  <a href="{{ url_for('teacher.lesson_builder') }}" class="btn btn-success text-white rounded-pill px-4 py-2 fw-bold shadow-sm">
-                    <i class="bi bi-plus-circle-fill me-1"></i>Create First Lesson
-                  </a>
-                </div>
-              {% endif %}
-            </div>
-
-            <!-- Configured Activities Catalog (Games) -->
-            <div class="dashboard-section teacher-panel p-4 mb-5" id="games-catalog">
-              <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                <div>
-                  <h2 class="h5 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                    <i class="bi bi-joystick text-primary"></i>
-                    <span>Configured Activities in Curriculum (Games)</span>
-                  </h2>
-                  <p class="teacher-panel-note mb-0 text-muted">All active sorting games available for student assignments and classroom play.</p>
-                </div>
-                <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
-                  <i class="bi bi-plus-circle me-1"></i>New Activity
-                </a>
-              </div>
-
-              {% if activity_cards %}
-                <div class="activity-catalog-list">
-                  {% for card in activity_cards %}
-                  <div class="activity-row-card">
-                    <div style="min-width: 260px; max-width: 420px;">
-                      <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
-                          <i class="bi bi-joystick me-1"></i>Sorting Claw
-                        </span>
-                        {% if card.is_default %}
-                          <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">Default Game</span>
-                        {% endif %}
-                        {% if card.config and card.config.difficulty %}
-                          <span class="badge bg-warning-subtle text-dark border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">{{ card.config.difficulty }}</span>
-                        {% endif %}
-                        <span class="activity-meta-badge"><i class="bi bi-star-fill text-warning"></i>{{ card.activity.points or 100 }} pts</span>
-                      </div>
-                      <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
-                      <p class="text-muted small mb-2 text-truncate" title="{{ card.instructions }}">
-                        {{ card.instructions or 'Sort each object into the correct chute to win stars.' }}
-                      </p>
-                      
-                      <!-- Chute / Bin chips -->
-                      <div class="d-flex flex-wrap gap-1 align-items-center">
-                        <span class="text-muted small me-1 fw-bold" style="font-size: 0.75rem;">Chutes:</span>
-                        {% for bin in card.bins %}
-                          <span class="chute-chip" style="border-color: {{ bin.color or '#60a5fa' }}40; background: {{ bin.color or '#60a5fa' }}15; color: #1e293b;">
-                            <span>{{ bin.icon or '📦' }}</span>
-                            <span>{{ bin.label }}</span>
-                          </span>
-                        {% endfor %}
-                      </div>
-                    </div>
-
-                    <!-- Meta stats -->
-                    <div class="d-flex align-items-center gap-4 text-center">
-                      <div>
-                        <div class="fw-bold text-dark fs-5">{{ card.objects_count }}</div>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Objects</div>
-                      </div>
-                      <div>
-                        <div class="fw-bold text-dark fs-5">{{ card.bins|length }}</div>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Chutes</div>
-                      </div>
-                      <div>
-                        <div class="fw-bold text-dark fs-5">{{ card.round_size }}</div>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Round Size</div>
-                      </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="d-flex align-items-center gap-2">
-                      <a href="{{ url_for('teacher.preview_activity', activity_id=card.activity.id) }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Test Play in Preview Mode">
-                        <i class="bi bi-play-circle-fill"></i>
-                        <span>Test Play</span>
-                      </a>
-                      <a href="{{ url_for('teacher.claw_machine_builder', activity_id=card.activity.id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
-                        <i class="bi bi-pencil-square"></i>
-                        <span>Edit</span>
-                      </a>
-                      {% if not card.is_default %}
-                      <form method="POST" action="{{ url_for('teacher.delete_activity', activity_id=card.activity.id) }}" onsubmit="return confirm('Move activity \'{{ card.title }}\' to archive?');" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Activity">
-                          <i class="bi bi-trash3"></i>
-                        </button>
-                      </form>
-                      {% endif %}
-                    </div>
-                  </div>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <div class="text-center py-5">
-                  <div class="mb-3">
-                    <span class="rounded-circle d-inline-flex p-3 bg-light text-primary fs-1">
-                      <i class="bi bi-joystick"></i>
-                    </span>
-                  </div>
-                  <h4 class="fw-bold text-dark mb-2">No Custom Activities Yet</h4>
-                  <p class="text-muted mb-4 max-w-md mx-auto">Create your first custom sorting game with personalized chutes, object images, and science explanations.</p>
-                  <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
-                    <i class="bi bi-plus-circle-fill me-1"></i>Create First Activity
-                  </a>
-                </div>
-              {% endif %}
-            </div>
-
-            <!-- Game Engine Templates Showcase -->
-            <div class="mb-5">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="h5 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                  <i class="bi bi-grid-fill text-primary"></i>
-                  <span>Reusable Game Engines</span>
-                </h2>
-                <span class="text-muted small">Choose an engine to create a new activity</span>
-              </div>
-
-              <div class="row g-4">
-                {% for tmpl in templates %}
-                <div class="col-12 col-md-6 col-xl-4">
-                  <div class="studio-engine-card {% if tmpl.is_available %}active-engine shadow-sm{% else %}opacity-75 bg-light{% endif %}">
-                    <div>
-                      <div class="d-flex justify-content-between align-items-start">
-                        <span class="engine-icon-badge" style="background: {{ tmpl.accent }}15; color: {{ tmpl.accent }};">
-                          <i class="bi {{ tmpl.icon }}"></i>
-                        </span>
-                        {% if tmpl.is_available %}
-                          <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold">
-                            <i class="bi bi-check-circle-fill me-1"></i>Ready to Use
-                          </span>
-                        {% else %}
-                          <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1 fw-bold">
-                            Coming Soon
-                          </span>
-                        {% endif %}
-                      </div>
-
-                      <div class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.05em;">
-                        {{ tmpl.category }}
-                      </div>
-                      <h3 class="h5 fw-bold text-dark mb-2">{{ tmpl.name }}</h3>
-                      <p class="text-muted small mb-4" style="line-height: 1.55;">
-                        {{ tmpl.description }}
-                      </p>
-                    </div>
-
-                    <div class="mt-auto pt-3 border-top d-flex gap-2">
-                      {% if tmpl.is_available %}
-                        <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
-                          <i class="bi bi-plus-lg me-1"></i>Create Activity
-                        </a>
-                        <a href="{{ url_for('teacher.preview_activity', activity_id=default_claw_id) }}" target="_blank" class="btn btn-outline-dark rounded-pill fw-bold py-2 px-3" title="Live Test Play">
-                          <i class="bi bi-play-fill"></i>
-                        </a>
-                      {% else %}
-                        <button class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-2 disabled" disabled>
-                          <i class="bi bi-lock-fill me-1"></i>Under Development
-                        </button>
-                      {% endif %}
-                    </div>
-                  </div>
-                </div>
-                {% endfor %}
               </div>
             </div>
 

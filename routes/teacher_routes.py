@@ -2032,18 +2032,9 @@ def api_live_lesson_tracker():
 # TEACHER CONTENT STUDIO & TEMPLATE WORKSPACE
 # ══════════════════════════════════════════════════════════════════════════════
 
-@teacher_bp.route('/content')
-@require_role('teacher')
-def content_management():
-    """Content Studio overview: Game templates and custom teacher activities"""
-    current_user = get_current_user()
-    log_access(current_user, 'page_view', 'teacher_content_management')
-
-    # Ensure core claw machine exists
-    from routes.student_routes import get_or_create_claw_machine_activity, load_sorting_activity_config
-    default_claw = get_or_create_claw_machine_activity()
-
-    # Query all active claw machine activities
+def _get_active_game_cards(default_claw_id):
+    """Helper to load all active Claw Machine sorting activity cards"""
+    from routes.student_routes import load_sorting_activity_config
     raw_activities = Activity.query.filter(
         Activity.engine == 'claw_machine',
         (Activity.is_archived == False) | (Activity.is_archived == None)
@@ -2060,11 +2051,40 @@ def content_management():
             'bins': cfg.get('bins', []),
             'objects_count': len(cfg.get('objects', [])),
             'round_size': cfg.get('round_size', 12),
-            'is_default': (act.id == default_claw.id)
+            'is_default': (act.id == default_claw_id)
         })
+    return activity_cards
 
-    # Available engine templates metadata
-    templates = [
+
+def _get_active_lesson_cards():
+    """Helper to load all active Lesson slide cards"""
+    lesson_cards = []
+    try:
+        raw_lessons = Lesson.query.filter(
+            (Lesson.is_archived == False) | (Lesson.is_archived == None)
+        ).order_by(Lesson.id.asc()).all()
+
+        for lsn in raw_lessons:
+            cfg = getattr(lsn, 'config', None) or {}
+            slides = cfg.get('slides', []) if isinstance(cfg, dict) else []
+            lesson_cards.append({
+                'lesson': lsn,
+                'title': lsn.title,
+                'description': lsn.description or '',
+                'slides_count': len(slides) if slides else 5,
+                'has_custom_slides': bool(slides),
+                'grade_level': cfg.get('grade_level', 'Grade 3') if isinstance(cfg, dict) else 'Grade 3',
+                'config': cfg
+            })
+    except Exception as e:
+        print("[Lesson Studio] Notice loading lessons:", e)
+        db.session.rollback()
+    return lesson_cards
+
+
+def _get_game_engine_templates():
+    """Metadata for reusable game engine cards"""
+    return [
         {
             'engine': 'claw_machine',
             'name': 'Sorting Claw Machine',
@@ -2097,36 +2117,64 @@ def content_management():
         }
     ]
 
-    # Query all active lessons for Lesson Studio
-    lesson_cards = []
-    try:
-        raw_lessons = Lesson.query.filter(
-            (Lesson.is_archived == False) | (Lesson.is_archived == None)
-        ).order_by(Lesson.id.asc()).all()
 
-        for lsn in raw_lessons:
-            cfg = getattr(lsn, 'config', None) or {}
-            slides = cfg.get('slides', []) if isinstance(cfg, dict) else []
-            lesson_cards.append({
-                'lesson': lsn,
-                'title': lsn.title,
-                'description': lsn.description or '',
-                'slides_count': len(slides) if slides else 5,
-                'has_custom_slides': bool(slides),
-                'grade_level': cfg.get('grade_level', 'Grade 3') if isinstance(cfg, dict) else 'Grade 3',
-                'config': cfg
-            })
-    except Exception as e:
-        print("[Content Studio] Notice loading lessons:", e)
-        db.session.rollback()
+@teacher_bp.route('/content')
+@require_role('teacher')
+def content_management():
+    """Content Studio Gateway Hub: Choose between Game Studio and Lesson Studio"""
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', 'teacher_content_management')
+
+    from routes.student_routes import get_or_create_claw_machine_activity
+    default_claw = get_or_create_claw_machine_activity()
+    activity_cards = _get_active_game_cards(default_claw.id)
+    lesson_cards = _get_active_lesson_cards()
 
     return render_template(
         'teacher/teacher_content.html',
         current_user=current_user,
+        games_count=len(activity_cards),
+        lessons_count=len(lesson_cards),
+        active_engines_count=1
+    )
+
+
+@teacher_bp.route('/content/games')
+@teacher_bp.route('/content/game_studio')
+@require_role('teacher')
+def game_studio():
+    """Dedicated Arcade Game Studio: Game Engines & Configured Sorting Games"""
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', 'teacher_game_studio')
+
+    from routes.student_routes import get_or_create_claw_machine_activity
+    default_claw = get_or_create_claw_machine_activity()
+    activity_cards = _get_active_game_cards(default_claw.id)
+    templates = _get_game_engine_templates()
+
+    return render_template(
+        'teacher/teacher_game_studio.html',
+        current_user=current_user,
         activity_cards=activity_cards,
-        lesson_cards=lesson_cards,
         templates=templates,
         default_claw_id=default_claw.id
+    )
+
+
+@teacher_bp.route('/content/lessons')
+@teacher_bp.route('/content/lesson_studio')
+@require_role('teacher')
+def lesson_studio():
+    """Dedicated Slide Lesson Studio: Slide Deck Workshops & Configured Lessons"""
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', 'teacher_lesson_studio')
+
+    lesson_cards = _get_active_lesson_cards()
+
+    return render_template(
+        'teacher/teacher_lesson_studio.html',
+        current_user=current_user,
+        lesson_cards=lesson_cards
     )
 
 
@@ -2298,7 +2346,7 @@ def save_claw_machine():
 
     db.session.commit()
     log_access(current_user, 'save_custom_activity', f'activity_id={activity.id} title={title}')
-    return redirect(url_for('teacher.content_management'))
+    return redirect(url_for('teacher.game_studio'))
 
 
 @teacher_bp.route('/content/preview/<int:activity_id>')
@@ -2309,7 +2357,7 @@ def preview_activity(activity_id):
     if activity.engine == 'claw_machine':
         return render_template('student/claw_machine_game.html', activity_id=activity.id, attempts_today=0, is_preview=True)
     flash("Live preview is only available for Claw Machine activities currently.", "info")
-    return redirect(url_for('teacher.content_management'))
+    return redirect(url_for('teacher.game_studio'))
 
 
 @teacher_bp.route('/content/delete/<int:activity_id>', methods=['POST'])
@@ -2323,7 +2371,7 @@ def delete_activity(activity_id):
     db.session.commit()
     log_access(current_user, 'archive_custom_activity', f'activity_id={activity_id}')
     flash(f"Activity '{activity.type}' has been moved to archive.", "warning")
-    return redirect(url_for('teacher.content_management'))
+    return redirect(url_for('teacher.game_studio'))
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -2432,7 +2480,7 @@ def save_lesson():
 
     db.session.commit()
     log_access(current_user, 'save_custom_lesson', f'lesson_id={lesson.id} title={title}')
-    return redirect(url_for('teacher.content_management'))
+    return redirect(url_for('teacher.lesson_studio'))
 
 
 @teacher_bp.route('/content/lesson/preview/<int:lesson_id>')
@@ -2461,6 +2509,6 @@ def delete_lesson(lesson_id):
     db.session.commit()
     log_access(current_user, 'archive_custom_lesson', f'lesson_id={lesson_id}')
     flash(f"Lesson '{lesson.title}' has been moved to archive.", "warning")
-    return redirect(url_for('teacher.content_management'))
+    return redirect(url_for('teacher.lesson_studio'))
 
 
