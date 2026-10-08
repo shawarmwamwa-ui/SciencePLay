@@ -44,17 +44,100 @@
       font-size: 0.9rem;
     }
     .chute-config-card {
-      background: #f8fafc;
-      border: 2px solid #cbd5e1;
-      border-radius: 1rem;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 1.15rem;
       padding: 1.25rem;
       position: relative;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
     .chute-config-card:focus-within, .chute-config-card:hover {
       border-color: #4318ff;
+      box-shadow: 0 10px 25px -4px rgba(67, 24, 255, 0.1);
+      transform: translateY(-2px);
+    }
+    .chute-accent-bar {
+      height: 4px;
+      border-radius: 9999px;
+      width: 100%;
+      margin-bottom: 0.85rem;
+      transition: background-color 0.2s ease;
+    }
+    .chute-card-layout {
+      display: grid;
+      grid-template-columns: 105px 1fr;
+      gap: 1.15rem;
+      align-items: center;
+    }
+    @media (max-width: 575px) {
+      .chute-card-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    .mini-arcade-bin {
+      height: 125px;
+      border-radius: 0.85rem;
+      padding: 0.65rem 0.4rem 0.4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      color: #ffffff;
+      text-align: center;
+      border: 3px solid rgba(0, 0, 0, 0.18);
+      box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35), 0 6px 14px rgba(0, 0, 0, 0.12);
+      transition: background 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .mini-bin-icon {
+      font-size: 1.85rem;
+      line-height: 1;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+    }
+    .mini-bin-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      line-height: 1.15;
+      max-width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+    .mini-bin-catch {
+      width: 85%;
+      height: 18px;
+      border-radius: 0 0 9999px 9999px;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.38));
+    }
+    .color-swatch-circle {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1px #cbd5e1;
+      cursor: pointer;
+      display: inline-block;
+      transition: transform 0.15s ease;
+      padding: 0;
+    }
+    .color-swatch-circle:hover {
+      transform: scale(1.25);
+    }
+    .color-picker-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 0.5rem;
+      border: 1px solid #cbd5e1;
+      padding: 2px;
+      cursor: pointer;
       background: #ffffff;
-      box-shadow: 0 8px 20px rgba(67, 24, 255, 0.06);
     }
     .object-item-row {
       background: #ffffff;
@@ -503,34 +586,63 @@
       }
 
       const zoneNames = ["Chute 1: Left Drop Zone", "Chute 2: Right Drop Zone"];
-      const zonePositions = ["Position: Left Cabinet Chute", "Position: Right Cabinet Chute"];
+      const zonePositions = ["Arcade Slot: Left Side", "Arcade Slot: Right Side"];
       const zoneIcons = ["bi-arrow-left-circle-fill", "bi-arrow-right-circle-fill"];
 
       chutes.forEach((chute, idx) => {
         const col = document.createElement('div');
         col.className = 'col-12 col-md-6';
+        
+        const isLeft = idx === 0;
+        const zoneBadgeClass = isLeft ? 'bg-primary-subtle text-primary border-primary-subtle' : 'bg-warning-subtle text-dark border-warning-subtle';
+        const currentColor = chute.color || (isLeft ? '#4ade80' : '#fb923c');
+
         col.innerHTML = `
-          <div class="chute-config-card" style="border-left: 6px solid ${chute.color || '#4318ff'};">
+          <div class="chute-config-card" id="chute_card_${idx}">
+            <div class="chute-accent-bar" id="chute_accent_${idx}" style="background-color: ${currentColor};"></div>
+
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <span class="badge bg-white text-dark border fw-bold d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1">
-                <i class="bi ${zoneIcons[idx]} text-primary"></i> ${zoneNames[idx]}
+              <span class="badge ${zoneBadgeClass} border fw-bold d-inline-flex align-items-center gap-1 px-2 py-1 shadow-sm">
+                <i class="bi ${zoneIcons[idx]}"></i> ${zoneNames[idx]}
               </span>
-              <span class="badge bg-secondary-subtle text-secondary small fw-semibold">${zonePositions[idx]}</span>
+              <span class="badge bg-light text-secondary border small fw-semibold">${zonePositions[idx]}</span>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label text-muted small fw-bold mb-1">Chute Label <span class="text-danger">*</span></label>
-              <input type="text" class="form-control form-control-lg fw-bold rounded-3" value="${chute.label}" onchange="updateChuteField(${idx}, 'label', this.value)" required placeholder="e.g. Living or Solid">
-            </div>
-
-            <div class="row g-2">
-              <div class="col-6">
-                <label class="form-label text-muted small fw-bold mb-1">Emoji / Icon Badge</label>
-                <input type="text" class="form-control text-center fs-4 rounded-3" value="${chute.icon || '📦'}" onchange="updateChuteField(${idx}, 'icon', this.value)" maxlength="4" placeholder="📦">
+            <div class="chute-card-layout">
+              <!-- Live In-Game Mini Chute Preview -->
+              <div>
+                <div class="mini-arcade-bin" id="mini_bin_${idx}" style="background: linear-gradient(180deg, ${currentColor} 0%, rgba(15, 23, 42, 0.45) 140%), ${currentColor};">
+                  <div class="mini-bin-icon" id="mini_icon_${idx}">${chute.icon || '📦'}</div>
+                  <div class="mini-bin-title" id="mini_label_${idx}">${chute.label || 'Chute'}</div>
+                  <div class="mini-bin-catch"></div>
+                </div>
+                <div class="text-center text-muted mt-1" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em;">IN-GAME LOOK</div>
               </div>
-              <div class="col-6">
-                <label class="form-label text-muted small fw-bold mb-1">Chute Glow Color</label>
-                <input type="color" class="form-control form-control-color w-100 rounded-3" value="${chute.color || (idx === 0 ? '#4ade80' : '#fb923c')}" onchange="updateChuteField(${idx}, 'color', this.value)">
+
+              <!-- Form Inputs -->
+              <div>
+                <div class="mb-2">
+                  <label class="form-label text-muted small fw-bold mb-1">Chute Label <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control form-control-sm fw-bold rounded-3" value="${chute.label}" oninput="updateChuteField(${idx}, 'label', this.value)" required placeholder="e.g. Living or Solid">
+                </div>
+
+                <div class="row g-2 align-items-end">
+                  <div class="col-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Emoji</label>
+                    <input type="text" class="form-control form-control-sm text-center fs-5 rounded-3 p-1" value="${chute.icon || '📦'}" oninput="updateChuteField(${idx}, 'icon', this.value)" maxlength="4" placeholder="📦">
+                  </div>
+                  <div class="col-8">
+                    <label class="form-label text-muted small fw-bold mb-1">Glow Color</label>
+                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                      <input type="color" class="color-picker-btn" id="chute_picker_${idx}" value="${currentColor}" oninput="updateChuteField(${idx}, 'color', this.value)" title="Choose custom color">
+                      <button type="button" class="color-swatch-circle" style="background-color: #4ade80;" onclick="updateChuteField(${idx}, 'color', '#4ade80')" title="Green"></button>
+                      <button type="button" class="color-swatch-circle" style="background-color: #60a5fa;" onclick="updateChuteField(${idx}, 'color', '#60a5fa')" title="Blue"></button>
+                      <button type="button" class="color-swatch-circle" style="background-color: #fb923c;" onclick="updateChuteField(${idx}, 'color', '#fb923c')" title="Orange"></button>
+                      <button type="button" class="color-swatch-circle" style="background-color: #ec4899;" onclick="updateChuteField(${idx}, 'color', '#ec4899')" title="Pink"></button>
+                      <button type="button" class="color-swatch-circle" style="background-color: #a855f7;" onclick="updateChuteField(${idx}, 'color', '#a855f7')" title="Purple"></button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -546,6 +658,20 @@
       chutes[idx][field] = value;
       if (field === 'label') {
         chutes[idx].id = value.toLowerCase().replace(/[^a-z0-9]/g, '_') || `category_${idx + 1}`;
+        const lbl = document.getElementById(`mini_label_${idx}`);
+        if (lbl) lbl.textContent = value || 'Chute';
+      }
+      if (field === 'icon') {
+        const ico = document.getElementById(`mini_icon_${idx}`);
+        if (ico) ico.textContent = value || '📦';
+      }
+      if (field === 'color') {
+        const bin = document.getElementById(`mini_bin_${idx}`);
+        if (bin) bin.style.background = `linear-gradient(180deg, ${value} 0%, rgba(15, 23, 42, 0.45) 140%), ${value}`;
+        const accent = document.getElementById(`chute_accent_${idx}`);
+        if (accent) accent.style.backgroundColor = value;
+        const picker = document.getElementById(`chute_picker_${idx}`);
+        if (picker && picker.value !== value) picker.value = value;
       }
       renderObjects();
     }
