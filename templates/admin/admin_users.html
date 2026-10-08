@@ -206,51 +206,6 @@
             </div>
           </section>
 
-          {% if archived_users %}
-          <section class="table-shell mt-4" id="archived-user-management">
-            <div class="table-header d-flex justify-content-between align-items-center">
-              <div>
-                <h2 class="h5 mb-0 text-secondary"><i class="bi bi-archive-fill me-2 text-warning"></i>Archived Accounts</h2>
-                <p class="mb-0 text-muted">{{ archived_users|length }} user account(s) safely archived.</p>
-              </div>
-            </div>
-
-            <div class="table-responsive">
-              <table class="table align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Username</th>
-                    <th>Role</th>
-                    <th>Archived Date</th>
-                    <th class="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for user in archived_users %}
-                  <tr>
-                    <td>{{ user.id }}</td>
-                    <td>{{ user.name }}</td>
-                    <td><strong class="text-secondary">@{{ user.username }}</strong></td>
-                    <td><span class="role-pill role-{{ user.role }}">{{ user.role|title }}</span></td>
-                    <td>
-                      <small class="text-muted">
-                        {{ user.deleted_at.strftime('%b %d, %Y') if user.deleted_at else 'Archived' }}
-                      </small>
-                    </td>
-                    <td class="text-end">
-                      <a href="{{ url_for('admin.restore_user', user_id=user.id) }}" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
-                      </a>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </section>
-          {% endif %}
           </div>
           <!-- End .dashboard-real-content -->
 
