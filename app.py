@@ -82,7 +82,7 @@ def ensure_database_schema_migrations():
                 return f'"{tbl_name}"'
 
             # 1. Soft-delete / Archive columns across archivable models
-            archive_target_tables = ['user', 'lesson', 'activity', 'lesson_assignment', 'activity_assignment']
+            archive_target_tables = ['user', 'lesson', 'activity', 'lesson_assignment', 'activity_assignment', 'access_log']
             for tbl in archive_target_tables:
                 if tbl in existing_tables:
                     cols = {column['name'] for column in inspector.get_columns(tbl)}

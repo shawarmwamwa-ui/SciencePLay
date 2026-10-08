@@ -172,7 +172,7 @@ class AttemptObjectLog(db.Model):
     attempt_log = db.relationship('AttemptLog', backref=db.backref('object_logs', lazy=True, cascade='all, delete-orphan'))
 
 
-class AccessLog(BaseModel):
+class AccessLog(BaseModel, ArchivableMixin):
     __tablename__ = 'access_log'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

@@ -288,6 +288,10 @@ def compliance():
         User, User.id == AccessLog.user_id
     )
 
+    # In active views, exclude archived logs
+    if view_mode != 'archive':
+        query = query.filter((AccessLog.is_archived == False) | (AccessLog.is_archived == None))
+
     start_date_str = request.args.get('start_date', '').strip()
     end_date_str = request.args.get('end_date', '').strip()
 
@@ -339,10 +343,10 @@ def compliance():
         user_compiled[uid]['recent_logs'].append(log)
 
     compiled_users = list(user_compiled.values())
-    compiled_users.sort(key=lambda x: x['last_active'] if x['last_active'] else x['user'].created_at, reverse=True)
+    compiled_users.sort(key=lambda x: x['last_active'] if x['last_active'] else (x['user'].created_at or datetime.min), reverse=True)
 
-    # Calculate role counts summary
-    all_users = User.query.all()
+    # Calculate role counts summary (active users)
+    all_users = User.query.filter((User.is_archived == False) | (User.is_archived == None)).all()
     role_counts = {
         'all': len(all_users),
         'admin': sum(1 for u in all_users if u.role == 'admin'),
@@ -351,7 +355,9 @@ def compliance():
     }
 
     # Detailed pagination query for timeline mode returning AccessLog model instances
-    detailed_query = AccessLog.query.join(User, User.id == AccessLog.user_id)
+    detailed_query = AccessLog.query.join(User, User.id == AccessLog.user_id).filter(
+        (AccessLog.is_archived == False) | (AccessLog.is_archived == None)
+    )
     if role_filter in ('admin', 'teacher', 'student'):
         detailed_query = detailed_query.filter(User.role == role_filter)
     if search_query:
@@ -374,6 +380,26 @@ def compliance():
 
     detailed_pagination = detailed_query.order_by(AccessLog.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
+    # Archive queries (Archived Logs and Archived Users)
+    archived_users = User.query.filter(User.is_archived == True).order_by(User.deleted_at.desc()).all()
+    try:
+        archived_logs_query = db.session.query(AccessLog, User).join(User, User.id == AccessLog.user_id).filter(
+            AccessLog.is_archived == True
+        )
+        if role_filter in ('admin', 'teacher', 'student'):
+            archived_logs_query = archived_logs_query.filter(User.role == role_filter)
+        if search_query:
+            archived_logs_query = archived_logs_query.filter(
+                (User.name.ilike(f'%{search_query}%')) | 
+                (User.username.ilike(f'%{search_query}%'))
+            )
+        archived_logs = archived_logs_query.order_by(AccessLog.deleted_at.desc(), AccessLog.created_at.desc()).all()
+        archived_logs_count = AccessLog.query.filter(AccessLog.is_archived == True).count()
+    except Exception:
+        db.session.rollback()
+        archived_logs = []
+        archived_logs_count = 0
+
     return render_template(
         'admin/admin_compliance.html',
         current_user=current_user,
@@ -385,7 +411,11 @@ def compliance():
         search_query=search_query,
         start_date=start_date_str,
         end_date=end_date_str,
-        role_counts=role_counts
+        role_counts=role_counts,
+        archived_logs=archived_logs,
+        archived_logs_count=archived_logs_count,
+        archived_users=archived_users,
+        archived_total=archived_logs_count + len(archived_users)
     )
 
 
@@ -396,23 +426,29 @@ def clear_logs():
     role_target = request.form.get('role_target', 'all').lower()
 
     try:
+        now = datetime.utcnow()
         if role_target in ('admin', 'teacher', 'student'):
             user_ids = [u.id for u in User.query.filter_by(role=role_target).all()]
             if user_ids:
-                deleted_count = AccessLog.query.filter(AccessLog.user_id.in_(user_ids)).delete(synchronize_session=False)
+                archived_count = AccessLog.query.filter(
+                    AccessLog.user_id.in_(user_ids),
+                    (AccessLog.is_archived == False) | (AccessLog.is_archived == None)
+                ).update({'is_archived': True, 'deleted_at': now}, synchronize_session=False)
                 db.session.commit()
-                log_access(current_user, 'clear_logs', f'target_role={role_target} count={deleted_count}')
-                flash(f"Successfully cleared {deleted_count} logs for {role_target.capitalize()} users.", "success")
+                log_access(current_user, 'archive_logs', f'target_role={role_target} count={archived_count}')
+                flash(f"Successfully moved {archived_count} logs for {role_target.capitalize()} users to Archive. Audit trail is safely preserved.", "warning")
             else:
-                flash(f"No logs found for {role_target.capitalize()} users.", "info")
+                flash(f"No active logs found for {role_target.capitalize()} users.", "info")
         else:
-            deleted_count = AccessLog.query.delete(synchronize_session=False)
+            archived_count = AccessLog.query.filter(
+                (AccessLog.is_archived == False) | (AccessLog.is_archived == None)
+            ).update({'is_archived': True, 'deleted_at': now}, synchronize_session=False)
             db.session.commit()
-            log_access(current_user, 'clear_logs', f'target=all count={deleted_count}')
-            flash(f"Successfully cleared all {deleted_count} compliance access logs.", "success")
+            log_access(current_user, 'archive_logs', f'target=all count={archived_count}')
+            flash(f"Successfully moved {archived_count} compliance logs to Archive. You can review or restore them anytime.", "warning")
     except Exception as e:
         db.session.rollback()
-        flash(f"Failed to clear logs: {str(e)}", "danger")
+        flash(f"Failed to archive logs: {str(e)}", "danger")
 
     return redirect(request.referrer or url_for('admin.compliance'))
 
@@ -427,15 +463,73 @@ def clear_user_logs(target_user_id):
         return redirect(request.referrer or url_for('admin.compliance'))
 
     try:
-        deleted_count = AccessLog.query.filter_by(user_id=target_user_id).delete(synchronize_session=False)
+        now = datetime.utcnow()
+        archived_count = AccessLog.query.filter_by(user_id=target_user_id).filter(
+            (AccessLog.is_archived == False) | (AccessLog.is_archived == None)
+        ).update({'is_archived': True, 'deleted_at': now}, synchronize_session=False)
         db.session.commit()
-        log_access(current_user, 'clear_user_logs', f'target_user={target_user.username} count={deleted_count}')
-        flash(f"Successfully cleared {deleted_count} logs for {target_user.name} (@{target_user.username}).", "success")
+        log_access(current_user, 'archive_user_logs', f'target_user={target_user.username} count={archived_count}')
+        flash(f"Successfully moved {archived_count} logs for {target_user.name} (@{target_user.username}) to Archive.", "warning")
     except Exception as e:
         db.session.rollback()
-        flash(f"Failed to clear user logs: {str(e)}", "danger")
+        flash(f"Failed to archive user logs: {str(e)}", "danger")
 
     return redirect(request.referrer or url_for('admin.compliance'))
+
+
+@admin_bp.route('/restore_logs', methods=['POST'])
+@require_role('admin')
+def restore_logs():
+    current_user = get_current_user()
+    role_target = request.form.get('role_target', 'all').lower()
+
+    try:
+        if role_target in ('admin', 'teacher', 'student'):
+            user_ids = [u.id for u in User.query.filter_by(role=role_target).all()]
+            if user_ids:
+                restored_count = AccessLog.query.filter(
+                    AccessLog.user_id.in_(user_ids),
+                    AccessLog.is_archived == True
+                ).update({'is_archived': False, 'deleted_at': None}, synchronize_session=False)
+                db.session.commit()
+                log_access(current_user, 'restore_logs', f'target_role={role_target} count={restored_count}')
+                flash(f"Successfully restored {restored_count} archived logs for {role_target.capitalize()} users back to active compliance timeline.", "success")
+            else:
+                flash(f"No archived logs found for {role_target.capitalize()} users.", "info")
+        else:
+            restored_count = AccessLog.query.filter(
+                AccessLog.is_archived == True
+            ).update({'is_archived': False, 'deleted_at': None}, synchronize_session=False)
+            db.session.commit()
+            log_access(current_user, 'restore_logs', f'target=all count={restored_count}')
+            flash(f"Successfully restored all {restored_count} archived logs back to active compliance timeline.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to restore logs: {str(e)}", "danger")
+
+    return redirect(url_for('admin.compliance', view='archive'))
+
+
+@admin_bp.route('/restore_single_log/<int:log_id>', methods=['POST'])
+@require_role('admin')
+def restore_single_log(log_id):
+    current_user = get_current_user()
+    log = AccessLog.query.get(log_id)
+    if not log:
+        flash("Log record not found.", "warning")
+        return redirect(url_for('admin.compliance', view='archive'))
+
+    try:
+        log.is_archived = False
+        log.deleted_at = None
+        db.session.commit()
+        log_access(current_user, 'restore_log_record', f'log_id={log_id}')
+        flash("Compliance log record successfully restored to active timeline.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to restore log record: {str(e)}", "danger")
+
+    return redirect(url_for('admin.compliance', view='archive'))
 
 
 
