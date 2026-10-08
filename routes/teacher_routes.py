@@ -2151,13 +2151,17 @@ def game_studio():
     default_claw = get_or_create_claw_machine_activity()
     activity_cards = _get_active_game_cards(default_claw.id)
     templates = _get_game_engine_templates()
+    students = User.query.filter_by(role='student').filter(
+        (User.is_archived == False) | (User.is_archived == None)
+    ).order_by(User.name.asc()).all()
 
     return render_template(
         'teacher/teacher_game_studio.html',
         current_user=current_user,
         activity_cards=activity_cards,
         templates=templates,
-        default_claw_id=default_claw.id
+        default_claw_id=default_claw.id,
+        students=students
     )
 
 
@@ -2170,11 +2174,15 @@ def lesson_studio():
     log_access(current_user, 'page_view', 'teacher_lesson_studio')
 
     lesson_cards = _get_active_lesson_cards()
+    students = User.query.filter_by(role='student').filter(
+        (User.is_archived == False) | (User.is_archived == None)
+    ).order_by(User.name.asc()).all()
 
     return render_template(
         'teacher/teacher_lesson_studio.html',
         current_user=current_user,
-        lesson_cards=lesson_cards
+        lesson_cards=lesson_cards,
+        students=students
     )
 
 

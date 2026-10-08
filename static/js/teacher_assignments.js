@@ -24,8 +24,12 @@ document.addEventListener('DOMContentLoaded', function () {
     console.error('Error parsing existingAssignmentsData:', e);
   }
 
+  const assignForm = document.getElementById('unifiedAssignForm');
   const studentSelect = document.getElementById('assignStudentSelect');
   const lessonSelect = document.getElementById('assignLessonSelect');
+  const activitySelect = document.getElementById('assignActivitySelect');
+  const lessonSelectCol = document.getElementById('lessonSelectCol');
+  const activitySelectCol = document.getElementById('activitySelectCol');
   const detailsArea = document.getElementById('assignmentDetailsArea');
   const pairedRow = document.getElementById('pairedActivityRow');
   const noPairedNote = document.getElementById('noPairedActivityNote');
@@ -36,8 +40,139 @@ document.addEventListener('DOMContentLoaded', function () {
   const duplicateWarningText = document.getElementById('duplicateWarningText');
   const submitBtn = document.getElementById('assignSubmitBtn');
   const btnText = document.getElementById('assignBtnText');
+  const assignHeadingText = document.getElementById('assignFormHeadingText');
+  const assignSubtitle = document.getElementById('assignFormSubtitle');
+  const modeLessonRadio = document.getElementById('modeLessonBundle');
+  const modeActivityRadio = document.getElementById('modeStandaloneActivity');
+  const lblModeLesson = document.getElementById('lblModeLesson');
+  const lblModeActivity = document.getElementById('lblModeActivity');
 
-  function updateAssignmentFormState() {
+  let currentMode = 'lesson'; // 'lesson' or 'activity'
+
+  function setAssignmentMode(mode) {
+    currentMode = mode;
+    if (mode === 'activity') {
+      if (modeActivityRadio) modeActivityRadio.checked = true;
+      if (lblModeActivity) {
+        lblModeActivity.className = 'btn btn-sm rounded-pill px-3 fw-bold btn-success text-white';
+      }
+      if (lblModeLesson) {
+        lblModeLesson.className = 'btn btn-sm rounded-pill px-3 fw-bold text-secondary';
+      }
+      if (assignForm) assignForm.action = '/teacher/assign_activity';
+      if (assignHeadingText) assignHeadingText.textContent = 'Assign Standalone Game Activity';
+      if (assignSubtitle) assignSubtitle.textContent = 'Choose an arcade sorting game or mini-game challenge to assign directly for practice or homework.';
+      
+      if (lessonSelectCol) lessonSelectCol.classList.add('d-none');
+      if (lessonSelect) {
+        lessonSelect.disabled = true;
+        lessonSelect.required = false;
+      }
+
+      if (activitySelectCol) activitySelectCol.classList.remove('d-none');
+      if (activitySelect) {
+        activitySelect.disabled = false;
+        activitySelect.required = true;
+      }
+
+      if (detailsArea) detailsArea.style.display = 'none';
+      updateActivityFormState();
+    } else {
+      if (modeLessonRadio) modeLessonRadio.checked = true;
+      if (lblModeLesson) {
+        lblModeLesson.className = 'btn btn-sm rounded-pill px-3 fw-bold btn-primary text-white';
+      }
+      if (lblModeActivity) {
+        lblModeActivity.className = 'btn btn-sm rounded-pill px-3 fw-bold text-secondary';
+      }
+      if (assignForm) assignForm.action = '/teacher/assign_lesson';
+      if (assignHeadingText) assignHeadingText.textContent = 'Assign Lesson & Paired Game Activity';
+      if (assignSubtitle) assignSubtitle.textContent = 'Select a student (or the entire class) and choose a science lesson. The corresponding interactive game is bundled automatically.';
+
+      if (activitySelectCol) activitySelectCol.classList.add('d-none');
+      if (activitySelect) {
+        activitySelect.disabled = true;
+        activitySelect.required = false;
+      }
+
+      if (lessonSelectCol) lessonSelectCol.classList.remove('d-none');
+      if (lessonSelect) {
+        lessonSelect.disabled = false;
+        lessonSelect.required = true;
+      }
+
+      updateLessonFormState();
+    }
+  }
+
+  if (modeLessonRadio) {
+    modeLessonRadio.addEventListener('change', function () {
+      if (this.checked) setAssignmentMode('lesson');
+    });
+  }
+
+  if (modeActivityRadio) {
+    modeActivityRadio.addEventListener('change', function () {
+      if (this.checked) setAssignmentMode('activity');
+    });
+  }
+
+  function updateActivityFormState() {
+    if (!studentSelect || !activitySelect) return;
+    const studentId = parseInt(studentSelect.value, 10);
+    const activityId = parseInt(activitySelect.value, 10);
+
+    if (!activityId) {
+      if (duplicateWarning) duplicateWarning.style.setProperty('display', 'none', 'important');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';
+      }
+      if (btnText) btnText.textContent = 'Assign Game Activity';
+      return;
+    }
+
+    const isAll = studentSelect.value === 'all';
+    if (!studentId || isAll) {
+      if (duplicateWarning) duplicateWarning.style.setProperty('display', 'none', 'important');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';
+      }
+      if (btnText) btnText.textContent = isAll ? 'Assign Game to ALL Students' : 'Assign Game Activity';
+      return;
+    }
+
+    const existingActObj = existingAssignments.activities
+      ? existingAssignments.activities.find(a => a.student_id === studentId && a.activity_id === activityId)
+      : null;
+
+    const studentName = studentSelect.options[studentSelect.selectedIndex] ? studentSelect.options[studentSelect.selectedIndex].text.split('(')[0].trim() : 'Student';
+    const actName = activitySelect.options[activitySelect.selectedIndex] ? activitySelect.options[activitySelect.selectedIndex].text.trim() : 'Activity';
+
+    if (existingActObj && (existingActObj.status === 'attempts_exhausted' || existingActObj.status === 'completed')) {
+      duplicateWarning.className = 'alert alert-info d-flex align-items-center py-2 px-3 mb-0 mt-1';
+      duplicateWarning.style.setProperty('display', 'flex', 'important');
+      duplicateWarningText.innerHTML = `<i class="bi bi-arrow-repeat me-2 text-primary fs-5"></i><span><strong>${studentName}</strong> has completed "${actName}". Assigning will grant 3 fresh attempts.</span>`;
+      submitBtn.disabled = false;
+      submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';
+      btnText.textContent = 'Reassign Activity';
+    } else if (existingActObj && existingActObj.status === 'assigned') {
+      duplicateWarning.className = 'alert alert-warning d-flex align-items-center py-2 px-3 mb-0 mt-1';
+      duplicateWarning.style.setProperty('display', 'flex', 'important');
+      duplicateWarningText.textContent = `"${actName}" is already actively assigned to ${studentName}.`;
+      submitBtn.disabled = true;
+      submitBtn.className = 'btn btn-secondary w-100 py-2 fw-semibold';
+      btnText.textContent = 'Already Actively Assigned';
+    } else {
+      duplicateWarning.style.setProperty('display', 'none', 'important');
+      submitBtn.disabled = false;
+      submitBtn.className = 'btn btn-primary w-100 py-2 fw-semibold';
+      btnText.textContent = 'Assign Game Activity';
+    }
+  }
+
+  function updateLessonFormState() {
     if (!studentSelect || !lessonSelect) return;
     const studentId = parseInt(studentSelect.value, 10);
     const lessonId = lessonSelect.value;
@@ -166,17 +301,27 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  if (studentSelect) studentSelect.addEventListener('change', updateAssignmentFormState);
-  if (lessonSelect) lessonSelect.addEventListener('change', updateAssignmentFormState);
-  if (includeActivityCheck) includeActivityCheck.addEventListener('change', updateAssignmentFormState);
+  function updateFormState() {
+    if (currentMode === 'activity') {
+      updateActivityFormState();
+    } else {
+      updateLessonFormState();
+    }
+  }
+
+  if (studentSelect) studentSelect.addEventListener('change', updateFormState);
+  if (lessonSelect) lessonSelect.addEventListener('change', updateFormState);
+  if (activitySelect) activitySelect.addEventListener('change', updateFormState);
+  if (includeActivityCheck) includeActivityCheck.addEventListener('change', updateFormState);
 
   // Quick-fill buttons from Lesson Library table
   document.querySelectorAll('.quick-fill-lesson-btn').forEach(btn => {
     btn.addEventListener('click', function () {
       const lid = this.getAttribute('data-lesson-id');
+      setAssignmentMode('lesson');
       if (lessonSelect && lid) {
         lessonSelect.value = lid;
-        updateAssignmentFormState();
+        updateFormState();
         const card = document.getElementById('create-assignment-card');
         if (card) {
           card.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -187,6 +332,39 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // Initial state check
-  updateAssignmentFormState();
+  // Quick-fill buttons from Activity Library table
+  document.querySelectorAll('.quick-fill-activity-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const aid = this.getAttribute('data-activity-id');
+      setAssignmentMode('activity');
+      if (activitySelect && aid) {
+        activitySelect.value = aid;
+        updateFormState();
+        const card = document.getElementById('create-assignment-card');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          card.classList.add('section-anchor-highlight');
+          setTimeout(() => card.classList.remove('section-anchor-highlight'), 2000);
+        }
+      }
+    });
+  });
+
+  // Handle URL query parameters (?assign_activity=X or ?assign_lesson=Y)
+  const urlParams = new URLSearchParams(window.location.search);
+  const qActivity = urlParams.get('assign_activity');
+  const qLesson = urlParams.get('assign_lesson');
+
+  if (qActivity && activitySelect) {
+    setAssignmentMode('activity');
+    activitySelect.value = qActivity;
+    updateFormState();
+  } else if (qLesson && lessonSelect) {
+    setAssignmentMode('lesson');
+    lessonSelect.value = qLesson;
+    updateFormState();
+  } else {
+    // Initial state check
+    updateFormState();
+  }
 });

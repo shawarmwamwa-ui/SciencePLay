@@ -235,13 +235,26 @@
 
             <!-- Unified Assignment Creation Card -->
             <div class="dashboard-section teacher-panel mb-4" id="create-assignment-card">
-              <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
-                  <h2 class="h5 mb-1 d-flex align-items-center gap-2 fw-bold text-dark">
+                  <h2 class="h5 mb-1 d-flex align-items-center gap-2 fw-bold text-dark" id="assignFormTitle">
                     <i class="bi bi-journal-plus text-primary"></i>
-                    <span>Assign Lesson &amp; Paired Game Activity</span>
+                    <span id="assignFormHeadingText">Assign Lesson &amp; Paired Game Activity</span>
                   </h2>
-                  <p class="teacher-panel-note mb-0">Select a student (or the entire class) and choose a science lesson. The corresponding interactive game is bundled automatically.</p>
+                  <p class="teacher-panel-note mb-0" id="assignFormSubtitle">Select a student (or the entire class) and choose a science lesson. The corresponding interactive game is bundled automatically.</p>
+                </div>
+
+                <!-- Assignment Mode Toggle -->
+                <div class="btn-group btn-group-sm rounded-pill p-1 bg-light border shadow-sm" role="group">
+                  <input type="radio" class="btn-check" name="assignModeRadio" id="modeLessonBundle" value="lesson" checked autocomplete="off">
+                  <label class="btn btn-sm rounded-pill px-3 fw-bold btn-primary text-white" for="modeLessonBundle" id="lblModeLesson">
+                    <i class="bi bi-book-half me-1"></i>Lesson &amp; Paired Game
+                  </label>
+
+                  <input type="radio" class="btn-check" name="assignModeRadio" id="modeStandaloneActivity" value="activity" autocomplete="off">
+                  <label class="btn btn-sm rounded-pill px-3 fw-bold text-secondary" for="modeStandaloneActivity" id="lblModeActivity">
+                    <i class="bi bi-joystick me-1 text-success"></i>Standalone Game
+                  </label>
                 </div>
               </div>
 
@@ -255,20 +268,35 @@
                     <label class="form-label fw-bold small text-muted mb-1" for="assignStudentSelect">1. Student</label>
                     <select name="student_id" id="assignStudentSelect" class="form-select" required>
                       <option value="">Select Student...</option>
-                      <option value="all" class="fw-semibold text-primary" style="background-color: #eff6ff;">All Students</option>
+                      <option value="all" class="fw-semibold text-primary" style="background-color: #eff6ff;">All Students (Entire Class)</option>
                       {% for student in students %}
                         <option value="{{ student.id }}">{{ student.name }} (@{{ student.username }})</option>
                       {% endfor %}
                     </select>
                   </div>
 
-                  <!-- 2. Select Lesson -->
-                  <div class="col-md-3">
-                    <label class="form-label fw-bold small text-muted mb-1" for="assignLessonSelect">2. Lesson</label>
+                  <!-- 2A. Select Lesson (Lesson Mode) -->
+                  <div class="col-md-3" id="lessonSelectCol">
+                    <label class="form-label fw-bold small text-muted mb-1" for="assignLessonSelect">2. Science Lesson</label>
                     <select name="lesson_id" id="assignLessonSelect" class="form-select" required>
                       <option value="">Select Lesson...</option>
                       {% for lesson in lessons %}
-                        <option value="{{ lesson.id }}">{{ lesson.title }}</option>
+                        <option value="{{ lesson.id }}">
+                          {% if lesson.id > 5 %}[Custom] {% endif %}{{ lesson.title }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+
+                  <!-- 2B. Select Activity (Activity Mode) -->
+                  <div class="col-md-3 d-none" id="activitySelectCol">
+                    <label class="form-label fw-bold small text-muted mb-1" for="assignActivitySelect">2. Game Activity</label>
+                    <select name="activity_id" id="assignActivitySelect" class="form-select" disabled>
+                      <option value="">Select Game...</option>
+                      {% for act in activities %}
+                        <option value="{{ act.id }}">
+                          {% if act.engine == 'claw_machine' and act.id > 1 %}[Custom Claw] {% endif %}{{ act.type }} ({{ act.points }} pts)
+                        </option>
                       {% endfor %}
                     </select>
                   </div>
@@ -530,17 +558,23 @@
                               <tr>
                                 <th>Game Activity</th>
                                 <th>Points</th>
-                                <th class="text-end">Engine</th>
+                                <th class="text-end">Quick Actions</th>
                               </tr>
                             </thead>
                             <tbody>
                               {% if activities %}
                               {% for activity in activities %}
                               <tr>
-                                <td><strong class="text-dark">{{ activity.type }}</strong></td>
+                                <td>
+                                  <strong class="text-dark">{{ activity.type }}</strong>
+                                  <div class="small text-muted">{{ activity.engine.replace('_', ' ')|title }}</div>
+                                </td>
                                 <td><span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">{{ activity.points }} pts</span></td>
                                 <td class="text-end">
-                                  <span class="badge bg-light text-secondary border rounded-pill px-2 py-1">{{ activity.engine.replace('_', ' ')|title }}</span>
+                                  <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold quick-fill-activity-btn"
+                                    data-activity-id="{{ activity.id }}" title="Pre-fill top assignment form with this game">
+                                    <i class="bi bi-pencil-square me-1"></i>Assign
+                                  </button>
                                 </td>
                               </tr>
                               {% endfor %}
@@ -575,7 +609,7 @@
   <script defer src="{{ url_for('static', filename='js/teacher.js', v='20260913') }}"></script>
   <script type="application/json" id="lessonActivityMapData">{{ lesson_activity_map|tojson }}</script>
   <script type="application/json" id="existingAssignmentsData">{{ existing_assignments|tojson }}</script>
-  <script defer src="{{ url_for('static', filename='js/teacher_assignments.js', v='20260913_1') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher_assignments.js', v='20261009_1') }}"></script>
 </body>
 
 </html>
