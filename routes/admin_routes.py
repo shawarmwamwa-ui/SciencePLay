@@ -405,6 +405,8 @@ def archive():
     search_query = request.args.get('search', '').strip()
     active_tab = request.args.get('tab', 'logs').lower()
 
+    selected_view = request.args.get('view', 'compiled').lower()
+
     # 1. Archived Users
     users_query = User.query.filter(User.is_archived == True)
     if role_filter in ('admin', 'teacher', 'student'):
@@ -432,19 +434,43 @@ def archive():
             )
         archived_logs = logs_query.order_by(AccessLog.deleted_at.desc(), AccessLog.created_at.desc()).all()
         archived_logs_count = len(archived_logs)
+
+        # Build compiled summary by user
+        from collections import defaultdict
+        user_compiled = defaultdict(lambda: {
+            'user': None,
+            'archived_count': 0,
+            'last_archived': None,
+            'action_counts': defaultdict(int),
+            'logs': []
+        })
+        for log, u in archived_logs:
+            uid = u.id
+            if user_compiled[uid]['user'] is None:
+                user_compiled[uid]['user'] = u
+                user_compiled[uid]['last_archived'] = log.deleted_at
+            user_compiled[uid]['archived_count'] += 1
+            user_compiled[uid]['action_counts'][log.event_type] += 1
+            user_compiled[uid]['logs'].append(log)
+
+        compiled_archived_logs = list(user_compiled.values())
+        compiled_archived_logs.sort(key=lambda x: x['last_archived'] or datetime.min, reverse=True)
     except Exception:
         db.session.rollback()
         archived_logs = []
         archived_logs_count = 0
+        compiled_archived_logs = []
 
     return render_template(
         'admin/admin_archive.html',
         current_user=current_user,
         archived_users=archived_users,
         archived_logs=archived_logs,
+        compiled_archived_logs=compiled_archived_logs,
         archived_logs_count=archived_logs_count,
         archived_users_count=len(archived_users),
         selected_role=role_filter,
+        selected_view=selected_view,
         search_query=search_query,
         active_tab=active_tab
     )
@@ -580,6 +606,52 @@ def purge_log(log_id):
     except Exception as e:
         db.session.rollback()
         flash(f"Failed to delete log: {str(e)}", "danger")
+
+    return redirect(url_for('admin.archive', tab='logs'))
+
+
+@admin_bp.route('/restore_user_logs/<int:target_user_id>', methods=['POST'])
+@require_role('admin')
+def restore_user_logs(target_user_id):
+    current_user = get_current_user()
+    target_user = User.query.get(target_user_id)
+    if not target_user:
+        flash("User not found.", "warning")
+        return redirect(url_for('admin.archive', tab='logs'))
+
+    try:
+        restored_count = AccessLog.query.filter_by(user_id=target_user_id).filter(
+            AccessLog.is_archived == True
+        ).update({'is_archived': False, 'deleted_at': None}, synchronize_session=False)
+        db.session.commit()
+        log_access(current_user, 'restore_user_logs', f'target_user={target_user.username} count={restored_count}')
+        flash(f"Successfully restored all {restored_count} archived logs for {target_user.name} (@{target_user.username}) back to active timeline.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to restore user logs: {str(e)}", "danger")
+
+    return redirect(url_for('admin.archive', tab='logs'))
+
+
+@admin_bp.route('/purge_user_logs/<int:target_user_id>', methods=['POST'])
+@require_role('admin')
+def purge_user_logs(target_user_id):
+    current_user = get_current_user()
+    target_user = User.query.get(target_user_id)
+    if not target_user:
+        flash("User not found.", "warning")
+        return redirect(url_for('admin.archive', tab='logs'))
+
+    try:
+        purged_count = AccessLog.query.filter_by(user_id=target_user_id).filter(
+            AccessLog.is_archived == True
+        ).delete(synchronize_session=False)
+        db.session.commit()
+        log_access(current_user, 'purge_user_logs', f'target_user={target_user.username} count={purged_count}')
+        flash(f"Permanently purged {purged_count} archived logs for {target_user.name} (@{target_user.username}).", "info")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to purge user logs: {str(e)}", "danger")
 
     return redirect(url_for('admin.archive', tab='logs'))
 

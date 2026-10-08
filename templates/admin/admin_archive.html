@@ -89,7 +89,7 @@
             <!-- Tab Navigation: Underline Style with Count -->
             <nav class="archive-nav-tabs d-flex gap-4 mb-2" aria-label="Archive navigation">
               <a class="archive-tab-link {{ 'active' if active_tab != 'users' else '' }}" 
-                 href="{{ url_for('admin.archive', tab='logs', role=selected_role, search=search_query) }}">
+                 href="{{ url_for('admin.archive', tab='logs', view=selected_view, role=selected_role, search=search_query) }}">
                 <i class="bi bi-clipboard-data me-1"></i>Deleted Compliance Logs
                 <span class="archive-count-pill">{{ archived_logs_count }}</span>
               </a>
@@ -116,35 +116,53 @@
                 <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
                   <form method="GET" action="{{ url_for('admin.archive') }}" class="d-flex flex-wrap align-items-end gap-3 flex-grow-1">
                     <input type="hidden" name="tab" value="{{ active_tab }}">
+                    <input type="hidden" name="view" value="{{ selected_view }}">
+                    
+                    {% if active_tab != 'users' %}
+                    <div>
+                      <label class="form-label small fw-bold text-muted mb-1 d-block">View Format:</label>
+                      <div class="btn-group btn-group-sm" role="group" aria-label="View Format">
+                        <a href="{{ url_for('admin.archive', tab='logs', view='compiled', role=selected_role, search=search_query) }}" 
+                           class="btn btn-outline-secondary {{ 'active fw-bold' if selected_view == 'compiled' else '' }}">
+                          <i class="bi bi-people-fill me-1"></i>Compiled by User
+                        </a>
+                        <a href="{{ url_for('admin.archive', tab='logs', view='detailed', role=selected_role, search=search_query) }}" 
+                           class="btn btn-outline-secondary {{ 'active fw-bold' if selected_view == 'detailed' else '' }}">
+                          <i class="bi bi-list-ul me-1"></i>Detailed Timeline
+                        </a>
+                      </div>
+                    </div>
+                    {% endif %}
+
                     <div>
                       <label class="form-label small fw-bold text-muted mb-1 d-block">Filter by Role:</label>
                       <div class="btn-group btn-group-sm" role="group" aria-label="Role Filter">
-                        <a href="{{ url_for('admin.archive', role='all', tab=active_tab, search=search_query) }}" 
+                        <a href="{{ url_for('admin.archive', role='all', tab=active_tab, view=selected_view, search=search_query) }}" 
                            class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'all' else '' }}">
                           All Roles
                         </a>
-                        <a href="{{ url_for('admin.archive', role='admin', tab=active_tab, search=search_query) }}" 
+                        <a href="{{ url_for('admin.archive', role='admin', tab=active_tab, view=selected_view, search=search_query) }}" 
                            class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'admin' else '' }}">
                           <span style="color: #ef4444; font-size: 0.75rem;">●</span> Admins
                         </a>
-                        <a href="{{ url_for('admin.archive', role='teacher', tab=active_tab, search=search_query) }}" 
+                        <a href="{{ url_for('admin.archive', role='teacher', tab=active_tab, view=selected_view, search=search_query) }}" 
                            class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'teacher' else '' }}">
                           <span style="color: #4318ff; font-size: 0.75rem;">●</span> Teachers
                         </a>
-                        <a href="{{ url_for('admin.archive', role='student', tab=active_tab, search=search_query) }}" 
+                        <a href="{{ url_for('admin.archive', role='student', tab=active_tab, view=selected_view, search=search_query) }}" 
                            class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'student' else '' }}">
                           <span style="color: #10b981; font-size: 0.75rem;">●</span> Students
                         </a>
                       </div>
                     </div>
 
-                    <div class="flex-grow-1" style="min-width: 240px; max-width: 420px;">
+                    <div class="flex-grow-1" style="min-width: 220px; max-width: 380px;">
                       <label class="form-label small fw-bold text-muted mb-1 d-block">Search Records:</label>
                       <div class="input-group input-group-sm">
                         <input type="text" name="search" class="form-control" placeholder="Search by name, username, or details..." value="{{ search_query }}">
                         <button class="btn btn-primary fw-bold" type="submit"><i class="bi bi-search me-1"></i>Search</button>
                         {% if search_query or selected_role != 'all' %}
-                          <a href="{{ url_for('admin.archive', tab=active_tab) }}" class="btn btn-outline-secondary" title="Reset Filters"><i class="bi bi-x-circle"></i></a>
+                          <a href="{{ url_for('admin.archive', tab=active_tab, view=selected_view) }}" class="btn btn-outline-secondary" title="Reset Filters"><i class="bi bi-x-circle"></i></a>
                         {% endif %}
                       </div>
                     </div>
@@ -165,64 +183,187 @@
               </div>
 
               {% if active_tab != 'users' %}
-                <!-- Pane 1: Deleted Compliance Logs Table -->
-                <div class="table-responsive">
-                  <table class="table align-middle mb-0">
-                    <thead>
-                      <tr>
-                        <th>Log Time</th>
-                        <th>Archived On</th>
-                        <th>User</th>
-                        <th>Role</th>
-                        <th>Event Type</th>
-                        <th>Details</th>
-                        <th class="text-end">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for log, log_user in archived_logs %}
-                        {% set r_class = log_user.role if log_user else 'admin' %}
+                {% if selected_view == 'compiled' %}
+                  <!-- Pane 1A: Compiled by User Table -->
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                      <thead>
                         <tr>
-                          <td class="small">{{ log.created_at|to_ph_time('%b %d, %Y %I:%M %p') if log.created_at else 'N/A' }}</td>
-                          <td class="small text-muted fw-semibold">
-                            {{ log.deleted_at|to_ph_time('%b %d, %Y %I:%M %p') if log.deleted_at else 'Archived' }}
-                          </td>
-                          <td>
-                            <strong>{{ log_user.name if log_user else 'Unknown' }}</strong>
-                            <span class="small text-muted d-block">@{{ log_user.username if log_user else 'N/A' }}</span>
-                          </td>
-                          <td><span class="role-pill role-{{ r_class }}">{{ log_user.role|title if log_user else 'N/A' }}</span></td>
-                          <td><span class="badge bg-secondary">{{ log.event_type }}</span></td>
-                          <td class="small text-muted">{{ log.event_details or 'No details' }}</td>
-                          <td class="text-end">
-                            <div class="d-inline-flex align-items-center justify-content-end gap-1">
-                              <form method="POST" action="{{ url_for('admin.restore_single_log', log_id=log.id) }}" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-primary fw-semibold px-2.5 py-1" title="Restore log to active timeline">
-                                  <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
-                                </button>
-                              </form>
-                              <form method="POST" action="{{ url_for('admin.purge_log', log_id=log.id) }}" class="d-inline" onsubmit="return confirm('Permanently delete this archived log record? This action cannot be undone.');">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn-quiet-danger" title="Permanently Delete">
-                                  <i class="bi bi-trash3"></i>
-                                </button>
-                              </form>
-                            </div>
-                          </td>
+                          <th>User</th>
+                          <th>Role</th>
+                          <th>Archived Logs</th>
+                          <th>Archived On</th>
+                          <th class="text-end">Action</th>
                         </tr>
-                      {% else %}
+                      </thead>
+                      <tbody>
+                        {% for item in compiled_archived_logs %}
+                          {% set u = item.user %}
+                          {% set role_class = 'admin' if u.role == 'admin' else 'teacher' if u.role == 'teacher' else 'student' %}
+                          <tr>
+                            <td>
+                              <div class="d-flex align-items-center gap-2">
+                                <div class="user-avatar-badge avatar-{{ role_class }}" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                  <i class="bi {{ 'bi-shield-check' if u.role == 'admin' else 'bi-person-badge-fill' if u.role == 'teacher' else 'bi-mortarboard-fill' }}"></i>
+                                </div>
+                                <div>
+                                  <strong>{{ u.name }}</strong>
+                                  <span class="small text-muted d-block">@{{ u.username }}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td><span class="role-pill role-{{ role_class }}">{{ u.role|title }}</span></td>
+                            <td>
+                              <span class="badge bg-warning-subtle text-dark border border-warning px-2.5 py-1.5 fw-bold">
+                                <i class="bi bi-journal-text me-1 text-warning"></i>{{ item.archived_count }} Logs
+                              </span>
+                              <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2 small text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#userLogsDetail{{ u.id }}" aria-expanded="false" title="Preview archived events">
+                                <i class="bi bi-chevron-down"></i> Preview
+                              </button>
+                            </td>
+                            <td class="small text-muted fw-semibold">
+                              {{ item.last_archived|to_ph_time('%b %d, %Y %I:%M %p') if item.last_archived else 'Archived' }}
+                            </td>
+                            <td class="text-end">
+                              <div class="d-inline-flex align-items-center justify-content-end gap-1">
+                                <form method="POST" action="{{ url_for('admin.restore_user_logs', target_user_id=u.id) }}" class="d-inline" onsubmit="return confirm('Restore all {{ item.archived_count }} archived logs for {{ u.name }}?');">
+                                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                  <button type="submit" class="btn btn-sm btn-primary fw-semibold px-2.5 py-1" title="Restore all {{ item.archived_count }} logs for {{ u.name }}">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Restore ({{ item.archived_count }})
+                                  </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin.purge_user_logs', target_user_id=u.id) }}" class="d-inline" onsubmit="return confirm('Permanently delete all {{ item.archived_count }} archived logs for {{ u.name }}? This action cannot be undone.');">
+                                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                  <button type="submit" class="btn-quiet-danger" title="Permanently delete logs for this user">
+                                    <i class="bi bi-trash3"></i>
+                                  </button>
+                                </form>
+                              </div>
+                            </td>
+                          </tr>
+                          <!-- Collapsible logs preview row -->
+                          <tr class="collapse bg-light-subtle" id="userLogsDetail{{ u.id }}">
+                            <td colspan="5" class="p-3">
+                              <div class="small">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                  <span class="fw-bold text-muted">Archived Action Breakdown:</span>
+                                  <span class="text-muted">
+                                    {% for event_type, count in item.action_counts.items() %}
+                                      <span class="badge bg-secondary me-1">{{ event_type }}: {{ count }}</span>
+                                    {% endfor %}
+                                  </span>
+                                </div>
+                                <div class="table-responsive bg-white rounded border">
+                                  <table class="table table-sm mb-0">
+                                    <thead class="table-light">
+                                      <tr>
+                                        <th class="ps-3">Log Time</th>
+                                        <th>Event Type</th>
+                                        <th>Details</th>
+                                        <th class="text-end pe-3">Action</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {% for l in item.logs[:10] %}
+                                        <tr>
+                                          <td class="ps-3 text-muted small">{{ l.created_at|to_ph_time('%b %d, %Y %I:%M %p') if l.created_at else 'N/A' }}</td>
+                                          <td><span class="badge bg-secondary">{{ l.event_type }}</span></td>
+                                          <td class="text-muted small">{{ l.event_details or 'No details' }}</td>
+                                          <td class="text-end pe-3">
+                                            <form method="POST" action="{{ url_for('admin.restore_single_log', log_id=l.id) }}" class="d-inline">
+                                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                              <button type="submit" class="btn btn-sm btn-link text-primary p-0 text-decoration-none small fw-semibold" title="Restore this single log">
+                                                Restore
+                                              </button>
+                                            </form>
+                                          </td>
+                                        </tr>
+                                      {% endfor %}
+                                      {% if item.logs|length > 10 %}
+                                        <tr>
+                                          <td colspan="4" class="text-center text-muted small py-1">
+                                            + {{ item.logs|length - 10 }} more logs...
+                                          </td>
+                                        </tr>
+                                      {% endif %}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        {% else %}
+                          <tr>
+                            <td colspan="5" class="text-center text-muted py-5">
+                              <i class="bi bi-archive fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                              <p class="mb-1 fw-semibold text-dark">No deleted compliance logs found in Archive.</p>
+                              <small class="text-muted">Cleared logs from the Compliance Logs page will appear here.</small>
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                {% else %}
+                  <!-- Pane 1B: Detailed Timeline Table -->
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                      <thead>
                         <tr>
-                          <td colspan="7" class="text-center text-muted py-5">
-                            <i class="bi bi-archive fs-1 d-block mb-2 text-secondary opacity-50"></i>
-                            <p class="mb-1 fw-semibold text-dark">No deleted compliance logs found in Archive.</p>
-                            <small class="text-muted">Cleared logs from the Compliance Logs page will appear here.</small>
-                          </td>
+                          <th>Log Time</th>
+                          <th>Archived On</th>
+                          <th>User</th>
+                          <th>Role</th>
+                          <th>Event Type</th>
+                          <th>Details</th>
+                          <th class="text-end">Action</th>
                         </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {% for log, log_user in archived_logs %}
+                          {% set r_class = log_user.role if log_user else 'admin' %}
+                          <tr>
+                            <td class="small">{{ log.created_at|to_ph_time('%b %d, %Y %I:%M %p') if log.created_at else 'N/A' }}</td>
+                            <td class="small text-muted fw-semibold">
+                              {{ log.deleted_at|to_ph_time('%b %d, %Y %I:%M %p') if log.deleted_at else 'Archived' }}
+                            </td>
+                            <td>
+                              <strong>{{ log_user.name if log_user else 'Unknown' }}</strong>
+                              <span class="small text-muted d-block">@{{ log_user.username if log_user else 'N/A' }}</span>
+                            </td>
+                            <td><span class="role-pill role-{{ r_class }}">{{ log_user.role|title if log_user else 'N/A' }}</span></td>
+                            <td><span class="badge bg-secondary">{{ log.event_type }}</span></td>
+                            <td class="small text-muted">{{ log.event_details or 'No details' }}</td>
+                            <td class="text-end">
+                              <div class="d-inline-flex align-items-center justify-content-end gap-1">
+                                <form method="POST" action="{{ url_for('admin.restore_single_log', log_id=log.id) }}" class="d-inline">
+                                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                  <button type="submit" class="btn btn-sm btn-primary fw-semibold px-2.5 py-1" title="Restore log to active timeline">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+                                  </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin.purge_log', log_id=log.id) }}" class="d-inline" onsubmit="return confirm('Permanently delete this archived log record? This action cannot be undone.');">
+                                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                  <button type="submit" class="btn-quiet-danger" title="Permanently Delete">
+                                    <i class="bi bi-trash3"></i>
+                                  </button>
+                                </form>
+                              </div>
+                            </td>
+                          </tr>
+                        {% else %}
+                          <tr>
+                            <td colspan="7" class="text-center text-muted py-5">
+                              <i class="bi bi-archive fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                              <p class="mb-1 fw-semibold text-dark">No deleted compliance logs found in Archive.</p>
+                              <small class="text-muted">Cleared logs from the Compliance Logs page will appear here.</small>
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                {% endif %}
               {% else %}
                 <!-- Pane 2: Deleted Users Table -->
                 <div class="table-responsive">
