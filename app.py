@@ -72,48 +72,77 @@ def ensure_database_schema_migrations():
         try:
             inspector = db.inspect(db.engine)
             existing_tables = set(inspector.get_table_names())
+            dialect_name = (db.engine.dialect.name or '').lower()
 
-            # 1. Soft-delete / Archive columns across core models
+            def quote_tbl(tbl_name):
+                if dialect_name in ('postgresql', 'sqlite'):
+                    return f'"{tbl_name}"'
+                elif dialect_name == 'mysql':
+                    return f'`{tbl_name}`'
+                return f'"{tbl_name}"'
+
+            # 1. Soft-delete / Archive columns across archivable models
             archive_target_tables = ['user', 'lesson', 'activity', 'lesson_assignment', 'activity_assignment']
             for tbl in archive_target_tables:
                 if tbl in existing_tables:
                     cols = {column['name'] for column in inspector.get_columns(tbl)}
+                    q_tbl = quote_tbl(tbl)
                     if 'deleted_at' not in cols:
                         try:
-                            db.session.execute(text(f'ALTER TABLE {tbl} ADD COLUMN deleted_at TIMESTAMP NULL'))
+                            db.session.execute(text(f'ALTER TABLE {q_tbl} ADD COLUMN deleted_at TIMESTAMP NULL'))
                             db.session.commit()
+                            print(f"[Migration] Added deleted_at to {tbl}")
                         except Exception as e:
                             db.session.rollback()
                             print(f"[Migration] deleted_at on {tbl}: {e}")
                     if 'is_archived' not in cols:
                         try:
-                            db.session.execute(text(f'ALTER TABLE {tbl} ADD COLUMN is_archived BOOLEAN DEFAULT FALSE'))
+                            if dialect_name == 'mysql':
+                                db.session.execute(text(f'ALTER TABLE {q_tbl} ADD COLUMN is_archived TINYINT(1) DEFAULT 0'))
+                            else:
+                                db.session.execute(text(f'ALTER TABLE {q_tbl} ADD COLUMN is_archived BOOLEAN DEFAULT FALSE'))
                             db.session.commit()
+                            print(f"[Migration] Added is_archived to {tbl}")
                         except Exception as e:
                             db.session.rollback()
                             print(f"[Migration] is_archived on {tbl}: {e}")
 
-            # 2. Existing columns checks
+            # 2. Check user table for last_seen
+            if 'user' in existing_tables:
+                u_cols = {column['name'] for column in inspector.get_columns('user')}
+                q_user = quote_tbl('user')
+                if 'last_seen' not in u_cols:
+                    try:
+                        db.session.execute(text(f'ALTER TABLE {q_user} ADD COLUMN last_seen TIMESTAMP NULL'))
+                        db.session.commit()
+                        print("[Migration] Added last_seen to user")
+                    except Exception as e:
+                        db.session.rollback()
+                        print(f"[Migration] last_seen on user: {e}")
+
+            # 3. Existing columns checks
             if 'attempt_log' in existing_tables:
                 cols = {column['name'] for column in inspector.get_columns('attempt_log')}
+                q_att = quote_tbl('attempt_log')
                 if 'teacher_feedback' not in cols:
                     try:
-                        db.session.execute(text('ALTER TABLE attempt_log ADD COLUMN teacher_feedback TEXT NULL'))
+                        db.session.execute(text(f'ALTER TABLE {q_att} ADD COLUMN teacher_feedback TEXT NULL'))
                         db.session.commit()
                     except Exception as e:
                         db.session.rollback()
 
             if 'lesson_progress' in existing_tables:
                 lp_cols = {column['name'] for column in inspector.get_columns('lesson_progress')}
+                q_lp = quote_tbl('lesson_progress')
                 if 'initial_time_spent' not in lp_cols:
                     try:
-                        db.session.execute(text('ALTER TABLE lesson_progress ADD COLUMN initial_time_spent INT DEFAULT 0'))
+                        db.session.execute(text(f'ALTER TABLE {q_lp} ADD COLUMN initial_time_spent INT DEFAULT 0'))
                         db.session.commit()
                     except Exception as e:
                         db.session.rollback()
                 if 'total_time_spent' not in lp_cols:
                     try:
-                        db.session.execute(text('ALTER TABLE lesson_progress ADD COLUMN total_time_spent INT DEFAULT 0'))
+                        db.session.execute(text(f'ALTER TABLE {q_lp} ADD COLUMN total_time_spent INT DEFAULT 0'))
                         db.session.commit()
                     except Exception as e:
                         db.session.rollback()
@@ -196,18 +225,21 @@ def teardown_request(exception=None):
 
 @app.before_request
 def update_last_seen():
-    user_id = session.get('user_id')
-    if user_id:
-        user = User.query.get(user_id)
-        if user:
-            now = datetime.utcnow()
-            # Throttle DB updates to once every 10 seconds
-            if not user.last_seen or (now - user.last_seen).total_seconds() > 10:
-                user.last_seen = now
-                try:
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
+    try:
+        user_id = session.get('user_id')
+        if user_id:
+            user = User.query.get(user_id)
+            if user:
+                now = datetime.utcnow()
+                # Throttle DB updates to once every 10 seconds
+                if not user.last_seen or (now - user.last_seen).total_seconds() > 10:
+                    user.last_seen = now
+                    try:
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+    except Exception:
+        db.session.rollback()
 
 @app.after_request
 def add_webview_headers(response):

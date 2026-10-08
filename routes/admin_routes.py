@@ -23,14 +23,29 @@ def _get_admin_dashboard_data():
     if _ADMIN_DASHBOARD_CACHE is not None and (now - _ADMIN_DASHBOARD_CACHE_TIME) < 20:
         return _ADMIN_DASHBOARD_CACHE
 
-    users = User.query.all()
     week_ago = datetime.utcnow() - timedelta(days=7)
     online_threshold = datetime.utcnow() - timedelta(minutes=3)
 
-    online_users = User.query.filter(
-        User.role.in_(['teacher', 'student']),
-        User.last_seen >= online_threshold
-    ).order_by(User.name.asc()).all()
+    try:
+        users = User.query.all()
+    except Exception:
+        db.session.rollback()
+        users = []
+
+    try:
+        online_users = User.query.filter(
+            User.role.in_(['teacher', 'student']),
+            User.last_seen >= online_threshold
+        ).order_by(User.name.asc()).all()
+    except Exception:
+        db.session.rollback()
+        online_users = []
+
+    try:
+        audit_count = AccessLog.query.count()
+    except Exception:
+        db.session.rollback()
+        audit_count = 0
 
     dashboard_stats = {
         'total_users': len(users),
@@ -39,7 +54,7 @@ def _get_admin_dashboard_data():
         'student_count': sum(1 for user in users if user.role == 'student'),
         'new_this_week': sum(1 for user in users if user.created_at and user.created_at >= week_ago),
         'online_count': len(online_users),
-        'total_audit_logs': AccessLog.query.count()
+        'total_audit_logs': audit_count
     }
     
     _ADMIN_DASHBOARD_CACHE = (online_users, dashboard_stats, online_threshold)

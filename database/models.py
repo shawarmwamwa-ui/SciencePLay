@@ -9,6 +9,9 @@ class BaseModel(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     deleted_at = db.Column(db.DateTime, nullable=True)
+
+
+class ArchivableMixin(object):
     is_archived = db.Column(db.Boolean, default=False, nullable=True)
 
     def archive(self):
@@ -20,7 +23,7 @@ class BaseModel(db.Model):
         self.deleted_at = None
 
 
-class User(BaseModel):
+class User(BaseModel, ArchivableMixin):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
@@ -36,13 +39,13 @@ class User(BaseModel):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-class Lesson(BaseModel):
+class Lesson(BaseModel, ArchivableMixin):
     __tablename__ = 'lesson'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
 
-class Activity(BaseModel):
+class Activity(BaseModel, ArchivableMixin):
     __tablename__ = 'activity'
     id = db.Column(db.Integer, primary_key=True)
     lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'))
@@ -93,7 +96,7 @@ class LessonAttemptLog(BaseModel):
     lesson = db.relationship('Lesson', backref='lesson_attempt_logs')
 
 
-class LessonAssignment(BaseModel):
+class LessonAssignment(BaseModel, ArchivableMixin):
     __tablename__ = 'lesson_assignment'
     id = db.Column(db.Integer, primary_key=True)
     lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=False)
@@ -108,7 +111,7 @@ class LessonAssignment(BaseModel):
     assigned_by_user = db.relationship('User', foreign_keys=[assigned_by])
 
 
-class ActivityAssignment(BaseModel):
+class ActivityAssignment(BaseModel, ArchivableMixin):
     __tablename__ = 'activity_assignment'
     id = db.Column(db.Integer, primary_key=True)
     activity_id = db.Column(db.Integer, db.ForeignKey('activity.id'), nullable=False)
