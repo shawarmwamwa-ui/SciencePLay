@@ -36,10 +36,17 @@
       <header class="cabinet-marquee">
         <div class="marquee-title">
           <div class="d-flex align-items-center gap-2 flex-wrap">
+            {% if is_preview %}
+            <a href="{{ url_for('teacher.content_management') }}" class="game-leave-btn text-white bg-primary border-0" id="btn-claw-back" title="Exit Preview">
+              <i class="bi bi-box-arrow-left"></i><span>Exit Preview</span>
+            </a>
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold"><i class="bi bi-eye-fill me-1"></i>Teacher Preview Mode</span>
+            {% else %}
             <a href="{{ url_for('student.activities') }}" class="game-leave-btn" id="btn-claw-back" title="Leave Game">
               <i class="bi bi-arrow-left"></i><span>Leave Game</span>
             </a>
-            <h1 class="mb-0 fs-3">Living vs Non-Living Claw Machine</h1>
+            {% endif %}
+            <h1 class="mb-0 fs-3">Claw Machine</h1>
           </div>
           <p class="mb-0 mt-1">Sort each object into the correct chute to win stars.</p>
         </div>
@@ -134,9 +141,15 @@
         </div>
 
         <div class="d-flex justify-content-center align-items-center gap-3 mt-3 flex-wrap">
+          {% if is_preview %}
+          <a href="{{ url_for('teacher.content_management') }}" class="btn btn-primary btn-lg px-4 rounded-pill fw-bold" id="btn-finish-playground">
+            <i class="bi bi-box-arrow-left me-1"></i>Back to Content Studio
+          </a>
+          {% else %}
           <a href="{{ url_for('student.activities') }}" class="btn btn-success btn-lg px-4 rounded-pill fw-bold" id="btn-finish-playground">
             <i class="bi bi-check-circle-fill me-1"></i>Finish & Return to Playground
           </a>
+          {% endif %}
           <button id="restart-button" class="btn btn-primary btn-lg px-4 rounded-pill fw-bold">
             <i class="bi bi-arrow-repeat me-1"></i>Play Again
           </button>
@@ -187,6 +200,7 @@
   <script>
     window.clawMachineActivityId = {{ activity_id|tojson }};
     window.initialAttemptsToday = {{ attempts_today if attempts_today is defined else 0 }};
+    window.isTeacherPreview = {{ (is_preview|default(false))|tojson }};
   </script>
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

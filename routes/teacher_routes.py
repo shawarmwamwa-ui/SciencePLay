@@ -2027,3 +2027,247 @@ def api_live_lesson_tracker():
         'total_active': len(live_tracker)
     })
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TEACHER CONTENT STUDIO & TEMPLATE WORKSPACE
+# ══════════════════════════════════════════════════════════════════════════════
+
+@teacher_bp.route('/content')
+@require_role('teacher')
+def content_management():
+    """Content Studio overview: Game templates and custom teacher activities"""
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', 'teacher_content_management')
+
+    # Ensure core claw machine exists
+    from routes.student_routes import get_or_create_claw_machine_activity, load_sorting_activity_config
+    default_claw = get_or_create_claw_machine_activity()
+
+    # Query all active claw machine activities
+    raw_activities = Activity.query.filter(
+        Activity.engine == 'claw_machine',
+        (Activity.is_archived == False) | (Activity.is_archived == None)
+    ).order_by(Activity.id.asc()).all()
+
+    activity_cards = []
+    for act in raw_activities:
+        cfg = load_sorting_activity_config(act.id)
+        activity_cards.append({
+            'activity': act,
+            'config': cfg,
+            'title': cfg.get('title') or act.type or 'Sorting Game',
+            'instructions': cfg.get('instructions') or '',
+            'bins': cfg.get('bins', []),
+            'objects_count': len(cfg.get('objects', [])),
+            'round_size': cfg.get('round_size', 12),
+            'is_default': (act.id == default_claw.id)
+        })
+
+    # Available engine templates metadata
+    templates = [
+        {
+            'engine': 'claw_machine',
+            'name': 'Sorting Claw Machine',
+            'category': 'Classification & Categorization',
+            'icon': 'bi-joystick',
+            'accent': '#4318ff',
+            'description': 'Students control an arcade claw to sort science objects into 2–4 customizable chutes. Great for States of Matter, Living/Non-Living, Animals, and Waste Sorting.',
+            'status': 'Ready to Customize',
+            'is_available': True
+        },
+        {
+            'engine': 'find_the_part',
+            'name': 'Find the Part (Hotspot Identifier)',
+            'category': 'Anatomy & Diagrams',
+            'icon': 'bi-crosshair',
+            'accent': '#0284c7',
+            'description': 'Interactive click-to-identify game where students pinpoint organs, body parts, or diagram components.',
+            'status': 'Engine Template Coming Soon',
+            'is_available': False
+        },
+        {
+            'engine': 'build_a_plant',
+            'name': 'Assembly Builder',
+            'category': 'Structure & Functions',
+            'icon': 'bi-puzzle-fill',
+            'accent': '#10b981',
+            'description': 'Drag-and-assemble building block game to construct plants, life cycles, or systems in order.',
+            'status': 'Engine Template Coming Soon',
+            'is_available': False
+        }
+    ]
+
+    return render_template(
+        'teacher/teacher_content.html',
+        current_user=current_user,
+        activity_cards=activity_cards,
+        templates=templates,
+        default_claw_id=default_claw.id
+    )
+
+
+@teacher_bp.route('/content/claw_machine/builder')
+@teacher_bp.route('/content/claw_machine/builder/<int:activity_id>')
+@require_role('teacher')
+def claw_machine_builder(activity_id=None):
+    """Visual workspace for customizing the Claw Machine Sorting Template"""
+    current_user = get_current_user()
+    from routes.student_routes import load_sorting_activity_config
+
+    activity = None
+    if activity_id:
+        activity = Activity.query.get_or_404(activity_id)
+        config = load_sorting_activity_config(activity.id)
+    else:
+        # Default starter configuration for a brand new sorting game
+        config = {
+            "title": "States of Matter Sorting",
+            "instructions": "Sort each object into the correct chute to win stars.",
+            "round_size": 8,
+            "bins": [
+                {"id": "solid", "label": "Solid", "icon": "🧊", "color": "#60a5fa"},
+                {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"},
+                {"id": "gas", "label": "Gas", "icon": "💨", "color": "#cbd5e1"}
+            ],
+            "objects": [
+                {"id": 1, "label": "Ice Cube", "categoryId": "solid", "explanation": "Ice has a fixed shape and volume.", "image": "/static/images/rock.webp"},
+                {"id": 2, "label": "Water", "categoryId": "liquid", "explanation": "Water flows and takes the shape of its container.", "image": "/static/images/puddle.webp"},
+                {"id": 3, "label": "Balloon Air", "categoryId": "gas", "explanation": "Air spreads out and fills any container.", "image": "/static/images/butterfly.webp"}
+            ]
+        }
+
+    preset_images = [
+        {"label": "Dog", "src": "/static/images/dog.webp"},
+        {"label": "Cat", "src": "/static/images/cat.webp"},
+        {"label": "Bird", "src": "/static/images/bird.webp"},
+        {"label": "Fish", "src": "/static/images/fish.webp"},
+        {"label": "Butterfly", "src": "/static/images/butterfly.webp"},
+        {"label": "Tree", "src": "/static/images/tree.webp"},
+        {"label": "Flower", "src": "/static/images/flower.webp"},
+        {"label": "Plant", "src": "/static/images/plant.webp"},
+        {"label": "Rock", "src": "/static/images/rock.webp"},
+        {"label": "Chair", "src": "/static/images/chair.webp"},
+        {"label": "Bicycle", "src": "/static/images/bicycle.webp"},
+        {"label": "Ball", "src": "/static/images/ball.webp"},
+        {"label": "Puddle", "src": "/static/images/puddle.webp"}
+    ]
+
+    all_lessons = Lesson.query.filter(
+        (Lesson.is_archived == False) | (Lesson.is_archived == None)
+    ).order_by(Lesson.title.asc()).all()
+
+    return render_template(
+        'teacher/teacher_claw_builder.html',
+        current_user=current_user,
+        activity=activity,
+        config=config,
+        preset_images=preset_images,
+        all_lessons=all_lessons
+    )
+
+
+@teacher_bp.route('/content/claw_machine/save', methods=['POST'])
+@require_role('teacher')
+def save_claw_machine():
+    """Save or update custom Claw Machine activity configuration and image uploads"""
+    import os, uuid
+    from flask import current_app
+
+    current_user = get_current_user()
+    activity_id = request.form.get('activity_id', type=int)
+    title = request.form.get('title', 'Custom Sorting Game').strip()
+    instructions = request.form.get('instructions', 'Sort each object into the correct chute.').strip()
+    points = request.form.get('points', 20, type=int)
+    round_size = request.form.get('round_size', 10, type=int)
+    lesson_id = request.form.get('lesson_id', type=int)
+
+    bins_json = request.form.get('bins_data', '[]')
+    objects_json = request.form.get('objects_data', '[]')
+
+    try:
+        bins = json.loads(bins_json)
+        objects = json.loads(objects_json)
+    except Exception as e:
+        flash(f"Invalid activity configuration: {e}", "danger")
+        return redirect(url_for('teacher.content_management'))
+
+    upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'activities')
+    os.makedirs(upload_dir, exist_ok=True)
+
+    for idx, obj in enumerate(objects):
+        file_key = f"object_file_{idx}"
+        if file_key in request.files:
+            file = request.files[file_key]
+            if file and file.filename:
+                ext = os.path.splitext(file.filename)[1].lower()
+                if ext in ('.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif'):
+                    unique_name = f"{uuid.uuid4().hex[:12]}{ext}"
+                    filepath = os.path.join(upload_dir, unique_name)
+                    file.save(filepath)
+                    obj['image'] = f"/static/uploads/activities/{unique_name}"
+                    obj['icon'] = obj['image']
+
+    config_payload = {
+        "title": title,
+        "instructions": instructions,
+        "round_size": round_size,
+        "bins": bins,
+        "objects": objects
+    }
+
+    if activity_id:
+        activity = Activity.query.get(activity_id)
+        if not activity:
+            flash("Activity not found.", "danger")
+            return redirect(url_for('teacher.content_management'))
+        activity.type = title
+        activity.points = points
+        if lesson_id:
+            activity.lesson_id = lesson_id
+        activity.config = config_payload
+        flash(f"Activity '{title}' updated successfully!", "success")
+    else:
+        if not lesson_id:
+            from routes.student_routes import get_or_create_default_lesson
+            def_l = get_or_create_default_lesson()
+            lesson_id = def_l.id
+
+        activity = Activity(
+            lesson_id=lesson_id,
+            type=title,
+            engine='claw_machine',
+            points=points,
+            config=config_payload
+        )
+        db.session.add(activity)
+        flash(f"New custom activity '{title}' created successfully!", "success")
+
+    db.session.commit()
+    log_access(current_user, 'save_custom_activity', f'activity_id={activity.id} title={title}')
+    return redirect(url_for('teacher.content_management'))
+
+
+@teacher_bp.route('/content/preview/<int:activity_id>')
+@require_role('teacher')
+def preview_activity(activity_id):
+    """Test play a custom activity as teacher without grade tracking"""
+    activity = Activity.query.get_or_404(activity_id)
+    if activity.engine == 'claw_machine':
+        return render_template('student/claw_machine_game.html', activity_id=activity.id, attempts_today=0, is_preview=True)
+    flash("Live preview is only available for Claw Machine activities currently.", "info")
+    return redirect(url_for('teacher.content_management'))
+
+
+@teacher_bp.route('/content/delete/<int:activity_id>', methods=['POST'])
+@require_role('teacher')
+def delete_activity(activity_id):
+    """Soft-delete a custom activity"""
+    current_user = get_current_user()
+    activity = Activity.query.get_or_404(activity_id)
+    activity.is_archived = True
+    activity.deleted_at = datetime.utcnow()
+    db.session.commit()
+    log_access(current_user, 'archive_custom_activity', f'activity_id={activity_id}')
+    flash(f"Activity '{activity.type}' has been moved to archive.", "warning")
+    return redirect(url_for('teacher.content_management'))
+

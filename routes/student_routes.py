@@ -1536,8 +1536,11 @@ def recycling_game():
 
 
 @student_bp.route('/sorting_activity_config/<int:activity_id>')
-@require_role('student')
 def sorting_activity_config(activity_id):
+    current_user = get_current_user()
+    if not current_user:
+        return jsonify({'error': 'Unauthorized'}), 401
+
     activity = Activity.query.filter_by(id=activity_id).first()
     if not activity:
         return jsonify({'error': 'Activity not found'}), 404
@@ -1559,12 +1562,17 @@ def sorting_activity_config(activity_id):
 
 
 @student_bp.route('/activity_attempts/<int:activity_id>')
-@require_role('student')
 def activity_attempts(activity_id):
     current_user = get_current_user()
+    if not current_user:
+        return jsonify({'error': 'Unauthorized'}), 401
+
     activity = Activity.query.filter_by(id=activity_id).first()
     if not activity:
         return jsonify({'error': 'Activity not found'}), 404
+
+    if current_user.role != 'student':
+        return jsonify({'used': 0, 'remaining': 999, 'limit': 999, 'preview': True})
 
     used = get_attempts_today(current_user.id, activity.id)
     return jsonify({'used': used, 'remaining': max(0, 3 - used), 'limit': 3})
@@ -1572,9 +1580,13 @@ def activity_attempts(activity_id):
 
 @student_bp.route('/activity_progress', methods=['POST'])
 @csrf.exempt  # JSON fetch() from clawMachineGame.js — no form token
-@require_role('student')
 def activity_progress():
     current_user = get_current_user()
+    if not current_user:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if current_user.role != 'student':
+        return jsonify({'success': True, 'preview': True, 'message': 'Teacher preview mode - progress not logged'})
     data = request.get_json(silent=True) or request.form
 
     try:

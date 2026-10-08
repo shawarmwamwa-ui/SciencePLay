@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if activity %}Edit Activity: {{ activity.type }}{% else %}New Sorting Game{% endif %} — Content Studio</title>
+  <meta name="description" content="SciencePlay Template Builder: Configure custom science sorting games with chutes, objects, and explanations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260903_4') }}">
+  <style>
+    .builder-step-card {
+      background: #ffffff;
+      border-radius: 1.25rem;
+      border: 1px solid #e2e8f0;
+      padding: 1.75rem;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+    }
+    .builder-step-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .step-number-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #4318ff;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+    .chute-config-card {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 1rem;
+      padding: 1.25rem;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .chute-config-card:focus-within, .chute-config-card:hover {
+      border-color: #4318ff;
+      background: #ffffff;
+      box-shadow: 0 8px 20px rgba(67, 24, 255, 0.06);
+    }
+    .object-item-row {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.85rem;
+      padding: 1rem;
+      margin-bottom: 0.85rem;
+      display: grid;
+      grid-template-columns: 70px 1.5fr 1fr 2fr 40px;
+      gap: 1rem;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+    .object-item-row:hover {
+      border-color: #94a3b8;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    }
+    @media (max-width: 991px) {
+      .object-item-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+    }
+    .object-thumb-preview {
+      width: 58px;
+      height: 58px;
+      border-radius: 0.65rem;
+      border: 1px solid #cbd5e1;
+      object-fit: contain;
+      background: #f1f5f9;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .object-thumb-preview:hover {
+      transform: scale(1.08);
+      border-color: #4318ff;
+    }
+    .preset-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.75rem;
+      max-height: 380px;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+    .preset-picker-item {
+      cursor: pointer;
+      border: 2px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 0.5rem;
+      text-align: center;
+      transition: all 0.15s ease;
+      background: #ffffff;
+    }
+    .preset-picker-item:hover, .preset-picker-item.selected {
+      border-color: #4318ff;
+      background: #f0f4ff;
+      transform: translateY(-2px);
+    }
+    .preset-picker-item img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      margin-bottom: 0.35rem;
+    }
+  </style>
+</head>
+
+<body class="teacher-page teacher-dashboard-page">
+
+  <div class="teacher-layout container-fluid">
+    <div class="row g-3 g-lg-4">
+
+      <!-- Sidebar Navigation -->
+      <aside class="col-12 col-lg-3 col-xl-2">
+        <nav class="teacher-sidebar h-100">
+          <div>
+            <div class="teacher-brand-wrap">
+              <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
+              <div>
+                <div class="teacher-brand-title">SciencePlay</div>
+                <p class="teacher-brand-subtitle">Teacher Portal</p>
+              </div>
+            </div>
+
+            <div class="teacher-menu-group mt-4">
+              <a class="teacher-menu-link" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="students" href="{{ url_for('teacher.students') }}">
+                <i class="bi bi-people"></i>
+                <span>Students</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
+                <i class="bi bi-journal-bookmark"></i>
+                <span>Lessons &amp; Assignments</span>
+              </a>
+
+              <a class="teacher-menu-link active" data-nav="content" href="{{ url_for('teacher.content_management') }}">
+                <i class="bi bi-controller"></i>
+                <span>Content Studio</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
+                <i class="bi bi-bar-chart"></i>
+                <span>Analytics</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
+                <i class="bi bi-chat-square-quote-fill"></i>
+                <span>Feedback</span>
+                {% if needs_feedback_count and needs_feedback_count > 0 %}
+                  <span class="feedback-nav-badge">{{ needs_feedback_count }}</span>
+                {% endif %}
+              </a>
+            </div>
+          </div>
+
+          <a href="{{ url_for('auth.logout') }}" class="teacher-logout-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="col-12 col-lg-9 col-xl-10">
+        <section class="teacher-content">
+          <div class="teacher-center-wrap" style="max-width: 1100px;">
+
+            <!-- Top Header & Breadcrumb -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+              <div>
+                <a href="{{ url_for('teacher.content_management') }}" class="text-decoration-none text-muted small fw-bold d-inline-flex align-items-center gap-1 mb-2">
+                  <i class="bi bi-arrow-left"></i><span>Back to Content Studio</span>
+                </a>
+                <h1 class="page-title fw-black text-dark mb-1">
+                  {% if activity %}Edit Sorting Activity: {{ activity.type }}{% else %}New Sorting Game Builder{% endif %}
+                </h1>
+                <p class="page-subtitle text-muted mb-0">Engine Template: <strong>Arcade Sorting Claw Machine</strong>. Configure chutes, objects, and science voice feedback.</p>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                {% if activity %}
+                  <a href="{{ url_for('teacher.preview_activity', activity_id=activity.id) }}" target="_blank" class="btn btn-outline-dark rounded-pill px-4 fw-bold">
+                    <i class="bi bi-play-circle-fill me-1"></i>Test Play
+                  </a>
+                {% endif %}
+                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btn-save-activity">
+                  <i class="bi bi-cloud-arrow-up-fill me-1"></i>Save &amp; Publish Game
+                </button>
+              </div>
+            </div>
+
+            <!-- Form Wrapper -->
+            <form id="activityBuilderForm" method="POST" action="{{ url_for('teacher.save_claw_machine') }}" enctype="multipart/form-data">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              {% if activity %}
+                <input type="hidden" name="activity_id" value="{{ activity.id }}">
+              {% endif %}
+              <input type="hidden" name="bins_data" id="binsDataInput" value="">
+              <input type="hidden" name="objects_data" id="objectsDataInput" value="">
+
+              <!-- STEP 1: Game Identity & Settings -->
+              <div class="builder-step-card">
+                <div class="builder-step-header">
+                  <span class="step-number-badge">1</span>
+                  <div>
+                    <h2 class="h5 fw-bold text-dark mb-0">Activity Overview &amp; Settings</h2>
+                    <span class="text-muted small">Define game title, instructions, and target lesson</span>
+                  </div>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-12 col-md-8">
+                    <label class="form-label fw-bold text-dark small">Game Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="activityTitleInput" value="{{ config.title or (activity.type if activity else 'States of Matter Sorting') }}" required placeholder="e.g. States of Matter Sorting">
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label fw-bold text-dark small">Link to Curriculum Lesson</label>
+                    <select class="form-select form-select-lg rounded-3" name="lesson_id">
+                      {% for l in all_lessons %}
+                        <option value="{{ l.id }}" {% if activity and activity.lesson_id == l.id %}selected{% endif %}>{{ l.title }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label fw-bold text-dark small">Player Instructions (Shown on marquee banner)</label>
+                    <input type="text" class="form-control rounded-3" name="instructions" id="activityInstructionsInput" value="{{ config.instructions or 'Sort each object into the correct chute to win stars.' }}" placeholder="e.g. Sort each object into the correct chute to win stars.">
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <label class="form-label fw-bold text-dark small">Points for Completion</label>
+                    <input type="number" class="form-control rounded-3" name="points" value="{{ activity.points if activity else 20 }}" min="5" max="100">
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <label class="form-label fw-bold text-dark small">Round Size (Objects per run)</label>
+                    <input type="number" class="form-control rounded-3" name="round_size" id="roundSizeInput" value="{{ config.round_size or 8 }}" min="3" max="20">
+                  </div>
+                  <div class="col-12 col-md-6 d-flex align-items-end">
+                    <!-- Quick Preset Loader -->
+                    <div class="dropdown w-100">
+                      <button class="btn btn-outline-secondary dropdown-toggle w-100 rounded-3 py-2 fw-bold" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-magic me-1"></i>Load Topic Preset Template
+                      </button>
+                      <ul class="dropdown-menu shadow-lg border-0 rounded-3 w-100">
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadTopicPreset('states_of_matter'); return false;">🧊 States of Matter (Solid, Liquid, Gas)</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadTopicPreset('living_vs_nonliving'); return false;">🌱 Living vs Non-Living (2 Chutes)</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadTopicPreset('waste_sorting'); return false;">♻️ Waste &amp; Recycling (Recyclable, Organic, Residual)</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- STEP 2: Configure Chutes (2 to 4 Bins) -->
+              <div class="builder-step-card">
+                <div class="builder-step-header d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="step-number-badge">2</span>
+                    <div>
+                      <h2 class="h5 fw-bold text-dark mb-0">Sorting Chutes (Categories)</h2>
+                      <span class="text-muted small">Choose 2 to 4 chutes where students drop objects</span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-primary rounded-pill fw-bold" id="btn-add-chute" onclick="addChute()">
+                    <i class="bi bi-plus-circle me-1"></i>Add Chute
+                  </button>
+                </div>
+
+                <div class="row g-3" id="chutesContainer">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+
+              <!-- STEP 3: Configure Items & Explanations -->
+              <div class="builder-step-card">
+                <div class="builder-step-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="step-number-badge">3</span>
+                    <div>
+                      <h2 class="h5 fw-bold text-dark mb-0">Objects to Sort &amp; Voice Explanations</h2>
+                      <span class="text-muted small">Upload custom images or pick presets. Explanations are read out loud automatically by synthetic speech!</span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="addObject()">
+                    <i class="bi bi-plus-circle-fill me-1"></i>Add Object
+                  </button>
+                </div>
+
+                <!-- Column headers for Desktop -->
+                <div class="d-none d-lg-grid px-3 py-2 text-muted fw-bold small" style="grid-template-columns: 70px 1.5fr 1fr 2fr 40px; gap: 1rem;">
+                  <span>Image</span>
+                  <span>Object Label</span>
+                  <span>Correct Chute</span>
+                  <span>Science Explanation (Spoken to student)</span>
+                  <span></span>
+                </div>
+
+                <div id="objectsContainer">
+                  <!-- Populated via JS -->
+                </div>
+
+                <div class="mt-3 text-center">
+                  <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold" onclick="addObject()">
+                    <i class="bi bi-plus-lg me-1"></i>Add Another Object
+                  </button>
+                </div>
+              </div>
+
+              <!-- Submit Toolbar -->
+              <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded-4 border shadow-sm">
+                <a href="{{ url_for('teacher.content_management') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                  Cancel
+                </a>
+                <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-sm" id="btn-save-activity-bottom">
+                  <i class="bi bi-cloud-arrow-up-fill me-2"></i>Save &amp; Publish Game
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </section>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Preset Image Selector Modal -->
+  <div class="modal fade" id="presetImageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-bottom pb-3">
+          <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-images text-primary"></i>
+            <span>Select Preset Science Image</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="text-muted small mb-3">Click any image to attach it to this object, or close to keep your uploaded file.</p>
+          <div class="preset-picker-grid" id="presetGrid">
+            {% for img in preset_images %}
+            <div class="preset-picker-item" onclick="choosePresetImage('{{ img.src }}', '{{ img.label }}')">
+              <img src="{{ img.src }}" alt="{{ img.label }}">
+              <div class="small fw-bold text-dark text-truncate">{{ img.label }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Initial data from server
+    let chutes = {{ (config.bins if config and config.bins else [
+      {"id": "solid", "label": "Solid", "icon": "🧊", "color": "#60a5fa"},
+      {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"},
+      {"id": "gas", "label": "Gas", "icon": "💨", "color": "#cbd5e1"}
+    ])|tojson }};
+
+    let objects = {{ (config.objects if config and config.objects else [
+      {"id": 1, "label": "Ice Cube", "categoryId": "solid", "explanation": "Ice has a fixed shape and volume.", "image": "/static/images/rock.webp"},
+      {"id": 2, "label": "Water", "categoryId": "liquid", "explanation": "Water flows and takes the shape of its container.", "image": "/static/images/puddle.webp"},
+      {"id": 3, "label": "Balloon Air", "categoryId": "gas", "explanation": "Air spreads out and fills any container.", "image": "/static/images/butterfly.webp"}
+    ])|tojson }};
+
+    let activeObjectPickerIndex = null;
+
+    // TOPIC PRESETS
+    const TOPIC_PRESETS = {
+      states_of_matter: {
+        title: "States of Matter Sorting",
+        instructions: "Sort each object into Solid, Liquid, or Gas to win stars.",
+        round_size: 6,
+        bins: [
+          { id: "solid", label: "Solid", icon: "🧊", color: "#60a5fa" },
+          { id: "liquid", label: "Liquid", icon: "💧", color: "#38bdf8" },
+          { id: "gas", label: "Gas", icon: "💨", color: "#94a3b8" }
+        ],
+        objects: [
+          { label: "Ice Cube", categoryId: "solid", explanation: "Ice holds its shape firmly as a solid.", image: "/static/images/rock.webp" },
+          { label: "Water Puddle", categoryId: "liquid", explanation: "Water flows and takes the shape of what holds it.", image: "/static/images/puddle.webp" },
+          { label: "Balloon Gas", categoryId: "gas", explanation: "Gas spreads out freely in all directions.", image: "/static/images/butterfly.webp" },
+          { label: "Wooden Chair", categoryId: "solid", explanation: "A chair is solid and keeps its shape.", image: "/static/images/chair.webp" },
+          { label: "Bicycle", categoryId: "solid", explanation: "A bicycle is made of solid metal parts.", image: "/static/images/bicycle.webp" }
+        ]
+      },
+      living_vs_nonliving: {
+        title: "Living vs Non-Living Sorting",
+        instructions: "Sort objects into Living and Non-Living chutes.",
+        round_size: 8,
+        bins: [
+          { id: "living", label: "Living", icon: "🌱", color: "#4ade80" },
+          { id: "non-living", label: "Non-Living", icon: "🪨", color: "#fb923c" }
+        ],
+        objects: [
+          { label: "Dog", categoryId: "living", explanation: "Dogs breathe, grow, and need food.", image: "/static/images/dog.webp" },
+          { label: "Cat", categoryId: "living", explanation: "Cats are living animals that reproduce and grow.", image: "/static/images/cat.webp" },
+          { label: "Tree", categoryId: "living", explanation: "Trees grow, take in sunlight, and need water.", image: "/static/images/tree.webp" },
+          { label: "Flower", categoryId: "living", explanation: "Flowers are living plants that absorb nutrients.", image: "/static/images/flower.webp" },
+          { label: "Rock", categoryId: "non-living", explanation: "Rocks do not eat, breathe, or grow.", image: "/static/images/rock.webp" },
+          { label: "Bicycle", categoryId: "non-living", explanation: "A bicycle is a manufactured object and is not alive.", image: "/static/images/bicycle.webp" }
+        ]
+      },
+      waste_sorting: {
+        title: "Eco Waste & Recycling Sort",
+        instructions: "Sort materials into Organic, Recyclable, or Residual chutes.",
+        round_size: 6,
+        bins: [
+          { id: "organic", label: "Organic Compost", icon: "🍂", color: "#84cc16" },
+          { id: "recyclable", label: "Recyclable", icon: "♻️", color: "#06b6d4" },
+          { id: "residual", label: "Residual Trash", icon: "🗑️", color: "#64748b" }
+        ],
+        objects: [
+          { label: "Fallen Leaves", categoryId: "organic", explanation: "Leaves decompose naturally into rich garden compost.", image: "/static/images/plant.webp" },
+          { label: "Plastic Bottle", categoryId: "recyclable", explanation: "Clean plastic can be melted and reprocessed into new goods.", image: "/static/images/puddle.webp" },
+          { label: "Tree Branch", categoryId: "organic", explanation: "Wood branches are organic matter that breakdown naturally.", image: "/static/images/tree.webp" },
+          { label: "Rubber Ball", categoryId: "residual", explanation: "Broken rubber items go to non-recyclable residual disposal.", image: "/static/images/ball.webp" }
+        ]
+      }
+    };
+
+    function loadTopicPreset(presetKey) {
+      const p = TOPIC_PRESETS[presetKey];
+      if (!p) return;
+      if (!confirm(`Load preset "${p.title}"? This will update chutes and items.`)) return;
+
+      document.getElementById('activityTitleInput').value = p.title;
+      document.getElementById('activityInstructionsInput').value = p.instructions;
+      document.getElementById('roundSizeInput').value = p.round_size;
+
+      chutes = JSON.parse(JSON.stringify(p.bins));
+      objects = JSON.parse(JSON.stringify(p.objects));
+
+      renderChutes();
+      renderObjects();
+    }
+
+    // RENDER CHUTES
+    function renderChutes() {
+      const container = document.getElementById('chutesContainer');
+      container.innerHTML = '';
+
+      chutes.forEach((chute, idx) => {
+        const col = document.createElement('div');
+        col.className = 'col-12 col-md-6 col-lg-3';
+        col.innerHTML = `
+          <div class="chute-config-card">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-white text-dark border fw-bold">Chute ${idx + 1}</span>
+              ${chutes.length > 2 ? `
+                <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1" onclick="removeChute(${idx})" title="Remove Chute">
+                  <i class="bi bi-x-circle-fill"></i>
+                </button>
+              ` : ''}
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label text-muted small fw-bold mb-1">Label</label>
+              <input type="text" class="form-control form-control-sm fw-bold" value="${chute.label}" onchange="updateChuteField(${idx}, 'label', this.value)" required placeholder="e.g. Solid">
+            </div>
+
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="form-label text-muted small fw-bold mb-1">Emoji</label>
+                <input type="text" class="form-control form-control-sm text-center fs-5" value="${chute.icon || '📦'}" onchange="updateChuteField(${idx}, 'icon', this.value)" maxlength="4">
+              </div>
+              <div class="col-6">
+                <label class="form-label text-muted small fw-bold mb-1">Color</label>
+                <input type="color" class="form-control form-control-sm form-control-color w-100" value="${chute.color || '#60a5fa'}" onchange="updateChuteField(${idx}, 'color', this.value)">
+              </div>
+            </div>
+          </div>
+        `;
+        container.appendChild(col);
+      });
+
+      const addBtn = document.getElementById('btn-add-chute');
+      if (addBtn) {
+        addBtn.disabled = chutes.length >= 4;
+        addBtn.style.opacity = chutes.length >= 4 ? '0.5' : '1';
+      }
+
+      // Re-render objects to sync chute category dropdowns
+      renderObjects();
+    }
+
+    function addChute() {
+      if (chutes.length >= 4) {
+        alert("A sorting activity can have a maximum of 4 chutes.");
+        return;
+      }
+      const palette = ["#60a5fa", "#38bdf8", "#34d399", "#f59e0b", "#ec4899", "#8b5cf6"];
+      const nextId = "category_" + (chutes.length + 1);
+      chutes.push({
+        id: nextId,
+        label: "Category " + (chutes.length + 1),
+        icon: "📦",
+        color: palette[chutes.length % palette.length]
+      });
+      renderChutes();
+    }
+
+    function removeChute(idx) {
+      if (chutes.length <= 2) {
+        alert("A sorting activity requires at least 2 chutes.");
+        return;
+      }
+      const removedId = chutes[idx].id;
+      chutes.splice(idx, 1);
+      
+      // If any object had this category, reassign to first remaining chute
+      objects.forEach(obj => {
+        if (obj.categoryId === removedId) {
+          obj.categoryId = chutes[0].id;
+        }
+      });
+
+      renderChutes();
+    }
+
+    function updateChuteField(idx, field, value) {
+      chutes[idx][field] = value;
+      if (field === 'label') {
+        chutes[idx].id = value.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      }
+      renderObjects();
+    }
+
+    // RENDER OBJECTS
+    function renderObjects() {
+      const container = document.getElementById('objectsContainer');
+      container.innerHTML = '';
+
+      objects.forEach((obj, idx) => {
+        const row = document.createElement('div');
+        row.className = 'object-item-row';
+        const currentImg = obj.image || '/static/images/rock.webp';
+
+        const categoryOptions = chutes.map(c => `
+          <option value="${c.id}" ${obj.categoryId === c.id ? 'selected' : ''}>
+            ${c.icon || '📦'} ${c.label}
+          </option>
+        `).join('');
+
+        row.innerHTML = `
+          <!-- Image Picker Thumbnail -->
+          <div class="text-center">
+            <img src="${currentImg}" alt="${obj.label || 'Object'}" class="object-thumb-preview" id="thumb_preview_${idx}" onclick="openPresetPicker(${idx})" title="Click to pick preset image">
+            <label class="btn btn-link btn-sm p-0 mt-1 text-decoration-none small" style="font-size: 0.7rem; cursor: pointer;">
+              Upload
+              <input type="file" name="object_file_${idx}" accept="image/*" class="d-none" onchange="handleFileUpload(${idx}, this)">
+            </label>
+          </div>
+
+          <!-- Label -->
+          <div>
+            <label class="form-label text-muted small fw-bold d-lg-none mb-1">Label</label>
+            <input type="text" class="form-control rounded-3 fw-bold" value="${obj.label || ''}" onchange="updateObjectField(${idx}, 'label', this.value)" required placeholder="e.g. Ice Cube">
+          </div>
+
+          <!-- Chute Selector -->
+          <div>
+            <label class="form-label text-muted small fw-bold d-lg-none mb-1">Chute</label>
+            <select class="form-select rounded-3 fw-semibold" onchange="updateObjectField(${idx}, 'categoryId', this.value)">
+              ${categoryOptions}
+            </select>
+          </div>
+
+          <!-- Science Explanation -->
+          <div>
+            <label class="form-label text-muted small fw-bold d-lg-none mb-1">Explanation</label>
+            <input type="text" class="form-control rounded-3" value="${obj.explanation || ''}" onchange="updateObjectField(${idx}, 'explanation', this.value)" placeholder="e.g. Ice has a fixed shape and volume.">
+          </div>
+
+          <!-- Delete Object -->
+          <div class="text-end">
+            ${objects.length > 2 ? `
+              <button type="button" class="btn btn-outline-danger btn-sm border-0 p-1" onclick="removeObject(${idx})" title="Delete object">
+                <i class="bi bi-trash3-fill fs-6"></i>
+              </button>
+            ` : ''}
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function addObject() {
+      const defaultCategory = chutes.length > 0 ? chutes[0].id : 'solid';
+      objects.push({
+        id: objects.length + 1,
+        label: "New Object",
+        categoryId: defaultCategory,
+        explanation: "Explain why this object belongs in this chute.",
+        image: "/static/images/rock.webp"
+      });
+      renderObjects();
+    }
+
+    function removeObject(idx) {
+      if (objects.length <= 2) {
+        alert("A sorting activity needs at least 2 objects to play.");
+        return;
+      }
+      objects.splice(idx, 1);
+      renderObjects();
+    }
+
+    function updateObjectField(idx, field, value) {
+      objects[idx][field] = value;
+    }
+
+    function handleFileUpload(idx, input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById(`thumb_preview_${idx}`).src = e.target.result;
+          objects[idx].image = e.target.result; // temporary preview
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function openPresetPicker(idx) {
+      activeObjectPickerIndex = idx;
+      const modalEl = document.getElementById('presetImageModal');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+    }
+
+    function choosePresetImage(src, label) {
+      if (activeObjectPickerIndex !== null && objects[activeObjectPickerIndex]) {
+        objects[activeObjectPickerIndex].image = src;
+        const thumb = document.getElementById(`thumb_preview_${activeObjectPickerIndex}`);
+        if (thumb) thumb.src = src;
+      }
+      const modalEl = document.getElementById('presetImageModal');
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+    }
+
+    // FORM SUBMISSION & VALIDATION
+    function submitBuilderForm() {
+      const title = document.getElementById('activityTitleInput').value.trim();
+      if (!title) {
+        alert("Please enter an activity title.");
+        document.getElementById('activityTitleInput').focus();
+        return;
+      }
+
+      if (chutes.length < 2 || chutes.length > 4) {
+        alert("A game must have between 2 and 4 chutes.");
+        return;
+      }
+
+      if (objects.length < 2) {
+        alert("Please add at least 2 objects to sort.");
+        return;
+      }
+
+      // Check object labels
+      for (let i = 0; i < objects.length; i++) {
+        if (!objects[i].label || !objects[i].label.trim()) {
+          alert(`Object #${i + 1} is missing a label.`);
+          return;
+        }
+      }
+
+      // Clean IDs
+      chutes.forEach((c, idx) => {
+        if (!c.id) c.id = "chute_" + (idx + 1);
+      });
+
+      // Assign object sequential IDs
+      objects.forEach((obj, idx) => {
+        obj.id = idx + 1;
+      });
+
+      document.getElementById('binsDataInput').value = JSON.stringify(chutes);
+      document.getElementById('objectsDataInput').value = JSON.stringify(objects);
+
+      document.getElementById('activityBuilderForm').submit();
+    }
+
+    document.getElementById('btn-save-activity')?.addEventListener('click', submitBuilderForm);
+    document.getElementById('btn-save-activity-bottom')?.addEventListener('click', submitBuilderForm);
+
+    // Initial render
+    document.addEventListener('DOMContentLoaded', () => {
+      renderChutes();
+      renderObjects();
+    });
+  </script>
+</body>
+</html>

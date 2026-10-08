@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Studio — SciencePlay</title>
+  <meta name="description" content="SciencePlay Content Studio: Create and customize interactive game templates for science curriculum.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260903_4') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
+  <style>
+    .studio-engine-card {
+      background: #ffffff;
+      border-radius: 1.25rem;
+      border: 1px solid #e2e8f0;
+      padding: 1.75rem;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .studio-engine-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 35px -10px rgba(67, 24, 255, 0.12);
+      border-color: #cbd5e1;
+    }
+    .studio-engine-card.active-engine {
+      border-color: #c7d2fe;
+      background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+    }
+    .engine-icon-badge {
+      width: 54px;
+      height: 54px;
+      border-radius: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin-bottom: 1rem;
+    }
+    .chute-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: 1px solid rgba(0,0,0,0.08);
+      background: #f8fafc;
+    }
+    .activity-row-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .activity-row-card:hover {
+      border-color: #4318ff;
+      box-shadow: 0 10px 25px -5px rgba(67, 24, 255, 0.08);
+    }
+    .activity-meta-badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #64748b;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+  </style>
+</head>
+
+<body class="teacher-page teacher-dashboard-page">
+
+  <div class="teacher-layout container-fluid">
+    <div class="row g-3 g-lg-4">
+
+      <!-- Sidebar Navigation -->
+      <aside class="col-12 col-lg-3 col-xl-2">
+        <nav class="teacher-sidebar h-100">
+          <div>
+            <div class="teacher-brand-wrap">
+              <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
+              <div>
+                <div class="teacher-brand-title">SciencePlay</div>
+                <p class="teacher-brand-subtitle">Teacher Portal</p>
+              </div>
+            </div>
+
+            <div class="teacher-menu-group mt-4">
+              <a class="teacher-menu-link" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="students" href="{{ url_for('teacher.students') }}">
+                <i class="bi bi-people"></i>
+                <span>Students</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
+                <i class="bi bi-journal-bookmark"></i>
+                <span>Lessons &amp; Assignments</span>
+              </a>
+
+              <a class="teacher-menu-link active" data-nav="content" href="{{ url_for('teacher.content_management') }}">
+                <i class="bi bi-controller"></i>
+                <span>Content Studio</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
+                <i class="bi bi-bar-chart"></i>
+                <span>Analytics</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
+                <i class="bi bi-chat-square-quote-fill"></i>
+                <span>Feedback</span>
+                {% if needs_feedback_count and needs_feedback_count > 0 %}
+                  <span class="feedback-nav-badge">{{ needs_feedback_count }}</span>
+                {% endif %}
+              </a>
+            </div>
+          </div>
+
+          <a href="{{ url_for('auth.logout') }}" class="teacher-logout-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="col-12 col-lg-9 col-xl-10">
+        <section class="teacher-content">
+          <div class="teacher-center-wrap">
+
+            <!-- Flash Notifications -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="mb-4">
+              {% for category, message in messages %}
+              <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm rounded-4" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <!-- Header Row -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 teacher-head-row">
+              <div>
+                <p class="teacher-eyebrow mb-1 text-primary fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.8rem;">
+                  <i class="bi bi-palette-fill me-1"></i>Content Studio &amp; Activity Templates
+                </p>
+                <h1 class="page-title fw-black text-dark mb-1">Game Engines &amp; Activities</h1>
+                <p class="page-subtitle text-muted mb-0">Turn interactive games into custom learning activities. Configure sorting chutes, labels, items, and explanations for your lessons.</p>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2">
+                  <i class="bi bi-plus-circle-fill fs-5"></i>
+                  <span>New Custom Game</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- KPI Summary Cards -->
+            <div class="teacher-summary-grid mb-4">
+              <div class="teacher-summary-card">
+                <div class="teacher-summary-text">
+                  <div class="metric-label">Custom Activities</div>
+                  <div class="metric-value">{{ activity_cards|length }}</div>
+                </div>
+                <span class="teacher-summary-icon ts-purple"><i class="bi bi-controller"></i></span>
+              </div>
+              <div class="teacher-summary-card">
+                <div class="teacher-summary-text">
+                  <div class="metric-label">Game Engines</div>
+                  <div class="metric-value">1 Active</div>
+                </div>
+                <span class="teacher-summary-icon ts-blue"><i class="bi bi-cpu"></i></span>
+              </div>
+              <div class="teacher-summary-card">
+                <div class="teacher-summary-text">
+                  <div class="metric-label">Grade Level</div>
+                  <div class="metric-value">Grade 3</div>
+                </div>
+                <span class="teacher-summary-icon ts-green"><i class="bi bi-mortarboard-fill"></i></span>
+              </div>
+              <div class="teacher-summary-card">
+                <div class="teacher-summary-text">
+                  <div class="metric-label">Speech Synthesis</div>
+                  <div class="metric-value">Zero Audio Setup</div>
+                </div>
+                <span class="teacher-summary-icon ts-amber"><i class="bi bi-volume-up-fill"></i></span>
+              </div>
+            </div>
+
+            <!-- Game Engine Templates Showcase -->
+            <div class="mb-5">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                  <i class="bi bi-grid-fill text-primary"></i>
+                  <span>Reusable Game Engines</span>
+                </h2>
+                <span class="text-muted small">Choose an engine to create a new activity</span>
+              </div>
+
+              <div class="row g-4">
+                {% for tmpl in templates %}
+                <div class="col-12 col-md-6 col-xl-4">
+                  <div class="studio-engine-card {% if tmpl.is_available %}active-engine shadow-sm{% else %}opacity-75 bg-light{% endif %}">
+                    <div>
+                      <div class="d-flex justify-content-between align-items-start">
+                        <span class="engine-icon-badge" style="background: {{ tmpl.accent }}15; color: {{ tmpl.accent }};">
+                          <i class="bi {{ tmpl.icon }}"></i>
+                        </span>
+                        {% if tmpl.is_available %}
+                          <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold">
+                            <i class="bi bi-check-circle-fill me-1"></i>Ready to Use
+                          </span>
+                        {% else %}
+                          <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1 fw-bold">
+                            Coming Soon
+                          </span>
+                        {% endif %}
+                      </div>
+
+                      <div class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        {{ tmpl.category }}
+                      </div>
+                      <h3 class="h5 fw-bold text-dark mb-2">{{ tmpl.name }}</h3>
+                      <p class="text-muted small mb-4" style="line-height: 1.55;">
+                        {{ tmpl.description }}
+                      </p>
+                    </div>
+
+                    <div class="mt-auto pt-3 border-top d-flex gap-2">
+                      {% if tmpl.is_available %}
+                        <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
+                          <i class="bi bi-plus-lg me-1"></i>Create Activity
+                        </a>
+                        <a href="{{ url_for('teacher.preview_activity', activity_id=default_claw_id) }}" target="_blank" class="btn btn-outline-dark rounded-pill fw-bold py-2 px-3" title="Live Test Play">
+                          <i class="bi bi-play-fill"></i>
+                        </a>
+                      {% else %}
+                        <button class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-2 disabled" disabled>
+                          <i class="bi bi-lock-fill me-1"></i>Under Development
+                        </button>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Configured Activities Catalog -->
+            <div class="dashboard-section teacher-panel p-4">
+              <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                  <h2 class="h5 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-joystick text-primary"></i>
+                    <span>Configured Activities in Curriculum</span>
+                  </h2>
+                  <p class="teacher-panel-note mb-0 text-muted">All active sorting games available for student assignments and classroom play.</p>
+                </div>
+                <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
+                  <i class="bi bi-plus-circle me-1"></i>New Activity
+                </a>
+              </div>
+
+              {% if activity_cards %}
+                <div class="activity-catalog-list">
+                  {% for card in activity_cards %}
+                  <div class="activity-row-card">
+                    <div style="min-width: 260px; max-width: 420px;">
+                      <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                          <i class="bi bi-joystick me-1"></i>Sorting Claw
+                        </span>
+                        {% if card.is_default %}
+                          <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">Default Game</span>
+                        {% endif %}
+                        <span class="activity-meta-badge"><i class="bi bi-star-fill text-warning"></i>{{ card.activity.points or 20 }} pts</span>
+                      </div>
+                      <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
+                      <p class="text-muted small mb-2 text-truncate" title="{{ card.instructions }}">
+                        {{ card.instructions or 'Sort each object into the correct chute to win stars.' }}
+                      </p>
+                      
+                      <!-- Chute / Bin chips -->
+                      <div class="d-flex flex-wrap gap-1 align-items-center">
+                        <span class="text-muted small me-1 fw-bold" style="font-size: 0.75rem;">Chutes:</span>
+                        {% for bin in card.bins %}
+                          <span class="chute-chip" style="border-color: {{ bin.color or '#60a5fa' }}40; background: {{ bin.color or '#60a5fa' }}15; color: #1e293b;">
+                            <span>{{ bin.icon or '📦' }}</span>
+                            <span>{{ bin.label }}</span>
+                          </span>
+                        {% endfor %}
+                      </div>
+                    </div>
+
+                    <!-- Meta stats -->
+                    <div class="d-flex align-items-center gap-4 text-center">
+                      <div>
+                        <div class="fw-bold text-dark fs-5">{{ card.objects_count }}</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Objects</div>
+                      </div>
+                      <div>
+                        <div class="fw-bold text-dark fs-5">{{ card.bins|length }}</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Chutes</div>
+                      </div>
+                      <div>
+                        <div class="fw-bold text-dark fs-5">{{ card.round_size }}</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Round Size</div>
+                      </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex align-items-center gap-2">
+                      <a href="{{ url_for('teacher.preview_activity', activity_id=card.activity.id) }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Test Play in Preview Mode">
+                        <i class="bi bi-play-circle-fill"></i>
+                        <span>Test Play</span>
+                      </a>
+                      <a href="{{ url_for('teacher.claw_machine_builder', activity_id=card.activity.id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Edit</span>
+                      </a>
+                      {% if not card.is_default %}
+                      <form method="POST" action="{{ url_for('teacher.delete_activity', activity_id=card.activity.id) }}" onsubmit="return confirm('Move activity \'{{ card.title }}\' to archive?');" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Activity">
+                          <i class="bi bi-trash3"></i>
+                        </button>
+                      </form>
+                      {% endif %}
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="text-center py-5">
+                  <div class="mb-3">
+                    <span class="rounded-circle d-inline-flex p-3 bg-light text-primary fs-1">
+                      <i class="bi bi-joystick"></i>
+                    </span>
+                  </div>
+                  <h4 class="fw-bold text-dark mb-2">No Custom Activities Yet</h4>
+                  <p class="text-muted mb-4 max-w-md mx-auto">Create your first custom sorting game with personalized chutes, object images, and science explanations.</p>
+                  <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
+                    <i class="bi bi-plus-circle-fill me-1"></i>Create First Activity
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+
+          </div>
+        </section>
+      </main>
+
+    </div>
+  </div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

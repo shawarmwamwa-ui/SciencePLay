@@ -1166,6 +1166,9 @@ async function initGame() {
 function bindExitHandlers() {
   const backBtn = document.getElementById('btn-claw-back');
   backBtn?.addEventListener('click', (e) => {
+    if (window.isTeacherPreview) {
+      return; // Direct navigation back to teacher studio
+    }
     const hasProgress = !state.completed && (state.totalAttempts > 0 || state.score > 0);
     if (hasProgress) {
       e.preventDefault();
