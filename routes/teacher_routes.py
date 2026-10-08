@@ -2098,23 +2098,27 @@ def content_management():
     ]
 
     # Query all active lessons for Lesson Studio
-    raw_lessons = Lesson.query.filter(
-        (Lesson.is_archived == False) | (Lesson.is_archived == None)
-    ).order_by(Lesson.id.asc()).all()
-
     lesson_cards = []
-    for lsn in raw_lessons:
-        cfg = lsn.config or {}
-        slides = cfg.get('slides', [])
-        lesson_cards.append({
-            'lesson': lsn,
-            'title': lsn.title,
-            'description': lsn.description or '',
-            'slides_count': len(slides) if slides else 5,
-            'has_custom_slides': bool(slides),
-            'grade_level': cfg.get('grade_level', 'Grade 3'),
-            'config': cfg
-        })
+    try:
+        raw_lessons = Lesson.query.filter(
+            (Lesson.is_archived == False) | (Lesson.is_archived == None)
+        ).order_by(Lesson.id.asc()).all()
+
+        for lsn in raw_lessons:
+            cfg = getattr(lsn, 'config', None) or {}
+            slides = cfg.get('slides', []) if isinstance(cfg, dict) else []
+            lesson_cards.append({
+                'lesson': lsn,
+                'title': lsn.title,
+                'description': lsn.description or '',
+                'slides_count': len(slides) if slides else 5,
+                'has_custom_slides': bool(slides),
+                'grade_level': cfg.get('grade_level', 'Grade 3') if isinstance(cfg, dict) else 'Grade 3',
+                'config': cfg
+            })
+    except Exception as e:
+        print("[Content Studio] Notice loading lessons:", e)
+        db.session.rollback()
 
     return render_template(
         'teacher/teacher_content.html',
@@ -2432,6 +2436,7 @@ def save_lesson():
 
 
 @teacher_bp.route('/content/lesson/preview/<int:lesson_id>')
+@teacher_bp.route('/content/lesson/preview/<int:lesson_id>', endpoint='lesson_preview')
 @require_role('teacher')
 def preview_lesson(lesson_id):
     """Test play a lesson slideshow as teacher without recording student progress"""

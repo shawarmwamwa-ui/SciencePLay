@@ -152,12 +152,23 @@ def ensure_database_schema_migrations():
                 q_l = quote_tbl('lesson')
                 if 'config' not in l_cols:
                     try:
-                        db.session.execute(text(f'ALTER TABLE {q_l} ADD COLUMN config JSON NULL'))
-                        db.session.commit()
-                        print("[Migration] Added config column to lesson table")
+                        # Try standard JSON first
+                        try:
+                            db.session.execute(text(f'ALTER TABLE {q_l} ADD COLUMN config JSON NULL'))
+                            db.session.commit()
+                            print("[Migration] Added config column (JSON) to lesson table")
+                        except Exception:
+                            db.session.rollback()
+                            # Fallback for MySQL/MariaDB without JSON type or SQLite
+                            if dialect_name == 'mysql':
+                                db.session.execute(text(f'ALTER TABLE {q_l} ADD COLUMN config LONGTEXT NULL'))
+                            else:
+                                db.session.execute(text(f'ALTER TABLE {q_l} ADD COLUMN config TEXT NULL'))
+                            db.session.commit()
+                            print("[Migration] Added config column (TEXT fallback) to lesson table")
                     except Exception as e:
                         db.session.rollback()
-                        print(f"[Migration] config on lesson: {e}")
+                        print(f"[Migration] config on lesson notice: {e}")
         except Exception as e:
             print("[Migration Notice]:", e)
 
@@ -210,7 +221,10 @@ def ensure_default_curriculum():
 
 
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception as e:
+        print("[DB Init Notice]:", e)
     ensure_database_schema_migrations()
     ensure_default_users()
     ensure_default_curriculum()
