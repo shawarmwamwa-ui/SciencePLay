@@ -2097,10 +2097,30 @@ def content_management():
         }
     ]
 
+    # Query all active lessons for Lesson Studio
+    raw_lessons = Lesson.query.filter(
+        (Lesson.is_archived == False) | (Lesson.is_archived == None)
+    ).order_by(Lesson.id.asc()).all()
+
+    lesson_cards = []
+    for lsn in raw_lessons:
+        cfg = lsn.config or {}
+        slides = cfg.get('slides', [])
+        lesson_cards.append({
+            'lesson': lsn,
+            'title': lsn.title,
+            'description': lsn.description or '',
+            'slides_count': len(slides) if slides else 5,
+            'has_custom_slides': bool(slides),
+            'grade_level': cfg.get('grade_level', 'Grade 3'),
+            'config': cfg
+        })
+
     return render_template(
         'teacher/teacher_content.html',
         current_user=current_user,
         activity_cards=activity_cards,
+        lesson_cards=lesson_cards,
         templates=templates,
         default_claw_id=default_claw.id
     )
@@ -2300,4 +2320,142 @@ def delete_activity(activity_id):
     log_access(current_user, 'archive_custom_activity', f'activity_id={activity_id}')
     flash(f"Activity '{activity.type}' has been moved to archive.", "warning")
     return redirect(url_for('teacher.content_management'))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TEACHER LESSON STUDIO & SLIDE CANVAS WORKSPACE
+# ══════════════════════════════════════════════════════════════════════════════
+
+@teacher_bp.route('/content/lesson/builder')
+@teacher_bp.route('/content/lesson/builder/<int:lesson_id>')
+@require_role('teacher')
+def lesson_builder(lesson_id=None):
+    """Visual workspace for creating and customizing interactive lesson slides"""
+    current_user = get_current_user()
+    lesson = None
+    config = None
+    if lesson_id:
+        lesson = Lesson.query.get_or_404(lesson_id)
+        config = lesson.config or {}
+
+    preset_images = [
+        {"label": "Tree", "src": "/static/images/tree.webp"},
+        {"label": "Rock", "src": "/static/images/rock.webp"},
+        {"label": "Bird", "src": "/static/images/bird.webp"},
+        {"label": "Bicycle", "src": "/static/images/bicycle.webp"},
+        {"label": "Fish", "src": "/static/images/fish.webp"},
+        {"label": "Ball", "src": "/static/images/ball.webp"},
+        {"label": "Plant", "src": "/static/images/plant.webp"},
+        {"label": "Chair", "src": "/static/images/chair.webp"},
+        {"label": "Cat", "src": "/static/images/cat.webp"},
+        {"label": "Flower", "src": "/static/images/flower.webp"},
+        {"label": "Butterfly", "src": "/static/images/butterfly.webp"},
+        {"label": "Puddle", "src": "/static/images/puddle.webp"},
+        {"label": "Dog", "src": "/static/images/dog.webp"}
+    ]
+
+    return render_template(
+        'teacher/teacher_lesson_builder.html',
+        current_user=current_user,
+        lesson=lesson,
+        config=config,
+        preset_images=preset_images
+    )
+
+
+@teacher_bp.route('/content/lesson/save', methods=['POST'])
+@require_role('teacher')
+def save_lesson():
+    """Save or update custom Lesson configuration, slides, and slide image uploads"""
+    import os, uuid
+    from flask import current_app
+
+    current_user = get_current_user()
+    lesson_id = request.form.get('lesson_id', type=int)
+    title = request.form.get('title', 'Science Lesson').strip()
+    description = request.form.get('description', '').strip()
+    grade_level = request.form.get('grade_level', 'Grade 3').strip()
+    slides_json = request.form.get('slides_data', '[]')
+
+    try:
+        slides = json.loads(slides_json)
+    except Exception as e:
+        flash(f"Invalid slide configuration: {e}", "danger")
+        return redirect(url_for('teacher.content_management'))
+
+    upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'lessons')
+    os.makedirs(upload_dir, exist_ok=True)
+
+    ALLOWED_IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp'}
+
+    for idx, slide in enumerate(slides):
+        file_key = f"slide_file_{idx}"
+        if file_key in request.files:
+            file = request.files[file_key]
+            if file and file.filename:
+                ext = os.path.splitext(file.filename)[1].lower()
+                mimetype = (file.mimetype or '').lower()
+                if ext in ALLOWED_IMAGE_EXTS and mimetype.startswith('image/'):
+                    unique_name = f"{uuid.uuid4().hex[:12]}{ext}"
+                    filepath = os.path.join(upload_dir, unique_name)
+                    file.save(filepath)
+                    slide['image'] = f"/static/uploads/lessons/{unique_name}"
+
+    config_payload = {
+        "title": title,
+        "description": description,
+        "grade_level": grade_level,
+        "slides": slides
+    }
+
+    if lesson_id:
+        lesson = Lesson.query.get(lesson_id)
+        if not lesson:
+            flash("Lesson not found.", "danger")
+            return redirect(url_for('teacher.content_management'))
+        lesson.title = title
+        lesson.description = description
+        lesson.config = config_payload
+        flash(f"Lesson '{title}' updated successfully!", "success")
+    else:
+        lesson = Lesson(
+            title=title,
+            description=description,
+            config=config_payload
+        )
+        db.session.add(lesson)
+        flash(f"New Lesson '{title}' created successfully!", "success")
+
+    db.session.commit()
+    log_access(current_user, 'save_custom_lesson', f'lesson_id={lesson.id} title={title}')
+    return redirect(url_for('teacher.content_management'))
+
+
+@teacher_bp.route('/content/lesson/preview/<int:lesson_id>')
+@require_role('teacher')
+def preview_lesson(lesson_id):
+    """Test play a lesson slideshow as teacher without recording student progress"""
+    lesson = Lesson.query.get_or_404(lesson_id)
+    return render_template(
+        'student/living_non_living_lesson.html',
+        lesson=lesson,
+        initial_slide=0,
+        published_payload=lesson.config,
+        is_preview=True
+    )
+
+
+@teacher_bp.route('/content/lesson/delete/<int:lesson_id>', methods=['POST'])
+@require_role('teacher')
+def delete_lesson(lesson_id):
+    """Soft-delete a custom lesson"""
+    current_user = get_current_user()
+    lesson = Lesson.query.get_or_404(lesson_id)
+    lesson.is_archived = True
+    lesson.deleted_at = datetime.utcnow()
+    db.session.commit()
+    log_access(current_user, 'archive_custom_lesson', f'lesson_id={lesson_id}')
+    flash(f"Lesson '{lesson.title}' has been moved to archive.", "warning")
+    return redirect(url_for('teacher.content_management'))
+
 

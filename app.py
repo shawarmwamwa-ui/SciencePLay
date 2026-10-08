@@ -146,6 +146,18 @@ def ensure_database_schema_migrations():
                         db.session.commit()
                     except Exception as e:
                         db.session.rollback()
+
+            if 'lesson' in existing_tables:
+                l_cols = {column['name'] for column in inspector.get_columns('lesson')}
+                q_l = quote_tbl('lesson')
+                if 'config' not in l_cols:
+                    try:
+                        db.session.execute(text(f'ALTER TABLE {q_l} ADD COLUMN config JSON NULL'))
+                        db.session.commit()
+                        print("[Migration] Added config column to lesson table")
+                    except Exception as e:
+                        db.session.rollback()
+                        print(f"[Migration] config on lesson: {e}")
         except Exception as e:
             print("[Migration Notice]:", e)
 

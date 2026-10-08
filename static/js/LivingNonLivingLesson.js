@@ -47,28 +47,36 @@ function playTapSound() {
 
 function getActiveLessonSlides() {
   if (window.publishedLessonPayload && Array.isArray(window.publishedLessonPayload.slides) && window.publishedLessonPayload.slides.length) {
-    return window.publishedLessonPayload.slides.map((slide, index) => ({
-      id: slide.id || `slide-${index + 1}`,
-      title: slide.title || `Slide ${index + 1}`,
-      type: slide.type || (slide.templateType === 'summary' ? 'summary' : 'quick-check'),
-      description: slide.metadata?.hintText || '',
-      prompt: slide.contentData?.prompt || 'Answer the question.',
-      options: (slide.contentData?.items || []).map((item, itemIndex) => ({
-        id: `${slide.id || index + 1}-option-${itemIndex + 1}`,
-        label: item.label || `Option ${itemIndex + 1}`,
-        icon: item.iconKey || '',
-        isLiving: item.category === 'living'
-      })),
-      targetIsLiving: (slide.contentData?.targets || []).some(target => target.accepts && target.accepts.includes('living')),
-      successMessage: slide.metadata?.correctFeedback || 'Correct!',
-      retryMessage: slide.metadata?.incorrectFeedback || 'Try again.',
-      retryHint: slide.metadata?.hintText || 'Think carefully.',
-      bullets: Array.isArray(slide.contentData?.bullets) ? slide.contentData.bullets : [],
-      hotspots: Array.isArray(slide.contentData?.hotspots) ? slide.contentData.hotspots : [],
-      traits: Array.isArray(slide.contentData?.traits) ? slide.contentData.traits : [],
-      object: slide.contentData?.object || {},
-      correctTraits: Array.isArray(slide.contentData?.correctTraits) ? slide.contentData.correctTraits : []
-    }));
+    return window.publishedLessonPayload.slides.map((slide, index) => {
+      const rawType = slide.type || (slide.templateType === 'summary' ? 'summary' : 'quick-check');
+      const normalizedType = (rawType === 'concept' ? 'intro' : rawType);
+      const rawOptions = Array.isArray(slide.options) ? slide.options : (slide.contentData?.items || []);
+      return {
+        id: slide.id || `slide-${index + 1}`,
+        title: slide.title || `Slide ${index + 1}`,
+        type: normalizedType,
+        image: slide.image || '',
+        description: slide.description || slide.explanation || slide.metadata?.hintText || '',
+        prompt: slide.prompt || slide.contentData?.prompt || 'Answer the question.',
+        options: rawOptions.map((item, itemIndex) => ({
+          id: item.id || `${slide.id || index + 1}-option-${itemIndex + 1}`,
+          label: item.label || `Option ${itemIndex + 1}`,
+          icon: item.icon || item.iconKey || item.image || '',
+          image: item.image || item.icon || '',
+          isCorrect: item.isCorrect ?? (item.category === 'living'),
+          isLiving: item.isCorrect ?? (item.category === 'living')
+        })),
+        targetIsLiving: (slide.contentData?.targets || []).some(target => target.accepts && target.accepts.includes('living')),
+        successMessage: slide.successMessage || slide.metadata?.correctFeedback || 'Correct! Well done!',
+        retryMessage: slide.retryMessage || slide.metadata?.incorrectFeedback || 'Try again!',
+        retryHint: slide.retryHint || slide.metadata?.hintText || 'Think carefully about the concept.',
+        bullets: Array.isArray(slide.contentData?.bullets) ? slide.contentData.bullets : [],
+        hotspots: Array.isArray(slide.contentData?.hotspots) ? slide.contentData.hotspots : [],
+        traits: Array.isArray(slide.contentData?.traits) ? slide.contentData.traits : [],
+        object: slide.contentData?.object || {},
+        correctTraits: Array.isArray(slide.contentData?.correctTraits) ? slide.contentData.correctTraits : []
+      };
+    });
   }
 
   return LESSON_SLIDES;
@@ -491,9 +499,11 @@ function handleQuickCheckTap(slide, option, button) {
     opt.classList.remove('option-correct', 'option-incorrect');
   });
 
-  const isCorrect = slide.hasOwnProperty('targetIsLiving')
-    ? option.isLiving === slide.targetIsLiving
-    : option.isLiving;
+  const isCorrect = option.hasOwnProperty('isCorrect')
+    ? Boolean(option.isCorrect)
+    : (slide.hasOwnProperty('targetIsLiving')
+      ? option.isLiving === slide.targetIsLiving
+      : Boolean(option.isLiving));
 
   slideState.quickCheckState = {
     selected: option.id,

@@ -44,6 +44,7 @@ class Lesson(BaseModel, ArchivableMixin):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
+    config = db.Column(db.JSON, nullable=True)
 
 class Activity(BaseModel, ArchivableMixin):
     __tablename__ = 'activity'

@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if lesson %}Edit Lesson: {{ lesson.title }}{% else %}New Lesson Builder{% endif %} — SciencePlay</title>
+  <meta name="description" content="SciencePlay Lesson Studio: Visual slide canvas to create interactive science slideshows and quick-check questions.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260903_4') }}">
+
+  <style>
+    .builder-step-card {
+      background: #ffffff;
+      border-radius: 1.25rem;
+      border: 1px solid #e2e8f0;
+      padding: 1.75rem;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 4px 15px -2px rgba(0, 0, 0, 0.03);
+    }
+    .builder-step-header {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 1.35rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .step-number-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Lesson Workspace Grid */
+    .lesson-workspace-grid {
+      display: grid;
+      grid-template-columns: 260px 1fr 340px;
+      gap: 1.25rem;
+      align-items: start;
+    }
+    @media (max-width: 1200px) {
+      .lesson-workspace-grid {
+        grid-template-columns: 240px 1fr;
+      }
+      .slide-editor-col {
+        grid-column: 1 / -1;
+      }
+    }
+    @media (max-width: 900px) {
+      .lesson-workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Slide Deck Strip */
+    .slide-strip-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      max-height: 580px;
+      overflow-y: auto;
+      padding-right: 0.35rem;
+    }
+    .slide-strip-item {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 0.85rem;
+      padding: 0.75rem 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .slide-strip-item:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+    .slide-strip-item.active {
+      background: #eff6ff;
+      border-color: #0284c7;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+    }
+    .slide-strip-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: #e2e8f0;
+      color: #475569;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .slide-strip-item.active .slide-strip-num {
+      background: #0284c7;
+      color: #ffffff;
+    }
+    .slide-strip-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-grow: 1;
+    }
+    .slide-strip-type-pill {
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.15rem 0.45rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .st-concept { background: #e0f2fe; color: #0369a1; }
+    .st-quiz { background: #fef3c7; color: #b45309; }
+    .st-summary { background: #dcfce7; color: #15803d; }
+
+    /* Neubrutalist Slide Canvas */
+    .neubrutal-slide-canvas {
+      background: #ffffff;
+      border: 3px solid #0f172a;
+      border-radius: 1.25rem;
+      box-shadow: 6px 6px 0px #0f172a;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 500px;
+    }
+    .canvas-window-header {
+      background: #f8fafc;
+      border-bottom: 3px solid #0f172a;
+      padding: 0.65rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .canvas-dots {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .c-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1.5px solid #0f172a;
+    }
+    .c-dot-red { background: #ef4444; }
+    .c-dot-yellow { background: #f59e0b; }
+    .c-dot-green { background: #10b981; }
+
+    .canvas-slide-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+    .canvas-slide-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .canvas-slide-title {
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: #0f172a;
+      margin: 0;
+    }
+    .canvas-tts-btn {
+      background: #f1f5f9;
+      border: 2px solid #0f172a;
+      border-radius: 9999px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #0f172a;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+      box-shadow: 2px 2px 0px #0f172a;
+    }
+    .canvas-tts-btn:hover {
+      background: #e2e8f0;
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0px #0f172a;
+    }
+
+    .canvas-hero-box {
+      border: 2px dashed #cbd5e1;
+      border-radius: 1rem;
+      background: #f8fafc;
+      padding: 1.5rem;
+      text-align: center;
+      margin-bottom: 1.25rem;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .canvas-hero-img {
+      max-height: 140px;
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    .canvas-narration-box {
+      background: #f1f5f9;
+      border-left: 4px solid #0284c7;
+      border-radius: 0 0.75rem 0.75rem 0;
+      padding: 0.85rem 1.15rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.95rem;
+      color: #1e293b;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .canvas-quiz-card {
+      background: #eff6ff;
+      border: 2px solid #0f172a;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .canvas-quiz-prompt {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 0.85rem;
+    }
+    .canvas-quiz-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.75rem;
+    }
+    .canvas-quiz-opt-btn {
+      background: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 0.75rem;
+      padding: 0.65rem 0.5rem;
+      text-align: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      box-shadow: 3px 3px 0px #0f172a;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+    }
+    .canvas-quiz-opt-btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0px #0f172a;
+    }
+    .canvas-quiz-opt-btn.is-correct {
+      background: #dcfce7;
+      border-color: #16a34a;
+    }
+    .canvas-quiz-opt-icon {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+    }
+
+    .canvas-bottom-nav {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 2px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .canvas-nav-btn {
+      background: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 0.75rem;
+      padding: 0.45rem 1rem;
+      font-weight: 800;
+      font-size: 0.85rem;
+      box-shadow: 3px 3px 0px #0f172a;
+    }
+    .canvas-nav-btn.btn-primary {
+      background: #0284c7;
+      color: #ffffff;
+    }
+
+    /* Preset Picker Modal */
+    .preset-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 0.75rem;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+    .preset-picker-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 0.65rem 0.35rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .preset-picker-item:hover {
+      background: #e0f2fe;
+      border-color: #0284c7;
+      transform: translateY(-2px);
+    }
+    .preset-picker-item img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      margin-bottom: 0.35rem;
+    }
+  </style>
+</head>
+
+<body class="teacher-page teacher-dashboard-page">
+
+  <div class="teacher-layout container-fluid">
+    <div class="row g-3 g-lg-4">
+
+      <!-- Sidebar Navigation -->
+      <aside class="col-12 col-lg-3 col-xl-2">
+        <nav class="teacher-sidebar h-100">
+          <div>
+            <div class="teacher-brand-wrap">
+              <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
+              <div>
+                <div class="teacher-brand-title">SciencePlay</div>
+                <p class="teacher-brand-subtitle">Teacher Portal</p>
+              </div>
+            </div>
+
+            <div class="teacher-menu-group mt-4">
+              <a class="teacher-menu-link" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="students" href="{{ url_for('teacher.students') }}">
+                <i class="bi bi-people"></i>
+                <span>Students</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
+                <i class="bi bi-journal-bookmark"></i>
+                <span>Lessons &amp; Assignments</span>
+              </a>
+
+              <a class="teacher-menu-link active" data-nav="content" href="{{ url_for('teacher.content_management') }}">
+                <i class="bi bi-controller"></i>
+                <span>Content Studio</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
+                <i class="bi bi-bar-chart"></i>
+                <span>Analytics</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
+                <i class="bi bi-chat-square-quote-fill"></i>
+                <span>Feedback</span>
+                {% if needs_feedback_count and needs_feedback_count > 0 %}
+                  <span class="feedback-nav-badge">{{ needs_feedback_count }}</span>
+                {% endif %}
+              </a>
+            </div>
+          </div>
+
+          <a href="{{ url_for('auth.logout') }}" class="teacher-logout-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="col-12 col-lg-9 col-xl-10">
+        <section class="teacher-content">
+          <div class="teacher-center-wrap">
+
+            <!-- Breadcrumb Navigation -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 teacher-head-row">
+              <div>
+                <a href="{{ url_for('teacher.content_management') }}" class="text-decoration-none text-muted small fw-bold d-inline-flex align-items-center gap-1 mb-2">
+                  <i class="bi bi-arrow-left"></i><span>Back to Content Studio</span>
+                </a>
+                <h1 class="page-title fw-black text-dark mb-1">
+                  {% if lesson %}Edit Lesson: {{ lesson.title }}{% else %}New Lesson Studio Builder{% endif %}
+                </h1>
+                <p class="page-subtitle text-muted mb-0">Create interactive slide decks, voice narrations, and quick-check questions for students.</p>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('teacher.content_management') }}" class="btn btn-outline-secondary rounded-pill px-3 fw-bold">
+                  <i class="bi bi-arrow-left me-1"></i>Cancel
+                </a>
+                {% if lesson %}
+                  <a href="{{ url_for('teacher.preview_lesson', lesson_id=lesson.id) }}" target="_blank" class="btn btn-outline-dark rounded-pill px-3 fw-bold">
+                    <i class="bi bi-play-circle-fill me-1"></i>Test Play
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Form Wrapper -->
+            <form id="lessonBuilderForm" method="POST" action="{{ url_for('teacher.save_lesson') }}" enctype="multipart/form-data">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              {% if lesson %}
+                <input type="hidden" name="lesson_id" value="{{ lesson.id }}">
+              {% endif %}
+              <input type="hidden" name="slides_data" id="slidesDataInput" value="">
+
+              <!-- STEP 1: Lesson Overview -->
+              <div class="builder-step-card">
+                <div class="builder-step-header">
+                  <span class="step-number-badge">1</span>
+                  <div>
+                    <h2 class="h5 fw-bold text-dark mb-0">Lesson Overview &amp; Curriculum Topic</h2>
+                    <span class="text-muted small">Specify the lesson title, grade level, and curriculum summary</span>
+                  </div>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-12 col-md-7">
+                    <label class="form-label fw-bold text-dark small">Lesson Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="lessonTitleInput" value="{{ config.title or (lesson.title if lesson else 'Living vs Non-Living') }}" required placeholder="e.g. Living vs Non-Living">
+                  </div>
+                  <div class="col-6 col-md-2">
+                    <label class="form-label fw-bold text-dark small">Grade Level</label>
+                    <select class="form-select form-select-lg rounded-3" name="grade_level" id="gradeLevelInput">
+                      <option value="Grade 3" {% if config.grade_level == 'Grade 3' or not config.grade_level %}selected{% endif %}>Grade 3</option>
+                      <option value="Grade 4" {% if config.grade_level == 'Grade 4' %}selected{% endif %}>Grade 4</option>
+                      <option value="Grade 2" {% if config.grade_level == 'Grade 2' %}selected{% endif %}>Grade 2</option>
+                    </select>
+                  </div>
+                  <div class="col-6 col-md-3 d-flex flex-column justify-content-end">
+                    <!-- Preset Starter Loader -->
+                    <label class="form-label fw-bold text-dark small d-none d-md-block">&nbsp;</label>
+                    <div class="dropdown w-100">
+                      <button class="btn btn-outline-secondary dropdown-toggle w-100 rounded-3 py-2 fw-bold" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-magic me-1"></i>Lesson Templates
+                      </button>
+                      <ul class="dropdown-menu shadow-lg border-0 rounded-3 w-100">
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('living_vs_nonliving'); return false;">🌱 Living vs Non-Living (5 Slides)</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('states_of_matter'); return false;">🧊 States of Matter (5 Slides)</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('recycling'); return false;">♻️ Eco Recycling & Waste (5 Slides)</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label fw-bold text-dark small">Lesson Curriculum Description</label>
+                    <textarea class="form-control rounded-3" name="description" id="lessonDescInput" rows="2" placeholder="Brief summary of learning objectives for students and parents...">{{ config.description or (lesson.description if lesson else 'Learn how to classify living organisms from inanimate non-living matter.') }}</textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- STEP 2: Interactive Slide Canvas Workspace -->
+              <div class="builder-step-card">
+                <div class="builder-step-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="step-number-badge">2</span>
+                    <div>
+                      <h2 class="h5 fw-bold text-dark mb-0">Slide Deck &amp; Interactive Canvas</h2>
+                      <span class="text-muted small">Design slides, synthesize audio voiceovers, and configure multiple-choice quick checks.</span>
+                    </div>
+                  </div>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill fw-bold" id="slidesCountBadge">
+                    5 Slides
+                  </span>
+                </div>
+
+                <div class="lesson-workspace-grid">
+                  <!-- Col 1: Slide Strip Navigator -->
+                  <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="fw-bold text-muted small text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">Slide Deck</span>
+                      <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-secondary p-1" onclick="moveSlide(-1)" title="Move slide up"><i class="bi bi-chevron-up"></i></button>
+                        <button type="button" class="btn btn-outline-secondary p-1" onclick="moveSlide(1)" title="Move slide down"><i class="bi bi-chevron-down"></i></button>
+                      </div>
+                    </div>
+
+                    <div class="slide-strip-list" id="slideStripContainer">
+                      <!-- Rendered via JS -->
+                    </div>
+
+                    <div class="dropdown mt-3">
+                      <button class="btn btn-outline-primary w-100 rounded-3 py-2 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-plus-circle-fill me-1"></i>Add Slide
+                      </button>
+                      <ul class="dropdown-menu shadow-lg border-0 rounded-3 w-100">
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('concept'); return false;">📝 Concept &amp; Story Slide</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('quick-check'); return false;">❓ Interactive Quick Check</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('summary'); return false;">🏆 Milestone &amp; Summary Slide</a></li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- Col 2: Center Neubrutalist Slide Canvas Preview -->
+                  <div>
+                    <div class="neubrutal-slide-canvas">
+                      <div class="canvas-window-header">
+                        <div class="canvas-dots">
+                          <span class="c-dot c-dot-red"></span>
+                          <span class="c-dot c-dot-yellow"></span>
+                          <span class="c-dot c-dot-green"></span>
+                        </div>
+                        <span class="badge bg-dark text-info border border-secondary small fw-bold">
+                          <i class="bi bi-broadcast me-1"></i>Live Student View Canvas
+                        </span>
+                      </div>
+
+                      <div class="canvas-slide-body">
+                        <div class="canvas-slide-top">
+                          <h3 class="canvas-slide-title" id="canvasTitleDisplay">Slide Title</h3>
+                          <button type="button" class="canvas-tts-btn" onclick="previewCurrentSlideTTS()" title="Test speech synthesis audio">
+                            <i class="bi bi-volume-up-fill text-primary"></i>
+                            <span>Read Aloud</span>
+                          </button>
+                        </div>
+
+                        <!-- Hero Media Box (For Concept/Intro/Summary) -->
+                        <div class="canvas-hero-box" id="canvasHeroBox">
+                          <img src="/static/images/tree.webp" alt="Slide Illustration" class="canvas-hero-img" id="canvasHeroImg">
+                        </div>
+
+                        <!-- Spoken Narration Text -->
+                        <div class="canvas-narration-box" id="canvasNarrationDisplay">
+                          Living things grow, breathe, and need food and water! Non-living things do not do these on their own.
+                        </div>
+
+                        <!-- Quick Check Interactive Section (If quiz slide) -->
+                        <div class="canvas-quiz-card d-none" id="canvasQuizBox">
+                          <div class="canvas-quiz-prompt" id="canvasQuizPromptDisplay">Which one can grow and needs water to stay alive? 🌱</div>
+                          <div class="canvas-quiz-options" id="canvasQuizOptionsContainer">
+                            <!-- Rendered via JS -->
+                          </div>
+                        </div>
+
+                        <!-- Canvas Bottom Navigation Simulator -->
+                        <div class="canvas-bottom-nav">
+                          <button type="button" class="canvas-nav-btn btn-secondary disabled" disabled>
+                            <i class="bi bi-arrow-left me-1"></i>Back
+                          </button>
+                          <span class="text-muted fw-bold small" id="canvasSlideIndicator">Slide 1 / 5</span>
+                          <button type="button" class="canvas-nav-btn btn-primary" id="canvasNextBtn">
+                            Next<i class="bi bi-arrow-right ms-1"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Col 3: Slide Editor Form -->
+                  <div class="slide-editor-col">
+                    <div class="p-3 bg-light rounded-4 border">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-1">
+                          <i class="bi bi-sliders text-primary"></i>
+                          <span>Slide Settings</span>
+                        </h4>
+                        <button type="button" class="btn btn-outline-danger btn-sm border-0 p-1" onclick="deleteCurrentSlide()" title="Delete slide">
+                          <i class="bi bi-trash3-fill"></i>
+                        </button>
+                      </div>
+
+                      <div class="mb-2">
+                        <label class="form-label text-muted small fw-bold mb-1">Slide Title</label>
+                        <input type="text" class="form-control form-control-sm rounded-3 fw-bold" id="editSlideTitle" oninput="updateCurrentSlideField('title', this.value)">
+                      </div>
+
+                      <div class="mb-2">
+                        <label class="form-label text-muted small fw-bold mb-1">Slide Type</label>
+                        <select class="form-select form-select-sm rounded-3 fw-semibold" id="editSlideType" onchange="updateCurrentSlideField('type', this.value)">
+                          <option value="concept">📝 Concept &amp; Story Slide</option>
+                          <option value="quick-check">❓ Interactive Quick Check</option>
+                          <option value="summary">🏆 Milestone Summary Slide</option>
+                        </select>
+                      </div>
+
+                      <!-- Image Picker -->
+                      <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold mb-1">Illustration Image</label>
+                        <div class="d-flex align-items-center gap-2">
+                          <img src="/static/images/tree.webp" alt="Thumb" class="rounded-3 border p-1" style="width: 44px; height: 44px; object-fit: contain;" id="editSlideThumb">
+                          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="openSlidePresetPicker()">
+                            <i class="bi bi-images me-1"></i>Presets
+                          </button>
+                          <label class="btn btn-sm btn-outline-primary rounded-pill px-3 mb-0" style="cursor: pointer;">
+                            <i class="bi bi-upload me-1"></i>Upload
+                            <input type="file" accept=".png,.jpg,.jpeg,.webp,image/*" class="d-none" onchange="handleSlideFileUpload(this)">
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- Narration Text -->
+                      <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold mb-1">Voice Narration / Explanation</label>
+                        <textarea class="form-control form-control-sm rounded-3" rows="3" id="editSlideExplanation" oninput="updateCurrentSlideField('explanation', this.value)" placeholder="Enter the text that will be read aloud to students..."></textarea>
+                        <small class="text-muted" style="font-size: 0.68rem;">Synthesized aloud when student clicks "Read Aloud"</small>
+                      </div>
+
+                      <!-- Quick Check Configuration Fields -->
+                      <div id="quickCheckEditFields" class="d-none border-top pt-2 mt-2">
+                        <div class="mb-2">
+                          <label class="form-label text-muted small fw-bold mb-1">Question Prompt</label>
+                          <input type="text" class="form-control form-control-sm rounded-3 fw-bold" id="editQuizPrompt" oninput="updateCurrentSlideField('prompt', this.value)" placeholder="e.g. Which one is living?">
+                        </div>
+
+                        <div class="mb-2">
+                          <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label text-muted small fw-bold mb-0">Answer Choices (Check correct)</label>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-bold small" onclick="addQuizOption()">+ Add Choice</button>
+                          </div>
+                          <div id="quizOptionsEditor" class="d-flex flex-column gap-2">
+                            <!-- Rendered via JS -->
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Submit Toolbar -->
+              <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded-4 border shadow-sm">
+                <a href="{{ url_for('teacher.content_management') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                  Cancel
+                </a>
+                <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-sm" id="btn-save-lesson">
+                  <i class="bi bi-cloud-arrow-up-fill me-2"></i>Save &amp; Publish Lesson
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </section>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Preset Image Selector Modal -->
+  <div class="modal fade" id="presetImageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-bottom pb-3">
+          <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-images text-primary"></i>
+            <span>Select Science Illustration</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="text-muted small mb-3">Click any science icon to attach it to this slide or quiz option.</p>
+          <div class="preset-picker-grid">
+            {% for img in preset_images %}
+            <div class="preset-picker-item" onclick="chooseSlidePresetImage('{{ img.src }}', '{{ img.label }}')">
+              <img src="{{ img.src }}" alt="{{ img.label }}">
+              <div class="small fw-bold text-dark text-truncate">{{ img.label }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modern In-App Notification Toast Container -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+    <div id="builderToast" class="toast align-items-center text-white border-0 shadow-lg rounded-4 overflow-hidden" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex p-3 align-items-center">
+        <span class="fs-4 me-3" id="builderToastIcon">✨</span>
+        <div class="toast-body p-0 fw-bold" id="builderToastMessage" style="font-size: 0.92rem; line-height: 1.35;">
+          Lesson updated!
+        </div>
+        <button type="button" class="btn-close btn-close-white ms-auto me-1" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Modern in-app toast
+    function showBuilderToast(message, type = 'success') {
+      const toastEl = document.getElementById('builderToast');
+      const msgEl = document.getElementById('builderToastMessage');
+      const iconEl = document.getElementById('builderToastIcon');
+      if (!toastEl || !msgEl) return;
+
+      msgEl.textContent = message;
+
+      if (type === 'success') {
+        toastEl.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+        if (iconEl) iconEl.textContent = '✨';
+      } else if (type === 'warning') {
+        toastEl.style.background = 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)';
+        if (iconEl) iconEl.textContent = '⚠️';
+      } else if (type === 'danger' || type === 'error') {
+        toastEl.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
+        if (iconEl) iconEl.textContent = '⛔';
+      } else {
+        toastEl.style.background = 'linear-gradient(135deg, #1e293b 0%, #334155 100%)';
+        if (iconEl) iconEl.textContent = 'ℹ️';
+      }
+
+      if (window.bootstrap?.Toast) {
+        const bsToast = window.bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3200 });
+        bsToast.show();
+      }
+    }
+
+    // Default starter slide deck
+    const DEFAULT_SLIDES = [
+      {
+        id: "slide-1",
+        title: "Living vs Non-Living",
+        type: "concept",
+        image: "/static/images/tree.webp",
+        explanation: "Living things grow, breathe, and need food and water! 🌱 Non-living things do not do these on their own. 🪨"
+      },
+      {
+        id: "slide-2",
+        title: "What is a Living Thing?",
+        type: "concept",
+        image: "/static/images/cat.webp",
+        explanation: "Animals and plants are living things. A cat eats food, drinks water, moves, and breathes air!"
+      },
+      {
+        id: "slide-3",
+        title: "Quick Check: Living Thing",
+        type: "quick-check",
+        prompt: "Which of these can grow and needs water to stay alive? 🌱",
+        image: "/static/images/plant.webp",
+        explanation: "Plants are living organisms that absorb water and sunlight to grow.",
+        options: [
+          { id: "opt-1", label: "Rock", icon: "/static/images/rock.webp", isCorrect: false },
+          { id: "opt-2", label: "Plant", icon: "/static/images/plant.webp", isCorrect: true }
+        ]
+      },
+      {
+        id: "slide-4",
+        title: "What is Non-Living?",
+        type: "concept",
+        image: "/static/images/bicycle.webp",
+        explanation: "A bicycle is made by humans in a factory. It does not grow, breathe, or eat food!"
+      },
+      {
+        id: "slide-5",
+        title: "Lesson Complete!",
+        type: "summary",
+        image: "/static/images/star.webp",
+        explanation: "Great job! You learned how to tell living things apart from non-living things. Ready for the challenge game!"
+      }
+    ];
+
+    // Lesson topic presets
+    const LESSON_PRESETS = {
+      living_vs_nonliving: {
+        title: "Living vs Non-Living",
+        description: "Learn how to tell living things from non-living things!",
+        slides: DEFAULT_SLIDES
+      },
+      states_of_matter: {
+        title: "States of Matter: Solid vs Liquid",
+        description: "Explore the different forms matter can take around us.",
+        slides: [
+          {
+            id: "slide-1",
+            title: "What is Matter?",
+            type: "concept",
+            image: "/static/images/rock.webp",
+            explanation: "Everything around us is made of matter! Matter can be a solid, liquid, or gas."
+          },
+          {
+            id: "slide-2",
+            title: "Solids Keep Their Shape",
+            type: "concept",
+            image: "/static/images/chair.webp",
+            explanation: "A wooden chair is a solid. It keeps its firm shape and fixed volume."
+          },
+          {
+            id: "slide-3",
+            title: "Quick Check: Find the Solid",
+            type: "quick-check",
+            prompt: "Which object keeps its rigid shape and is a solid? 🧊",
+            image: "/static/images/rock.webp",
+            explanation: "Ice and rocks hold a definite shape as solids.",
+            options: [
+              { id: "opt-1", label: "Ice Cube", icon: "/static/images/rock.webp", isCorrect: true },
+              { id: "opt-2", label: "Water Puddle", icon: "/static/images/puddle.webp", isCorrect: false }
+            ]
+          },
+          {
+            id: "slide-4",
+            title: "Liquids Flow and Pour",
+            type: "concept",
+            image: "/static/images/puddle.webp",
+            explanation: "Water is a liquid! It flows smoothly and takes the shape of whatever container it sits in."
+          },
+          {
+            id: "slide-5",
+            title: "Matter Explorer Complete!",
+            type: "summary",
+            image: "/static/images/star.webp",
+            explanation: "You now know the basic properties of solids and liquids!"
+          }
+        ]
+      },
+      recycling: {
+        title: "Eco Recycling & Waste Sorting",
+        description: "Discover how sorting waste protects our planet Earth.",
+        slides: [
+          {
+            id: "slide-1",
+            title: "Caring for Our Planet",
+            type: "concept",
+            image: "/static/images/plant.webp",
+            explanation: "Every day we use materials that can either become compost or be recycled into new products!"
+          },
+          {
+            id: "slide-2",
+            title: "Organic Compost",
+            type: "concept",
+            image: "/static/images/tree.webp",
+            explanation: "Leaves, branches, and fruit peels decompose naturally into nutrient-rich garden soil."
+          },
+          {
+            id: "slide-3",
+            title: "Quick Check: Organic Waste",
+            type: "quick-check",
+            prompt: "Which item breaks down naturally as organic compost? 🍂",
+            image: "/static/images/plant.webp",
+            explanation: "Fallen leaves decompose naturally in garden compost.",
+            options: [
+              { id: "opt-1", label: "Fallen Leaves", icon: "/static/images/plant.webp", isCorrect: true },
+              { id: "opt-2", label: "Plastic Bottle", icon: "/static/images/puddle.webp", isCorrect: false }
+            ]
+          },
+          {
+            id: "slide-4",
+            title: "Recyclable Materials",
+            type: "concept",
+            image: "/static/images/puddle.webp",
+            explanation: "Clean plastics, glass, and metals can be melted and remanufactured to reduce pollution."
+          },
+          {
+            id: "slide-5",
+            title: "Eco Scientist Certified!",
+            type: "summary",
+            image: "/static/images/star.webp",
+            explanation: "You are ready to help protect the environment by sorting waste properly!"
+          }
+        ]
+      }
+    };
+
+    // State
+    let currentSlideIndex = 0;
+    let slides = {{ (config.slides if config and config.slides else None)|tojson }} || DEFAULT_SLIDES;
+
+    function renderSlideStrip() {
+      const container = document.getElementById('slideStripContainer');
+      container.innerHTML = '';
+
+      slides.forEach((slide, idx) => {
+        const item = document.createElement('div');
+        item.className = `slide-strip-item ${idx === currentSlideIndex ? 'active' : ''}`;
+        item.onclick = () => selectSlide(idx);
+
+        let typePill = '<span class="slide-strip-type-pill st-concept">Concept</span>';
+        if (slide.type === 'quick-check') {
+          typePill = '<span class="slide-strip-type-pill st-quiz">Quiz</span>';
+        } else if (slide.type === 'summary') {
+          typePill = '<span class="slide-strip-type-pill st-summary">Summary</span>';
+        }
+
+        item.innerHTML = `
+          <div class="d-flex align-items-center gap-2 overflow-hidden">
+            <span class="slide-strip-num">${idx + 1}</span>
+            <span class="slide-strip-title">${slide.title || 'Untitled Slide'}</span>
+          </div>
+          ${typePill}
+        `;
+        container.appendChild(item);
+      });
+
+      const badge = document.getElementById('slidesCountBadge');
+      if (badge) badge.textContent = `${slides.length} Slides`;
+    }
+
+    function selectSlide(idx) {
+      if (idx < 0 || idx >= slides.length) return;
+      currentSlideIndex = idx;
+      renderSlideStrip();
+      loadSlideIntoEditor();
+      updateCanvasPreview();
+    }
+
+    function addSlide(type = 'concept') {
+      const nextNum = slides.length + 1;
+      let newSlide = {
+        id: `slide-${Date.now()}`,
+        title: type === 'quick-check' ? `Quick Check ${nextNum}` : `Concept Slide ${nextNum}`,
+        type: type,
+        image: "/static/images/tree.webp",
+        explanation: "Enter explanatory text for this slide..."
+      };
+
+      if (type === 'quick-check') {
+        newSlide.prompt = "What is the correct answer?";
+        newSlide.options = [
+          { id: `opt-${Date.now()}-1`, label: "Option A", icon: "/static/images/tree.webp", isCorrect: true },
+          { id: `opt-${Date.now()}-2`, label: "Option B", icon: "/static/images/rock.webp", isCorrect: false }
+        ];
+      }
+
+      slides.push(newSlide);
+      selectSlide(slides.length - 1);
+      showBuilderToast("Added new slide", "success");
+    }
+
+    function moveSlide(direction) {
+      const targetIndex = currentSlideIndex + direction;
+      if (targetIndex < 0 || targetIndex >= slides.length) return;
+
+      const temp = slides[currentSlideIndex];
+      slides[currentSlideIndex] = slides[targetIndex];
+      slides[targetIndex] = temp;
+
+      selectSlide(targetIndex);
+    }
+
+    function deleteCurrentSlide() {
+      if (slides.length <= 1) {
+        showBuilderToast("A lesson must have at least 1 slide.", "warning");
+        return;
+      }
+      slides.splice(currentSlideIndex, 1);
+      currentSlideIndex = Math.max(0, currentSlideIndex - 1);
+      renderSlideStrip();
+      loadSlideIntoEditor();
+      updateCanvasPreview();
+      showBuilderToast("Slide removed", "warning");
+    }
+
+    function loadSlideIntoEditor() {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+
+      document.getElementById('editSlideTitle').value = slide.title || '';
+      document.getElementById('editSlideType').value = slide.type || 'concept';
+      document.getElementById('editSlideExplanation').value = slide.explanation || '';
+      document.getElementById('editSlideThumb').src = slide.image || '/static/images/tree.webp';
+
+      const quizBox = document.getElementById('quickCheckEditFields');
+      if (slide.type === 'quick-check') {
+        quizBox.classList.remove('d-none');
+        document.getElementById('editQuizPrompt').value = slide.prompt || '';
+        renderQuizOptionsEditor();
+      } else {
+        quizBox.classList.add('d-none');
+      }
+    }
+
+    function renderQuizOptionsEditor() {
+      const slide = slides[currentSlideIndex];
+      if (!slide || !Array.isArray(slide.options)) return;
+      const container = document.getElementById('quizOptionsEditor');
+      container.innerHTML = '';
+
+      slide.options.forEach((opt, optIdx) => {
+        const row = document.createElement('div');
+        row.className = 'd-flex align-items-center gap-2 p-2 bg-white rounded-3 border';
+        row.innerHTML = `
+          <input type="radio" name="correct_opt_radio" ${opt.isCorrect ? 'checked' : ''} onchange="setQuizCorrectOption(${optIdx})" title="Mark as correct answer">
+          <img src="${opt.icon || '/static/images/tree.webp'}" alt="Icon" style="width: 28px; height: 28px; object-fit: contain;">
+          <input type="text" class="form-control form-control-sm rounded-2 fw-bold" value="${opt.label}" oninput="updateQuizOptionLabel(${optIdx}, this.value)" placeholder="Choice label">
+          ${slide.options.length > 2 ? `
+            <button type="button" class="btn btn-outline-danger btn-sm border-0 p-1" onclick="removeQuizOption(${optIdx})"><i class="bi bi-x-lg"></i></button>
+          ` : ''}
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function updateQuizOptionLabel(optIdx, val) {
+      if (slides[currentSlideIndex]?.options?.[optIdx]) {
+        slides[currentSlideIndex].options[optIdx].label = val;
+        updateCanvasPreview();
+      }
+    }
+
+    function setQuizCorrectOption(optIdx) {
+      if (slides[currentSlideIndex]?.options) {
+        slides[currentSlideIndex].options.forEach((opt, i) => {
+          opt.isCorrect = (i === optIdx);
+        });
+        updateCanvasPreview();
+      }
+    }
+
+    function addQuizOption() {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      if (!Array.isArray(slide.options)) slide.options = [];
+      if (slide.options.length >= 4) {
+        showBuilderToast("Maximum 4 options allowed per quick-check.", "warning");
+        return;
+      }
+      slide.options.push({
+        id: `opt-${Date.now()}-${slide.options.length + 1}`,
+        label: `Choice ${slide.options.length + 1}`,
+        icon: "/static/images/rock.webp",
+        isCorrect: false
+      });
+      renderQuizOptionsEditor();
+      updateCanvasPreview();
+    }
+
+    function removeQuizOption(optIdx) {
+      const slide = slides[currentSlideIndex];
+      if (!slide?.options || slide.options.length <= 2) {
+        showBuilderToast("A question needs at least 2 options.", "warning");
+        return;
+      }
+      slide.options.splice(optIdx, 1);
+      // Ensure at least one is correct
+      if (!slide.options.some(o => o.isCorrect)) {
+        slide.options[0].isCorrect = true;
+      }
+      renderQuizOptionsEditor();
+      updateCanvasPreview();
+    }
+
+    function updateCurrentSlideField(field, value) {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      slide[field] = value;
+      if (field === 'type') {
+        if (value === 'quick-check' && !slide.options) {
+          slide.prompt = "Answer the question.";
+          slide.options = [
+            { id: "opt-1", label: "Choice A", icon: "/static/images/tree.webp", isCorrect: true },
+            { id: "opt-2", label: "Choice B", icon: "/static/images/rock.webp", isCorrect: false }
+          ];
+        }
+        loadSlideIntoEditor();
+      }
+      renderSlideStrip();
+      updateCanvasPreview();
+    }
+
+    function updateCanvasPreview() {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+
+      document.getElementById('canvasTitleDisplay').textContent = slide.title || 'Untitled Slide';
+      document.getElementById('canvasNarrationDisplay').textContent = slide.explanation || 'No narration entered yet.';
+      document.getElementById('canvasSlideIndicator').textContent = `Slide ${currentSlideIndex + 1} / ${slides.length}`;
+
+      const heroBox = document.getElementById('canvasHeroBox');
+      const heroImg = document.getElementById('canvasHeroImg');
+      const quizBox = document.getElementById('canvasQuizBox');
+      const quizPrompt = document.getElementById('canvasQuizPromptDisplay');
+      const quizOpts = document.getElementById('canvasQuizOptionsContainer');
+
+      if (slide.type === 'quick-check') {
+        heroBox.classList.add('d-none');
+        quizBox.classList.remove('d-none');
+        quizPrompt.textContent = slide.prompt || 'Answer the question:';
+        quizOpts.innerHTML = '';
+
+        (slide.options || []).forEach(opt => {
+          const btn = document.createElement('div');
+          btn.className = `canvas-quiz-opt-btn ${opt.isCorrect ? 'is-correct' : ''}`;
+          btn.innerHTML = `
+            <img src="${opt.icon || '/static/images/tree.webp'}" alt="Icon" class="canvas-quiz-opt-icon">
+            <span>${opt.label}</span>
+            ${opt.isCorrect ? '<span class="badge bg-success small py-0 px-1 mt-1">✓ Correct</span>' : ''}
+          `;
+          quizOpts.appendChild(btn);
+        });
+      } else {
+        quizBox.classList.add('d-none');
+        heroBox.classList.remove('d-none');
+        heroImg.src = slide.image || '/static/images/tree.webp';
+      }
+
+      const nextBtn = document.getElementById('canvasNextBtn');
+      if (nextBtn) {
+        nextBtn.innerHTML = (currentSlideIndex === slides.length - 1)
+          ? 'Finish <i class="bi bi-check-circle-fill ms-1"></i>'
+          : 'Next <i class="bi bi-arrow-right ms-1"></i>';
+      }
+    }
+
+    // TTS Preview in Canvas
+    function previewCurrentSlideTTS() {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      const textToRead = `${slide.title}. ${slide.type === 'quick-check' ? (slide.prompt || '') : (slide.explanation || '')}`;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(textToRead);
+        utterance.rate = 0.95;
+        utterance.pitch = 1.05;
+        window.speechSynthesis.speak(utterance);
+        showBuilderToast("Speaking aloud...", "info");
+      } else {
+        showBuilderToast("Speech synthesis not supported in this browser.", "warning");
+      }
+    }
+
+    // Preset Image Picker
+    function openSlidePresetPicker() {
+      const modalEl = document.getElementById('presetImageModal');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+    }
+
+    function chooseSlidePresetImage(src, label) {
+      const slide = slides[currentSlideIndex];
+      if (slide) {
+        slide.image = src;
+        document.getElementById('editSlideThumb').src = src;
+        updateCanvasPreview();
+      }
+      const modalEl = document.getElementById('presetImageModal');
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+    }
+
+    // File upload (no size limit)
+    function handleSlideFileUpload(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const validExtensions = ['png', 'jpg', 'jpeg', 'webp'];
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        const isImageMime = file.type.startsWith('image/');
+
+        if (!validExtensions.includes(ext) || !isImageMime) {
+          showBuilderToast("Only image files (.png, .jpg, .jpeg, .webp) are supported.", "danger");
+          input.value = '';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          slides[currentSlideIndex].image = e.target.result;
+          document.getElementById('editSlideThumb').src = e.target.result;
+          updateCanvasPreview();
+          showBuilderToast("Custom image attached to slide", "success");
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Load Starter Lesson Presets
+    function loadLessonPreset(presetKey) {
+      const p = LESSON_PRESETS[presetKey];
+      if (!p) return;
+
+      document.getElementById('lessonTitleInput').value = p.title;
+      document.getElementById('lessonDescInput').value = p.description;
+      slides = JSON.parse(JSON.stringify(p.slides));
+      currentSlideIndex = 0;
+
+      renderSlideStrip();
+      loadSlideIntoEditor();
+      updateCanvasPreview();
+      showBuilderToast(`Loaded lesson template: "${p.title}"`, "success");
+    }
+
+    // Form Submission
+    function submitLessonForm() {
+      const title = document.getElementById('lessonTitleInput').value.trim();
+      if (!title) {
+        showBuilderToast("Please enter a lesson title.", "warning");
+        document.getElementById('lessonTitleInput').focus();
+        return;
+      }
+
+      if (slides.length === 0) {
+        showBuilderToast("Please add at least 1 slide to this lesson.", "warning");
+        return;
+      }
+
+      document.getElementById('slidesDataInput').value = JSON.stringify(slides);
+      document.getElementById('lessonBuilderForm').submit();
+    }
+
+    document.getElementById('btn-save-lesson')?.addEventListener('click', submitLessonForm);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSlideStrip();
+      loadSlideIntoEditor();
+      updateCanvasPreview();
+    });
+  </script>
+</body>
+</html>
