@@ -67,13 +67,47 @@
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem;
+      gap: 1.5rem;
     }
     .activity-row-card:hover {
       border-color: #4318ff;
       box-shadow: 0 10px 25px -5px rgba(67, 24, 255, 0.08);
+    }
+    .activity-col-info {
+      flex: 1 1 0%;
+      min-width: 0;
+    }
+    .activity-col-stats {
+      width: 230px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+    .activity-col-actions {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-left: auto;
+    }
+    @media (max-width: 991px) {
+      .activity-row-card {
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .activity-col-info {
+        flex: 1 1 100%;
+      }
+      .activity-col-stats {
+        width: auto;
+        justify-content: flex-start;
+      }
+      .activity-col-actions {
+        margin-left: auto;
+      }
     }
     .activity-meta-badge {
       font-size: 0.8rem;
@@ -278,7 +312,7 @@
                     <div class="activity-catalog-list">
                       {% for card in activity_cards %}
                       <div class="activity-row-card">
-                        <div style="min-width: 260px; max-width: 420px;">
+                        <div class="activity-col-info">
                           <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                             <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
                               <i class="bi bi-joystick me-1"></i>Sorting Claw
@@ -313,23 +347,23 @@
                         </div>
 
                         <!-- Meta stats -->
-                        <div class="d-flex align-items-center gap-4 text-center">
-                          <div>
-                            <div class="fw-bold text-dark fs-5">{{ card.objects_count }}</div>
-                            <div class="text-muted small" style="font-size: 0.75rem;">Objects</div>
+                        <div class="activity-col-stats text-center">
+                          <div style="min-width: 50px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.objects_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Objects</div>
                           </div>
-                          <div>
-                            <div class="fw-bold text-dark fs-5">{{ card.bins|length }}</div>
-                            <div class="text-muted small" style="font-size: 0.75rem;">Chutes</div>
+                          <div style="min-width: 50px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.bins|length }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Chutes</div>
                           </div>
-                          <div>
-                            <div class="fw-bold text-dark fs-5">{{ card.round_size }}</div>
-                            <div class="text-muted small" style="font-size: 0.75rem;">Round Size</div>
+                          <div style="min-width: 65px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.round_size }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Round Size</div>
                           </div>
                         </div>
 
                         <!-- Actions -->
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="activity-col-actions">
                           <a href="{{ url_for('teacher.preview_activity', activity_id=card.activity.id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Test Play in Preview Mode">
                             <i class="bi bi-play-circle-fill"></i>
                             <span>Test Play</span>
@@ -389,7 +423,7 @@
                     <div class="activity-catalog-list">
                       {% for card in archived_cards %}
                       <div class="activity-row-card bg-light border-dashed">
-                        <div style="min-width: 260px; max-width: 420px;">
+                        <div class="activity-col-info">
                           <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                             <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
                               <i class="bi bi-archive me-1"></i>Archived
@@ -414,23 +448,23 @@
                         </div>
 
                         <!-- Meta stats -->
-                        <div class="d-flex align-items-center gap-4 text-center opacity-75">
-                          <div>
-                            <div class="fw-bold text-dark fs-5">{{ card.objects_count }}</div>
-                            <div class="text-muted small" style="font-size: 0.75rem;">Objects</div>
+                        <div class="activity-col-stats text-center opacity-75">
+                          <div style="min-width: 50px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.objects_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Objects</div>
                           </div>
-                          <div>
-                            <div class="fw-bold text-dark fs-5">{{ card.bins|length }}</div>
-                            <div class="text-muted small" style="font-size: 0.75rem;">Chutes</div>
+                          <div style="min-width: 50px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.bins|length }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Chutes</div>
                           </div>
-                          <div>
-                            <div class="fw-bold text-dark fs-5">{{ card.round_size }}</div>
-                            <div class="text-muted small" style="font-size: 0.75rem;">Round Size</div>
+                          <div style="min-width: 65px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.round_size }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Round Size</div>
                           </div>
                         </div>
 
                         <!-- Restore & Permanent Delete action -->
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="activity-col-actions">
                           <form method="POST" action="{{ url_for('teacher.restore_activity', activity_id=card.activity.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Restore this activity to active curriculum">

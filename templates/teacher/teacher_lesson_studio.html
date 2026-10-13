@@ -37,13 +37,47 @@
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem;
+      gap: 1.5rem;
     }
     .activity-row-card:hover {
       border-color: #10b981;
       box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.08);
+    }
+    .activity-col-info {
+      flex: 1 1 0%;
+      min-width: 0;
+    }
+    .activity-col-stats {
+      width: 170px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+    .activity-col-actions {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-left: auto;
+    }
+    @media (max-width: 991px) {
+      .activity-row-card {
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .activity-col-info {
+        flex: 1 1 100%;
+      }
+      .activity-col-stats {
+        width: auto;
+        justify-content: flex-start;
+      }
+      .activity-col-actions {
+        margin-left: auto;
+      }
     }
     .lesson-hero-banner {
       background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
@@ -223,7 +257,7 @@
                     <div class="activity-catalog-list">
                       {% for card in lesson_cards %}
                       <div class="activity-row-card">
-                        <div style="min-width: 260px; max-width: 480px;">
+                        <div class="activity-col-info">
                           <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                             <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
                               <i class="bi bi-easel me-1"></i>Slide Presentation
@@ -237,25 +271,25 @@
                             {% endif %}
                           </div>
                           <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
-                          <p class="text-muted small mb-2 text-truncate" title="{{ card.description }}">
+                          <p class="text-muted small mb-0 text-truncate" title="{{ card.description }}">
                             {{ card.description or 'Interactive science lesson slides with voice read-aloud and quiz checks.' }}
                           </p>
                         </div>
 
                         <!-- Meta stats -->
-                        <div class="d-flex align-items-center gap-4 text-center">
-                          <div>
-                            <div class="fw-bold text-dark fs-5">{{ card.slides_count }}</div>
-                            <div class="text-muted small" style="font-size: 0.75rem;">Slides</div>
+                        <div class="activity-col-stats text-center">
+                          <div style="min-width: 50px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.slides_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Slides</div>
                           </div>
-                          <div>
-                            <div class="fw-bold text-dark fs-5"><i class="bi bi-volume-up text-success"></i></div>
-                            <div class="text-muted small" style="font-size: 0.75rem;">Read Aloud</div>
+                          <div style="min-width: 65px;">
+                            <div class="fw-bold text-dark fs-5 lh-1"><i class="bi bi-volume-up text-success"></i></div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Read Aloud</div>
                           </div>
                         </div>
 
                         <!-- Actions -->
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="activity-col-actions">
                           <a href="{{ url_for('teacher.preview_lesson', lesson_id=card.lesson.id) }}" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Preview Lesson as Student">
                             <i class="bi bi-play-circle-fill"></i>
                             <span>Test Play</span>
@@ -315,7 +349,7 @@
                     <div class="activity-catalog-list">
                       {% for card in archived_cards %}
                       <div class="activity-row-card bg-light border-dashed">
-                        <div style="min-width: 260px; max-width: 480px;">
+                        <div class="activity-col-info">
                           <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                             <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
                               <i class="bi bi-archive me-1"></i>Archived
@@ -325,21 +359,21 @@
                             </span>
                           </div>
                           <h4 class="h6 fw-bold text-dark mb-1 text-decoration-line-through text-muted">{{ card.title }}</h4>
-                          <p class="text-muted small mb-2 text-truncate" title="{{ card.description }}">
+                          <p class="text-muted small mb-0 text-truncate" title="{{ card.description }}">
                             {{ card.description or 'Interactive science lesson slides.' }}
                           </p>
                         </div>
 
                         <!-- Meta stats -->
-                        <div class="d-flex align-items-center gap-4 text-center opacity-75">
-                          <div>
-                            <div class="fw-bold text-dark fs-5">{{ card.slides_count }}</div>
-                            <div class="text-muted small" style="font-size: 0.75rem;">Slides</div>
+                        <div class="activity-col-stats text-center opacity-75">
+                          <div style="min-width: 50px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.slides_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Slides</div>
                           </div>
                         </div>
 
                         <!-- Restore & Permanent Delete action -->
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="activity-col-actions">
                           <form method="POST" action="{{ url_for('teacher.restore_lesson', lesson_id=card.lesson.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Restore this lesson to active curriculum">
