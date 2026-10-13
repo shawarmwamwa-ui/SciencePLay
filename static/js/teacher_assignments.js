@@ -50,59 +50,91 @@ document.addEventListener('DOMContentLoaded', function () {
   let currentMode = 'lesson'; // 'lesson' or 'activity'
 
   function setAssignmentMode(mode) {
+    if (currentMode === mode && arguments.length > 1 && !arguments[1]) return;
     currentMode = mode;
+
+    // Immediately update toggle button styles for instant responsive feedback
     if (mode === 'activity') {
       if (modeActivityRadio) modeActivityRadio.checked = true;
       if (lblModeActivity) {
-        lblModeActivity.className = 'btn btn-sm rounded-pill px-3 fw-bold btn-success text-white';
+        lblModeActivity.className = 'btn btn-sm rounded-pill px-3 fw-bold btn-success text-white shadow-sm';
       }
       if (lblModeLesson) {
         lblModeLesson.className = 'btn btn-sm rounded-pill px-3 fw-bold text-secondary';
       }
-      if (assignForm) assignForm.action = '/teacher/assign_activity';
-      if (assignHeadingText) assignHeadingText.textContent = 'Assign Standalone Game Activity';
-      if (assignSubtitle) assignSubtitle.textContent = 'Choose an arcade sorting game or mini-game challenge to assign directly for practice or homework.';
-      
-      if (lessonSelectCol) lessonSelectCol.classList.add('d-none');
-      if (lessonSelect) {
-        lessonSelect.disabled = true;
-        lessonSelect.required = false;
-      }
-
-      if (activitySelectCol) activitySelectCol.classList.remove('d-none');
-      if (activitySelect) {
-        activitySelect.disabled = false;
-        activitySelect.required = true;
-      }
-
-      if (detailsArea) detailsArea.style.display = 'none';
-      updateActivityFormState();
     } else {
       if (modeLessonRadio) modeLessonRadio.checked = true;
       if (lblModeLesson) {
-        lblModeLesson.className = 'btn btn-sm rounded-pill px-3 fw-bold btn-primary text-white';
+        lblModeLesson.className = 'btn btn-sm rounded-pill px-3 fw-bold btn-primary text-white shadow-sm';
       }
       if (lblModeActivity) {
         lblModeActivity.className = 'btn btn-sm rounded-pill px-3 fw-bold text-secondary';
       }
-      if (assignForm) assignForm.action = '/teacher/assign_lesson';
-      if (assignHeadingText) assignHeadingText.textContent = 'Assign Lesson & Paired Game Activity';
-      if (assignSubtitle) assignSubtitle.textContent = 'Select a student (or the entire class) and choose a science lesson. The corresponding interactive game is bundled automatically.';
-
-      if (activitySelectCol) activitySelectCol.classList.add('d-none');
-      if (activitySelect) {
-        activitySelect.disabled = true;
-        activitySelect.required = false;
-      }
-
-      if (lessonSelectCol) lessonSelectCol.classList.remove('d-none');
-      if (lessonSelect) {
-        lessonSelect.disabled = false;
-        lessonSelect.required = true;
-      }
-
-      updateLessonFormState();
     }
+
+    // Smoothly fade out changing content
+    const fadeEls = [assignHeadingText, assignSubtitle, submitBtn];
+    fadeEls.forEach(el => {
+      if (el) el.style.opacity = '0';
+    });
+    const outgoingCol = mode === 'activity' ? lessonSelectCol : activitySelectCol;
+    const incomingCol = mode === 'activity' ? activitySelectCol : lessonSelectCol;
+    if (outgoingCol) outgoingCol.style.opacity = '0';
+
+    setTimeout(() => {
+      if (mode === 'activity') {
+        if (assignForm) assignForm.action = '/teacher/assign_activity';
+        if (assignHeadingText) assignHeadingText.textContent = 'Assign Standalone Game Activity';
+        if (assignSubtitle) assignSubtitle.textContent = 'Choose an arcade sorting game or mini-game challenge to assign directly for practice or homework.';
+        
+        if (lessonSelectCol) lessonSelectCol.classList.add('d-none');
+        if (lessonSelect) {
+          lessonSelect.disabled = true;
+          lessonSelect.required = false;
+        }
+
+        if (activitySelectCol) {
+          activitySelectCol.classList.remove('d-none');
+          activitySelectCol.style.opacity = '0';
+        }
+        if (activitySelect) {
+          activitySelect.disabled = false;
+          activitySelect.required = true;
+        }
+
+        if (detailsArea) detailsArea.style.display = 'none';
+        updateActivityFormState();
+      } else {
+        if (assignForm) assignForm.action = '/teacher/assign_lesson';
+        if (assignHeadingText) assignHeadingText.textContent = 'Assign Lesson & Paired Game Activity';
+        if (assignSubtitle) assignSubtitle.textContent = 'Select a student or class to assign a science lesson. The paired game is bundled automatically.';
+
+        if (activitySelectCol) activitySelectCol.classList.add('d-none');
+        if (activitySelect) {
+          activitySelect.disabled = true;
+          activitySelect.required = false;
+        }
+
+        if (lessonSelectCol) {
+          lessonSelectCol.classList.remove('d-none');
+          lessonSelectCol.style.opacity = '0';
+        }
+        if (lessonSelect) {
+          lessonSelect.disabled = false;
+          lessonSelect.required = true;
+        }
+
+        updateLessonFormState();
+      }
+
+      // Smoothly fade back in
+      requestAnimationFrame(() => {
+        fadeEls.forEach(el => {
+          if (el) el.style.opacity = '1';
+        });
+        if (incomingCol) incomingCol.style.opacity = '1';
+      });
+    }, 120);
   }
 
   if (modeLessonRadio) {
