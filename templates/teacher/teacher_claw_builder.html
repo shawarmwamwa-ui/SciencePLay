@@ -610,6 +610,20 @@
                 </div>
               </div>
 
+              <!-- 2-Chute Pedagogical Guidance Callout -->
+              <div class="alert alert-warning border-2 rounded-4 p-3 mb-4 d-flex align-items-start gap-3 shadow-sm" style="border-color: #f59e0b !important; background: #fffbeb;">
+                <div class="fs-3 text-warning"><i class="bi bi-lightbulb-fill"></i></div>
+                <div>
+                  <h6 class="fw-bold text-dark mb-1">Claw Machine Cabinet Rule: 2-Chute Target Matching</h6>
+                  <p class="small text-secondary mb-1">
+                    The physical claw machine arcade stage features <strong>2 drop zones (Left Chute vs Right Chute)</strong>. If your science lesson covers 3+ states or concepts (such as <em>Solid, Liquid, and Gas</em>), frame this sorting game as a focused comparison (e.g., <strong>Solid vs. Liquid</strong>, or <strong>Solids vs. Non-Solids</strong>).
+                  </p>
+                  <p class="small text-danger fw-bold mb-0">
+                    <i class="bi bi-check2-circle me-1"></i>Every item configured below must be mapped to Chute 1 or Chute 2 so students always have a matching target chute to score points!
+                  </p>
+                </div>
+              </div>
+
               <!-- STEP 2: Configure 2 Chutes (Left & Right Drop Zones) -->
               <div class="builder-step-card">
                 <div class="builder-step-header d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -1036,20 +1050,42 @@
       });
 
       // Keep round size automatically synchronized to total objects created
+      const maxAllowed = getMaxAllowedObjects();
       const roundInput = document.getElementById('roundSizeInput');
       if (roundInput) {
-        roundInput.value = objects.length;
-        roundInput.max = Math.max(50, objects.length);
+        roundInput.value = Math.min(objects.length, maxAllowed);
+        roundInput.max = maxAllowed;
       }
       const countBadge = document.getElementById('objectsCountBadge');
       if (countBadge) {
-        countBadge.textContent = `${objects.length} Objects`;
+        const diffText = document.getElementById('difficultyLevelInput')?.value || 'Level 1 — Easy';
+        const tierName = diffText.includes('Easy') ? 'Easy' : (diffText.includes('Medium') ? 'Medium' : 'Hard');
+        countBadge.textContent = `${objects.length} / ${maxAllowed} Objects (${tierName} Cap)`;
+        if (objects.length > maxAllowed) {
+          countBadge.className = 'badge bg-danger text-white border border-danger px-3 py-1 rounded-pill fw-bold';
+        } else {
+          countBadge.className = 'badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill fw-bold';
+        }
       }
 
       updateLiveCanvas();
     }
 
+    function getMaxAllowedObjects() {
+      const val = (document.getElementById('difficultyLevelInput')?.value || '').toLowerCase();
+      if (val.includes('easy')) return 8;
+      if (val.includes('medium')) return 12;
+      if (val.includes('hard')) return 16;
+      return 16;
+    }
+
     function addObject() {
+      const maxAllowed = getMaxAllowedObjects();
+      if (objects.length >= maxAllowed) {
+        const diffText = document.getElementById('difficultyLevelInput')?.value || 'this level';
+        showBuilderToast(`Item limit reached (${maxAllowed} max for ${diffText}). Select a higher difficulty level to add more items.`, "warning");
+        return;
+      }
       const defaultCategory = chutes.length > 0 ? chutes[0].id : 'solid';
       objects.push({
         id: objects.length + 1,
@@ -1225,6 +1261,23 @@
         }
       }
 
+      // Check difficulty limits
+      const maxAllowed = getMaxAllowedObjects();
+      if (objects.length > maxAllowed) {
+        const diffName = document.getElementById('difficultyLevelInput').value;
+        showBuilderToast(`You have ${objects.length} items, which exceeds the limit of ${maxAllowed} items for ${diffName}. Please delete ${objects.length - maxAllowed} item(s) or select a higher difficulty tier.`, "danger");
+        return;
+      }
+
+      // Check that every object maps to Chute 1 or Chute 2
+      const validCategoryIds = new Set(chutes.map(c => c.id));
+      for (let i = 0; i < objects.length; i++) {
+        if (!validCategoryIds.has(objects[i].categoryId)) {
+          showBuilderToast(`Object "${objects[i].label}" is not assigned to either Chute 1 or Chute 2. Every item must have a valid destination chute.`, "danger");
+          return;
+        }
+      }
+
       // Assign chute sequential clean IDs
       chutes[0].id = chutes[0].label.toLowerCase().replace(/[^a-z0-9]/g, '_') || "category_1";
       chutes[1].id = chutes[1].label.toLowerCase().replace(/[^a-z0-9]/g, '_') || "category_2";
@@ -1250,7 +1303,14 @@
       document.getElementById('activityTitleInput')?.addEventListener('input', updateLiveCanvas);
       document.getElementById('activityInstructionsInput')?.addEventListener('input', updateLiveCanvas);
       document.getElementById('roundSizeInput')?.addEventListener('input', updateLiveCanvas);
-      document.getElementById('difficultyLevelInput')?.addEventListener('change', updateLiveCanvas);
+      document.getElementById('difficultyLevelInput')?.addEventListener('change', () => {
+        const maxAllowed = getMaxAllowedObjects();
+        if (objects.length > maxAllowed) {
+          showBuilderToast(`Notice: You have ${objects.length} items, which exceeds the ${maxAllowed}-item limit for ${document.getElementById('difficultyLevelInput').value}. Please reduce items or select a higher tier before saving.`, "warning");
+        }
+        renderObjects();
+        updateLiveCanvas();
+      });
     });
   </script>
 </body>

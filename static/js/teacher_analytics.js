@@ -40,11 +40,141 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Initialize Most Missed Concepts Visual Chart (Chart.js)
+  function initMostMissedChart() {
+    const canvas = document.getElementById('mostMissedChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    let labels = [];
+    let misses = [];
+    let types = [];
+    try {
+      labels = JSON.parse(canvas.getAttribute('data-chart-labels') || '[]');
+      misses = JSON.parse(canvas.getAttribute('data-chart-misses') || '[]');
+      types = JSON.parse(canvas.getAttribute('data-chart-types') || '[]');
+    } catch (e) {
+      return;
+    }
+
+    if (!labels.length || !misses.length) return;
+
+    const ctx = canvas.getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Total Misses',
+          data: misses,
+          backgroundColor: [
+            'rgba(239, 68, 68, 0.85)',
+            'rgba(249, 115, 22, 0.85)',
+            'rgba(245, 158, 11, 0.85)',
+            'rgba(234, 179, 8, 0.85)',
+            'rgba(99, 102, 241, 0.85)',
+            'rgba(139, 92, 246, 0.85)',
+            'rgba(236, 72, 153, 0.85)',
+            'rgba(20, 184, 166, 0.85)'
+          ],
+          borderColor: [
+            '#dc2626',
+            '#ea580c',
+            '#d97706',
+            '#ca8a04',
+            '#4f46e5',
+            '#7c3aed',
+            '#db2777',
+            '#0d9488'
+          ],
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            titleFont: { size: 13, family: 'Plus Jakarta Sans', weight: 'bold' },
+            bodyFont: { size: 12, family: 'Plus Jakarta Sans' },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              afterLabel: function(ctx) {
+                const idx = ctx.dataIndex;
+                return types[idx] ? `Context: ${types[idx]}` : '';
+              },
+              label: function(ctx) {
+                return ` ${ctx.parsed.y} miss${ctx.parsed.y === 1 ? '' : 'es'}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: {
+              font: { family: 'Plus Jakarta Sans', weight: '600', size: 11 },
+              color: '#475569'
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1,
+              precision: 0,
+              font: { family: 'Plus Jakarta Sans', weight: '500', size: 11 },
+              color: '#64748b'
+            },
+            grid: {
+              color: '#f1f5f9'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Initialize retry table game filter
+  function initRetryGameFilter() {
+    const filterSelect = document.getElementById('retryGameFilter');
+    const table = document.getElementById('retry-table');
+    if (!filterSelect || !table) return;
+
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    const allRows = Array.from(tbody.querySelectorAll('.retry-table-row'));
+    if (!allRows.length) return;
+
+    filterSelect.addEventListener('change', () => {
+      const selectedGame = filterSelect.value.trim().toLowerCase();
+
+      allRows.forEach(row => {
+        const rowGame = (row.getAttribute('data-game') || '').toLowerCase();
+        if (selectedGame === 'all' || rowGame === selectedGame) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      // Re-trigger pagination on filtered rows
+      if (typeof setupTablePagination === 'function') {
+        setupTablePagination('#retry-table', '#retry-pagination-wrap', '#retry-page-info', '#retry-pagination-nav', 8, 1, false);
+      }
+    });
+  }
+
   // Initialize pagination for all tables across both tabs using centralized teacher.js helper
   if (typeof setupTablePagination === 'function') {
     setupTablePagination('#top-students-table', '#top-students-pagination-wrap', '#top-students-page-info', '#top-students-pagination-nav', 5);
-    setupTablePagination('#missed-lessons-table', '#missed-lessons-pagination-wrap', '#missed-lessons-page-info', '#missed-lessons-pagination-nav', 5);
-    setupTablePagination('#missed-activities-table', '#missed-activities-pagination-wrap', '#missed-activities-page-info', '#missed-activities-pagination-nav', 5);
+    setupTablePagination('#struggle-breakdown-table', '#struggle-breakdown-pagination-wrap', '#struggle-breakdown-page-info', '#struggle-breakdown-pagination-nav', 6);
     setupTablePagination('#retry-table', '#retry-pagination-wrap', '#retry-page-info', '#retry-pagination-nav', 8);
     setupTablePagination('#tracker-table', '#tracker-pagination-wrap', '#tracker-page-info', '#tracker-pagination-nav', 5);
     setupTablePagination('#attempts-table', '#attempts-pagination-wrap', '#attempts-page-info', '#attempts-pagination-nav', 5);
@@ -72,7 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const missesEl = document.getElementById('strugglingModalMisses');
     const countPillEl = document.getElementById('strugglingModalCountPill');
     const studentListEl = document.getElementById('strugglingModalStudentList');
-    const searchInput = document.getElementById('strugglingModalSearchInput');
 
     let currentStudents = [];
 
@@ -145,5 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  initMostMissedChart();
+  initRetryGameFilter();
   initStrugglingStudentsModal();
 });

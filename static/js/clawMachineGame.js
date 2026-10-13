@@ -2,7 +2,7 @@
 // Clean rebuild of the Living vs Non-Living claw machine.
 
 import { getClawGameObjects } from './gameObjects.js';
-import { playVoicePrompt } from './ttsHelper.js';
+import { speakText, stopVoicePrompt } from './ttsHelper.js';
 
 const LANE_COUNT = 4;
 const DEFAULT_ATTEMPT_LIMIT = 3;
@@ -749,7 +749,11 @@ async function dropObject() {
 
     if (isCorrect) {
       playSound('correct');
-      playVoicePrompt('claw_correct', 'Correct! Good job!');
+      if (object.explanation) {
+        speakText(object.explanation);
+      } else {
+        speakText(`Correct! ${object.name} goes into ${slot.bin.label}.`);
+      }
       object.wasCorrect = true;
       state.streak = (state.streak || 0) + 1;
       state.correctFirstTry += 1;
@@ -762,7 +766,7 @@ async function dropObject() {
       setMessage(`✓ Correct! ${object.name} is a ${slot.bin.label}. (+${earned} pts)`, 'success');
     } else {
       playSound('wrong');
-      playVoicePrompt('claw_wrong', 'Oops! Try again!');
+      speakText(`Oops! ${object.name} does not belong in ${slot.bin.label}. Try another chute!`);
       object.wasCorrect = false;
       state.wrongDrops += 1;
       state.streak = 0;
@@ -907,7 +911,7 @@ function bindTTS() {
   if (!ttsBtn) return;
   ttsBtn.onclick = () => {
     const textToRead = `${state.title || 'Claw Machine'}. ${state.instructions || 'Sort the objects into the correct bins.'}`;
-    playVoicePrompt('claw_instructions', textToRead);
+    speakText(textToRead);
   };
   ttsBound = true;
 }
@@ -1149,7 +1153,7 @@ async function initGame() {
       }
     } else {
       setMessage(resumed ? 'Resumed from where you left off! Move the claw to continue.' : 'Move the claw, grab an object, then drop it into the matching bin.', 'primary');
-      playVoicePrompt('claw_intro', 'Move the claw, grab an item, and drop it into a chute!');
+      speakText('Move the claw, grab an item, and drop it into the matching chute!');
     }
     bindExitHandlers();
   } catch (error) {

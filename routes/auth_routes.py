@@ -47,7 +47,10 @@ def logout():
     if user_id:
         user = User.query.get(user_id)
         if user:
-            user.last_seen = None
+            from datetime import timedelta
+            # Mark offline immediately by placing last_seen just outside the 3-minute online window,
+            # while permanently preserving the actual timestamp of their activity!
+            user.last_seen = datetime.utcnow() - timedelta(minutes=4)
             try:
                 db.session.commit()
             except Exception:

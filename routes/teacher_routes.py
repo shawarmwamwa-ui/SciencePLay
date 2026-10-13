@@ -73,6 +73,47 @@ def format_time_duration(seconds):
     return f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
 
 
+def get_students_effective_last_seen_map():
+    """Returns a dict {student_id: datetime} representing the most recent timestamp of activity across all tables."""
+    result = {}
+    try:
+        for u in User.query.filter_by(role='student').all():
+            if u.last_seen:
+                result[u.id] = u.last_seen
+
+        al_max = db.session.query(
+            AttemptLog.student_id, db.func.max(AttemptLog.created_at)
+        ).filter(AttemptLog.created_at.isnot(None)).group_by(AttemptLog.student_id).all()
+        for s_id, ts in al_max:
+            if s_id and ts and (s_id not in result or ts > result[s_id]):
+                result[s_id] = ts
+
+        lal_max = db.session.query(
+            LessonAttemptLog.student_id, db.func.max(LessonAttemptLog.created_at)
+        ).filter(LessonAttemptLog.created_at.isnot(None)).group_by(LessonAttemptLog.student_id).all()
+        for s_id, ts in lal_max:
+            if s_id and ts and (s_id not in result or ts > result[s_id]):
+                result[s_id] = ts
+
+        lp_max = db.session.query(
+            LessonProgress.student_id,
+            db.func.max(db.func.coalesce(LessonProgress.updated_at, LessonProgress.completed_at))
+        ).group_by(LessonProgress.student_id).all()
+        for s_id, ts in lp_max:
+            if s_id and ts and (s_id not in result or ts > result[s_id]):
+                result[s_id] = ts
+
+        pl_max = db.session.query(
+            ProgressLog.student_id, db.func.max(ProgressLog.completed_at)
+        ).filter(ProgressLog.completed_at.isnot(None)).group_by(ProgressLog.student_id).all()
+        for s_id, ts in pl_max:
+            if s_id and ts and (s_id not in result or ts > result[s_id]):
+                result[s_id] = ts
+    except Exception:
+        pass
+    return result
+
+
 def build_live_lesson_tracker(online_students_set=None):
     try:
         ensure_trixia_lesson_progress()
@@ -81,6 +122,8 @@ def build_live_lesson_tracker(online_students_set=None):
     if online_students_set is None:
         online_threshold = datetime.utcnow() - timedelta(minutes=3)
         online_students_set = set(u.id for u in User.query.filter(User.role == 'student', User.last_seen >= online_threshold).all())
+
+    effective_last_seen_map = get_students_effective_last_seen_map()
 
     lesson_progress_records = LessonProgress.query.join(
         User, User.id == LessonProgress.student_id
@@ -269,7 +312,9 @@ def build_live_lesson_tracker(online_students_set=None):
         if lp.student and lp.student.is_archived:
             continue
 
-        s_last_seen = lp.student.last_seen if lp.student else None
+        s_last_seen = effective_last_seen_map.get(lp.student_id) or (lp.student.last_seen if lp.student else None)
+        if not s_last_seen and lp:
+            s_last_seen = lp.updated_at or lp.completed_at or (lp.student.created_at if lp.student else None)
         is_stud_online = lp.student_id in online_students_set
         s_rel = format_relative_time(s_last_seen) if not is_stud_online else 'Online Now'
         s_fmt = to_ph_time(s_last_seen).strftime('%b %d, %Y at %I:%M %p') if s_last_seen else 'Never active'
@@ -402,13 +447,36 @@ def get_student_retry_progression():
     return retry_progression
 
 
+def get_recommendation_for_concept(concept_name, activity_type='', engine=''):
+    """Generates targeted pedagogical recommendation based on the concept and activity context."""
+    c_lower = (concept_name or '').lower()
+    t_lower = (activity_type or '').lower()
+    
+    if any(k in c_lower for k in ['living', 'non-living', 'rock', 'chair', 'plant', 'animal', 'water', 'dog', 'cat', 'tree', 'sun', 'puddle']):
+        return "Reinforce core characteristics of living vs non-living (breathing, growth, reproduction) with real-world examples before sorting."
+    elif any(k in c_lower for k in ['solid', 'liquid', 'gas', 'steam', 'ice', 'matter', 'chair', 'rock', 'water']):
+        return "Demonstrate observable shape and volume properties using hands-on water and ice examples before chute categorization."
+    elif any(k in c_lower for k in ['body', 'fin', 'wing', 'tail', 'leg', 'beak', 'ear', 'horn']):
+        return "Review animal outer body adaptations using illustrated cards to help students identify which body parts belong to each animal."
+    elif any(k in c_lower for k in ['root', 'stem', 'leaf', 'flower', 'seed', 'petal']):
+        return "Guide student through step-by-step botanical structures with interactive diagram assembly before independent games."
+    elif any(k in c_lower for k in ['metal', 'magnet', 'recycle', 'plastic', 'paper', 'organic']):
+        return "Provide tactile material sorting practice to clarify magnetic, biodegradable, and recyclable distinctions."
+    else:
+        return f"Review foundational concept '{concept_name}' through guided multimedia slides and reassign supplementary practice."
+
+
 def get_struggling_concepts(is_lesson=True, limit=None):
-    """Returns missed questions/items grouped with miss counts and distinct student names who struggled."""
+    """Returns missed questions/items grouped with miss counts, lesson context, pedagogical recommendations, and distinct student names who struggled."""
     object_library = {obj['id']: obj for obj in load_teacher_object_library()}
     query = db.session.query(
         AttemptObjectLog.object_id,
+        Activity.id.label('activity_id'),
         Activity.type.label('activity_type'),
         Activity.engine.label('activity_engine'),
+        Activity.lesson_id.label('lesson_id'),
+        Lesson.title.label('lesson_title'),
+        User.id.label('student_id'),
         User.name.label('student_name'),
         User.username.label('student_username'),
         db.func.count(AttemptObjectLog.id).label('miss_count')
@@ -416,6 +484,8 @@ def get_struggling_concepts(is_lesson=True, limit=None):
         AttemptLog, AttemptLog.id == AttemptObjectLog.attempt_log_id
     ).join(
         Activity, Activity.id == AttemptLog.activity_id
+    ).outerjoin(
+        Lesson, Lesson.id == Activity.lesson_id
     ).join(
         User, User.id == AttemptLog.student_id
     ).filter(
@@ -435,26 +505,40 @@ def get_struggling_concepts(is_lesson=True, limit=None):
 
     raw_results = query.group_by(
         AttemptObjectLog.object_id,
+        Activity.id,
         Activity.type,
         Activity.engine,
+        Activity.lesson_id,
+        Lesson.title,
+        User.id,
         User.name,
         User.username
     ).all()
 
     grouped = {}
     for r in raw_results:
-        key = (r.object_id, r.activity_type)
+        key = (r.object_id, r.activity_id, r.activity_type)
         if key not in grouped:
-            grouped[key] = {'misses': 0, 'students': []}
+            grouped[key] = {
+                'misses': 0,
+                'students': [],
+                'activity_id': r.activity_id,
+                'activity_type': r.activity_type or 'Interactive Game',
+                'activity_engine': r.activity_engine or 'game',
+                'lesson_id': r.lesson_id,
+                'lesson_title': r.lesson_title or (f"Lesson #{r.lesson_id}" if r.lesson_id else "General Science Module")
+            }
         grouped[key]['misses'] += r.miss_count
         student_display = r.student_name or r.student_username
         if student_display:
-            existing = next((s for s in grouped[key]['students'] if s['name'] == student_display), None)
+            existing = next((s for s in grouped[key]['students'] if s.get('id') == r.student_id or s.get('name') == student_display), None)
             if existing:
                 existing['miss_count'] += r.miss_count
             else:
                 grouped[key]['students'].append({
+                    'id': r.student_id,
                     'name': student_display,
+                    'username': r.student_username or '',
                     'miss_count': int(r.miss_count or 1)
                 })
 
@@ -462,7 +546,7 @@ def get_struggling_concepts(is_lesson=True, limit=None):
         val['students'].sort(key=lambda s: s['miss_count'], reverse=True)
 
     items = []
-    for (obj_id_raw, act_type), val in grouped.items():
+    for (obj_id_raw, act_id, act_type), val in grouped.items():
         obj_id = str(obj_id_raw)
         obj_name = object_library.get(obj_id, {}).get('label')
         if not obj_name:
@@ -473,11 +557,19 @@ def get_struggling_concepts(is_lesson=True, limit=None):
         if not obj_name:
             obj_name = format_item_name(obj_id)
 
+        rec = get_recommendation_for_concept(obj_name, val['activity_type'], val['activity_engine'])
+
         items.append({
             'name': obj_name,
-            'activity_type': act_type,
+            'object_id': obj_id,
+            'activity_id': val['activity_id'],
+            'activity_type': val['activity_type'],
+            'activity_engine': val['activity_engine'],
+            'lesson_id': val['lesson_id'],
+            'lesson_title': val['lesson_title'],
             'misses': val['misses'],
-            'students': val['students']
+            'students': val['students'],
+            'recommendation': rec
         })
 
     items.sort(key=lambda x: x['misses'], reverse=True)
@@ -734,6 +826,7 @@ def students():
     for aa in all_activity_assignments:
         aa_by_student.setdefault(aa.student_id, []).append(aa)
 
+    effective_map = get_students_effective_last_seen_map()
     students_data = []
     online_count = 0
     total_class_progress = 0
@@ -773,10 +866,11 @@ def students():
 
         s_attempts = attempts_by_student.get(s.id, [])
         latest_attempt_date = max((a.created_at for a in s_attempts if a.created_at), default=None)
-        latest_active = latest_attempt_date or s.last_seen or s.created_at
+        eff_last_seen = effective_map.get(s.id) or latest_attempt_date or s.last_seen or s.created_at
+        latest_active = eff_last_seen
 
-        s_rel = format_relative_time(s.last_seen) if not is_online else 'Online Now'
-        s_fmt = to_ph_time(s.last_seen).strftime('%b %d, %Y at %I:%M %p') if s.last_seen else 'Never active'
+        s_rel = format_relative_time(eff_last_seen) if not is_online else 'Online Now'
+        s_fmt = to_ph_time(eff_last_seen).strftime('%b %d, %Y at %I:%M %p') if eff_last_seen else 'Never active'
 
         item = {
             'id': s.id,
@@ -785,7 +879,7 @@ def students():
             'is_online': is_online,
             'is_archived': bool(s.is_archived),
             'deleted_at': s.deleted_at,
-            'last_seen': s.last_seen,
+            'last_seen': eff_last_seen,
             'last_seen_relative': s_rel,
             'last_seen_formatted': s_fmt,
             'latest_active': latest_active,
@@ -890,6 +984,47 @@ def lessons():
     active_activity_assignments = [aa for aa in activity_assignments if not aa.is_archived]
     archived_activity_assignments = [aa for aa in activity_assignments if aa.is_archived]
 
+    # Containerize lesson assignments per lesson module
+    lesson_groups_dict = {}
+    for la in active_lesson_assignments:
+        lid = la.lesson_id
+        if lid not in lesson_groups_dict:
+            lesson_groups_dict[lid] = {
+                'lesson': la.lesson,
+                'lesson_id': lid,
+                'title': la.lesson.title if la.lesson else f'Lesson #{lid}',
+                'assignments': [],
+                'total_assigned': 0,
+                'completed_count': 0
+            }
+        lesson_groups_dict[lid]['assignments'].append(la)
+        lesson_groups_dict[lid]['total_assigned'] += 1
+        if la.status == 'completed':
+            lesson_groups_dict[lid]['completed_count'] += 1
+    lesson_assignment_groups = list(lesson_groups_dict.values())
+    lesson_assignment_groups.sort(key=lambda g: g['title'])
+
+    # Containerize activity assignments per game/activity
+    activity_groups_dict = {}
+    for aa in active_activity_assignments:
+        aid = aa.activity_id
+        if aid not in activity_groups_dict:
+            activity_groups_dict[aid] = {
+                'activity': aa.activity,
+                'activity_id': aid,
+                'title': aa.activity.type if aa.activity else f'Activity #{aid}',
+                'engine': aa.activity.engine if aa.activity else 'game',
+                'assignments': [],
+                'total_assigned': 0,
+                'completed_count': 0
+            }
+        activity_groups_dict[aid]['assignments'].append(aa)
+        activity_groups_dict[aid]['total_assigned'] += 1
+        if aa.status in ('completed', 'attempts_exhausted'):
+            activity_groups_dict[aid]['completed_count'] += 1
+    activity_assignment_groups = list(activity_groups_dict.values())
+    activity_assignment_groups.sort(key=lambda g: g['title'])
+
     active_students = [s for s in students if not s.is_archived]
 
     existing_assignments = {
@@ -907,6 +1042,8 @@ def lessons():
         archived_lesson_assignments=archived_lesson_assignments,
         activity_assignments=active_activity_assignments,
         archived_activity_assignments=archived_activity_assignments,
+        lesson_assignment_groups=lesson_assignment_groups,
+        activity_assignment_groups=activity_assignment_groups,
         lesson_activity_map=lesson_activity_map,
         existing_assignments=existing_assignments,
         completed_lessons=completed_lessons,
@@ -1447,19 +1584,22 @@ def analytics():
         if lp.student_id and lp.student_id not in student_time_map:
             student_time_map[lp.student_id] = (lp.total_time_spent or lp.time_spent or 0)
 
+    effective_map = get_students_effective_last_seen_map()
+
     students_time_list = []
     for s in User.query.filter(User.role == 'student', (User.is_archived == False) | (User.is_archived == None)).order_by(User.name.asc()).all():
         s_sec = student_time_map.get(s.id, 0)
+        eff_dt = effective_map.get(s.id) or s.last_seen or s.created_at
         is_online = bool(s.last_seen and s.last_seen >= online_threshold)
-        s_rel = format_relative_time(s.last_seen) if not is_online else 'Online Now'
-        s_fmt = to_ph_time(s.last_seen).strftime('%b %d, %Y at %I:%M %p') if s.last_seen else 'Never active'
+        s_rel = format_relative_time(eff_dt) if not is_online else 'Online Now'
+        s_fmt = to_ph_time(eff_dt).strftime('%b %d, %Y at %I:%M %p') if eff_dt else 'Never active'
         students_time_list.append({
             'student_id': s.id,
             'name': s.name,
             'username': s.username,
             'time_seconds': s_sec,
             'time_formatted': format_time_duration(s_sec),
-            'last_seen': s.last_seen,
+            'last_seen': eff_dt,
             'is_online': is_online,
             'last_seen_relative': s_rel,
             'last_seen_formatted': s_fmt
@@ -1489,9 +1629,10 @@ def analytics():
 
     all_top_students = []
     for idx, row in enumerate(all_top_students_raw):
+        eff_dt = effective_map.get(row.id) or row.last_seen
         is_online = bool(row.last_seen and row.last_seen >= online_threshold)
-        s_rel = format_relative_time(row.last_seen) if not is_online else 'Online Now'
-        s_fmt = to_ph_time(row.last_seen).strftime('%b %d, %Y at %I:%M %p') if row.last_seen else 'Never active'
+        s_rel = format_relative_time(eff_dt) if not is_online else 'Online Now'
+        s_fmt = to_ph_time(eff_dt).strftime('%b %d, %Y at %I:%M %p') if eff_dt else 'Never active'
         all_top_students.append({
             'rank': idx + 1,
             'id': row.id,
@@ -1499,7 +1640,7 @@ def analytics():
             'username': row.username,
             'total_score': int(row.total_score or 0),
             'activities_completed': int(row.activities_completed or 0),
-            'last_seen': row.last_seen,
+            'last_seen': eff_dt,
             'is_online': is_online,
             'last_seen_relative': s_rel,
             'last_seen_formatted': s_fmt
@@ -1517,6 +1658,14 @@ def analytics():
     # --- Most Missed Items with Student Names ---
     analytics_missed_lessons = get_struggling_concepts(is_lesson=True)
     analytics_missed_activities = get_struggling_concepts(is_lesson=False)
+
+    # Combined struggling concepts list for comprehensive table & visual chart
+    all_struggling_concepts = analytics_missed_lessons + analytics_missed_activities
+    all_struggling_concepts.sort(key=lambda x: x['misses'], reverse=True)
+
+    struggle_chart_labels = [c['name'] for c in all_struggling_concepts[:8]]
+    struggle_chart_misses = [c['misses'] for c in all_struggling_concepts[:8]]
+    struggle_chart_types = [c['activity_type'] for c in all_struggling_concepts[:8]]
 
     # --- Per-game leaderboards for dashboard widget ---
     def build_teacher_game_lb(activity_type_fragment):
@@ -1581,7 +1730,11 @@ def analytics():
         plant_leaderboard_rows=plant_leaderboard_rows,
         all_top_students=all_top_students,
         analytics_missed_lessons=analytics_missed_lessons,
-        analytics_missed_activities=analytics_missed_activities
+        analytics_missed_activities=analytics_missed_activities,
+        all_struggling_concepts=all_struggling_concepts,
+        struggle_chart_labels=struggle_chart_labels,
+        struggle_chart_misses=struggle_chart_misses,
+        struggle_chart_types=struggle_chart_types
     )
 
 
@@ -2282,6 +2435,15 @@ def save_claw_machine():
                 {"id": "category_1", "label": "Chute 1", "icon": "📦", "color": "#60a5fa"},
                 {"id": "category_2", "label": "Chute 2", "icon": "📦", "color": "#f59e0b"}
             ]
+
+    # Enforce item limits based on difficulty level: Easy (max 8), Medium (max 12), Hard (max 16)
+    diff_lower = difficulty.lower()
+    max_items = 8 if 'easy' in diff_lower else (12 if 'medium' in diff_lower else 16)
+    if len(objects) > max_items:
+        objects = objects[:max_items]
+        flash(f"Activity items capped to {max_items} objects to match {difficulty}.", "info")
+
+    round_size = min(len(objects), max_items) if objects else 8
 
     valid_bin_ids = {b['id'] for b in bins}
     for obj in objects:

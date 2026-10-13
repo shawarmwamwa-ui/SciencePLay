@@ -371,123 +371,199 @@
             <!-- Tab Contents -->
             <div class="tab-content" id="lessonsViewTabContent">
 
-              <!-- TAB 1: Active Student Coursework Assignments -->
+              <!-- TAB 1: Active Student Coursework Assignments (Containerized per Lesson/Activity) -->
               <div class="tab-pane fade show active" id="pane-active-assignments" role="tabpanel" aria-labelledby="tab-active-assignments">
                 <div class="row g-4">
-                  <!-- Lesson Assignments Table -->
+                  <!-- Lesson Assignments Containers -->
                   <div class="col-lg-6">
                     <section class="table-shell teacher-table-shell h-100 d-flex flex-column justify-content-between" id="lesson-assignments-section">
                       <div>
                         <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
-                          <h2 class="h5 mb-0"><i class="bi bi-book me-2 text-primary"></i>Lesson Assignments</h2>
-                          <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">{{ lesson_assignments|length }} Assigned</span>
+                          <h2 class="h5 mb-0"><i class="bi bi-book me-2 text-primary"></i>Lesson Coursework Modules</h2>
+                          <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">{{ lesson_assignment_groups|length }} Lessons</span>
+                            <span class="badge bg-light text-dark border rounded-pill">{{ lesson_assignments|length }} Assigned</span>
+                          </div>
                         </div>
-                        <div class="table-responsive">
-                          <table class="table align-middle mb-0">
-                            <thead>
-                              <tr>
-                                <th>Lesson</th>
-                                <th>Student</th>
-                                <th>Status</th>
-                                <th>Due Date</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {% for assignment in lesson_assignments %}
-                                <tr>
-                                  <td><strong class="text-dark">{{ assignment.lesson.title if assignment.lesson else assignment.lesson_id }}</strong></td>
-                                  <td>{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
-                                  <td>
-                                    {% if assignment.status == 'completed' %}
-                                      <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
-                                    {% else %}
-                                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill"><i class="bi bi-hourglass-split me-1"></i>Assigned</span>
-                                    {% endif %}
-                                  </td>
-                                  <td>
-                                    <small class="text-muted">
-                                      {% if assignment.due_date %}
-                                        {{ assignment.due_date.strftime('%b %d, %Y at %I:%M %p') if assignment.due_date.strftime is defined else assignment.due_date }}
-                                      {% else %}
-                                        No due date
-                                      {% endif %}
-                                    </small>
-                                  </td>
-                                </tr>
-                              {% else %}
-                                <tr>
-                                  <td colspan="4" class="text-center text-muted py-4">No lesson assignments found. Use the quick form above to assign a lesson.</td>
-                                </tr>
-                              {% endfor %}
-                            </tbody>
-                          </table>
+
+                        <div class="p-3 d-flex flex-column gap-3" id="lesson-containers-accordion">
+                          {% for group in lesson_assignment_groups %}
+                            {% set pct = ((group.completed_count / group.total_assigned * 100)|round|int) if group.total_assigned > 0 else 0 %}
+                            <div class="card border rounded-3 shadow-none overflow-hidden" style="border-color: #e2e8f0;">
+                              <div class="card-header bg-white py-2.5 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2 cursor-pointer" 
+                                   data-bs-toggle="collapse" 
+                                   data-bs-target="#collapseLessonGroup{{ group.lesson_id }}" 
+                                   aria-expanded="false" 
+                                   aria-controls="collapseLessonGroup{{ group.lesson_id }}">
+                                <div class="d-flex align-items-center gap-2">
+                                  <span class="badge bg-primary-subtle text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-journal-text"></i>
+                                  </span>
+                                  <div>
+                                    <strong class="text-dark d-block" style="font-size: 0.92rem;">{{ group.title }}</strong>
+                                    <div class="d-flex align-items-center gap-2 mt-0.5">
+                                      <small class="text-muted fw-semibold">{{ group.total_assigned }} student{% if group.total_assigned != 1 %}s{% endif %}</small>
+                                      <span class="text-muted small">&bull;</span>
+                                      <small class="text-success fw-bold">{{ group.completed_count }} completed ({{ pct }}%)</small>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                  <div class="progress d-none d-sm-block" style="width: 80px; height: 6px; border-radius: 9999px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                  </div>
+                                  <button type="button" class="btn btn-sm btn-light border rounded-pill px-2.5 py-1 text-primary fw-bold" style="font-size: 0.78rem;">
+                                    View <i class="bi bi-chevron-down ms-1"></i>
+                                  </button>
+                                </div>
+                              </div>
+                              <div id="collapseLessonGroup{{ group.lesson_id }}" class="collapse" data-bs-parent="#lesson-containers-accordion">
+                                <div class="card-body p-0 border-top">
+                                  <div class="table-responsive">
+                                    <table class="table align-middle mb-0" style="font-size: 0.86rem;">
+                                      <thead class="bg-light">
+                                        <tr>
+                                          <th>Student</th>
+                                          <th>Status</th>
+                                          <th>Due Date</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {% for assignment in group.assignments %}
+                                          <tr>
+                                            <td><span class="fw-semibold text-dark">{{ assignment.student.name if assignment.student else assignment.student_id }}</span></td>
+                                            <td>
+                                              {% if assignment.status == 'completed' %}
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
+                                              {% else %}
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill"><i class="bi bi-hourglass-split me-1"></i>Assigned</span>
+                                              {% endif %}
+                                            </td>
+                                            <td>
+                                              <small class="text-muted">
+                                                {% if assignment.due_date %}
+                                                  {{ assignment.due_date.strftime('%b %d, %Y') if assignment.due_date.strftime is defined else assignment.due_date }}
+                                                {% else %}
+                                                  No due date
+                                                {% endif %}
+                                              </small>
+                                            </td>
+                                          </tr>
+                                        {% endfor %}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          {% else %}
+                            <div class="text-center text-muted py-4">No lesson assignments found. Use the quick form above to assign a lesson.</div>
+                          {% endfor %}
                         </div>
                       </div>
                     </section>
                   </div>
 
-                  <!-- Activity Assignments Table -->
+                  <!-- Activity Assignments Containers -->
                   <div class="col-lg-6">
                     <section class="table-shell teacher-table-shell h-100 d-flex flex-column justify-content-between" id="activity-assignments-section">
                       <div>
                         <div class="table-header teacher-table-header d-flex justify-content-between align-items-center">
-                          <h2 class="h5 mb-0"><i class="bi bi-controller me-2 text-success"></i>Activity Assignments</h2>
-                          <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">{{ activity_assignments|length }} Assigned</span>
+                          <h2 class="h5 mb-0"><i class="bi bi-controller me-2 text-success"></i>Interactive Game Containers</h2>
+                          <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">{{ activity_assignment_groups|length }} Games</span>
+                            <span class="badge bg-light text-dark border rounded-pill">{{ activity_assignments|length }} Assigned</span>
+                          </div>
                         </div>
-                        <div class="table-responsive">
-                          <table class="table align-middle mb-0" style="font-size: 0.88rem;">
-                            <thead>
-                              <tr>
-                                <th style="min-width: 120px;">Activity</th>
-                                <th style="min-width: 80px;">Student</th>
-                                <th style="min-width: 95px;">Status</th>
-                                <th style="min-width: 85px;">Due Date</th>
-                                <th class="text-end text-nowrap" style="min-width: 95px;">Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {% for assignment in activity_assignments %}
-                                <tr>
-                                  <td style="max-width: 135px; overflow-wrap: break-word;"><strong class="text-dark">{{ assignment.activity.type if assignment.activity else assignment.activity_id }}</strong></td>
-                                  <td class="text-nowrap">{{ assignment.student.name if assignment.student else assignment.student_id }}</td>
-                                  <td>
-                                    {% if assignment.status == 'completed' %}
-                                      <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold text-nowrap"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
-                                    {% elif assignment.status == 'attempts_exhausted' %}
-                                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill fw-semibold text-nowrap"><i class="bi bi-slash-circle me-1"></i>Exhausted (3/3)</span>
-                                    {% else %}
-                                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold text-nowrap"><i class="bi bi-hourglass-split me-1"></i>In Progress</span>
-                                    {% endif %}
-                                  </td>
-                                  <td>
-                                    <small class="text-muted text-nowrap">
-                                      {% if assignment.due_date %}
-                                        {{ assignment.due_date.strftime('%b %d, %Y') if assignment.due_date.strftime is defined else assignment.due_date }}
-                                      {% else %}
-                                        No due date
-                                      {% endif %}
-                                    </small>
-                                  </td>
-                                  <td class="text-end text-nowrap">
-                                    {% if assignment.status in ['attempts_exhausted', 'completed'] %}
-                                      <form method="POST" action="{{ url_for('teacher.reassign_activity', assignment_id=assignment.id) }}" class="d-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 fw-semibold shadow-sm text-nowrap" style="font-size: 0.8rem;" title="Reassign this activity with 3 fresh attempts">
-                                          <i class="bi bi-arrow-repeat me-1"></i>Reassign
-                                        </button>
-                                      </form>
-                                    {% else %}
-                                      <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 text-nowrap">Active</span>
-                                    {% endif %}
-                                  </td>
-                                </tr>
-                              {% else %}
-                                <tr>
-                                  <td colspan="5" class="text-center text-muted py-4">No activity assignments found. Use the quick form above to assign an activity.</td>
-                                </tr>
-                              {% endfor %}
-                            </tbody>
-                          </table>
+
+                        <div class="p-3 d-flex flex-column gap-3" id="activity-containers-accordion">
+                          {% for group in activity_assignment_groups %}
+                            {% set pct = ((group.completed_count / group.total_assigned * 100)|round|int) if group.total_assigned > 0 else 0 %}
+                            <div class="card border rounded-3 shadow-none overflow-hidden" style="border-color: #e2e8f0;">
+                              <div class="card-header bg-white py-2.5 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2 cursor-pointer" 
+                                   data-bs-toggle="collapse" 
+                                   data-bs-target="#collapseActivityGroup{{ group.activity_id }}" 
+                                   aria-expanded="false" 
+                                   aria-controls="collapseActivityGroup{{ group.activity_id }}">
+                                <div class="d-flex align-items-center gap-2">
+                                  <span class="badge bg-success-subtle text-success rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-joystick"></i>
+                                  </span>
+                                  <div>
+                                    <strong class="text-dark d-block" style="font-size: 0.92rem;">{{ group.title }}</strong>
+                                    <div class="d-flex align-items-center gap-2 mt-0.5">
+                                      <small class="text-muted fw-semibold">{{ group.total_assigned }} student{% if group.total_assigned != 1 %}s{% endif %}</small>
+                                      <span class="text-muted small">&bull;</span>
+                                      <small class="text-success fw-bold">{{ group.completed_count }} completed ({{ pct }}%)</small>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                  <div class="progress d-none d-sm-block" style="width: 80px; height: 6px; border-radius: 9999px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                  </div>
+                                  <button type="button" class="btn btn-sm btn-light border rounded-pill px-2.5 py-1 text-success fw-bold" style="font-size: 0.78rem;">
+                                    View <i class="bi bi-chevron-down ms-1"></i>
+                                  </button>
+                                </div>
+                              </div>
+                              <div id="collapseActivityGroup{{ group.activity_id }}" class="collapse" data-bs-parent="#activity-containers-accordion">
+                                <div class="card-body p-0 border-top">
+                                  <div class="table-responsive">
+                                    <table class="table align-middle mb-0" style="font-size: 0.86rem;">
+                                      <thead class="bg-light">
+                                        <tr>
+                                          <th>Student</th>
+                                          <th>Status</th>
+                                          <th>Due Date</th>
+                                          <th class="text-end">Action</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {% for assignment in group.assignments %}
+                                          <tr>
+                                            <td><span class="fw-semibold text-dark">{{ assignment.student.name if assignment.student else assignment.student_id }}</span></td>
+                                            <td>
+                                              {% if assignment.status == 'completed' %}
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold text-nowrap"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
+                                              {% elif assignment.status == 'attempts_exhausted' %}
+                                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill fw-semibold text-nowrap"><i class="bi bi-slash-circle me-1"></i>Exhausted (3/3)</span>
+                                              {% else %}
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold text-nowrap"><i class="bi bi-hourglass-split me-1"></i>In Progress</span>
+                                              {% endif %}
+                                            </td>
+                                            <td>
+                                              <small class="text-muted text-nowrap">
+                                                {% if assignment.due_date %}
+                                                  {{ assignment.due_date.strftime('%b %d, %Y') if assignment.due_date.strftime is defined else assignment.due_date }}
+                                                {% else %}
+                                                  No due date
+                                                {% endif %}
+                                              </small>
+                                            </td>
+                                            <td class="text-end text-nowrap">
+                                              {% if assignment.status in ['attempts_exhausted', 'completed'] %}
+                                                <form method="POST" action="{{ url_for('teacher.reassign_activity', assignment_id=assignment.id) }}" class="d-inline">
+                                                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                  <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 fw-semibold shadow-sm text-nowrap" style="font-size: 0.78rem;" title="Reassign this activity with 3 fresh attempts">
+                                                    <i class="bi bi-arrow-repeat me-1"></i>Reassign
+                                                  </button>
+                                                </form>
+                                              {% else %}
+                                                <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 text-nowrap">Active</span>
+                                              {% endif %}
+                                            </td>
+                                          </tr>
+                                        {% endfor %}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          {% else %}
+                            <div class="text-center text-muted py-4">No activity assignments found. Use the quick form above to assign an activity.</div>
+                          {% endfor %}
                         </div>
                       </div>
                     </section>
