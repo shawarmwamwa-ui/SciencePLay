@@ -2224,6 +2224,29 @@ def _get_active_game_cards(default_claw_id):
     return activity_cards
 
 
+def _get_archived_game_cards():
+    """Helper to load all archived Claw Machine sorting activity cards"""
+    from routes.student_routes import load_sorting_activity_config
+    raw_activities = Activity.query.filter(
+        Activity.is_archived == True
+    ).order_by(Activity.deleted_at.desc(), Activity.id.desc()).all()
+
+    archived_cards = []
+    for act in raw_activities:
+        cfg = load_sorting_activity_config(act.id)
+        archived_cards.append({
+            'activity': act,
+            'config': cfg,
+            'title': cfg.get('title') or act.type or 'Sorting Game',
+            'instructions': cfg.get('instructions') or '',
+            'bins': cfg.get('bins', []),
+            'objects_count': len(cfg.get('objects', [])),
+            'round_size': cfg.get('round_size', 12),
+            'deleted_at': act.deleted_at.strftime('%b %d, %Y %I:%M %p') if act.deleted_at else 'Archived'
+        })
+    return archived_cards
+
+
 def _get_active_lesson_cards():
     """Helper to load all active Lesson slide cards"""
     lesson_cards = []
@@ -2246,6 +2269,32 @@ def _get_active_lesson_cards():
             })
     except Exception as e:
         print("[Lesson Studio] Notice loading lessons:", e)
+        db.session.rollback()
+    return lesson_cards
+
+
+def _get_archived_lesson_cards():
+    """Helper to load all archived Lesson slide cards"""
+    lesson_cards = []
+    try:
+        raw_lessons = Lesson.query.filter(
+            Lesson.is_archived == True
+        ).order_by(Lesson.deleted_at.desc(), Lesson.id.desc()).all()
+
+        for lsn in raw_lessons:
+            cfg = getattr(lsn, 'config', None) or {}
+            slides = cfg.get('slides', []) if isinstance(cfg, dict) else []
+            lesson_cards.append({
+                'lesson': lsn,
+                'title': lsn.title,
+                'description': lsn.description or '',
+                'slides_count': len(slides) if slides else 5,
+                'has_custom_slides': bool(slides),
+                'deleted_at': lsn.deleted_at.strftime('%b %d, %Y %I:%M %p') if lsn.deleted_at else 'Archived',
+                'config': cfg
+            })
+    except Exception as e:
+        print("[Lesson Studio] Notice loading archived lessons:", e)
         db.session.rollback()
     return lesson_cards
 
@@ -2318,6 +2367,7 @@ def game_studio():
     from routes.student_routes import get_or_create_claw_machine_activity
     default_claw = get_or_create_claw_machine_activity()
     activity_cards = _get_active_game_cards(default_claw.id)
+    archived_cards = _get_archived_game_cards()
     templates = _get_game_engine_templates()
     students = User.query.filter_by(role='student').filter(
         (User.is_archived == False) | (User.is_archived == None)
@@ -2327,6 +2377,7 @@ def game_studio():
         'teacher/teacher_game_studio.html',
         current_user=current_user,
         activity_cards=activity_cards,
+        archived_cards=archived_cards,
         templates=templates,
         default_claw_id=default_claw.id,
         students=students
@@ -2342,6 +2393,7 @@ def lesson_studio():
     log_access(current_user, 'page_view', 'teacher_lesson_studio')
 
     lesson_cards = _get_active_lesson_cards()
+    archived_cards = _get_archived_lesson_cards()
     students = User.query.filter_by(role='student').filter(
         (User.is_archived == False) | (User.is_archived == None)
     ).order_by(User.name.asc()).all()
@@ -2350,6 +2402,7 @@ def lesson_studio():
         'teacher/teacher_lesson_studio.html',
         current_user=current_user,
         lesson_cards=lesson_cards,
+        archived_cards=archived_cards,
         students=students
     )
 
@@ -2551,11 +2604,23 @@ def delete_activity(activity_id):
     """Soft-delete a custom activity"""
     current_user = get_current_user()
     activity = Activity.query.get_or_404(activity_id)
-    activity.is_archived = True
-    activity.deleted_at = datetime.utcnow()
+    activity.archive()
     db.session.commit()
     log_access(current_user, 'archive_custom_activity', f'activity_id={activity_id}')
     flash(f"Activity '{activity.type}' has been moved to archive.", "warning")
+    return redirect(url_for('teacher.game_studio'))
+
+
+@teacher_bp.route('/content/restore/<int:activity_id>', methods=['POST'])
+@require_role('teacher')
+def restore_activity(activity_id):
+    """Restore an archived custom activity to active games"""
+    current_user = get_current_user()
+    activity = Activity.query.get_or_404(activity_id)
+    activity.restore()
+    db.session.commit()
+    log_access(current_user, 'restore_custom_activity', f'activity_id={activity_id}')
+    flash(f"Activity '{activity.type}' has been successfully restored from archive.", "success")
     return redirect(url_for('teacher.game_studio'))
 
 
@@ -2689,11 +2754,23 @@ def delete_lesson(lesson_id):
     """Soft-delete a custom lesson"""
     current_user = get_current_user()
     lesson = Lesson.query.get_or_404(lesson_id)
-    lesson.is_archived = True
-    lesson.deleted_at = datetime.utcnow()
+    lesson.archive()
     db.session.commit()
     log_access(current_user, 'archive_custom_lesson', f'lesson_id={lesson_id}')
     flash(f"Lesson '{lesson.title}' has been moved to archive.", "warning")
+    return redirect(url_for('teacher.lesson_studio'))
+
+
+@teacher_bp.route('/content/lesson/restore/<int:lesson_id>', methods=['POST'])
+@require_role('teacher')
+def restore_lesson(lesson_id):
+    """Restore an archived custom lesson to active lessons"""
+    current_user = get_current_user()
+    lesson = Lesson.query.get_or_404(lesson_id)
+    lesson.restore()
+    db.session.commit()
+    log_access(current_user, 'restore_custom_lesson', f'lesson_id={lesson_id}')
+    flash(f"Lesson '{lesson.title}' has been successfully restored from archive.", "success")
     return redirect(url_for('teacher.lesson_studio'))
 
 

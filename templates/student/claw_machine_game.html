@@ -37,7 +37,7 @@
         <div class="marquee-title">
           <div class="d-flex align-items-center gap-2 flex-wrap">
             {% if is_preview %}
-            <a href="{{ url_for('teacher.content_management') }}" class="game-leave-btn text-white bg-primary border-0" id="btn-claw-back" title="Exit Preview">
+            <a href="{{ url_for('teacher.game_studio') }}" class="game-leave-btn text-white bg-primary border-0" id="btn-claw-back" title="Exit Preview">
               <i class="bi bi-box-arrow-left"></i><span>Exit Preview</span>
             </a>
             <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold"><i class="bi bi-eye-fill me-1"></i>Teacher Preview Mode</span>
@@ -142,8 +142,8 @@
 
         <div class="d-flex justify-content-center align-items-center gap-3 mt-3 flex-wrap">
           {% if is_preview %}
-          <a href="{{ url_for('teacher.content_management') }}" class="btn btn-primary btn-lg px-4 rounded-pill fw-bold" id="btn-finish-playground">
-            <i class="bi bi-box-arrow-left me-1"></i>Back to Content Studio
+          <a href="{{ url_for('teacher.game_studio') }}" class="btn btn-primary btn-lg px-4 rounded-pill fw-bold" id="btn-finish-playground">
+            <i class="bi bi-box-arrow-left me-1"></i>Back to Game Studio
           </a>
           {% else %}
           <a href="{{ url_for('student.activities') }}" class="btn btn-success btn-lg px-4 rounded-pill fw-bold" id="btn-finish-playground">

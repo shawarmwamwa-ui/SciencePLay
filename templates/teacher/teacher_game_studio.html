@@ -241,116 +241,220 @@
               </div>
             </div>
 
-            <!-- Configured Games in Curriculum Catalog -->
-            <div class="dashboard-section teacher-panel p-4 mb-5">
-              <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                <div>
-                  <h2 class="h5 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                    <i class="bi bi-joystick text-primary"></i>
-                    <span>Configured Activities in Curriculum (Games)</span>
-                  </h2>
-                  <p class="teacher-panel-note mb-0 text-muted">Active sorting games available for student assignments and classroom arcade play.</p>
+            <!-- ══════ View Toggle Tabs (Active Games vs Archived Activities) ══════ -->
+            <ul class="nav nav-pills teacher-view-pills mb-4 gap-2" id="gamesStudioTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-active-games" data-bs-toggle="pill" data-bs-target="#pane-active-games" type="button" role="tab" aria-controls="pane-active-games" aria-selected="true">
+                  <i class="bi bi-joystick me-2"></i>Active Games
+                  <span class="badge bg-light text-dark border ms-1 rounded-pill">{{ activity_cards|length }}</span>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-archived-games" data-bs-toggle="pill" data-bs-target="#pane-archived-games" type="button" role="tab" aria-controls="pane-archived-games" aria-selected="false">
+                  <i class="bi bi-archive-fill me-2 text-secondary"></i>Archived Activities
+                  <span class="badge bg-secondary-subtle text-secondary border ms-1 rounded-pill">{{ archived_cards|length if archived_cards else 0 }}</span>
+                </button>
+              </li>
+            </ul>
+
+            <div class="tab-content" id="gamesStudioTabContent">
+              <!-- PANE 1: Active Games -->
+              <div class="tab-pane fade show active" id="pane-active-games" role="tabpanel" aria-labelledby="tab-active-games">
+                <div class="dashboard-section teacher-panel p-4 mb-5">
+                  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div>
+                      <h2 class="h5 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-joystick text-primary"></i>
+                        <span>Configured Activities in Curriculum (Games)</span>
+                      </h2>
+                      <p class="teacher-panel-note mb-0 text-muted">Active sorting games available for student assignments and classroom arcade play.</p>
+                    </div>
+                    <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
+                      <i class="bi bi-plus-circle me-1"></i>New Activity
+                    </a>
+                  </div>
+
+                  {% if activity_cards %}
+                    <div class="activity-catalog-list">
+                      {% for card in activity_cards %}
+                      <div class="activity-row-card">
+                        <div style="min-width: 260px; max-width: 420px;">
+                          <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              <i class="bi bi-joystick me-1"></i>Sorting Claw
+                            </span>
+                            {% if card.is_default %}
+                              <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">Default Game</span>
+                            {% else %}
+                              <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-check-circle-fill me-1"></i>Published
+                              </span>
+                            {% endif %}
+                            {% if card.config and card.config.difficulty %}
+                              <span class="badge bg-warning-subtle text-dark border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">{{ card.config.difficulty }}</span>
+                            {% endif %}
+                            <span class="activity-meta-badge"><i class="bi bi-star-fill text-warning"></i>{{ card.activity.points or 100 }} pts</span>
+                          </div>
+                          <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
+                          <p class="text-muted small mb-2 text-truncate" title="{{ card.instructions }}">
+                            {{ card.instructions or 'Sort each object into the correct chute to win stars.' }}
+                          </p>
+                          
+                          <!-- Chute / Bin chips -->
+                          <div class="d-flex flex-wrap gap-1 align-items-center">
+                            <span class="text-muted small me-1 fw-bold" style="font-size: 0.75rem;">Chutes:</span>
+                            {% for bin in card.bins %}
+                              <span class="chute-chip" style="border-color: {{ bin.color or '#60a5fa' }}40; background: {{ bin.color or '#60a5fa' }}15; color: #1e293b;">
+                                <span>{{ bin.icon or '📦' }}</span>
+                                <span>{{ bin.label }}</span>
+                              </span>
+                            {% endfor %}
+                          </div>
+                        </div>
+
+                        <!-- Meta stats -->
+                        <div class="d-flex align-items-center gap-4 text-center">
+                          <div>
+                            <div class="fw-bold text-dark fs-5">{{ card.objects_count }}</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Objects</div>
+                          </div>
+                          <div>
+                            <div class="fw-bold text-dark fs-5">{{ card.bins|length }}</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Chutes</div>
+                          </div>
+                          <div>
+                            <div class="fw-bold text-dark fs-5">{{ card.round_size }}</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Round Size</div>
+                          </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex align-items-center gap-2">
+                          <a href="{{ url_for('teacher.preview_activity', activity_id=card.activity.id) }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Test Play in Preview Mode">
+                            <i class="bi bi-play-circle-fill"></i>
+                            <span>Test Play</span>
+                          </a>
+                          <a href="{{ url_for('teacher.claw_machine_builder', activity_id=card.activity.id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
+                            <i class="bi bi-pencil-square"></i>
+                            <span>Edit</span>
+                          </a>
+                          <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm"
+                            onclick="openAssignGameModal('{{ card.activity.id }}', '{{ card.title|escape }}')" title="Assign this game directly to students">
+                            <i class="bi bi-journal-plus"></i>
+                            <span>Assign</span>
+                          </button>
+                          {% if not card.is_default %}
+                          <form method="POST" action="{{ url_for('teacher.delete_activity', activity_id=card.activity.id) }}" onsubmit="return confirm('Move activity \'{{ card.title }}\' to archive?');" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Activity">
+                              <i class="bi bi-trash3"></i>
+                            </button>
+                          </form>
+                          {% endif %}
+                        </div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="text-center py-5">
+                      <div class="mb-3">
+                        <span class="rounded-circle d-inline-flex p-3 bg-light text-primary fs-1">
+                          <i class="bi bi-joystick"></i>
+                        </span>
+                      </div>
+                      <h4 class="fw-bold text-dark mb-2">No Custom Activities Yet</h4>
+                      <p class="text-muted mb-4 max-w-md mx-auto">Create your first custom sorting game with personalized chutes, object images, and science explanations.</p>
+                      <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
+                        <i class="bi bi-plus-circle-fill me-1"></i>Create First Activity
+                      </a>
+                    </div>
+                  {% endif %}
                 </div>
-                <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
-                  <i class="bi bi-plus-circle me-1"></i>New Activity
-                </a>
               </div>
 
-              {% if activity_cards %}
-                <div class="activity-catalog-list">
-                  {% for card in activity_cards %}
-                  <div class="activity-row-card">
-                    <div style="min-width: 260px; max-width: 420px;">
-                      <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                        <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
-                          <i class="bi bi-joystick me-1"></i>Sorting Claw
+              <!-- PANE 2: Archived Activities -->
+              <div class="tab-pane fade" id="pane-archived-games" role="tabpanel" aria-labelledby="tab-archived-games">
+                <div class="dashboard-section teacher-panel p-4 mb-5">
+                  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div>
+                      <h2 class="h5 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-archive-fill text-secondary"></i>
+                        <span>Archived Custom Activities</span>
+                      </h2>
+                      <p class="teacher-panel-note mb-0 text-muted">Activities previously moved to archive. You can safely restore any activity back to the active catalog at any time.</p>
+                    </div>
+                  </div>
+
+                  {% if archived_cards %}
+                    <div class="activity-catalog-list">
+                      {% for card in archived_cards %}
+                      <div class="activity-row-card bg-light border-dashed">
+                        <div style="min-width: 260px; max-width: 420px;">
+                          <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              <i class="bi bi-archive me-1"></i>Archived
+                            </span>
+                            <span class="badge bg-white text-muted border rounded-pill px-2 py-1 small">
+                              <i class="bi bi-clock-history me-1"></i>Archived: {{ card.deleted_at }}
+                            </span>
+                          </div>
+                          <h4 class="h6 fw-bold text-dark mb-1 text-decoration-line-through text-muted">{{ card.title }}</h4>
+                          <p class="text-muted small mb-2 text-truncate" title="{{ card.instructions }}">
+                            {{ card.instructions or 'Sort each object into the correct chute to win stars.' }}
+                          </p>
+                          <div class="d-flex flex-wrap gap-1 align-items-center">
+                            <span class="text-muted small me-1 fw-bold" style="font-size: 0.75rem;">Chutes:</span>
+                            {% for bin in card.bins %}
+                              <span class="chute-chip" style="opacity: 0.75; border-color: {{ bin.color or '#60a5fa' }}40; background: {{ bin.color or '#60a5fa' }}15; color: #1e293b;">
+                                <span>{{ bin.icon or '📦' }}</span>
+                                <span>{{ bin.label }}</span>
+                              </span>
+                            {% endfor %}
+                          </div>
+                        </div>
+
+                        <!-- Meta stats -->
+                        <div class="d-flex align-items-center gap-4 text-center opacity-75">
+                          <div>
+                            <div class="fw-bold text-dark fs-5">{{ card.objects_count }}</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Objects</div>
+                          </div>
+                          <div>
+                            <div class="fw-bold text-dark fs-5">{{ card.bins|length }}</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Chutes</div>
+                          </div>
+                          <div>
+                            <div class="fw-bold text-dark fs-5">{{ card.round_size }}</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Round Size</div>
+                          </div>
+                        </div>
+
+                        <!-- Restore action -->
+                        <div class="d-flex align-items-center gap-2">
+                          <form method="POST" action="{{ url_for('teacher.restore_activity', activity_id=card.activity.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Restore this activity to active curriculum">
+                              <i class="bi bi-arrow-counterclockwise fs-6"></i>
+                              <span>Restore Activity</span>
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="text-center py-5">
+                      <div class="mb-3">
+                        <span class="rounded-circle d-inline-flex p-3 bg-light text-muted fs-1">
+                          <i class="bi bi-archive"></i>
                         </span>
-                        {% if card.is_default %}
-                          <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">Default Game</span>
-                        {% else %}
-                          <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
-                            <i class="bi bi-check-circle-fill me-1"></i>Published
-                          </span>
-                        {% endif %}
-                        {% if card.config and card.config.difficulty %}
-                          <span class="badge bg-warning-subtle text-dark border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">{{ card.config.difficulty }}</span>
-                        {% endif %}
-                        <span class="activity-meta-badge"><i class="bi bi-star-fill text-warning"></i>{{ card.activity.points or 100 }} pts</span>
                       </div>
-                      <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
-                      <p class="text-muted small mb-2 text-truncate" title="{{ card.instructions }}">
-                        {{ card.instructions or 'Sort each object into the correct chute to win stars.' }}
-                      </p>
-                      
-                      <!-- Chute / Bin chips -->
-                      <div class="d-flex flex-wrap gap-1 align-items-center">
-                        <span class="text-muted small me-1 fw-bold" style="font-size: 0.75rem;">Chutes:</span>
-                        {% for bin in card.bins %}
-                          <span class="chute-chip" style="border-color: {{ bin.color or '#60a5fa' }}40; background: {{ bin.color or '#60a5fa' }}15; color: #1e293b;">
-                            <span>{{ bin.icon or '📦' }}</span>
-                            <span>{{ bin.label }}</span>
-                          </span>
-                        {% endfor %}
-                      </div>
+                      <h4 class="fw-bold text-dark mb-2">No Archived Activities</h4>
+                      <p class="text-muted mb-0 max-w-md mx-auto">When you archive a custom sorting game, it will appear here safely preserved so you can review or restore it at any time.</p>
                     </div>
-
-                    <!-- Meta stats -->
-                    <div class="d-flex align-items-center gap-4 text-center">
-                      <div>
-                        <div class="fw-bold text-dark fs-5">{{ card.objects_count }}</div>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Objects</div>
-                      </div>
-                      <div>
-                        <div class="fw-bold text-dark fs-5">{{ card.bins|length }}</div>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Chutes</div>
-                      </div>
-                      <div>
-                        <div class="fw-bold text-dark fs-5">{{ card.round_size }}</div>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Round Size</div>
-                      </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="d-flex align-items-center gap-2">
-                      <a href="{{ url_for('teacher.preview_activity', activity_id=card.activity.id) }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Test Play in Preview Mode">
-                        <i class="bi bi-play-circle-fill"></i>
-                        <span>Test Play</span>
-                      </a>
-                      <a href="{{ url_for('teacher.claw_machine_builder', activity_id=card.activity.id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
-                        <i class="bi bi-pencil-square"></i>
-                        <span>Edit</span>
-                      </a>
-                      <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm"
-                        onclick="openAssignGameModal('{{ card.activity.id }}', '{{ card.title|escape }}')" title="Assign this game directly to students">
-                        <i class="bi bi-journal-plus"></i>
-                        <span>Assign</span>
-                      </button>
-                      {% if not card.is_default %}
-                      <form method="POST" action="{{ url_for('teacher.delete_activity', activity_id=card.activity.id) }}" onsubmit="return confirm('Move activity \'{{ card.title }}\' to archive?');" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Activity">
-                          <i class="bi bi-trash3"></i>
-                        </button>
-                      </form>
-                      {% endif %}
-                    </div>
-                  </div>
-                  {% endfor %}
+                  {% endif %}
                 </div>
-              {% else %}
-                <div class="text-center py-5">
-                  <div class="mb-3">
-                    <span class="rounded-circle d-inline-flex p-3 bg-light text-primary fs-1">
-                      <i class="bi bi-joystick"></i>
-                    </span>
-                  </div>
-                  <h4 class="fw-bold text-dark mb-2">No Custom Activities Yet</h4>
-                  <p class="text-muted mb-4 max-w-md mx-auto">Create your first custom sorting game with personalized chutes, object images, and science explanations.</p>
-                  <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
-                    <i class="bi bi-plus-circle-fill me-1"></i>Create First Activity
-                  </a>
-                </div>
-              {% endif %}
+              </div>
             </div>
 
           </div>

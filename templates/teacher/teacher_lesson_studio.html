@@ -186,98 +186,185 @@
               </div>
             </div>
 
-            <!-- Configured Lessons Catalog -->
-            <div class="dashboard-section teacher-panel p-4 mb-5">
-              <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                <div>
-                  <h2 class="h5 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                    <i class="bi bi-journal-bookmark-fill text-success"></i>
-                    <span>Configured Lessons in Curriculum</span>
-                  </h2>
-                  <p class="teacher-panel-note mb-0 text-muted">Slide presentations with voice read-aloud and quick check-for-understanding quizzes.</p>
+            <!-- ══════ View Toggle Tabs (Active Lessons vs Archived Lessons) ══════ -->
+            <ul class="nav nav-pills teacher-view-pills mb-4 gap-2" id="lessonsStudioTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-active-lessons" data-bs-toggle="pill" data-bs-target="#pane-active-lessons" type="button" role="tab" aria-controls="pane-active-lessons" aria-selected="true">
+                  <i class="bi bi-journal-bookmark-fill me-2 text-success"></i>Active Lessons
+                  <span class="badge bg-light text-dark border ms-1 rounded-pill">{{ lesson_cards|length }}</span>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-archived-lessons" data-bs-toggle="pill" data-bs-target="#pane-archived-lessons" type="button" role="tab" aria-controls="pane-archived-lessons" aria-selected="false">
+                  <i class="bi bi-archive-fill me-2 text-secondary"></i>Archived Lessons
+                  <span class="badge bg-secondary-subtle text-secondary border ms-1 rounded-pill">{{ archived_cards|length if archived_cards else 0 }}</span>
+                </button>
+              </li>
+            </ul>
+
+            <div class="tab-content" id="lessonsStudioTabContent">
+              <!-- PANE 1: Active Lessons -->
+              <div class="tab-pane fade show active" id="pane-active-lessons" role="tabpanel" aria-labelledby="tab-active-lessons">
+                <div class="dashboard-section teacher-panel p-4 mb-5">
+                  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div>
+                      <h2 class="h5 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-journal-bookmark-fill text-success"></i>
+                        <span>Configured Lessons in Curriculum</span>
+                      </h2>
+                      <p class="teacher-panel-note mb-0 text-muted">Slide presentations with voice read-aloud and quick check-for-understanding quizzes.</p>
+                    </div>
+                    <a href="{{ url_for('teacher.lesson_builder') }}" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold">
+                      <i class="bi bi-plus-circle me-1"></i>New Lesson
+                    </a>
+                  </div>
+
+                  {% if lesson_cards %}
+                    <div class="activity-catalog-list">
+                      {% for card in lesson_cards %}
+                      <div class="activity-row-card">
+                        <div style="min-width: 260px; max-width: 480px;">
+                          <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              <i class="bi bi-easel me-1"></i>Slide Presentation
+                            </span>
+                            {% if card.has_custom_slides %}
+                              <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-check-circle-fill me-1"></i>Published
+                              </span>
+                            {% else %}
+                              <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">Default Core</span>
+                            {% endif %}
+                            <span class="badge bg-light text-dark border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">{{ card.grade_level }}</span>
+                          </div>
+                          <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
+                          <p class="text-muted small mb-2 text-truncate" title="{{ card.description }}">
+                            {{ card.description or 'Interactive science lesson slides with voice read-aloud and quiz checks.' }}
+                          </p>
+                        </div>
+
+                        <!-- Meta stats -->
+                        <div class="d-flex align-items-center gap-4 text-center">
+                          <div>
+                            <div class="fw-bold text-dark fs-5">{{ card.slides_count }}</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Slides</div>
+                          </div>
+                          <div>
+                            <div class="fw-bold text-dark fs-5"><i class="bi bi-volume-up text-success"></i></div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Read Aloud</div>
+                          </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex align-items-center gap-2">
+                          <a href="{{ url_for('teacher.preview_lesson', lesson_id=card.lesson.id) }}" target="_blank" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Preview Lesson as Student">
+                            <i class="bi bi-play-circle-fill"></i>
+                            <span>Test Play</span>
+                          </a>
+                          <a href="{{ url_for('teacher.lesson_builder', lesson_id=card.lesson.id) }}" class="btn btn-success text-white btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
+                            <i class="bi bi-pencil-square"></i>
+                            <span>Edit Slides</span>
+                          </a>
+                          <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm"
+                            onclick="openAssignLessonModal('{{ card.lesson.id }}', '{{ card.title|escape }}')" title="Assign this lesson directly to students">
+                            <i class="bi bi-journal-plus"></i>
+                            <span>Assign</span>
+                          </button>
+                          {% if card.has_custom_slides and card.lesson.id != 1 %}
+                          <form method="POST" action="{{ url_for('teacher.delete_lesson', lesson_id=card.lesson.id) }}" onsubmit="return confirm('Archive lesson \'{{ card.title }}\'?');" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Lesson">
+                              <i class="bi bi-trash3"></i>
+                            </button>
+                          </form>
+                          {% endif %}
+                        </div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="text-center py-5">
+                      <div class="mb-3">
+                        <span class="rounded-circle d-inline-flex p-3 bg-light text-success fs-1">
+                          <i class="bi bi-easel"></i>
+                        </span>
+                      </div>
+                      <h4 class="fw-bold text-dark mb-2">No Lessons Configured</h4>
+                      <p class="text-muted mb-4 max-w-md mx-auto">Create your first custom slide lesson deck with live canvas editing and voice narration.</p>
+                      <a href="{{ url_for('teacher.lesson_builder') }}" class="btn btn-success text-white rounded-pill px-4 py-2 fw-bold shadow-sm">
+                        <i class="bi bi-plus-circle-fill me-1"></i>Create First Lesson
+                      </a>
+                    </div>
+                  {% endif %}
                 </div>
-                <a href="{{ url_for('teacher.lesson_builder') }}" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold">
-                  <i class="bi bi-plus-circle me-1"></i>New Lesson
-                </a>
               </div>
 
-              {% if lesson_cards %}
-                <div class="activity-catalog-list">
-                  {% for card in lesson_cards %}
-                  <div class="activity-row-card">
-                    <div style="min-width: 260px; max-width: 480px;">
-                      <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                        <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
-                          <i class="bi bi-easel me-1"></i>Slide Presentation
+              <!-- PANE 2: Archived Lessons -->
+              <div class="tab-pane fade" id="pane-archived-lessons" role="tabpanel" aria-labelledby="tab-archived-lessons">
+                <div class="dashboard-section teacher-panel p-4 mb-5">
+                  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div>
+                      <h2 class="h5 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-archive-fill text-secondary"></i>
+                        <span>Archived Custom Lessons</span>
+                      </h2>
+                      <p class="teacher-panel-note mb-0 text-muted">Lessons previously moved to archive. You can safely restore any lesson back to the active catalog at any time.</p>
+                    </div>
+                  </div>
+
+                  {% if archived_cards %}
+                    <div class="activity-catalog-list">
+                      {% for card in archived_cards %}
+                      <div class="activity-row-card bg-light border-dashed">
+                        <div style="min-width: 260px; max-width: 480px;">
+                          <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              <i class="bi bi-archive me-1"></i>Archived
+                            </span>
+                            <span class="badge bg-white text-muted border rounded-pill px-2 py-1 small">
+                              <i class="bi bi-clock-history me-1"></i>Archived: {{ card.deleted_at }}
+                            </span>
+                          </div>
+                          <h4 class="h6 fw-bold text-dark mb-1 text-decoration-line-through text-muted">{{ card.title }}</h4>
+                          <p class="text-muted small mb-2 text-truncate" title="{{ card.description }}">
+                            {{ card.description or 'Interactive science lesson slides.' }}
+                          </p>
+                        </div>
+
+                        <!-- Meta stats -->
+                        <div class="d-flex align-items-center gap-4 text-center opacity-75">
+                          <div>
+                            <div class="fw-bold text-dark fs-5">{{ card.slides_count }}</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Slides</div>
+                          </div>
+                        </div>
+
+                        <!-- Restore action -->
+                        <div class="d-flex align-items-center gap-2">
+                          <form method="POST" action="{{ url_for('teacher.restore_lesson', lesson_id=card.lesson.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Restore this lesson to active curriculum">
+                              <i class="bi bi-arrow-counterclockwise fs-6"></i>
+                              <span>Restore Lesson</span>
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="text-center py-5">
+                      <div class="mb-3">
+                        <span class="rounded-circle d-inline-flex p-3 bg-light text-muted fs-1">
+                          <i class="bi bi-archive"></i>
                         </span>
-                        {% if card.has_custom_slides %}
-                          <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
-                            <i class="bi bi-check-circle-fill me-1"></i>Published
-                          </span>
-                        {% else %}
-                          <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">Default Core</span>
-                        {% endif %}
-                        <span class="badge bg-light text-dark border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">{{ card.grade_level }}</span>
                       </div>
-                      <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
-                      <p class="text-muted small mb-2 text-truncate" title="{{ card.description }}">
-                        {{ card.description or 'Interactive science lesson slides with voice read-aloud and quiz checks.' }}
-                      </p>
+                      <h4 class="fw-bold text-dark mb-2">No Archived Lessons</h4>
+                      <p class="text-muted mb-0 max-w-md mx-auto">When you archive a custom lesson, it will appear here safely preserved so you can review or restore it at any time.</p>
                     </div>
-
-                    <!-- Meta stats -->
-                    <div class="d-flex align-items-center gap-4 text-center">
-                      <div>
-                        <div class="fw-bold text-dark fs-5">{{ card.slides_count }}</div>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Slides</div>
-                      </div>
-                      <div>
-                        <div class="fw-bold text-dark fs-5"><i class="bi bi-volume-up text-success"></i></div>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Read Aloud</div>
-                      </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="d-flex align-items-center gap-2">
-                      <a href="{{ url_for('teacher.preview_lesson', lesson_id=card.lesson.id) }}" target="_blank" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Preview Lesson as Student">
-                        <i class="bi bi-play-circle-fill"></i>
-                        <span>Test Play</span>
-                      </a>
-                      <a href="{{ url_for('teacher.lesson_builder', lesson_id=card.lesson.id) }}" class="btn btn-success text-white btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
-                        <i class="bi bi-pencil-square"></i>
-                        <span>Edit Slides</span>
-                      </a>
-                      <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm"
-                        onclick="openAssignLessonModal('{{ card.lesson.id }}', '{{ card.title|escape }}')" title="Assign this lesson directly to students">
-                        <i class="bi bi-journal-plus"></i>
-                        <span>Assign</span>
-                      </button>
-                      {% if card.has_custom_slides and card.lesson.id != 1 %}
-                      <form method="POST" action="{{ url_for('teacher.delete_lesson', lesson_id=card.lesson.id) }}" onsubmit="return confirm('Archive lesson \'{{ card.title }}\'?');" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Lesson">
-                          <i class="bi bi-trash3"></i>
-                        </button>
-                      </form>
-                      {% endif %}
-                    </div>
-                  </div>
-                  {% endfor %}
+                  {% endif %}
                 </div>
-              {% else %}
-                <div class="text-center py-5">
-                  <div class="mb-3">
-                    <span class="rounded-circle d-inline-flex p-3 bg-light text-success fs-1">
-                      <i class="bi bi-easel"></i>
-                    </span>
-                  </div>
-                  <h4 class="fw-bold text-dark mb-2">No Lessons Configured</h4>
-                  <p class="text-muted mb-4 max-w-md mx-auto">Create your first custom slide lesson deck with live canvas editing and voice narration.</p>
-                  <a href="{{ url_for('teacher.lesson_builder') }}" class="btn btn-success text-white rounded-pill px-4 py-2 fw-bold shadow-sm">
-                    <i class="bi bi-plus-circle-fill me-1"></i>Create First Lesson
-                  </a>
-                </div>
-              {% endif %}
+              </div>
             </div>
 
           </div>

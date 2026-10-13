@@ -825,6 +825,12 @@ async function saveProgress() {
   state.saving = true;
   try { localStorage.removeItem(getStorageKey()); } catch (_) {}
 
+  if (window.isTeacherPreview) {
+    // In teacher preview, do not submit student progress to server
+    state.saving = false;
+    return;
+  }
+
   const elapsedSeconds = Math.max(1, getActiveElapsedSeconds());
   const payload = {
     activity_id: state.activityId,
@@ -940,6 +946,9 @@ function bindControls() {
 
   if (dom.backButton) {
     dom.backButton.onclick = (e) => {
+      if (window.isTeacherPreview) {
+        return; // Allow direct navigation back to Game Studio without prompt
+      }
       if (!state.completed && state.totalAttempts > 0) {
         e.preventDefault();
         const exitModalEl = document.getElementById('exitConfirmModal');
@@ -1231,7 +1240,11 @@ function bindExitHandlers() {
     } catch (e) {
       console.warn('Could not save claw machine state to localStorage', e);
     }
-    window.location.href = '/student/activities';
+    if (window.isTeacherPreview) {
+      window.location.href = '/teacher/game_studio';
+    } else {
+      window.location.href = '/student/activities';
+    }
   });
 }
 

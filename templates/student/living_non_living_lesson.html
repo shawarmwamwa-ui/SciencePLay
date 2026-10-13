@@ -15,12 +15,18 @@
 <body class="living-lesson-page">
 
   <div class="container py-3 lesson-container">
-    <!-- Header Banner -->
     <div class="lesson-header">
+      {% if is_preview %}
+      <a href="{{ url_for('teacher.lesson_studio') }}" class="brutal-back-btn text-white bg-success border-0" title="Exit Preview">
+        <i class="bi bi-box-arrow-left"></i>
+        <span>Exit Preview</span>
+      </a>
+      {% else %}
       <a href="{{ url_for('student.lessons') }}" class="brutal-back-btn">
         <i class="bi bi-arrow-left-circle-fill"></i>
         <span>Back to Lessons</span>
       </a>
+      {% endif %}
       <div class="lesson-title-center text-center">
         <h1 class="mb-0"><i class="bi bi-journal-bookmark-fill me-2 text-primary"></i>Living vs Non-Living</h1>
         <p class="mb-0 text-dark fw-bold small">Learn how to tell living things from non-living things!</p>
@@ -75,6 +81,7 @@
     window.currentLessonId = {{ lesson.id if lesson else 'null' }};
     window.initialSlideIndex = {{ initial_slide if initial_slide is defined else 0 }};
     window.publishedLessonPayload = {{ published_payload|tojson if published_payload else 'null' }};
+    window.isTeacherPreview = {{ (is_preview|default(false))|tojson }};
     
     window.addEventListener('error', function(event) {
       console.error('Caught error event:', event.message, event.filename, event.lineno);

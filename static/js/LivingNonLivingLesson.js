@@ -749,6 +749,10 @@ function updateNavigationState() {
 let lastSavedTime = performance.now();
 
 function saveLessonProgress(completed = false) {
+  if (window.isTeacherPreview) {
+    return Promise.resolve();
+  }
+
   const lessonId = window.currentLessonId || null;
   if (!lessonId) {
     return Promise.resolve();
