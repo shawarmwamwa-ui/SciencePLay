@@ -456,24 +456,17 @@
                   <span class="step-number-badge">1</span>
                   <div>
                     <h2 class="h5 fw-bold text-dark mb-0">Lesson Overview &amp; Curriculum Topic</h2>
-                    <span class="text-muted small">Specify the lesson title, grade level, and curriculum summary</span>
+                    <span class="text-muted small">Specify the lesson title and curriculum summary</span>
                   </div>
                 </div>
 
                 <div class="row g-3">
-                  <div class="col-12 col-md-7">
+                  <div class="col-12 col-md-8">
                     <label class="form-label fw-bold text-dark small">Lesson Title <span class="text-danger">*</span></label>
                     <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="lessonTitleInput" value="{{ config.title or (lesson.title if lesson else 'Living vs Non-Living') }}" required placeholder="e.g. Living vs Non-Living">
+                    <input type="hidden" name="grade_level" id="gradeLevelInput" value="Grade 3">
                   </div>
-                  <div class="col-6 col-md-2">
-                    <label class="form-label fw-bold text-dark small">Grade Level</label>
-                    <select class="form-select form-select-lg rounded-3" name="grade_level" id="gradeLevelInput">
-                      <option value="Grade 3" {% if config.grade_level == 'Grade 3' or not config.grade_level %}selected{% endif %}>Grade 3</option>
-                      <option value="Grade 4" {% if config.grade_level == 'Grade 4' %}selected{% endif %}>Grade 4</option>
-                      <option value="Grade 2" {% if config.grade_level == 'Grade 2' %}selected{% endif %}>Grade 2</option>
-                    </select>
-                  </div>
-                  <div class="col-6 col-md-3 d-flex flex-column justify-content-end">
+                  <div class="col-12 col-md-4 d-flex flex-column justify-content-end">
                     <!-- Preset Starter Loader -->
                     <label class="form-label fw-bold text-dark small d-none d-md-block">&nbsp;</label>
                     <div class="dropdown w-100">
@@ -481,9 +474,9 @@
                         <i class="bi bi-magic me-1"></i>Lesson Templates
                       </button>
                       <ul class="dropdown-menu shadow-lg border-0 rounded-3 w-100">
-                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('living_vs_nonliving'); return false;">🌱 Living vs Non-Living (5 Slides)</a></li>
-                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('states_of_matter'); return false;">🧊 States of Matter (5 Slides)</a></li>
-                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('recycling'); return false;">♻️ Eco Recycling & Waste (5 Slides)</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('living_vs_nonliving'); return false;">🌱 Living vs Non-Living</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('states_of_matter'); return false;">🧊 States of Matter</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('recycling'); return false;">♻️ Eco Recycling & Waste</a></li>
                       </ul>
                     </div>
                   </div>

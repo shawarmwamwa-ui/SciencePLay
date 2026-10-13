@@ -2252,6 +2252,22 @@ def _get_archived_game_cards():
     return archived_cards
 
 
+def _get_default_lesson_slide_count(title):
+    """Returns the actual slide count for default core curriculum lessons"""
+    t_lower = (title or '').lower()
+    if 'living' in t_lower:
+        return 7
+    elif 'animal' in t_lower:
+        return 12
+    elif 'plant' in t_lower:
+        return 12
+    elif 'metal' in t_lower:
+        return 20
+    elif 'recycl' in t_lower:
+        return 13
+    return 7
+
+
 def _get_active_lesson_cards():
     """Helper to load all active Lesson slide cards"""
     lesson_cards = []
@@ -2263,11 +2279,12 @@ def _get_active_lesson_cards():
         for lsn in raw_lessons:
             cfg = getattr(lsn, 'config', None) or {}
             slides = cfg.get('slides', []) if isinstance(cfg, dict) else []
+            slides_count = len(slides) if slides else _get_default_lesson_slide_count(lsn.title)
             lesson_cards.append({
                 'lesson': lsn,
                 'title': lsn.title,
                 'description': lsn.description or '',
-                'slides_count': len(slides) if slides else 5,
+                'slides_count': slides_count,
                 'has_custom_slides': bool(slides),
                 'grade_level': cfg.get('grade_level', 'Grade 3') if isinstance(cfg, dict) else 'Grade 3',
                 'config': cfg
@@ -2289,11 +2306,12 @@ def _get_archived_lesson_cards():
         for lsn in raw_lessons:
             cfg = getattr(lsn, 'config', None) or {}
             slides = cfg.get('slides', []) if isinstance(cfg, dict) else []
+            slides_count = len(slides) if slides else _get_default_lesson_slide_count(lsn.title)
             lesson_cards.append({
                 'lesson': lsn,
                 'title': lsn.title,
                 'description': lsn.description or '',
-                'slides_count': len(slides) if slides else 5,
+                'slides_count': slides_count,
                 'has_custom_slides': bool(slides),
                 'deleted_at': lsn.deleted_at.strftime('%b %d, %Y %I:%M %p') if lsn.deleted_at else 'Archived',
                 'config': cfg
