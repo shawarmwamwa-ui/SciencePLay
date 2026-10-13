@@ -744,8 +744,13 @@ def dashboard():
     ).join(User, User.id == ProgressLog.student_id).join(Activity, Activity.id == ProgressLog.activity_id
     ).order_by(ProgressLog.created_at.desc()).limit(5).all()
 
-    most_missed_lessons = get_struggling_concepts(is_lesson=True, limit=3)
-    most_missed_activities = get_struggling_concepts(is_lesson=False, limit=3)
+    most_missed_lessons = get_struggling_concepts(is_lesson=True, limit=5)
+    most_missed_activities = get_struggling_concepts(is_lesson=False, limit=5)
+    all_struggling_concepts = most_missed_lessons + most_missed_activities
+    all_struggling_concepts.sort(key=lambda x: x['misses'], reverse=True)
+    struggle_chart_labels = [c['name'] for c in all_struggling_concepts[:6]]
+    struggle_chart_misses = [c['misses'] for c in all_struggling_concepts[:6]]
+    struggle_chart_types = [c['activity_type'] for c in all_struggling_concepts[:6]]
     dashboard_charts = get_dashboard_charts_data(lessons, activities, students)
 
     return render_template(
@@ -770,6 +775,10 @@ def dashboard():
         recent_activity=recent_activity,
         most_missed_lessons=most_missed_lessons,
         most_missed_activities=most_missed_activities,
+        all_struggling_concepts=all_struggling_concepts,
+        struggle_chart_labels=struggle_chart_labels,
+        struggle_chart_misses=struggle_chart_misses,
+        struggle_chart_types=struggle_chart_types,
         retry_progression=get_student_retry_progression(),
         dashboard_charts=dashboard_charts,
         current_user=current_user

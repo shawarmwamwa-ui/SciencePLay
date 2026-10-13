@@ -426,15 +426,35 @@
                     <p class="teacher-panel-note mb-0">Track score progression and learning gains across student game replays.</p>
                   </div>
                   {% if retry_progression %}
-                  <div class="d-flex align-items-center gap-2 w-100 w-md-auto">
-                    <label for="retryProgressionSelect" class="form-label small text-muted mb-0 fw-semibold text-nowrap d-none d-sm-inline">
-                      Select Student:
-                    </label>
-                    <select id="retryProgressionSelect" class="form-select form-select-sm rounded-pill border-secondary-subtle fw-semibold shadow-sm" style="min-width: 250px; max-width: 340px;" aria-label="Select student and activity to view retry progression">
-                      {% for item in retry_progression %}
-                        <option value="{{ loop.index0 }}">{{ item.student_name }} — {{ item.activity_name }} ({{ item.attempt_count }}x {% if item.attempt_count == 1 %}try{% else %}tries{% endif %})</option>
-                      {% endfor %}
-                    </select>
+                  <div class="d-flex align-items-center gap-2 flex-wrap flex-md-nowrap w-100 w-md-auto">
+                    <!-- Game Filter Dropdown -->
+                    <div class="d-flex align-items-center gap-1.5">
+                      <label for="retryGameSelect" class="form-label small text-muted mb-0 fw-semibold text-nowrap">
+                        <i class="bi bi-funnel me-1"></i>Game:
+                      </label>
+                      <select id="retryGameSelect" class="form-select form-select-sm rounded-pill border-secondary-subtle fw-semibold shadow-sm" style="min-width: 170px;" aria-label="Filter retry progression by game">
+                        <option value="all">All Games &amp; Activities</option>
+                        {% set seen_games = [] %}
+                        {% for item in retry_progression %}
+                          {% if item.activity_name not in seen_games %}
+                            {% set _ = seen_games.append(item.activity_name) %}
+                            <option value="{{ item.activity_name }}">{{ item.activity_name }}</option>
+                          {% endif %}
+                        {% endfor %}
+                      </select>
+                    </div>
+
+                    <!-- Student Select Dropdown -->
+                    <div class="d-flex align-items-center gap-1.5">
+                      <label for="retryProgressionSelect" class="form-label small text-muted mb-0 fw-semibold text-nowrap d-none d-sm-inline">
+                        Student:
+                      </label>
+                      <select id="retryProgressionSelect" class="form-select form-select-sm rounded-pill border-secondary-subtle fw-semibold shadow-sm" style="min-width: 220px; max-width: 330px;" aria-label="Select student and activity to view retry progression">
+                        {% for item in retry_progression %}
+                          <option value="{{ loop.index0 }}" data-game="{{ item.activity_name }}">{{ item.student_name }} — {{ item.activity_name }} ({{ item.attempt_count }}x {% if item.attempt_count == 1 %}try{% else %}tries{% endif %})</option>
+                        {% endfor %}
+                      </select>
+                    </div>
                   </div>
                   {% endif %}
                 </div>
@@ -505,115 +525,42 @@
             <div class="mb-4">
               <p class="teacher-eyebrow mb-2">Classroom Action Items</p>
               <div class="row g-3 classroom-action-row">
-                <!-- Card 1: Challenging / Most Missed Concepts (Tabbed) -->
+                <!-- Card 1: Challenging / Most Missed Concepts Visual Chart -->
                 <div class="col-lg-6 d-flex flex-column">
                   <div class="dashboard-section teacher-panel flex-fill d-flex flex-column justify-content-between h-100">
                     <div class="flex-grow-1 d-flex flex-column">
                       <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h2 class="h5 mb-0"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Struggling Concepts</h2>
-                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">Top Misses</span>
+                        <h2 class="h5 mb-0"><i class="bi bi-bar-chart-fill text-danger me-2"></i>Struggling Concepts</h2>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill fw-bold">Top Misses Chart</span>
                       </div>
                       <p class="teacher-panel-note mb-3">Items students found most difficult during lessons and games.</p>
 
-                      <ul class="nav nav-tabs nav-sm mb-3" id="missedTabs" role="tablist" style="font-size:0.84rem;">
-                        <li class="nav-item" role="presentation">
-                          <button class="nav-link active py-1 px-3 fw-semibold" id="dt-missed-lessons-tab" data-bs-toggle="tab" data-bs-target="#dt-missed-lessons" type="button" role="tab">
-                            <i class="bi bi-journal-x me-1"></i>Lessons
-                          </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                          <button class="nav-link py-1 px-3 fw-semibold" id="dt-missed-games-tab" data-bs-toggle="tab" data-bs-target="#dt-missed-games" type="button" role="tab">
-                            <i class="bi bi-controller me-1"></i>Games
-                          </button>
-                        </li>
-                      </ul>
-
-                      <div class="tab-content flex-grow-1" id="missedTabContent">
-                        <!-- Lessons Missed Tab -->
-                        <div class="tab-pane fade show active" id="dt-missed-lessons" role="tabpanel">
-                          <ul class="activity-status-list">
-                            {% if most_missed_lessons %}
-                            {% for obj in most_missed_lessons[:4] %}
-                            <li class="py-2.5 border-bottom">
-                              <div class="d-flex justify-content-between align-items-start gap-2">
-                                <div class="flex-grow-1" style="min-width: 0;">
-                                  <span class="status-label fw-bold text-dark d-block text-truncate" title="{{ obj.name }}">{{ obj.name }}</span>
-                                  <small class="text-muted d-block">({{ obj.activity_type }})</small>
-                                </div>
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold flex-shrink-0">{{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}</span>
-                              </div>
-                              <div class="d-flex justify-content-between align-items-center mt-2">
-                                <small class="text-muted" style="font-size: 0.78rem;">
-                                  <i class="bi bi-people me-1"></i>Struggling Students:
-                                </small>
-                                {% if obj.students %}
-                                <button type="button" class="btn btn-sm open-struggling-students-modal-btn rounded-pill px-2.5 py-0.5 d-inline-flex align-items-center gap-1 fw-semibold shadow-sm"
-                                  data-item-name="{{ obj.name }}"
-                                  data-context="{{ obj.activity_type }}"
-                                  data-misses="{{ obj.misses }}"
-                                  data-students='{{ obj.students|tojson|safe }}'
-                                  title="View struggling students">
-                                  <i class="bi bi-people-fill text-danger"></i>
-                                  <span>{{ obj.students|length }} Student{% if obj.students|length != 1 %}s{% endif %}</span>
-                                  <i class="bi bi-chevron-right ms-1" style="font-size: 0.7rem;"></i>
-                                </button>
-                                {% else %}
-                                <span class="badge bg-light text-muted border">None</span>
-                                {% endif %}
-                              </div>
-                            </li>
-                            {% endfor %}
-                            {% else %}
-                            <p class="text-muted small py-3 mb-0 text-center">No lesson misses recorded yet.</p>
-                            {% endif %}
-                          </ul>
-                        </div>
-
-                        <!-- Games Missed Tab -->
-                        <div class="tab-pane fade" id="dt-missed-games" role="tabpanel">
-                          <ul class="activity-status-list">
-                            {% if most_missed_activities %}
-                            {% for obj in most_missed_activities[:4] %}
-                            <li class="py-2.5 border-bottom">
-                              <div class="d-flex justify-content-between align-items-start gap-2">
-                                <div class="flex-grow-1" style="min-width: 0;">
-                                  <span class="status-label fw-bold text-dark d-block text-truncate" title="{{ obj.name }}">{{ obj.name }}</span>
-                                  <small class="text-muted d-block">({{ obj.activity_type }})</small>
-                                </div>
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold flex-shrink-0">{{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}</span>
-                              </div>
-                              <div class="d-flex justify-content-between align-items-center mt-2">
-                                <small class="text-muted" style="font-size: 0.78rem;">
-                                  <i class="bi bi-people me-1"></i>Struggling Students:
-                                </small>
-                                {% if obj.students %}
-                                <button type="button" class="btn btn-sm open-struggling-students-modal-btn rounded-pill px-2.5 py-0.5 d-inline-flex align-items-center gap-1 fw-semibold shadow-sm"
-                                  data-item-name="{{ obj.name }}"
-                                  data-context="{{ obj.activity_type }}"
-                                  data-misses="{{ obj.misses }}"
-                                  data-students='{{ obj.students|tojson|safe }}'
-                                  title="View struggling students">
-                                  <i class="bi bi-people-fill text-danger"></i>
-                                  <span>{{ obj.students|length }} Student{% if obj.students|length != 1 %}s{% endif %}</span>
-                                  <i class="bi bi-chevron-right ms-1" style="font-size: 0.7rem;"></i>
-                                </button>
-                                {% else %}
-                                <span class="badge bg-light text-muted border">None</span>
-                                {% endif %}
-                              </div>
-                            </li>
-                            {% endfor %}
-                            {% else %}
-                            <p class="text-muted small py-3 mb-0 text-center">No game misses recorded yet.</p>
-                            {% endif %}
-                          </ul>
-                        </div>
+                      <div class="flex-grow-1 d-flex flex-column justify-content-center">
+                        {% if struggle_chart_labels %}
+                          <div class="chart-wrapper position-relative p-1" style="height: 250px; width: 100%;">
+                            <canvas id="dashboardStruggleChart"
+                                    data-chart-labels='{{ struggle_chart_labels|tojson|forceescape }}'
+                                    data-chart-misses='{{ struggle_chart_misses|tojson|forceescape }}'
+                                    data-chart-types='{{ struggle_chart_types|tojson|forceescape }}'></canvas>
+                          </div>
+                          <div class="d-flex justify-content-between align-items-center mt-2 px-1 text-muted small" style="font-size: 0.78rem;">
+                            <span><i class="bi bi-info-circle me-1 text-danger"></i>Ranked by total incorrect attempts</span>
+                            <span class="badge bg-danger-subtle text-danger fw-semibold">{{ all_struggling_concepts|length }} Flagged Concepts</span>
+                          </div>
+                        {% else %}
+                          <div class="text-center text-muted py-5">
+                            <i class="bi bi-check-circle-fill text-success fs-1 mb-2 d-block"></i>
+                            <h6 class="fw-bold text-dark mb-1">High Classroom Mastery</h6>
+                            <p class="small text-muted mb-0">No struggling concepts recorded yet!</p>
+                          </div>
+                        {% endif %}
                       </div>
                     </div>
 
-                    <div class="pt-3 border-top mt-auto d-flex justify-content-end teacher-panel-footer">
-                      <a href="{{ url_for('teacher.analytics') }}#struggling-concepts-section" class="btn btn-sm btn-outline-warning text-dark rounded-pill px-3 fw-semibold">
-                        <i class="bi bi-bar-chart-line me-1"></i>
+                    <div class="pt-3 border-top mt-auto d-flex justify-content-between align-items-center teacher-panel-footer">
+                      <span class="small text-muted d-none d-sm-inline"><i class="bi bi-mortarboard text-warning me-1"></i>Actionable Interventions</span>
+                      <a href="{{ url_for('teacher.analytics') }}#struggling-concepts-section" class="btn btn-sm btn-outline-warning text-dark rounded-pill px-3 fw-semibold shadow-sm">
+                        <i class="bi bi-table me-1"></i>
                         <span>Full Struggle Breakdown</span>
                         <i class="bi bi-arrow-right ms-1"></i>
                       </a>

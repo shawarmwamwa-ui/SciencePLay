@@ -274,7 +274,59 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // -------------------------------------------------------------
+  // Automatic URL Hash Handling & Tab Activation for Inter-page Links
+  // -------------------------------------------------------------
+  function initUrlHashNavigation() {
+    function jumpToTarget() {
+      const hash = window.location.hash;
+      if (!hash) return;
+
+      const tab2Anchors = ['#attempts-section', '#live-tracker-section', '#time-on-task-section'];
+      const tab1Anchors = ['#struggling-concepts-section', '#struggling-concepts-table-section', '#most-missed-chart-section', '#top-students-section', '#retry-improvement-section'];
+
+      if (tab2Anchors.some(anchor => hash.startsWith(anchor))) {
+        const tabBtn = document.getElementById('tab-live-logs');
+        if (tabBtn && window.bootstrap && window.bootstrap.Tab) {
+          bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+        }
+      } else if (tab1Anchors.some(anchor => hash.startsWith(anchor))) {
+        const tabBtn = document.getElementById('tab-performance');
+        if (tabBtn && window.bootstrap && window.bootstrap.Tab) {
+          bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+        }
+      }
+
+      setTimeout(() => {
+        let targetEl = null;
+        try {
+          targetEl = document.querySelector(hash);
+        } catch (e) {
+          targetEl = null;
+        }
+
+        if (targetEl) {
+          const headerOffset = 85;
+          const elementPosition = targetEl.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+          window.scrollTo({
+            top: Math.max(0, offsetPosition),
+            behavior: 'smooth'
+          });
+
+          targetEl.classList.add('section-anchor-highlight');
+          setTimeout(() => targetEl.classList.remove('section-anchor-highlight'), 2500);
+        }
+      }, 250);
+    }
+
+    jumpToTarget();
+    window.addEventListener('hashchange', jumpToTarget);
+  }
+
   initMostMissedChart();
   initRetryGameFilter();
   initStrugglingStudentsModal();
+  initUrlHashNavigation();
 });

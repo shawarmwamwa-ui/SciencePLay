@@ -168,6 +168,42 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       }
 
+      const gameFilterSelect = document.getElementById('retryGameSelect');
+
+      function filterStudentOptionsByGame(selectedGame) {
+        if (!selectElem) return;
+        selectElem.innerHTML = '';
+
+        let firstMatchIndex = null;
+        retryData.forEach((item, index) => {
+          if (selectedGame === 'all' || item.activity_name === selectedGame) {
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.setAttribute('data-game', item.activity_name);
+            if (selectedGame === 'all') {
+              opt.textContent = `${item.student_name} — ${item.activity_name} (${item.attempt_count}x ${item.attempt_count === 1 ? 'try' : 'tries'})`;
+            } else {
+              opt.textContent = `${item.student_name} (${item.attempt_count}x tries · Best: ${item.best_score} pts)`;
+            }
+            selectElem.appendChild(opt);
+            if (firstMatchIndex === null) {
+              firstMatchIndex = index;
+            }
+          }
+        });
+
+        if (firstMatchIndex !== null) {
+          selectElem.value = firstMatchIndex;
+          updateDashboardAttemptChart(firstMatchIndex);
+        }
+      }
+
+      if (gameFilterSelect) {
+        gameFilterSelect.addEventListener('change', function () {
+          filterStudentOptionsByGame(this.value);
+        });
+      }
+
       // Initialize with first item after layout settles
       requestAnimationFrame(function () {
         updateDashboardAttemptChart(0);
@@ -184,6 +220,104 @@ document.addEventListener('DOMContentLoaded', function () {
           chartInstance.resize();
         }
       }, 750);
+    }
+  }
+
+  // -------------------------------------------------------------
+  // 1b. Dashboard Struggling Concepts Visual Chart
+  // -------------------------------------------------------------
+  const struggleCanvas = document.getElementById('dashboardStruggleChart');
+  if (struggleCanvas && typeof Chart !== 'undefined') {
+    let sLabels = [];
+    let sMisses = [];
+    let sTypes = [];
+    try {
+      sLabels = JSON.parse(struggleCanvas.getAttribute('data-chart-labels') || '[]');
+      sMisses = JSON.parse(struggleCanvas.getAttribute('data-chart-misses') || '[]');
+      sTypes = JSON.parse(struggleCanvas.getAttribute('data-chart-types') || '[]');
+    } catch (e) {
+      console.error('Error parsing dashboardStruggleChart data:', e);
+    }
+
+    if (sLabels.length && sMisses.length) {
+      const shortLabels = sLabels.map(l => (l.length > 25 ? l.substring(0, 23) + '…' : l));
+      const sCtx = struggleCanvas.getContext('2d');
+      new Chart(sCtx, {
+        type: 'bar',
+        data: {
+          labels: shortLabels,
+          datasets: [{
+            label: 'Student Misses',
+            data: sMisses,
+            backgroundColor: [
+              'rgba(239, 68, 68, 0.85)',
+              'rgba(249, 115, 22, 0.85)',
+              'rgba(245, 158, 11, 0.85)',
+              'rgba(234, 179, 8, 0.85)',
+              'rgba(139, 92, 246, 0.85)',
+              'rgba(99, 102, 241, 0.85)'
+            ],
+            borderColor: [
+              '#dc2626',
+              '#ea580c',
+              '#d97706',
+              '#ca8a04',
+              '#7c3aed',
+              '#4f46e5'
+            ],
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y', // Horizontal bars for clear label reading
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: 800,
+            easing: 'easeOutQuart'
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1f2937',
+              titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' },
+              bodyFont: { family: 'Plus Jakarta Sans', size: 11 },
+              padding: 10,
+              cornerRadius: 8,
+              callbacks: {
+                title: function (items) {
+                  const idx = items[0].dataIndex;
+                  return sLabels[idx] || shortLabels[idx];
+                },
+                label: function (context) {
+                  const idx = context.dataIndex;
+                  const type = sTypes[idx] ? ` (${sTypes[idx]})` : '';
+                  return ` ${context.parsed.x} student misses${type}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0,
+                font: { family: 'Plus Jakarta Sans', size: 10 },
+                callback: function (v) { return v + ' misses'; }
+              },
+              grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            },
+            y: {
+              ticks: {
+                font: { family: 'Plus Jakarta Sans', size: 10, weight: '600' },
+                color: '#374151'
+              },
+              grid: { display: false }
+            }
+          }
+        }
+      });
     }
   }
 
