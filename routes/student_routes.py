@@ -1189,15 +1189,24 @@ def activity_complete(activity_id, score):
     return redirect(url_for('student.dashboard'))
 
 @student_bp.route('/lesson/living-non-living')
-def living_non_living_lesson():
+@student_bp.route('/lesson/view/<int:lesson_id>')
+def living_non_living_lesson(lesson_id=None):
     user_id = session.get('user_id')
-    lesson = get_or_create_default_lesson()
+    if lesson_id:
+        lesson = Lesson.query.get_or_404(lesson_id)
+    else:
+        lesson = get_or_create_default_lesson()
     if user_id:
         attempt, log = start_or_resume_lesson_attempt(user_id, lesson.id)
         initial_slide = log.current_slide if log else 0
     else:
         initial_slide = 0
-    return render_template('student/living_non_living_lesson.html', lesson=lesson, initial_slide=initial_slide)
+    return render_template(
+        'student/living_non_living_lesson.html',
+        lesson=lesson,
+        initial_slide=initial_slide,
+        published_payload=lesson.config
+    )
 
 @student_bp.route('/lesson/characters-of-living-things')
 @student_bp.route('/lesson/parts-of-an-animal')

@@ -83,11 +83,14 @@
                     </td>
                     <td>
                       {% set lesson_title = assignment.lesson.title if assignment.lesson else '' %}
-                      {% set target_url = url_for('student.living_non_living_lesson') if 'Living vs Non-Living' in lesson_title
+                      {% set has_custom = assignment.lesson and assignment.lesson.config and assignment.lesson.config.get('slides') %}
+                      {% set target_url = url_for('student.living_non_living_lesson', lesson_id=assignment.lesson.id) if has_custom
+                             else url_for('student.living_non_living_lesson') if 'Living vs Non-Living' in lesson_title
                              else url_for('student.animal_body_parts_lesson') if ('Animal Body Parts' in lesson_title or 'Parts of an Animal' in lesson_title)
                              else url_for('student.plant_parts_lesson') if 'Plant Parts' in lesson_title
                              else url_for('student.properties_of_metals_lesson') if 'Properties of Metals' in lesson_title
                              else url_for('student.recycling_lesson') if 'Recycling' in lesson_title
+                             else url_for('student.living_non_living_lesson', lesson_id=assignment.lesson.id) if assignment.lesson
                              else url_for('student.lessons') %}
                       <a href="{{ target_url }}" class="btn btn-sm {% if assignment.status == 'completed' %}btn-outline-primary{% else %}btn-primary{% endif %} rounded-pill px-3 fw-bold" style="text-decoration:none;">
                         <i class="bi {% if assignment.status == 'completed' %}bi-arrow-clockwise{% else %}bi-play-fill{% endif %} me-1"></i>

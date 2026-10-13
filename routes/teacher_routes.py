@@ -937,7 +937,9 @@ def lessons():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'teacher_lessons')
 
-    lessons = Lesson.query.order_by(Lesson.id.asc()).all()
+    lessons = Lesson.query.filter(
+        (Lesson.is_archived == False) | (Lesson.is_archived == None)
+    ).order_by(Lesson.id.asc()).all()
     activities = Activity.query.filter(
         ~Activity.engine.in_(['quick_check', 'lesson']),
         ~Activity.type.ilike('%Quick Check%'),
@@ -2625,8 +2627,226 @@ def restore_activity(activity_id):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TEACHER LESSON STUDIO & SLIDE CANVAS WORKSPACE
-# ══════════════════════════════════════════════════════════════════════════════
+def _get_core_lesson_starter_slides(title):
+    """Provides curated 5-slide starter templates for each core science curriculum topic"""
+    t_lower = (title or '').lower()
+    if 'animal' in t_lower:
+        return [
+            {
+                "id": "slide-1",
+                "title": "Animal Body Parts Intro",
+                "type": "concept",
+                "image": "/static/images/dog.webp",
+                "explanation": "Animals have amazing outer body parts that help them move, find food, and stay safe in nature!"
+            },
+            {
+                "id": "slide-2",
+                "title": "Parts for Moving Around",
+                "type": "concept",
+                "image": "/static/images/bird.webp",
+                "explanation": "Wings help birds fly high, strong legs help animals run fast, and fins help fish swim in water."
+            },
+            {
+                "id": "slide-3",
+                "title": "Quick Check: Animal Movement",
+                "type": "quick-check",
+                "prompt": "Which body part helps a bird fly high in the sky? 🪶",
+                "image": "/static/images/bird.webp",
+                "explanation": "Wings are light and feathered to let birds soar through the air.",
+                "options": [
+                    {"id": "opt-1", "label": "Feathered Wings", "icon": "/static/images/bird.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Walking Paws", "icon": "/static/images/cat.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-4",
+                "title": "Parts for Finding Food",
+                "type": "concept",
+                "image": "/static/images/cat.webp",
+                "explanation": "Sharp teeth help carnivores chew food, long beaks help hummingbirds drink nectar, and claws help catch prey."
+            },
+            {
+                "id": "slide-5",
+                "title": "Animal Anatomy Explorer Done!",
+                "type": "summary",
+                "image": "/static/images/star.webp",
+                "explanation": "Great job! You learned how animal body parts help each creature thrive in their habitat."
+            }
+        ]
+    elif 'plant' in t_lower:
+        return [
+            {
+                "id": "slide-1",
+                "title": "Welcome to Plant Parts",
+                "type": "concept",
+                "image": "/static/images/plant.webp",
+                "explanation": "Plants have special parts that work together: roots underground, sturdy stems, and green leaves!"
+            },
+            {
+                "id": "slide-2",
+                "title": "Roots Drink Water",
+                "type": "concept",
+                "image": "/static/images/tree.webp",
+                "explanation": "Roots grow deep into the soil. They anchor the plant firmly and drink water and nutrients from the earth."
+            },
+            {
+                "id": "slide-3",
+                "title": "Quick Check: Roots in Action",
+                "type": "quick-check",
+                "prompt": "Which plant part absorbs water from underground soil? 🌱",
+                "image": "/static/images/plant.webp",
+                "explanation": "Roots act like tiny straws that soak up water from the soil.",
+                "options": [
+                    {"id": "opt-1", "label": "Underground Roots", "icon": "/static/images/tree.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Colorful Flower", "icon": "/static/images/flower.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-4",
+                "title": "Leaves Make Food with Sunlight",
+                "type": "concept",
+                "image": "/static/images/flower.webp",
+                "explanation": "Green leaves catch sunlight and air to make energy and food for the plant through photosynthesis."
+            },
+            {
+                "id": "slide-5",
+                "title": "Botanist Master Certified!",
+                "type": "summary",
+                "image": "/static/images/star.webp",
+                "explanation": "Fantastic! You know how roots, stems, leaves, and flowers keep plants healthy and blooming."
+            }
+        ]
+    elif 'metal' in t_lower:
+        return [
+            {
+                "id": "slide-1",
+                "title": "Properties of Metals",
+                "type": "concept",
+                "image": "/static/images/rock.webp",
+                "explanation": "Metals are special materials found in Earth! Common metals include Iron, Copper, Gold, and Silver."
+            },
+            {
+                "id": "slide-2",
+                "title": "Iron is Strong & Magnetic",
+                "type": "concept",
+                "image": "/static/images/chair.webp",
+                "explanation": "Iron is heavy and very strong. It is used to build bridges and skyscrapers, and sticks firmly to magnets!"
+            },
+            {
+                "id": "slide-3",
+                "title": "Quick Check: Magnetic Metal",
+                "type": "quick-check",
+                "prompt": "Which metal is attracted by magnets and used in strong buildings? 🧲",
+                "image": "/static/images/rock.webp",
+                "explanation": "Iron is magnetic and one of the strongest structural metals.",
+                "options": [
+                    {"id": "opt-1", "label": "Iron Bar", "icon": "/static/images/rock.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Wood Stick", "icon": "/static/images/tree.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-4",
+                "title": "Copper Conducts Electricity",
+                "type": "concept",
+                "image": "/static/images/bicycle.webp",
+                "explanation": "Copper is a reddish metal that conducts electricity easily. It is inside wires that power our lights and screens!"
+            },
+            {
+                "id": "slide-5",
+                "title": "Metal Clue Detective Complete!",
+                "type": "summary",
+                "image": "/static/images/star.webp",
+                "explanation": "Awesome work! You discovered the key scientific properties of iron and copper metals."
+            }
+        ]
+    elif 'recycl' in t_lower:
+        return [
+            {
+                "id": "slide-1",
+                "title": "Caring for Our Planet",
+                "type": "concept",
+                "image": "/static/images/plant.webp",
+                "explanation": "Every day we use materials that can either become compost or be recycled into brand-new products!"
+            },
+            {
+                "id": "slide-2",
+                "title": "Organic Compost & Food Waste",
+                "type": "concept",
+                "image": "/static/images/tree.webp",
+                "explanation": "Leaves, fruit peels, and vegetables decompose naturally into nutrient-rich soil for gardens."
+            },
+            {
+                "id": "slide-3",
+                "title": "Quick Check: Compost Sorting",
+                "type": "quick-check",
+                "prompt": "Which item decomposes naturally in a garden compost bin? 🍂",
+                "image": "/static/images/plant.webp",
+                "explanation": "Organic plant materials and fallen leaves decompose naturally into soil.",
+                "options": [
+                    {"id": "opt-1", "label": "Fallen Leaves", "icon": "/static/images/plant.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Plastic Wrapper", "icon": "/static/images/puddle.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-4",
+                "title": "Recyclable Plastics and Cans",
+                "type": "concept",
+                "image": "/static/images/puddle.webp",
+                "explanation": "Clean plastics, glass, and metals can be melted and remanufactured, keeping waste out of landfills."
+            },
+            {
+                "id": "slide-5",
+                "title": "Eco Champion Certified!",
+                "type": "summary",
+                "image": "/static/images/star.webp",
+                "explanation": "You are now ready to protect our planet Earth by sorting waste properly every single day!"
+            }
+        ]
+    else:
+        # Default Living vs Non-Living starter slides
+        return [
+            {
+                "id": "slide-1",
+                "title": "Welcome to Science Discovery!",
+                "type": "concept",
+                "image": "/static/images/tree.webp",
+                "explanation": "Our world is full of things to explore! Some are living things, and others are non-living."
+            },
+            {
+                "id": "slide-2",
+                "title": "What Makes Something Living?",
+                "type": "concept",
+                "image": "/static/images/dog.webp",
+                "explanation": "Living things breathe, grow, and need food and water to survive. Animals and plants are alive!"
+            },
+            {
+                "id": "slide-3",
+                "title": "Quick Check: Find the Living Thing",
+                "type": "quick-check",
+                "prompt": "Which of these is a living thing that needs water and grows? 🌱",
+                "image": "/static/images/tree.webp",
+                "explanation": "A green plant grows and needs water and sunlight to live.",
+                "options": [
+                    {"id": "opt-1", "label": "Green Plant", "icon": "/static/images/plant.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Hard Rock", "icon": "/static/images/rock.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-4",
+                "title": "What is Non-Living?",
+                "type": "concept",
+                "image": "/static/images/chair.webp",
+                "explanation": "Non-living things do not breathe, eat, or grow on their own. Chairs, bicycles, and rocks are non-living."
+            },
+            {
+                "id": "slide-5",
+                "title": "Science Explorer Complete!",
+                "type": "summary",
+                "image": "/static/images/star.webp",
+                "explanation": "You did it! You know how to classify living and non-living things in our environment."
+            }
+        ]
+
 
 @teacher_bp.route('/content/lesson/builder')
 @teacher_bp.route('/content/lesson/builder/<int:lesson_id>')
@@ -2636,9 +2856,23 @@ def lesson_builder(lesson_id=None):
     current_user = get_current_user()
     lesson = None
     config = None
+    is_core_lesson = False
+
     if lesson_id:
         lesson = Lesson.query.get_or_404(lesson_id)
-        config = lesson.config or {}
+        has_custom = bool(lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'))
+        # If this is one of the 5 default core curriculum lessons or has no custom slides, initialize starter slides and mark as core
+        if lesson.id in [1, 2, 3, 4, 5] or not has_custom:
+            is_core_lesson = True
+            starter_slides = _get_core_lesson_starter_slides(lesson.title)
+            config = {
+                "title": f"{lesson.title} (Configured)",
+                "description": lesson.description or f"Configured {lesson.title} interactive slide presentation.",
+                "grade_level": "Grade 3",
+                "slides": starter_slides
+            }
+        else:
+            config = lesson.config or {}
 
     preset_images = [
         {"label": "Tree", "src": "/static/images/tree.webp"},
@@ -2661,6 +2895,7 @@ def lesson_builder(lesson_id=None):
         current_user=current_user,
         lesson=lesson,
         config=config,
+        is_core_lesson=is_core_lesson,
         preset_images=preset_images
     )
 
@@ -2674,6 +2909,7 @@ def save_lesson():
 
     current_user = get_current_user()
     lesson_id = request.form.get('lesson_id', type=int)
+    is_core_lesson = (request.form.get('is_core_lesson') == '1') or (lesson_id and lesson_id in [1, 2, 3, 4, 5])
     title = request.form.get('title', 'Science Lesson').strip()
     description = request.form.get('description', '').strip()
     grade_level = request.form.get('grade_level', 'Grade 3').strip()
@@ -2683,7 +2919,7 @@ def save_lesson():
         slides = json.loads(slides_json)
     except Exception as e:
         flash(f"Invalid slide configuration: {e}", "danger")
-        return redirect(url_for('teacher.content_management'))
+        return redirect(url_for('teacher.lesson_studio'))
 
     upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'lessons')
     os.makedirs(upload_dir, exist_ok=True)
@@ -2710,27 +2946,31 @@ def save_lesson():
         "slides": slides
     }
 
-    if lesson_id:
+    # When editing a default core lesson, always create a separate configured lesson so core records are never overwritten
+    if is_core_lesson or not lesson_id:
+        new_lesson = Lesson(
+            title=title,
+            description=description,
+            config=config_payload,
+            is_archived=False
+        )
+        db.session.add(new_lesson)
+        db.session.commit()
+        flash(f"New configured lesson '{title}' created successfully! It is now available to assign.", "success")
+        log_access(current_user, 'create_configured_lesson', f'lesson_id={new_lesson.id} title={title}')
+        return redirect(url_for('teacher.lesson_studio'))
+    else:
         lesson = Lesson.query.get(lesson_id)
         if not lesson:
             flash("Lesson not found.", "danger")
-            return redirect(url_for('teacher.content_management'))
+            return redirect(url_for('teacher.lesson_studio'))
         lesson.title = title
         lesson.description = description
         lesson.config = config_payload
+        db.session.commit()
         flash(f"Lesson '{title}' updated successfully!", "success")
-    else:
-        lesson = Lesson(
-            title=title,
-            description=description,
-            config=config_payload
-        )
-        db.session.add(lesson)
-        flash(f"New Lesson '{title}' created successfully!", "success")
-
-    db.session.commit()
-    log_access(current_user, 'save_custom_lesson', f'lesson_id={lesson.id} title={title}')
-    return redirect(url_for('teacher.lesson_studio'))
+        log_access(current_user, 'save_custom_lesson', f'lesson_id={lesson.id} title={title}')
+        return redirect(url_for('teacher.lesson_studio'))
 
 
 @teacher_bp.route('/content/lesson/preview/<int:lesson_id>')
@@ -2739,6 +2979,21 @@ def save_lesson():
 def preview_lesson(lesson_id):
     """Test play a lesson slideshow as teacher without recording student progress"""
     lesson = Lesson.query.get_or_404(lesson_id)
+    has_custom = bool(lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'))
+
+    # If it is a core lesson without custom slide configurations, render its dedicated original template
+    if not has_custom:
+        t_lower = (lesson.title or '').lower()
+        if 'animal' in t_lower:
+            return render_template('student/animal_body_parts_lesson.html', lesson=lesson, initial_slide=0, is_preview=True)
+        elif 'plant' in t_lower:
+            return render_template('student/plant_parts_lesson.html', lesson=lesson, initial_slide=0, is_preview=True)
+        elif 'metal' in t_lower:
+            return render_template('student/properties_of_metals_lesson.html', lesson=lesson, initial_slide=0, is_preview=True)
+        elif 'recycl' in t_lower:
+            return render_template('student/recycling_lesson.html', lesson=lesson, initial_slide=0, is_preview=True)
+
+    # For Living vs Non-Living or any customized/new slide deck, use the dynamic slide deck engine
     return render_template(
         'student/living_non_living_lesson.html',
         lesson=lesson,

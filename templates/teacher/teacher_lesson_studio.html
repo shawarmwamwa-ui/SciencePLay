@@ -270,7 +270,7 @@
                             <i class="bi bi-journal-plus"></i>
                             <span>Assign</span>
                           </button>
-                          {% if card.has_custom_slides and card.lesson.id != 1 %}
+                          {% if card.has_custom_slides and card.lesson.id not in [1, 2, 3, 4, 5] %}
                           <form method="POST" action="{{ url_for('teacher.delete_lesson', lesson_id=card.lesson.id) }}" onsubmit="return confirm('Archive lesson \'{{ card.title }}\'?');" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Lesson">

@@ -309,7 +309,7 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
   }
 
   function saveProgress(completed = false) {
-    if (!lessonId) return Promise.resolve();
+    if (window.isTeacherPreview || !lessonId) return Promise.resolve();
     const now = performance.now();
     const delta = Math.max(1, Math.round((now - state.lastSavedTime) / 1000));
     state.lastSavedTime = now;
@@ -337,6 +337,7 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
   }
 
   function logQuickCheckAttempt(slide, optId, correct) {
+    if (window.isTeacherPreview || !lessonId) return;
     fetch('/student/lesson_question_attempt', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -424,7 +425,7 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
         nextBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Finishing...';
       }
       saveProgress(true).finally(() => {
-        window.location.href = '/student/lessons';
+        window.location.href = window.isTeacherPreview ? '/teacher/content/lesson_studio' : '/student/lessons';
       });
       return;
     }
@@ -506,7 +507,7 @@ export function initBodyPartsLesson(slides, lessonId, lessonName, initialSlide =
     const isAtEnd = state.currentIndex >= totalSlides - 1 || slides[state.currentIndex]?.type === 'summary';
     backBtn.classList.add('disabled');
     saveProgress(isAtEnd).finally(() => {
-      window.location.href = '/student/lessons';
+      window.location.href = window.isTeacherPreview ? '/teacher/content/lesson_studio' : '/student/lessons';
     });
   });
 

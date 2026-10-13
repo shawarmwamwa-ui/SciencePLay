@@ -171,7 +171,7 @@ function bindNavigation() {
         nextBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Finishing...';
       }
       saveLessonProgress(true).finally(() => {
-        window.location.href = '/student/lessons';
+        window.location.href = window.isTeacherPreview ? '/teacher/content/lesson_studio' : '/student/lessons';
       });
       return;
     }
@@ -203,7 +203,7 @@ function bindNavigation() {
       const isAtEnd = lessonState.currentIndex >= slides.length - 1 || getCurrentSlide()?.type === 'summary';
       backBtn.classList.add('disabled');
       saveLessonProgress(isAtEnd).finally(() => {
-        window.location.href = '/student/lessons';
+        window.location.href = window.isTeacherPreview ? '/teacher/content/lesson_studio' : '/student/lessons';
       });
     });
   }

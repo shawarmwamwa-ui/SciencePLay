@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% if lesson %}Edit Lesson: {{ lesson.title }}{% else %}New Lesson Builder{% endif %} — SciencePlay</title>
+  <title>{% if is_core_lesson %}Configure Lesson: {{ lesson.title }}{% elif lesson %}Edit Lesson: {{ lesson.title }}{% else %}New Lesson Builder{% endif %} — SciencePlay</title>
   <meta name="description" content="SciencePlay Lesson Studio: Visual slide canvas to create interactive science slideshows and quick-check questions.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -413,7 +413,7 @@
                   <i class="bi bi-arrow-left"></i><span>Back to Lesson Studio</span>
                 </a>
                 <h1 class="page-title fw-black text-dark mb-1">
-                  {% if lesson %}Edit Lesson: {{ lesson.title }}{% else %}New Lesson Studio Builder{% endif %}
+                  {% if is_core_lesson %}Configure Lesson: {{ lesson.title }}{% elif lesson %}Edit Lesson: {{ lesson.title }}{% else %}New Lesson Studio Builder{% endif %}
                 </h1>
                 <p class="page-subtitle text-muted mb-0">Create interactive slide decks, voice narrations, and quick-check questions for students.</p>
               </div>
@@ -430,10 +430,22 @@
               </div>
             </div>
 
+            {% if is_core_lesson %}
+            <div class="alert alert-info border-0 rounded-4 d-flex align-items-center gap-3 mb-4 shadow-sm" style="background-color: #f0f9ff; border-left: 4px solid #0284c7 !important;">
+              <i class="bi bi-info-circle-fill fs-4 text-primary"></i>
+              <div class="small">
+                <strong class="text-dark">Configuring Core Lesson:</strong> You are customizing <em>{{ lesson.title }}</em>. When saved, this creates a new custom lesson that can be assigned to students without overwriting the core curriculum.
+              </div>
+            </div>
+            {% endif %}
+
             <!-- Form Wrapper -->
             <form id="lessonBuilderForm" method="POST" action="{{ url_for('teacher.save_lesson') }}" enctype="multipart/form-data">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              {% if lesson %}
+              {% if is_core_lesson %}
+                <input type="hidden" name="is_core_lesson" value="1">
+                <input type="hidden" name="source_lesson_id" value="{{ lesson.id }}">
+              {% elif lesson %}
                 <input type="hidden" name="lesson_id" value="{{ lesson.id }}">
               {% endif %}
               <input type="hidden" name="slides_data" id="slidesDataInput" value="">

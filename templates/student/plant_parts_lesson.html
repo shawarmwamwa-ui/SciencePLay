@@ -19,10 +19,17 @@
 
     <!-- ── Header ─────────────────────────────────────────────────────────── -->
     <header class="bpl-header">
+      {% if is_preview %}
+      <a href="{{ url_for('teacher.lesson_studio') }}" class="bpl-back-btn text-white bg-success border-0" title="Exit Preview">
+        <i class="bi bi-box-arrow-left"></i>
+        <span>Exit Preview</span>
+      </a>
+      {% else %}
       <a href="{{ url_for('student.lessons') }}" class="bpl-back-btn">
         <i class="bi bi-arrow-left-circle-fill"></i>
         <span>Back to Lessons</span>
       </a>
+      {% endif %}
       <div class="bpl-title-group">
         <h1><i class="bi bi-tree-fill me-2 text-success"></i>Plant Parts</h1>
         <p>How roots, stem, and leaves keep a plant alive</p>
@@ -73,6 +80,7 @@
   <script>
     window.currentLessonId = {{ lesson.id if lesson else 'null' }};
     window.initialSlide = {{ initial_slide if initial_slide is defined else 0 }};
+    window.isTeacherPreview = {{ (is_preview|default(false))|tojson }};
   </script>
   <script type="module">
     import { PLANT_PARTS_SLIDES } from "{{ url_for('static', filename='js/plantPartsLessonData.js', v='20260903_2') }}";

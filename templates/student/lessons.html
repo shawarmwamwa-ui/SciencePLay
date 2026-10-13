@@ -61,7 +61,9 @@
             </div>
           </div>
           {% else %}
-          {% if item.lesson.title == 'Animal Body Parts' %}
+          {% if item.lesson.config and item.lesson.config.get('slides') %}
+            {% set lesson_url = url_for('student.living_non_living_lesson', lesson_id=item.lesson.id) %}
+          {% elif item.lesson.title == 'Animal Body Parts' %}
             {% set lesson_url = url_for('student.animal_body_parts_lesson') %}
           {% elif item.lesson.title == 'Plant Parts' %}
             {% set lesson_url = url_for('student.plant_parts_lesson') %}
@@ -70,7 +72,7 @@
           {% elif item.lesson.title == 'Recycling' %}
             {% set lesson_url = url_for('student.recycling_lesson') %}
           {% else %}
-            {% set lesson_url = url_for('student.living_non_living_lesson') %}
+            {% set lesson_url = url_for('student.living_non_living_lesson', lesson_id=item.lesson.id) %}
           {% endif %}
           {% set btn_colors = ['brutal-open-btn-green', 'brutal-open-btn-yellow', 'brutal-open-btn-pink', 'brutal-open-btn-purple', 'brutal-open-btn-cyan'] %}
           {% set btn_class = btn_colors[loop.index0 % btn_colors|length] %}
