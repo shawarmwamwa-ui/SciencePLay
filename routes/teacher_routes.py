@@ -2683,222 +2683,598 @@ def permanent_delete_activity(activity_id):
 
 # ══════════════════════════════════════════════════════════════════════════════
 def _get_core_lesson_starter_slides(title):
-    """Provides curated 5-slide starter templates for each core science curriculum topic"""
+    """Provides the full, authentic curriculum slide decks for each core science topic so teachers can edit real content"""
     t_lower = (title or '').lower()
     if 'animal' in t_lower:
         return [
             {
                 "id": "slide-1",
-                "title": "Animal Body Parts Intro",
+                "title": "How Animals Move & Find Food",
                 "type": "concept",
                 "image": "/static/images/dog.webp",
-                "explanation": "Animals have amazing outer body parts that help them move, find food, and stay safe in nature!"
+                "explanation": "Animals have special body parts that help them walk, fly, eat, and stay safe in nature! 🐾"
             },
             {
                 "id": "slide-2",
-                "title": "Parts for Moving Around",
+                "title": "The Head: Eyes & Mouth",
                 "type": "concept",
-                "image": "/static/images/bird.webp",
-                "explanation": "Wings help birds fly high, strong legs help animals run fast, and fins help fish swim in water."
+                "image": "/static/images/cat.webp",
+                "explanation": "The head holds the eyes for watching and the mouth for eating! 👀 👄"
             },
             {
                 "id": "slide-3",
-                "title": "Quick Check: Animal Movement",
-                "type": "quick-check",
-                "prompt": "Which body part helps a bird fly high in the sky? 🪶",
-                "image": "/static/images/bird.webp",
-                "explanation": "Wings are light and feathered to let birds soar through the air.",
-                "options": [
-                    {"id": "opt-1", "label": "Feathered Wings", "icon": "/static/images/bird.webp", "isCorrect": True},
-                    {"id": "opt-2", "label": "Walking Paws", "icon": "/static/images/cat.webp", "isCorrect": False}
-                ]
+                "title": "The Head: Senses & Eating",
+                "type": "concept",
+                "image": "/static/images/dog.webp",
+                "explanation": "Eyes spot food from far away, while the mouth chews food for daily energy! 🍎"
             },
             {
                 "id": "slide-4",
-                "title": "Parts for Finding Food",
+                "title": "Legs: Moving Across Land",
                 "type": "concept",
-                "image": "/static/images/cat.webp",
-                "explanation": "Sharp teeth help carnivores chew food, long beaks help hummingbirds drink nectar, and claws help catch prey."
+                "image": "/static/images/dog.webp",
+                "explanation": "Legs support the body so animals can walk, run, and explore land! 🦊"
             },
             {
                 "id": "slide-5",
-                "title": "Animal Anatomy Explorer Done!",
+                "title": "Legs: Finding Food & Safety",
+                "type": "concept",
+                "image": "/static/images/cat.webp",
+                "explanation": "Strong legs help animals search for food and quickly leap away from danger! 🏃"
+            },
+            {
+                "id": "slide-6",
+                "title": "Wings: Soaring in the Air",
+                "type": "concept",
+                "image": "/static/images/bird.webp",
+                "explanation": "Wings are light and wide to help birds soar smoothly through the sky! 🦅"
+            },
+            {
+                "id": "slide-7",
+                "title": "Wings: High Food & Quick Escape",
+                "type": "concept",
+                "image": "/static/images/bird.webp",
+                "explanation": "Wings fly up to reach fruits in tall trees and quickly escape predators on the ground! 🌳"
+            },
+            {
+                "id": "slide-8",
+                "title": "Quick Check: The Head",
+                "type": "quick-check",
+                "prompt": "Which part of the head helps an animal SEE food? 👀",
+                "image": "/static/images/cat.webp",
+                "explanation": "Eyes spot food and danger from afar.",
+                "options": [
+                    {"id": "opt-1", "label": "Tail", "icon": "/static/images/dog.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "Eyes", "icon": "/static/images/cat.webp", "isCorrect": True},
+                    {"id": "opt-3", "label": "Claws", "icon": "/static/images/bird.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-9",
+                "title": "Quick Check: Legs",
+                "type": "quick-check",
+                "prompt": "How do legs help an animal when it is hungry? 🐾",
+                "image": "/static/images/dog.webp",
+                "explanation": "Legs let animals roam, walk, and run across the land to find food.",
+                "options": [
+                    {"id": "opt-1", "label": "Sleep in shade", "icon": "/static/images/cat.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "Fly into clouds", "icon": "/static/images/bird.webp", "isCorrect": False},
+                    {"id": "opt-3", "label": "Walk and run to find food", "icon": "/static/images/dog.webp", "isCorrect": True}
+                ]
+            },
+            {
+                "id": "slide-10",
+                "title": "Quick Check: Wings",
+                "type": "quick-check",
+                "prompt": "Why do birds need wings to get food in tall trees? 🦅",
+                "image": "/static/images/bird.webp",
+                "explanation": "Wings allow birds to fly high and reach tall tree branches.",
+                "options": [
+                    {"id": "opt-1", "label": "To dig deep holes", "icon": "/static/images/rock.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "To fly up and reach branches", "icon": "/static/images/bird.webp", "isCorrect": True},
+                    {"id": "opt-3", "label": "To swim under soil", "icon": "/static/images/puddle.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-11",
+                "title": "Deepen Thinking: In Water",
+                "type": "quick-check",
+                "prompt": "A fish has NO legs and NO wings. How does it move through water to find food? 🐟",
+                "image": "/static/images/fish.webp",
+                "explanation": "Fish use fins and a strong tail to swim through water!",
+                "options": [
+                    {"id": "opt-1", "label": "Grows temporary legs", "icon": "/static/images/dog.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "Flies above water", "icon": "/static/images/bird.webp", "isCorrect": False},
+                    {"id": "opt-3", "label": "Uses fins and tail to swim", "icon": "/static/images/fish.webp", "isCorrect": True}
+                ]
+            },
+            {
+                "id": "slide-12",
+                "title": "Animal Body Parts: Big Ideas",
                 "type": "summary",
                 "image": "/static/images/star.webp",
-                "explanation": "Great job! You learned how animal body parts help each creature thrive in their habitat."
+                "explanation": "👀 Head: Eyes spot food and mouth chews food. 🐾 Legs: Walk, run, and leap across land. 🦅 Wings: Fly high into trees and escape danger. 🐟 Animals have body parts built for where they live!"
             }
         ]
     elif 'plant' in t_lower:
         return [
             {
                 "id": "slide-1",
-                "title": "Welcome to Plant Parts",
+                "title": "What Keeps a Plant Alive?",
                 "type": "concept",
                 "image": "/static/images/plant.webp",
-                "explanation": "Plants have special parts that work together: roots underground, sturdy stems, and green leaves!"
+                "explanation": "All plant parts work together to help the plant stand tall, drink water, and make food! 🌿"
             },
             {
                 "id": "slide-2",
-                "title": "Roots Drink Water",
+                "title": "Roots: Underground Network",
                 "type": "concept",
                 "image": "/static/images/tree.webp",
-                "explanation": "Roots grow deep into the soil. They anchor the plant firmly and drink water and nutrients from the earth."
+                "explanation": "Roots spread deep into the soil beneath the plant to grip the ground firmly. 🌱"
             },
             {
                 "id": "slide-3",
-                "title": "Quick Check: Roots in Action",
-                "type": "quick-check",
-                "prompt": "Which plant part absorbs water from underground soil? 🌱",
-                "image": "/static/images/plant.webp",
-                "explanation": "Roots act like tiny straws that soak up water from the soil.",
-                "options": [
-                    {"id": "opt-1", "label": "Underground Roots", "icon": "/static/images/tree.webp", "isCorrect": True},
-                    {"id": "opt-2", "label": "Colorful Flower", "icon": "/static/images/flower.webp", "isCorrect": False}
-                ]
+                "title": "Roots: Drinking Water & Anchoring",
+                "type": "concept",
+                "image": "/static/images/tree.webp",
+                "explanation": "Roots drink up water and minerals from the soil and hold the plant steady in strong winds! 🌧️"
             },
             {
                 "id": "slide-4",
-                "title": "Leaves Make Food with Sunlight",
+                "title": "The Stem: The Central Pillar",
                 "type": "concept",
-                "image": "/static/images/flower.webp",
-                "explanation": "Green leaves catch sunlight and air to make energy and food for the plant through photosynthesis."
+                "image": "/static/images/plant.webp",
+                "explanation": "The stem rises above the ground, holding leaves and flowers high toward the sun! ☀️"
             },
             {
                 "id": "slide-5",
-                "title": "Botanist Master Certified!",
+                "title": "The Stem: The Water Elevator",
+                "type": "concept",
+                "image": "/static/images/plant.webp",
+                "explanation": "Inside the stem, tiny tubes carry water and nutrients up from the roots to the leaves like a straw! 🥤"
+            },
+            {
+                "id": "slide-6",
+                "title": "Leaves: Sun Catchers",
+                "type": "concept",
+                "image": "/static/images/flower.webp",
+                "explanation": "Leaves are flat and green to catch as much warm sunlight as possible! 🍃"
+            },
+            {
+                "id": "slide-7",
+                "title": "Leaves: Making Food",
+                "type": "concept",
+                "image": "/static/images/flower.webp",
+                "explanation": "Leaves are the plant's kitchen! They use sunlight, air, and water to make food (sugar) through photosynthesis! 🍲"
+            },
+            {
+                "id": "slide-8",
+                "title": "Quick Check: Roots",
+                "type": "quick-check",
+                "prompt": "Which plant part absorbs water from the soil? 💧",
+                "image": "/static/images/plant.webp",
+                "explanation": "Roots grow underground and absorb water and nutrients from the soil.",
+                "options": [
+                    {"id": "opt-1", "label": "Leaves", "icon": "/static/images/flower.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "Roots", "icon": "/static/images/tree.webp", "isCorrect": True},
+                    {"id": "opt-3", "label": "Flower", "icon": "/static/images/flower.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-9",
+                "title": "Quick Check: Stem",
+                "type": "quick-check",
+                "prompt": "What does the stem carry from roots up to leaves? 🌿",
+                "image": "/static/images/plant.webp",
+                "explanation": "The stem is like a pipe carrying water and nutrients up to the leaves.",
+                "options": [
+                    {"id": "opt-1", "label": "Seeds only", "icon": "/static/images/tree.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "Air bubbles", "icon": "/static/images/puddle.webp", "isCorrect": False},
+                    {"id": "opt-3", "label": "Water and nutrients", "icon": "/static/images/plant.webp", "isCorrect": True}
+                ]
+            },
+            {
+                "id": "slide-10",
+                "title": "Quick Check: Leaves",
+                "type": "quick-check",
+                "prompt": "What do leaves need to make food for the plant? ☀️",
+                "image": "/static/images/flower.webp",
+                "explanation": "Leaves catch sunlight and air to cook plant food.",
+                "options": [
+                    {"id": "opt-1", "label": "Soil only", "icon": "/static/images/tree.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "Sunlight and air", "icon": "/static/images/flower.webp", "isCorrect": True},
+                    {"id": "opt-3", "label": "Rocks and sand", "icon": "/static/images/rock.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-11",
+                "title": "Deepen Thinking: Sunlight",
+                "type": "quick-check",
+                "prompt": "A plant has water but is kept in a dark room with no light. Which part suffers first?",
+                "image": "/static/images/plant.webp",
+                "explanation": "Without sunlight, leaves cannot make food for the rest of the plant!",
+                "options": [
+                    {"id": "opt-1", "label": "Roots — cannot absorb water", "icon": "/static/images/tree.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "Stem — cannot hold water", "icon": "/static/images/plant.webp", "isCorrect": False},
+                    {"id": "opt-3", "label": "Leaves — cannot make food without light", "icon": "/static/images/flower.webp", "isCorrect": True}
+                ]
+            },
+            {
+                "id": "slide-12",
+                "title": "Plant Parts: Big Ideas",
                 "type": "summary",
                 "image": "/static/images/star.webp",
-                "explanation": "Fantastic! You know how roots, stems, leaves, and flowers keep plants healthy and blooming."
+                "explanation": "🌱 Roots anchor the plant and drink water. 🌿 The stem holds the plant high and carries water up. 🍃 Leaves catch sunlight and air to make food! 🤝 All parts work together as a team."
             }
         ]
     elif 'metal' in t_lower:
         return [
             {
                 "id": "slide-1",
-                "title": "Properties of Metals",
+                "title": "Iron Objects Around Us",
                 "type": "concept",
                 "image": "/static/images/rock.webp",
-                "explanation": "Metals are special materials found in Earth! Common metals include Iron, Copper, Gold, and Silver."
+                "explanation": "Iron is all around us in heavy gates, cooking pans, and nails! It is one of Earth's strongest metals. 🔩"
             },
             {
                 "id": "slide-2",
-                "title": "Iron is Strong & Magnetic",
+                "title": "Property 1: Hard & Strong",
                 "type": "concept",
-                "image": "/static/images/chair.webp",
-                "explanation": "Iron is heavy and very strong. It is used to build bridges and skyscrapers, and sticks firmly to magnets!"
+                "image": "/static/images/rock.webp",
+                "explanation": "Iron is super strong and hard. It does not easily bend, crack, or melt in hot soup, which makes it great for building bridges!"
             },
             {
                 "id": "slide-3",
-                "title": "Quick Check: Magnetic Metal",
-                "type": "quick-check",
-                "prompt": "Which metal is attracted by magnets and used in strong buildings? 🧲",
+                "title": "Property 2: Abundant in Earth",
+                "type": "concept",
                 "image": "/static/images/rock.webp",
-                "explanation": "Iron is magnetic and one of the strongest structural metals.",
-                "options": [
-                    {"id": "opt-1", "label": "Iron Bar", "icon": "/static/images/rock.webp", "isCorrect": True},
-                    {"id": "opt-2", "label": "Wood Stick", "icon": "/static/images/tree.webp", "isCorrect": False}
-                ]
+                "explanation": "Iron is one of the most plentiful metals on Earth. Builders use thousands of iron beams to support tall buildings!"
             },
             {
                 "id": "slide-4",
-                "title": "Copper Conducts Electricity",
+                "title": "Property 3: Iron Can Rust",
                 "type": "concept",
-                "image": "/static/images/bicycle.webp",
-                "explanation": "Copper is a reddish metal that conducts electricity easily. It is inside wires that power our lights and screens!"
+                "image": "/static/images/chair.webp",
+                "explanation": "Rain and air cause iron to turn into reddish-brown rust over time. Painting iron helps protect it from moisture and rust!"
             },
             {
                 "id": "slide-5",
-                "title": "Metal Clue Detective Complete!",
+                "title": "Quick Check: Iron",
+                "type": "quick-check",
+                "prompt": "What happens to iron when left outside in wet rainy air? 🌧️",
+                "image": "/static/images/rock.webp",
+                "explanation": "Iron reacts with rain and air to form rust.",
+                "options": [
+                    {"id": "opt-1", "label": "It turns into gold", "icon": "/static/images/rock.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "It forms reddish rust", "icon": "/static/images/chair.webp", "isCorrect": True}
+                ]
+            },
+            {
+                "id": "slide-6",
+                "title": "Copper: The Power Conductor",
+                "type": "concept",
+                "image": "/static/images/bicycle.webp",
+                "explanation": "Inside power cables hide reddish-orange copper threads! Copper brings electrical power safely into our homes. ⚡"
+            },
+            {
+                "id": "slide-7",
+                "title": "Conductors & Plastic Insulation",
+                "type": "concept",
+                "image": "/static/images/bicycle.webp",
+                "explanation": "Copper conducts electricity easily! Plastic coating wraps around copper wires to keep our hands safe from shocks. 🔌"
+            },
+            {
+                "id": "slide-8",
+                "title": "Quick Check: Copper Wires",
+                "type": "quick-check",
+                "prompt": "Why are copper wires coated in plastic? 🔌",
+                "image": "/static/images/bicycle.webp",
+                "explanation": "Plastic is an insulator that protects us from electric shocks.",
+                "options": [
+                    {"id": "opt-1", "label": "To make wires heavier", "icon": "/static/images/rock.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "To insulate and protect from shocks", "icon": "/static/images/bicycle.webp", "isCorrect": True}
+                ]
+            },
+            {
+                "id": "slide-9",
+                "title": "Gold & Silver: Precious Metals",
+                "type": "concept",
+                "image": "/static/images/rock.webp",
+                "explanation": "Gold and silver never rust! They keep their dazzling shine for centuries in crowns, rings, and medals. 👑"
+            },
+            {
+                "id": "slide-10",
+                "title": "Luster & Light Reflection",
+                "type": "concept",
+                "image": "/static/images/rock.webp",
+                "explanation": "Gold and silver have brilliant metallic luster. When light hits them, they sparkle brightly and resist corrosion! ✨"
+            },
+            {
+                "id": "slide-11",
+                "title": "Quick Check: Shiny Metals",
+                "type": "quick-check",
+                "prompt": "Which precious metals reflect light beautifully and do not easily rust? 💍",
+                "image": "/static/images/rock.webp",
+                "explanation": "Gold and silver do not rust and keep their beautiful shine.",
+                "options": [
+                    {"id": "opt-1", "label": "Gold and Silver", "icon": "/static/images/rock.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Wood and Plastic", "icon": "/static/images/tree.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-12",
+                "title": "Reflect: Metal Detectives",
+                "type": "concept",
+                "image": "/static/images/chair.webp",
+                "explanation": "Look around! Iron protects our gates, copper powers our lights, and gold & silver shine in jewelry! 🔍"
+            },
+            {
+                "id": "slide-13",
+                "title": "Real-World Metal Jobs",
+                "type": "concept",
+                "image": "/static/images/chair.webp",
+                "explanation": "Every metal has a special job matched to its unique properties in engineering and medicine! 🛠️"
+            },
+            {
+                "id": "slide-14",
+                "title": "Common vs. Rare Metals",
+                "type": "concept",
+                "image": "/static/images/rock.webp",
+                "explanation": "Iron is abundant to build entire cities! Gold and silver are rare treasures. All metals can be recycled! ♻️"
+            },
+            {
+                "id": "slide-15",
+                "title": "Properties of Metals: Big Ideas",
                 "type": "summary",
                 "image": "/static/images/star.webp",
-                "explanation": "Awesome work! You discovered the key scientific properties of iron and copper metals."
+                "explanation": "🔩 Iron: Strong, magnetic, can rust. ⚡ Copper: Reddish, conducts electricity. ✨ Gold & Silver: Shiny, never rust."
+            },
+            {
+                "id": "slide-16",
+                "title": "Assessment 1: Electric Cables",
+                "type": "quick-check",
+                "prompt": "Which metal is the standard choice inside electric cables because electricity flows through it smoothly?",
+                "image": "/static/images/bicycle.webp",
+                "explanation": "Copper conducts electricity easily and efficiently.",
+                "options": [
+                    {"id": "opt-1", "label": "Copper", "icon": "/static/images/bicycle.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Iron", "icon": "/static/images/rock.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-17",
+                "title": "Assessment 2: Reaction with Water",
+                "type": "quick-check",
+                "prompt": "What happens when iron is exposed to moisture and oxygen over time?",
+                "image": "/static/images/chair.webp",
+                "explanation": "Iron reacts to form rust, an orange-brown crust that weakens the metal.",
+                "options": [
+                    {"id": "opt-1", "label": "It forms rust and weakens", "icon": "/static/images/chair.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "It melts into a puddle", "icon": "/static/images/puddle.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-18",
+                "title": "Assessment 3: Jewelry Value",
+                "type": "quick-check",
+                "prompt": "Why are gold and silver prized for making jewelry and coins?",
+                "image": "/static/images/rock.webp",
+                "explanation": "They reflect light with bright luster and do not easily rust.",
+                "options": [
+                    {"id": "opt-1", "label": "They reflect light and resist rust", "icon": "/static/images/rock.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "They are the cheapest metals", "icon": "/static/images/chair.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-19",
+                "title": "Assessment 4: Heavy Structures",
+                "type": "quick-check",
+                "prompt": "Which property makes iron best for heavy bridge beams and skyscraper frames?",
+                "image": "/static/images/rock.webp",
+                "explanation": "Iron has extreme hardness and high tensile strength.",
+                "options": [
+                    {"id": "opt-1", "label": "Hardness and high strength", "icon": "/static/images/rock.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Lightness and softness", "icon": "/static/images/plant.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-20",
+                "title": "Assessment 5: Wire Safety",
+                "type": "quick-check",
+                "prompt": "What is the plastic coating around copper wires used for?",
+                "image": "/static/images/bicycle.webp",
+                "explanation": "Plastic is an insulator that traps current inside the wire to prevent electric shocks.",
+                "options": [
+                    {"id": "opt-1", "label": "Insulation and shock protection", "icon": "/static/images/bicycle.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Decoration only", "icon": "/static/images/flower.webp", "isCorrect": False}
+                ]
             }
         ]
     elif 'recycl' in t_lower:
         return [
             {
                 "id": "slide-1",
-                "title": "Caring for Our Planet",
+                "title": "What Happens to Our Trash?",
                 "type": "concept",
-                "image": "/static/images/plant.webp",
-                "explanation": "Every day we use materials that can either become compost or be recycled into brand-new products!"
+                "image": "/static/images/puddle.webp",
+                "explanation": "We throw away bottles, cans, and paper every day. Recycling gives them a brand new life instead of piling up in dumps!"
             },
             {
                 "id": "slide-2",
-                "title": "Organic Compost & Food Waste",
+                "title": "The Recycling Process",
                 "type": "concept",
-                "image": "/static/images/tree.webp",
-                "explanation": "Leaves, fruit peels, and vegetables decompose naturally into nutrient-rich soil for gardens."
+                "image": "/static/images/plant.webp",
+                "explanation": "Recycling turns old trash into brand new items! Look for the 3-arrow loop symbol on containers: Collect, Clean, and Remake!"
             },
             {
                 "id": "slide-3",
-                "title": "Quick Check: Compost Sorting",
-                "type": "quick-check",
-                "prompt": "Which item decomposes naturally in a garden compost bin? 🍂",
-                "image": "/static/images/plant.webp",
-                "explanation": "Organic plant materials and fallen leaves decompose naturally into soil.",
-                "options": [
-                    {"id": "opt-1", "label": "Fallen Leaves", "icon": "/static/images/plant.webp", "isCorrect": True},
-                    {"id": "opt-2", "label": "Plastic Wrapper", "icon": "/static/images/puddle.webp", "isCorrect": False}
-                ]
+                "title": "Let's Sort: Recyclable or Compost?",
+                "type": "concept",
+                "image": "/static/images/tree.webp",
+                "explanation": "Clean plastics, glass, paper, and cans go into the Recycling Bin. Fruit peels and food scraps go into the Compost Bin!"
             },
             {
                 "id": "slide-4",
-                "title": "Recyclable Plastics and Cans",
-                "type": "concept",
-                "image": "/static/images/puddle.webp",
-                "explanation": "Clean plastics, glass, and metals can be melted and remanufactured, keeping waste out of landfills."
+                "title": "Quick Check: Sorting Right",
+                "type": "quick-check",
+                "prompt": "Why should leftover food scraps NOT be placed into a bin of clean paper recyclables? 🍎",
+                "image": "/static/images/plant.webp",
+                "explanation": "Food waste makes dry paper dirty and wet, ruining entire recycling loads.",
+                "options": [
+                    {"id": "opt-1", "label": "Food scraps contaminate clean paper", "icon": "/static/images/plant.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Food scraps are made of copper", "icon": "/static/images/rock.webp", "isCorrect": False}
+                ]
             },
             {
                 "id": "slide-5",
-                "title": "Eco Champion Certified!",
+                "title": "Reflect: Recycling at Home",
+                "type": "concept",
+                "image": "/static/images/tree.webp",
+                "explanation": "Having separate bins at home makes sorting easy. Small daily habits keep mountains of trash out of our oceans!"
+            },
+            {
+                "id": "slide-6",
+                "title": "Discuss: Sorting Tricky Items",
+                "type": "concept",
+                "image": "/static/images/puddle.webp",
+                "explanation": "We sort trash into Biodegradable, Non-Biodegradable, and Recyclable. Watch out for tricky mixed materials!"
+            },
+            {
+                "id": "slide-7",
+                "title": "Deepen: The Wonder of Metal Recycling",
+                "type": "concept",
+                "image": "/static/images/rock.webp",
+                "explanation": "Metals like iron, copper, and aluminum can be melted down and remade again and again forever without losing strength!"
+            },
+            {
+                "id": "slide-8",
+                "title": "Big Ideas — Recycling",
                 "type": "summary",
                 "image": "/static/images/star.webp",
-                "explanation": "You are now ready to protect our planet Earth by sorting waste properly every single day!"
+                "explanation": "♻️ Recycling saves trees, saves energy, and keeps our Earth clean for animals and people!"
+            },
+            {
+                "id": "slide-9",
+                "title": "Assessment 1: What is Recycling?",
+                "type": "quick-check",
+                "prompt": "What does recycling mean in science?",
+                "image": "/static/images/plant.webp",
+                "explanation": "Recycling takes used materials and turns them into brand-new products.",
+                "options": [
+                    {"id": "opt-1", "label": "Turning used materials into new products", "icon": "/static/images/plant.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Throwing trash into the ocean", "icon": "/static/images/puddle.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-10",
+                "title": "Assessment 2: Recyclable Metal",
+                "type": "quick-check",
+                "prompt": "Which item can be melted down and remade into a new container in just 60 days?",
+                "image": "/static/images/rock.webp",
+                "explanation": "Aluminum cans are easily melted down and recycled indefinitely.",
+                "options": [
+                    {"id": "opt-1", "label": "Aluminum soda can", "icon": "/static/images/rock.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Banana peel", "icon": "/static/images/plant.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-11",
+                "title": "Assessment 3: Food Waste Safety",
+                "type": "quick-check",
+                "prompt": "Why must food waste be kept out of the dry paper recycling bin?",
+                "image": "/static/images/plant.webp",
+                "explanation": "Wet food rots and contaminates dry paper and cardboard fibers.",
+                "options": [
+                    {"id": "opt-1", "label": "It contaminates other recyclables", "icon": "/static/images/plant.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Food waste is magnetic", "icon": "/static/images/rock.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-12",
+                "title": "Assessment 4: Endless Recycling",
+                "type": "quick-check",
+                "prompt": "Which material can be recycled endlessly with zero loss of quality?",
+                "image": "/static/images/rock.webp",
+                "explanation": "Aluminum and metals can be melted and reshaped repeatedly.",
+                "options": [
+                    {"id": "opt-1", "label": "Aluminum can", "icon": "/static/images/rock.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Styrofoam plate", "icon": "/static/images/chair.webp", "isCorrect": False}
+                ]
+            },
+            {
+                "id": "slide-13",
+                "title": "Assessment 5: Caring for Earth",
+                "type": "quick-check",
+                "prompt": "How does recycling help protect the environment?",
+                "image": "/static/images/tree.webp",
+                "explanation": "It conserves natural resources, reduces mining, and cuts down landfill waste.",
+                "options": [
+                    {"id": "opt-1", "label": "Conserves resources and reduces landfill waste", "icon": "/static/images/tree.webp", "isCorrect": True},
+                    {"id": "opt-2", "label": "Makes trash vanish into thin air", "icon": "/static/images/puddle.webp", "isCorrect": False}
+                ]
             }
         ]
     else:
-        # Default Living vs Non-Living starter slides
+        # Default Living vs Non-Living full 7 slides
         return [
             {
                 "id": "slide-1",
-                "title": "Welcome to Science Discovery!",
+                "title": "Living vs Non-Living",
                 "type": "concept",
                 "image": "/static/images/tree.webp",
-                "explanation": "Our world is full of things to explore! Some are living things, and others are non-living."
+                "explanation": "Living things grow, breathe, and need food and water! 🌱 Non-living things do not do these on their own. 🪨"
             },
             {
                 "id": "slide-2",
-                "title": "What Makes Something Living?",
+                "title": "Tap to Explore",
                 "type": "concept",
-                "image": "/static/images/dog.webp",
-                "explanation": "Living things breathe, grow, and need food and water to survive. Animals and plants are alive!"
+                "image": "/static/images/tree.webp",
+                "explanation": "Observe the world around us: trees grow tall, birds fly and breathe, but bicycles and puddles cannot grow or eat!"
             },
             {
                 "id": "slide-3",
-                "title": "Quick Check: Find the Living Thing",
+                "title": "Quick Check: Living Thing",
                 "type": "quick-check",
-                "prompt": "Which of these is a living thing that needs water and grows? 🌱",
-                "image": "/static/images/tree.webp",
-                "explanation": "A green plant grows and needs water and sunlight to live.",
+                "prompt": "Which one can grow and needs water to stay alive? 🌱",
+                "image": "/static/images/plant.webp",
+                "explanation": "Plants are living things because they absorb water and grow.",
                 "options": [
-                    {"id": "opt-1", "label": "Green Plant", "icon": "/static/images/plant.webp", "isCorrect": True},
-                    {"id": "opt-2", "label": "Hard Rock", "icon": "/static/images/rock.webp", "isCorrect": False}
+                    {"id": "opt-1", "label": "Rock", "icon": "/static/images/rock.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "Plant", "icon": "/static/images/plant.webp", "isCorrect": True}
                 ]
             },
             {
                 "id": "slide-4",
-                "title": "What is Non-Living?",
+                "title": "More Objects to Classify",
                 "type": "concept",
-                "image": "/static/images/chair.webp",
-                "explanation": "Non-living things do not breathe, eat, or grow on their own. Chairs, bicycles, and rocks are non-living."
+                "image": "/static/images/cat.webp",
+                "explanation": "Cats eat food and run around. Toys, balls, and chairs are made by people and cannot breathe!"
             },
             {
                 "id": "slide-5",
-                "title": "Science Explorer Complete!",
+                "title": "Quick Check: Non-Living Thing",
+                "type": "quick-check",
+                "prompt": "Which object cannot breathe or move by itself? 🪑",
+                "image": "/static/images/chair.webp",
+                "explanation": "A chair is made of wood or plastic by people and cannot breathe or grow.",
+                "options": [
+                    {"id": "opt-1", "label": "Butterfly", "icon": "/static/images/butterfly.webp", "isCorrect": False},
+                    {"id": "opt-2", "label": "Chair", "icon": "/static/images/chair.webp", "isCorrect": True}
+                ]
+            },
+            {
+                "id": "slide-6",
+                "title": "Why is this Fish a Living Thing?",
+                "type": "concept",
+                "image": "/static/images/fish.webp",
+                "explanation": "A fish is living because it breathes water through gills, moves on its own, eats food, and grows larger!"
+            },
+            {
+                "id": "slide-7",
+                "title": "Living vs Non-Living: Big Ideas",
                 "type": "summary",
                 "image": "/static/images/star.webp",
-                "explanation": "You did it! You know how to classify living and non-living things in our environment."
+                "explanation": "🌱 Living things grow, breathe, and need food. 🪨 Non-living things do not eat, breathe, or grow on their own. Awesome job!"
             }
         ]
 

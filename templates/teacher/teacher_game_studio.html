@@ -226,7 +226,7 @@
                         <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
                           <i class="bi bi-plus-lg me-1"></i>Create Activity
                         </a>
-                        <a href="{{ url_for('teacher.preview_activity', activity_id=default_claw_id) }}" target="_blank" class="btn btn-outline-dark rounded-pill fw-bold py-2 px-3" title="Live Test Play">
+                        <a href="{{ url_for('teacher.preview_activity', activity_id=default_claw_id) }}" class="btn btn-outline-dark rounded-pill fw-bold py-2 px-3" title="Live Test Play">
                           <i class="bi bi-play-fill"></i>
                         </a>
                       {% else %}
@@ -330,7 +330,7 @@
 
                         <!-- Actions -->
                         <div class="d-flex align-items-center gap-2">
-                          <a href="{{ url_for('teacher.preview_activity', activity_id=card.activity.id) }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Test Play in Preview Mode">
+                          <a href="{{ url_for('teacher.preview_activity', activity_id=card.activity.id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Test Play in Preview Mode">
                             <i class="bi bi-play-circle-fill"></i>
                             <span>Test Play</span>
                           </a>

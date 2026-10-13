@@ -423,7 +423,7 @@
                   <i class="bi bi-arrow-left me-1"></i>Cancel
                 </a>
                 {% if lesson %}
-                  <a href="{{ url_for('teacher.preview_lesson', lesson_id=lesson.id) }}" target="_blank" class="btn btn-outline-dark rounded-pill px-3 fw-bold">
+                  <a href="{{ url_for('teacher.preview_lesson', lesson_id=lesson.id) }}" class="btn btn-outline-dark rounded-pill px-3 fw-bold">
                     <i class="bi bi-play-circle-fill me-1"></i>Test Play
                   </a>
                 {% endif %}
@@ -498,7 +498,7 @@
                     </div>
                   </div>
                   <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill fw-bold" id="slidesCountBadge">
-                    5 Slides
+                    {{ config.slides|length if config and config.slides else 7 }} Slides
                   </span>
                 </div>
 
@@ -744,7 +744,7 @@
       }
     }
 
-    // Default starter slide deck
+    // Default starter slide deck (Living vs Non-Living 7 slides)
     const DEFAULT_SLIDES = [
       {
         id: "slide-1",
@@ -755,18 +755,18 @@
       },
       {
         id: "slide-2",
-        title: "What is a Living Thing?",
+        title: "Tap to Explore",
         type: "concept",
-        image: "/static/images/cat.webp",
-        explanation: "Animals and plants are living things. A cat eats food, drinks water, moves, and breathes air!"
+        image: "/static/images/tree.webp",
+        explanation: "Observe the world around us: trees grow tall, birds fly and breathe, but bicycles and puddles cannot grow or eat!"
       },
       {
         id: "slide-3",
         title: "Quick Check: Living Thing",
         type: "quick-check",
-        prompt: "Which of these can grow and needs water to stay alive? 🌱",
+        prompt: "Which one can grow and needs water to stay alive? 🌱",
         image: "/static/images/plant.webp",
-        explanation: "Plants are living organisms that absorb water and sunlight to grow.",
+        explanation: "Plants are living things because they absorb water and grow.",
         options: [
           { id: "opt-1", label: "Rock", icon: "/static/images/rock.webp", isCorrect: false },
           { id: "opt-2", label: "Plant", icon: "/static/images/plant.webp", isCorrect: true }
@@ -774,17 +774,36 @@
       },
       {
         id: "slide-4",
-        title: "What is Non-Living?",
+        title: "More Objects to Classify",
         type: "concept",
-        image: "/static/images/bicycle.webp",
-        explanation: "A bicycle is made by humans in a factory. It does not grow, breathe, or eat food!"
+        image: "/static/images/cat.webp",
+        explanation: "Cats eat food and run around. Toys, balls, and chairs are made by people and cannot breathe!"
       },
       {
         id: "slide-5",
-        title: "Lesson Complete!",
+        title: "Quick Check: Non-Living Thing",
+        type: "quick-check",
+        prompt: "Which object cannot breathe or move by itself? 🪑",
+        image: "/static/images/chair.webp",
+        explanation: "A chair is made of wood or plastic by people and cannot breathe or grow.",
+        options: [
+          { id: "opt-1", label: "Butterfly", icon: "/static/images/butterfly.webp", isCorrect: false },
+          { id: "opt-2", label: "Chair", icon: "/static/images/chair.webp", isCorrect: true }
+        ]
+      },
+      {
+        id: "slide-6",
+        title: "Why is this Fish a Living Thing?",
+        type: "concept",
+        image: "/static/images/fish.webp",
+        explanation: "A fish is living because it breathes water through gills, moves on its own, eats food, and grows larger!"
+      },
+      {
+        id: "slide-7",
+        title: "Living vs Non-Living: Big Ideas",
         type: "summary",
         image: "/static/images/star.webp",
-        explanation: "Great job! You learned how to tell living things apart from non-living things. Ready for the challenge game!"
+        explanation: "🌱 Living things grow, breathe, and need food. 🪨 Non-living things do not eat, breathe, or grow on their own. Awesome job!"
       }
     ];
 
