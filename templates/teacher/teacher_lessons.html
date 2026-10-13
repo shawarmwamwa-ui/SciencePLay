@@ -390,29 +390,30 @@
                           {% for group in lesson_assignment_groups %}
                             {% set pct = ((group.completed_count / group.total_assigned * 100)|round|int) if group.total_assigned > 0 else 0 %}
                             <div class="card border rounded-3 shadow-none overflow-hidden" style="border-color: #e2e8f0;">
-                              <div class="card-header bg-white py-2.5 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2 cursor-pointer" 
+                              <div class="card-header bg-white py-2.5 px-3 d-flex justify-content-between align-items-center flex-nowrap gap-3 cursor-pointer" 
+                                   style="min-height: 64px;"
                                    data-bs-toggle="collapse" 
                                    data-bs-target="#collapseLessonGroup{{ group.lesson_id }}" 
                                    aria-expanded="false" 
                                    aria-controls="collapseLessonGroup{{ group.lesson_id }}">
-                                <div class="d-flex align-items-center gap-2">
-                                  <span class="badge bg-primary-subtle text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                <div class="d-flex align-items-center gap-2.5 flex-grow-1 overflow-hidden" style="min-width: 0;">
+                                  <span class="badge bg-primary-subtle text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px;">
                                     <i class="bi bi-journal-text"></i>
                                   </span>
-                                  <div>
-                                    <strong class="text-dark d-block" style="font-size: 0.92rem;">{{ group.title }}</strong>
-                                    <div class="d-flex align-items-center gap-2 mt-0.5">
+                                  <div class="overflow-hidden" style="min-width: 0;">
+                                    <strong class="text-dark d-block text-truncate fw-bold" style="font-size: 0.92rem;" title="{{ group.title }}">{{ group.title }}</strong>
+                                    <div class="d-flex align-items-center gap-1.5 mt-0.5 text-nowrap">
                                       <small class="text-muted fw-semibold">{{ group.total_assigned }} student{% if group.total_assigned != 1 %}s{% endif %}</small>
                                       <span class="text-muted small">&bull;</span>
                                       <small class="text-success fw-bold">{{ group.completed_count }} completed ({{ pct }}%)</small>
                                     </div>
                                   </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-2">
-                                  <div class="progress d-none d-sm-block" style="width: 80px; height: 6px; border-radius: 9999px;">
-                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                <div class="d-flex align-items-center gap-2.5 flex-shrink-0 ms-2">
+                                  <div class="progress d-none d-sm-block flex-shrink-0" style="width: 75px; height: 7px; border-radius: 9999px; background-color: #e2e8f0;" title="{{ pct }}% Completed">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ pct }}%; border-radius: 9999px;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
                                   </div>
-                                  <button type="button" class="btn btn-sm btn-light border rounded-pill px-2.5 py-1 text-primary fw-bold" style="font-size: 0.78rem;">
+                                  <button type="button" class="btn btn-sm btn-light border rounded-pill px-2.5 py-1 text-primary fw-bold text-nowrap flex-shrink-0" style="font-size: 0.78rem;">
                                     View <i class="bi bi-chevron-down ms-1"></i>
                                   </button>
                                 </div>
@@ -480,29 +481,30 @@
                           {% for group in activity_assignment_groups %}
                             {% set pct = ((group.completed_count / group.total_assigned * 100)|round|int) if group.total_assigned > 0 else 0 %}
                             <div class="card border rounded-3 shadow-none overflow-hidden" style="border-color: #e2e8f0;">
-                              <div class="card-header bg-white py-2.5 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2 cursor-pointer" 
+                              <div class="card-header bg-white py-2.5 px-3 d-flex justify-content-between align-items-center flex-nowrap gap-3 cursor-pointer" 
+                                   style="min-height: 64px;"
                                    data-bs-toggle="collapse" 
                                    data-bs-target="#collapseActivityGroup{{ group.activity_id }}" 
                                    aria-expanded="false" 
                                    aria-controls="collapseActivityGroup{{ group.activity_id }}">
-                                <div class="d-flex align-items-center gap-2">
-                                  <span class="badge bg-success-subtle text-success rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                <div class="d-flex align-items-center gap-2.5 flex-grow-1 overflow-hidden" style="min-width: 0;">
+                                  <span class="badge bg-success-subtle text-success rounded-circle p-2 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px;">
                                     <i class="bi bi-joystick"></i>
                                   </span>
-                                  <div>
-                                    <strong class="text-dark d-block" style="font-size: 0.92rem;">{{ group.title }}</strong>
-                                    <div class="d-flex align-items-center gap-2 mt-0.5">
+                                  <div class="overflow-hidden" style="min-width: 0;">
+                                    <strong class="text-dark d-block text-truncate fw-bold" style="font-size: 0.92rem;" title="{{ group.title }}">{{ group.title }}</strong>
+                                    <div class="d-flex align-items-center gap-1.5 mt-0.5 text-nowrap">
                                       <small class="text-muted fw-semibold">{{ group.total_assigned }} student{% if group.total_assigned != 1 %}s{% endif %}</small>
                                       <span class="text-muted small">&bull;</span>
                                       <small class="text-success fw-bold">{{ group.completed_count }} completed ({{ pct }}%)</small>
                                     </div>
                                   </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-2">
-                                  <div class="progress d-none d-sm-block" style="width: 80px; height: 6px; border-radius: 9999px;">
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                <div class="d-flex align-items-center gap-2.5 flex-shrink-0 ms-2">
+                                  <div class="progress d-none d-sm-block flex-shrink-0" style="width: 75px; height: 7px; border-radius: 9999px; background-color: #e2e8f0;" title="{{ pct }}% Completed">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ pct }}%; border-radius: 9999px;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
                                   </div>
-                                  <button type="button" class="btn btn-sm btn-light border rounded-pill px-2.5 py-1 text-success fw-bold" style="font-size: 0.78rem;">
+                                  <button type="button" class="btn btn-sm btn-light border rounded-pill px-2.5 py-1 text-success fw-bold text-nowrap flex-shrink-0" style="font-size: 0.78rem;">
                                     View <i class="bi bi-chevron-down ms-1"></i>
                                   </button>
                                 </div>
