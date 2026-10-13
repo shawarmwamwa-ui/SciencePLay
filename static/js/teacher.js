@@ -169,7 +169,12 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
 
   if (!table || !nav) return;
 
-  const rows = Array.from(table.querySelectorAll('tbody tr')).filter(r => !r.classList.contains('table-spacer-row') && !r.querySelector('td[colspan]'));
+  const rows = Array.from(table.querySelectorAll('tbody tr')).filter(r => 
+    !r.classList.contains('table-spacer-row') && 
+    !r.querySelector('td[colspan]') &&
+    !r.classList.contains('filter-hidden') &&
+    r.getAttribute('data-filtered') !== 'true'
+  );
   const totalRows = rows.length;
 
   if (totalRows === 0) {

@@ -152,23 +152,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const allRows = Array.from(tbody.querySelectorAll('.retry-table-row'));
     if (!allRows.length) return;
 
-    filterSelect.addEventListener('change', () => {
+    function applyFilter() {
       const selectedGame = filterSelect.value.trim().toLowerCase();
+      let matchedCount = 0;
 
       allRows.forEach(row => {
-        const rowGame = (row.getAttribute('data-game') || '').toLowerCase();
-        if (selectedGame === 'all' || rowGame === selectedGame) {
-          row.style.display = '';
+        const rowGame = (row.getAttribute('data-game') || '').trim().toLowerCase();
+        const matches = (
+          selectedGame === 'all' || 
+          rowGame === selectedGame || 
+          rowGame.includes(selectedGame) || 
+          selectedGame.includes(rowGame)
+        );
+
+        if (matches) {
+          row.classList.remove('filter-hidden');
+          row.removeAttribute('data-filtered');
+          matchedCount++;
         } else {
+          row.classList.add('filter-hidden');
+          row.setAttribute('data-filtered', 'true');
           row.style.display = 'none';
         }
       });
 
-      // Re-trigger pagination on filtered rows
+      // Handle empty filtered state
+      let noMatchRow = tbody.querySelector('.retry-no-match-row');
+      if (matchedCount === 0) {
+        if (!noMatchRow) {
+          noMatchRow = document.createElement('tr');
+          noMatchRow.className = 'retry-no-match-row';
+          noMatchRow.innerHTML = '<td colspan="8" class="text-center text-muted py-4"><i class="bi bi-info-circle me-1"></i>No student retry entries found for this activity.</td>';
+          tbody.appendChild(noMatchRow);
+        }
+        noMatchRow.style.display = '';
+      } else if (noMatchRow) {
+        noMatchRow.style.display = 'none';
+      }
+
+      // Re-trigger pagination on only the visible, filtered rows
       if (typeof setupTablePagination === 'function') {
         setupTablePagination('#retry-table', '#retry-pagination-wrap', '#retry-page-info', '#retry-pagination-nav', 8, 1, false);
       }
-    });
+    }
+
+    filterSelect.addEventListener('change', applyFilter);
   }
 
   // Initialize pagination for all tables across both tabs using centralized teacher.js helper

@@ -447,29 +447,32 @@ def get_student_retry_progression():
     return retry_progression
 
 
-def get_recommendation_for_concept(concept_name, activity_type='', engine=''):
-    """Generates targeted pedagogical recommendation based on the concept and activity context."""
+def get_recommendation_for_concept(concept_name, activity_type='', engine='', lesson_title=''):
+    """Generates recommendation with the specific name of the lesson needed."""
+    # If the activity is already linked to a specific curriculum lesson, recommend that lesson directly
+    if lesson_title and lesson_title not in ['General Science Module', 'None', ''] and not lesson_title.startswith('Lesson #'):
+        return f"Review Lesson: {lesson_title}"
+
     c_lower = (concept_name or '').lower()
     t_lower = (activity_type or '').lower()
     combined = f"{c_lower} {t_lower} {(engine or '').lower()}"
 
-    # 1. Botanical / Plant Parts
     if any(k in combined for k in ['root', 'stem', 'leaf', 'leaves', 'flower', 'seed', 'petal', 'trunk', 'bark', 'branch', 'fruit', 'plant part', 'build a plant']):
-        return "Guide student through step-by-step botanical structures (roots, stem, leaves, flower) with interactive diagram assembly before independent games."
-    # 2. Animal Anatomy & Adaptations
+        return "Review Lesson: Plant Parts"
     elif any(k in combined for k in ['fin', 'wing', 'tail', 'leg', 'beak', 'ear', 'horn', 'fur', 'feather', 'claw', 'gills', 'find the part', 'animal body']):
-        return "Review animal outer body adaptations using illustrated cards to help students identify which body parts belong to each animal."
-    # 3. States of Matter
+        return "Review Lesson: Animal Body Parts"
     elif any(k in combined for k in ['solid', 'liquid', 'gas', 'steam', 'ice', 'vapor', 'melt', 'freeze', 'matter', 'volume']):
-        return "Demonstrate observable shape and volume properties using hands-on water and ice examples before chute categorization."
-    # 4. Recycling & Materials
-    elif any(k in combined for k in ['recycle', 'recycling', 'metal', 'magnet', 'plastic', 'paper', 'glass', 'organic', 'compost', 'biodegradable', 'ecoswipe', 'sorter']):
-        return "Provide tactile material sorting practice to clarify magnetic, biodegradable, and recyclable distinctions."
-    # 5. Living vs Non-Living (Claw Machine)
+        return "Review Lesson: States of Matter"
+    elif any(k in combined for k in ['metal', 'iron', 'copper', 'gold', 'silver', 'magnet']):
+        return "Review Lesson: Properties of Metals"
+    elif any(k in combined for k in ['recycle', 'recycling', 'plastic', 'paper', 'glass', 'organic', 'compost', 'biodegradable', 'ecoswipe', 'sorter']):
+        return "Review Lesson: Recycling"
     elif any(k in combined for k in ['living', 'non-living', 'alive', 'claw machine']):
-        return "Reinforce core characteristics of living vs non-living (breathing, growth, reproduction) with real-world examples before sorting."
+        return "Review Lesson: Living vs Non-Living"
+    elif lesson_title and lesson_title != 'General Science Module':
+        return f"Review Lesson: {lesson_title}"
     else:
-        return f"Review foundational concept '{concept_name}' through guided multimedia slides and reassign supplementary practice."
+        return f"Review Lesson on {concept_name.title()}"
 
 
 def get_struggling_concepts(is_lesson=True, limit=None):
@@ -563,7 +566,7 @@ def get_struggling_concepts(is_lesson=True, limit=None):
         if not obj_name:
             obj_name = format_item_name(obj_id)
 
-        rec = get_recommendation_for_concept(obj_name, val['activity_type'], val['activity_engine'])
+        rec = get_recommendation_for_concept(obj_name, val['activity_type'], val['activity_engine'], val['lesson_title'])
 
         items.append({
             'name': obj_name,
@@ -2626,6 +2629,40 @@ def restore_activity(activity_id):
     return redirect(url_for('teacher.game_studio'))
 
 
+@teacher_bp.route('/content/permanent_delete/<int:activity_id>', methods=['POST'])
+@require_role('teacher')
+def permanent_delete_activity(activity_id):
+    """Permanently delete an archived custom activity and purge dependent records"""
+    current_user = get_current_user()
+    activity = Activity.query.get_or_404(activity_id)
+
+    # Core activities (id=1 or default sorting games) can never be permanently deleted
+    if activity.id == 1:
+        flash("Default core curriculum activities cannot be permanently deleted.", "danger")
+        return redirect(url_for('teacher.game_studio'))
+
+    act_title = activity.type or 'Custom Activity'
+
+    try:
+        # Clean up dependent records before deleting
+        ActivityAssignment.query.filter_by(activity_id=activity.id).delete()
+        ProgressLog.query.filter_by(activity_id=activity.id).delete()
+        attempt_logs = AttemptLog.query.filter_by(activity_id=activity.id).all()
+        for al in attempt_logs:
+            AttemptObjectLog.query.filter_by(attempt_log_id=al.id).delete()
+        AttemptLog.query.filter_by(activity_id=activity.id).delete()
+
+        db.session.delete(activity)
+        db.session.commit()
+        log_access(current_user, 'permanent_delete_activity', f'activity_id={activity_id} title={act_title}')
+        flash(f"Activity '{act_title}' was permanently deleted.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Could not delete activity: {e}", "danger")
+
+    return redirect(url_for('teacher.game_studio'))
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 def _get_core_lesson_starter_slides(title):
     """Provides curated 5-slide starter templates for each core science curriculum topic"""
@@ -3026,6 +3063,38 @@ def restore_lesson(lesson_id):
     db.session.commit()
     log_access(current_user, 'restore_custom_lesson', f'lesson_id={lesson_id}')
     flash(f"Lesson '{lesson.title}' has been successfully restored from archive.", "success")
+    return redirect(url_for('teacher.lesson_studio'))
+
+
+@teacher_bp.route('/content/lesson/permanent_delete/<int:lesson_id>', methods=['POST'])
+@require_role('teacher')
+def permanent_delete_lesson(lesson_id):
+    """Permanently delete an archived custom lesson and purge dependent records"""
+    current_user = get_current_user()
+    lesson = Lesson.query.get_or_404(lesson_id)
+
+    # Core curriculum lessons 1-5 can never be deleted
+    if lesson.id in [1, 2, 3, 4, 5]:
+        flash("Default core curriculum lessons cannot be permanently deleted.", "danger")
+        return redirect(url_for('teacher.lesson_studio'))
+
+    lesson_title = lesson.title or 'Custom Lesson'
+
+    try:
+        # Clean up dependent records before deleting
+        LessonAssignment.query.filter_by(lesson_id=lesson.id).delete()
+        LessonProgress.query.filter_by(lesson_id=lesson.id).delete()
+        LessonAttemptLog.query.filter_by(lesson_id=lesson.id).delete()
+        Activity.query.filter_by(lesson_id=lesson.id).update({'lesson_id': None})
+
+        db.session.delete(lesson)
+        db.session.commit()
+        log_access(current_user, 'permanent_delete_lesson', f'lesson_id={lesson_id} title={lesson_title}')
+        flash(f"Custom lesson '{lesson_title}' was permanently deleted.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Could not delete lesson: {e}", "danger")
+
     return redirect(url_for('teacher.lesson_studio'))
 
 
