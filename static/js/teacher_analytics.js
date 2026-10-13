@@ -174,6 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize pagination for all tables across both tabs using centralized teacher.js helper
   if (typeof setupTablePagination === 'function') {
     setupTablePagination('#top-students-table', '#top-students-pagination-wrap', '#top-students-page-info', '#top-students-pagination-nav', 5);
+    setupTablePagination('#struggle-games-table', '#struggle-games-pagination-wrap', '#struggle-games-page-info', '#struggle-games-pagination-nav', 6);
+    setupTablePagination('#struggle-lessons-table', '#struggle-lessons-pagination-wrap', '#struggle-lessons-page-info', '#struggle-lessons-pagination-nav', 6);
     setupTablePagination('#struggle-breakdown-table', '#struggle-breakdown-pagination-wrap', '#struggle-breakdown-page-info', '#struggle-breakdown-pagination-nav', 6);
     setupTablePagination('#retry-table', '#retry-pagination-wrap', '#retry-page-info', '#retry-pagination-nav', 8);
     setupTablePagination('#tracker-table', '#tracker-pagination-wrap', '#tracker-page-info', '#tracker-pagination-nav', 5);

@@ -497,95 +497,299 @@
         <div class="table-header teacher-table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
           <div>
             <h2 class="h5 mb-0"><i class="bi bi-mortarboard-fill me-2 text-warning"></i>Full Struggle Breakdown &amp; Pedagogical Interventions</h2>
-            <p class="text-muted small mb-0">Detailed table of missed concepts with student rosters, pedagogical recommendations, and quick reassign/tweak interventions.</p>
+            <p class="text-muted small mb-0">Categorized analysis of missed concepts across interactive games and curriculum lessons with pedagogical recommendations.</p>
           </div>
-          <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-bold">{{ all_struggling_concepts|length }} Records</span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-bold">
+              <i class="bi bi-controller me-1"></i>{{ analytics_missed_activities|length }} Games
+            </span>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold">
+              <i class="bi bi-journal-text me-1"></i>{{ analytics_missed_lessons|length }} Lessons
+            </span>
+          </div>
         </div>
-        <div class="table-responsive">
-          <table id="struggle-breakdown-table" class="table align-middle mb-0">
-            <thead>
-              <tr>
-                <th style="min-width: 140px;">Student(s)</th>
-                <th style="min-width: 150px;">Curriculum Lesson</th>
-                <th style="min-width: 150px;">Game / Activity</th>
-                <th style="min-width: 130px;">Missed Concept</th>
-                <th class="text-center" style="width: 90px;">Total Misses</th>
-                <th style="min-width: 240px;">Pedagogical Recommendation</th>
-                <th class="text-end text-nowrap" style="min-width: 160px;">Intervention Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for obj in all_struggling_concepts %}
-                <tr>
-                  <td>
-                    {% if obj.students %}
-                      <button type="button" 
-                              class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 fw-bold d-inline-flex align-items-center gap-1 open-struggling-students-modal-btn shadow-sm"
-                              data-item-name="{{ obj.name }}"
-                              data-context="{{ obj.activity_type }}"
-                              data-misses="{{ obj.misses }}"
-                              data-students='{{ obj.students|tojson|forceescape }}'>
-                        <i class="bi bi-people-fill text-danger"></i>
-                        <span>{{ obj.students|length }} Student{% if obj.students|length != 1 %}s{% endif %}</span>
-                        <i class="bi bi-chevron-right text-muted small ms-1"></i>
-                      </button>
-                    {% else %}
-                      <span class="text-muted small">—</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold">
-                      <i class="bi bi-book me-1"></i>{{ obj.lesson_title }}
-                    </span>
-                  </td>
-                  <td>
-                    <span class="fw-semibold text-secondary small d-block">
-                      <i class="bi bi-controller me-1 text-success"></i>{{ obj.activity_type }}
-                    </span>
-                  </td>
-                  <td>
-                    <strong class="text-dark">{{ obj.name }}</strong>
-                  </td>
-                  <td class="text-center">
-                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">
-                      {{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}
-                    </span>
-                  </td>
-                  <td>
-                    <div class="small text-dark p-2 rounded-2 bg-light border border-light-subtle" style="line-height: 1.35;">
-                      <i class="bi bi-lightbulb-fill text-warning me-1"></i>{{ obj.recommendation }}
-                    </div>
-                  </td>
-                  <td class="text-end text-nowrap">
-                    <div class="d-inline-flex align-items-center gap-1">
-                      <!-- Quick Reassign Link -->
-                      <a href="{{ url_for('teacher.lessons') }}#create-assignment-card" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Reassign lesson or game in Lessons &amp; Assignments">
-                        <i class="bi bi-arrow-repeat me-1"></i>Reassign
-                      </a>
-                      <!-- Tweak Supplementary in Content Studio -->
-                      {% if obj.activity_engine == 'claw_machine' and obj.activity_id %}
-                        <a href="{{ url_for('teacher.claw_machine_builder', activity_id=obj.activity_id) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Tweak game items and chutes in Claw Machine Builder">
-                          <i class="bi bi-sliders me-1"></i>Tweak
-                        </a>
-                      {% else %}
-                        <a href="{{ url_for('teacher.content_management') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Review supplementary material and games in Content Studio">
-                          <i class="bi bi-sliders me-1"></i>Studio
-                        </a>
-                      {% endif %}
-                    </div>
-                  </td>
-                </tr>
-              {% else %}
-                <tr>
-                  <td colspan="7" class="text-center text-muted py-4">No struggling concepts logged yet. Class is demonstrating strong mastery!</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+
+        <!-- Category Separation Tabs -->
+        <div class="px-3 pt-3 pb-2 border-bottom bg-light-subtle d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <ul class="nav nav-pills nav-sm gap-2" id="struggleCategoryTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active rounded-pill px-3 py-1.5 fw-bold" id="tab-struggle-games" data-bs-toggle="pill" data-bs-target="#pane-struggle-games" type="button" role="tab" aria-controls="pane-struggle-games" aria-selected="true">
+                <i class="bi bi-controller me-1 text-success"></i>Interactive Games ({{ analytics_missed_activities|length }})
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link rounded-pill px-3 py-1.5 fw-bold" id="tab-struggle-lessons" data-bs-toggle="pill" data-bs-target="#pane-struggle-lessons" type="button" role="tab" aria-controls="pane-struggle-lessons" aria-selected="false">
+                <i class="bi bi-journal-text me-1 text-primary"></i>Lesson Quick-Checks ({{ analytics_missed_lessons|length }})
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link rounded-pill px-3 py-1.5 fw-bold" id="tab-struggle-all" data-bs-toggle="pill" data-bs-target="#pane-struggle-all" type="button" role="tab" aria-controls="pane-struggle-all" aria-selected="false">
+                <i class="bi bi-collection me-1 text-secondary"></i>All Concepts ({{ all_struggling_concepts|length }})
+              </button>
+            </li>
+          </ul>
+          <span class="text-muted small d-none d-md-inline"><i class="bi bi-filter me-1"></i>Select a tab to focus on games or lesson slides</span>
         </div>
-        <div id="struggle-breakdown-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
-          <small id="struggle-breakdown-page-info" class="text-muted fw-semibold">Showing entries</small>
-          <nav><ul id="struggle-breakdown-pagination-nav" class="pagination pagination-smooth mb-0"></ul></nav>
+
+        <!-- Category Tab Contents -->
+        <div class="tab-content" id="struggleCategoryTabContent">
+          <!-- TAB A: Interactive Games -->
+          <div class="tab-pane fade show active" id="pane-struggle-games" role="tabpanel" aria-labelledby="tab-struggle-games">
+            <div class="table-responsive">
+              <table id="struggle-games-table" class="table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th style="min-width: 140px;">Student(s)</th>
+                    <th style="min-width: 150px;">Curriculum Lesson</th>
+                    <th style="min-width: 150px;">Game / Activity</th>
+                    <th style="min-width: 130px;">Missed Game Item</th>
+                    <th class="text-center" style="width: 90px;">Total Misses</th>
+                    <th style="min-width: 240px;">Pedagogical Recommendation</th>
+                    <th class="text-end text-nowrap" style="min-width: 160px;">Intervention Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for obj in analytics_missed_activities %}
+                    <tr>
+                      <td>
+                        {% if obj.students %}
+                          <button type="button" 
+                                  class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 fw-bold d-inline-flex align-items-center gap-1 open-struggling-students-modal-btn shadow-sm"
+                                  data-item-name="{{ obj.name }}"
+                                  data-context="{{ obj.activity_type }}"
+                                  data-misses="{{ obj.misses }}"
+                                  data-students='{{ obj.students|tojson|forceescape }}'>
+                            <i class="bi bi-people-fill text-danger"></i>
+                            <span>{{ obj.students|length }} Student{% if obj.students|length != 1 %}s{% endif %}</span>
+                            <i class="bi bi-chevron-right text-muted small ms-1"></i>
+                          </button>
+                        {% else %}
+                          <span class="text-muted small">—</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold">
+                          <i class="bi bi-book me-1"></i>{{ obj.lesson_title }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="fw-semibold text-secondary small d-block">
+                          <i class="bi bi-controller me-1 text-success"></i>{{ obj.activity_type }}
+                        </span>
+                      </td>
+                      <td>
+                        <strong class="text-dark">{{ obj.name }}</strong>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">
+                          {{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="small text-dark p-2 rounded-2 bg-light border border-light-subtle" style="line-height: 1.35;">
+                          <i class="bi bi-lightbulb-fill text-warning me-1"></i>{{ obj.recommendation }}
+                        </div>
+                      </td>
+                      <td class="text-end text-nowrap">
+                        <div class="d-inline-flex align-items-center gap-1">
+                          <a href="{{ url_for('teacher.lessons') }}#create-assignment-card" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Reassign game in Lessons &amp; Assignments">
+                            <i class="bi bi-arrow-repeat me-1"></i>Reassign
+                          </a>
+                          {% if obj.activity_engine == 'claw_machine' and obj.activity_id %}
+                            <a href="{{ url_for('teacher.claw_machine_builder', activity_id=obj.activity_id) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Tweak game items and chutes in Claw Machine Builder">
+                              <i class="bi bi-sliders me-1"></i>Tweak
+                            </a>
+                          {% else %}
+                            <a href="{{ url_for('teacher.content_management') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Review supplementary material and games in Content Studio">
+                              <i class="bi bi-sliders me-1"></i>Studio
+                            </a>
+                          {% endif %}
+                        </div>
+                      </td>
+                    </tr>
+                  {% else %}
+                    <tr>
+                      <td colspan="7" class="text-center text-muted py-4">No game struggles recorded yet. Students are demonstrating strong mastery in interactive games!</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div id="struggle-games-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+              <small id="struggle-games-page-info" class="text-muted fw-semibold">Showing entries</small>
+              <nav><ul id="struggle-games-pagination-nav" class="pagination pagination-smooth mb-0"></ul></nav>
+            </div>
+          </div>
+
+          <!-- TAB B: Lesson Quick-Checks -->
+          <div class="tab-pane fade" id="pane-struggle-lessons" role="tabpanel" aria-labelledby="tab-struggle-lessons">
+            <div class="table-responsive">
+              <table id="struggle-lessons-table" class="table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th style="min-width: 140px;">Student(s)</th>
+                    <th style="min-width: 160px;">Curriculum Lesson</th>
+                    <th style="min-width: 140px;">Slide Activity</th>
+                    <th style="min-width: 150px;">Missed Question / Concept</th>
+                    <th class="text-center" style="width: 90px;">Total Misses</th>
+                    <th style="min-width: 240px;">Pedagogical Recommendation</th>
+                    <th class="text-end text-nowrap" style="min-width: 160px;">Intervention Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for obj in analytics_missed_lessons %}
+                    <tr>
+                      <td>
+                        {% if obj.students %}
+                          <button type="button" 
+                                  class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 fw-bold d-inline-flex align-items-center gap-1 open-struggling-students-modal-btn shadow-sm"
+                                  data-item-name="{{ obj.name }}"
+                                  data-context="{{ obj.activity_type }}"
+                                  data-misses="{{ obj.misses }}"
+                                  data-students='{{ obj.students|tojson|forceescape }}'>
+                            <i class="bi bi-people-fill text-danger"></i>
+                            <span>{{ obj.students|length }} Student{% if obj.students|length != 1 %}s{% endif %}</span>
+                            <i class="bi bi-chevron-right text-muted small ms-1"></i>
+                          </button>
+                        {% else %}
+                          <span class="text-muted small">—</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold">
+                          <i class="bi bi-book me-1"></i>{{ obj.lesson_title }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="fw-semibold text-secondary small d-block">
+                          <i class="bi bi-journal-check me-1 text-primary"></i>{{ obj.activity_type }}
+                        </span>
+                      </td>
+                      <td>
+                        <strong class="text-dark">{{ obj.name }}</strong>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">
+                          {{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="small text-dark p-2 rounded-2 bg-light border border-light-subtle" style="line-height: 1.35;">
+                          <i class="bi bi-lightbulb-fill text-warning me-1"></i>{{ obj.recommendation }}
+                        </div>
+                      </td>
+                      <td class="text-end text-nowrap">
+                        <div class="d-inline-flex align-items-center gap-1">
+                          <a href="{{ url_for('teacher.lessons') }}#create-assignment-card" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Reassign lesson module in Lessons &amp; Assignments">
+                            <i class="bi bi-arrow-repeat me-1"></i>Reassign
+                          </a>
+                          <a href="{{ url_for('teacher.content_management') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Review lesson slides in Content Studio">
+                            <i class="bi bi-sliders me-1"></i>Studio
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  {% else %}
+                    <tr>
+                      <td colspan="7" class="text-center text-muted py-4">No lesson slide struggles recorded yet. High quick-check pass rate!</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div id="struggle-lessons-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+              <small id="struggle-lessons-page-info" class="text-muted fw-semibold">Showing entries</small>
+              <nav><ul id="struggle-lessons-pagination-nav" class="pagination pagination-smooth mb-0"></ul></nav>
+            </div>
+          </div>
+
+          <!-- TAB C: All Combined -->
+          <div class="tab-pane fade" id="pane-struggle-all" role="tabpanel" aria-labelledby="tab-struggle-all">
+            <div class="table-responsive">
+              <table id="struggle-breakdown-table" class="table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th style="min-width: 140px;">Student(s)</th>
+                    <th style="min-width: 150px;">Curriculum Lesson</th>
+                    <th style="min-width: 150px;">Activity / Question</th>
+                    <th style="min-width: 130px;">Missed Concept</th>
+                    <th class="text-center" style="width: 90px;">Total Misses</th>
+                    <th style="min-width: 240px;">Pedagogical Recommendation</th>
+                    <th class="text-end text-nowrap" style="min-width: 160px;">Intervention Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for obj in all_struggling_concepts %}
+                    <tr>
+                      <td>
+                        {% if obj.students %}
+                          <button type="button" 
+                                  class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 fw-bold d-inline-flex align-items-center gap-1 open-struggling-students-modal-btn shadow-sm"
+                                  data-item-name="{{ obj.name }}"
+                                  data-context="{{ obj.activity_type }}"
+                                  data-misses="{{ obj.misses }}"
+                                  data-students='{{ obj.students|tojson|forceescape }}'>
+                            <i class="bi bi-people-fill text-danger"></i>
+                            <span>{{ obj.students|length }} Student{% if obj.students|length != 1 %}s{% endif %}</span>
+                            <i class="bi bi-chevron-right text-muted small ms-1"></i>
+                          </button>
+                        {% else %}
+                          <span class="text-muted small">—</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold">
+                          <i class="bi bi-book me-1"></i>{{ obj.lesson_title }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="fw-semibold text-secondary small d-block">
+                          <i class="bi bi-controller me-1 text-success"></i>{{ obj.activity_type }}
+                        </span>
+                      </td>
+                      <td>
+                        <strong class="text-dark">{{ obj.name }}</strong>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">
+                          {{ obj.misses }} miss{% if obj.misses != 1 %}es{% endif %}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="small text-dark p-2 rounded-2 bg-light border border-light-subtle" style="line-height: 1.35;">
+                          <i class="bi bi-lightbulb-fill text-warning me-1"></i>{{ obj.recommendation }}
+                        </div>
+                      </td>
+                      <td class="text-end text-nowrap">
+                        <div class="d-inline-flex align-items-center gap-1">
+                          <a href="{{ url_for('teacher.lessons') }}#create-assignment-card" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Reassign lesson or game in Lessons &amp; Assignments">
+                            <i class="bi bi-arrow-repeat me-1"></i>Reassign
+                          </a>
+                          {% if obj.activity_engine == 'claw_machine' and obj.activity_id %}
+                            <a href="{{ url_for('teacher.claw_machine_builder', activity_id=obj.activity_id) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Tweak game items and chutes in Claw Machine Builder">
+                              <i class="bi bi-sliders me-1"></i>Tweak
+                            </a>
+                          {% else %}
+                            <a href="{{ url_for('teacher.content_management') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Review supplementary material and games in Content Studio">
+                              <i class="bi bi-sliders me-1"></i>Studio
+                            </a>
+                          {% endif %}
+                        </div>
+                      </td>
+                    </tr>
+                  {% else %}
+                    <tr>
+                      <td colspan="7" class="text-center text-muted py-4">No struggling concepts logged yet. Class is demonstrating strong mastery!</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div id="struggle-breakdown-pagination-wrap" class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+              <small id="struggle-breakdown-page-info" class="text-muted fw-semibold">Showing entries</small>
+              <nav><ul id="struggle-breakdown-pagination-nav" class="pagination pagination-smooth mb-0"></ul></nav>
+            </div>
+          </div>
         </div>
       </section>
     </div>

@@ -451,17 +451,23 @@ def get_recommendation_for_concept(concept_name, activity_type='', engine=''):
     """Generates targeted pedagogical recommendation based on the concept and activity context."""
     c_lower = (concept_name or '').lower()
     t_lower = (activity_type or '').lower()
-    
-    if any(k in c_lower for k in ['living', 'non-living', 'rock', 'chair', 'plant', 'animal', 'water', 'dog', 'cat', 'tree', 'sun', 'puddle']):
-        return "Reinforce core characteristics of living vs non-living (breathing, growth, reproduction) with real-world examples before sorting."
-    elif any(k in c_lower for k in ['solid', 'liquid', 'gas', 'steam', 'ice', 'matter', 'chair', 'rock', 'water']):
-        return "Demonstrate observable shape and volume properties using hands-on water and ice examples before chute categorization."
-    elif any(k in c_lower for k in ['body', 'fin', 'wing', 'tail', 'leg', 'beak', 'ear', 'horn']):
+    combined = f"{c_lower} {t_lower} {(engine or '').lower()}"
+
+    # 1. Botanical / Plant Parts
+    if any(k in combined for k in ['root', 'stem', 'leaf', 'leaves', 'flower', 'seed', 'petal', 'trunk', 'bark', 'branch', 'fruit', 'plant part', 'build a plant']):
+        return "Guide student through step-by-step botanical structures (roots, stem, leaves, flower) with interactive diagram assembly before independent games."
+    # 2. Animal Anatomy & Adaptations
+    elif any(k in combined for k in ['fin', 'wing', 'tail', 'leg', 'beak', 'ear', 'horn', 'fur', 'feather', 'claw', 'gills', 'find the part', 'animal body']):
         return "Review animal outer body adaptations using illustrated cards to help students identify which body parts belong to each animal."
-    elif any(k in c_lower for k in ['root', 'stem', 'leaf', 'flower', 'seed', 'petal']):
-        return "Guide student through step-by-step botanical structures with interactive diagram assembly before independent games."
-    elif any(k in c_lower for k in ['metal', 'magnet', 'recycle', 'plastic', 'paper', 'organic']):
+    # 3. States of Matter
+    elif any(k in combined for k in ['solid', 'liquid', 'gas', 'steam', 'ice', 'vapor', 'melt', 'freeze', 'matter', 'volume']):
+        return "Demonstrate observable shape and volume properties using hands-on water and ice examples before chute categorization."
+    # 4. Recycling & Materials
+    elif any(k in combined for k in ['recycle', 'recycling', 'metal', 'magnet', 'plastic', 'paper', 'glass', 'organic', 'compost', 'biodegradable', 'ecoswipe', 'sorter']):
         return "Provide tactile material sorting practice to clarify magnetic, biodegradable, and recyclable distinctions."
+    # 5. Living vs Non-Living (Claw Machine)
+    elif any(k in combined for k in ['living', 'non-living', 'alive', 'claw machine']):
+        return "Reinforce core characteristics of living vs non-living (breathing, growth, reproduction) with real-world examples before sorting."
     else:
         return f"Review foundational concept '{concept_name}' through guided multimedia slides and reassign supplementary practice."
 
