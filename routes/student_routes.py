@@ -683,6 +683,18 @@ def dashboard():
         if is_act_done:
             terms_dict[t_name]['activities_completed'] += 1
 
+    # Guarantee Term 1 container is always visible on the student dashboard
+    if 'Term 1' not in terms_dict:
+        terms_dict['Term 1'] = {
+            'name': 'Term 1',
+            'lessons': [],
+            'activities': [],
+            'lessons_completed': 0,
+            'lessons_total': 0,
+            'activities_completed': 0,
+            'activities_total': 0,
+        }
+
     term_mastery_list = []
     def term_sort_key(k):
         if 'supplementary' in k.lower():
@@ -693,11 +705,11 @@ def dashboard():
         td = terms_dict[t_name]
         l_total = td['lessons_total']
         l_comp = td['lessons_completed']
-        l_pct = round((l_comp / l_total) * 100) if l_total else 100
+        l_pct = round((l_comp / l_total) * 100) if l_total else 0
         
         a_total = td['activities_total']
         a_comp = td['activities_completed']
-        a_pct = round((a_comp / a_total) * 100) if a_total else 100
+        a_pct = round((a_comp / a_total) * 100) if a_total else 0
 
         total_items = l_total + a_total
         total_done = l_comp + a_comp
