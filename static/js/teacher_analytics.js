@@ -168,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (matches) {
           row.classList.remove('filter-hidden');
           row.removeAttribute('data-filtered');
+          row.style.display = '';
           matchedCount++;
         } else {
           row.classList.add('filter-hidden');
@@ -197,6 +198,79 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     filterSelect.addEventListener('change', applyFilter);
+  }
+
+  // Initialize struggle breakdown tables game filter
+  function initStruggleGameFilter() {
+    const filterSelect = document.getElementById('struggleGameFilter');
+    if (!filterSelect) return;
+
+    const tableConfigs = [
+      { id: '#struggle-games-table', wrap: '#struggle-games-pagination-wrap', info: '#struggle-games-page-info', nav: '#struggle-games-pagination-nav' },
+      { id: '#struggle-lessons-table', wrap: '#struggle-lessons-pagination-wrap', info: '#struggle-lessons-page-info', nav: '#struggle-lessons-pagination-nav' },
+      { id: '#struggle-breakdown-table', wrap: '#struggle-breakdown-pagination-wrap', info: '#struggle-breakdown-page-info', nav: '#struggle-breakdown-pagination-nav' }
+    ];
+
+    function applyStruggleFilter() {
+      const selectedGame = filterSelect.value.trim().toLowerCase();
+
+      tableConfigs.forEach(cfg => {
+        const table = document.querySelector(cfg.id);
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+
+        const allRows = Array.from(tbody.querySelectorAll('.struggle-table-row'));
+        if (!allRows.length) return;
+
+        let matchedCount = 0;
+        allRows.forEach(row => {
+          const rowGame = (row.getAttribute('data-game') || '').trim().toLowerCase();
+          const rowLesson = (row.getAttribute('data-lesson') || '').trim().toLowerCase();
+
+          const matches = (
+            selectedGame === 'all' ||
+            rowGame === selectedGame ||
+            rowGame.includes(selectedGame) ||
+            selectedGame.includes(rowGame) ||
+            rowLesson === selectedGame ||
+            rowLesson.includes(selectedGame)
+          );
+
+          if (matches) {
+            row.classList.remove('filter-hidden');
+            row.removeAttribute('data-filtered');
+            row.style.display = '';
+            matchedCount++;
+          } else {
+            row.classList.add('filter-hidden');
+            row.setAttribute('data-filtered', 'true');
+            row.style.display = 'none';
+          }
+        });
+
+        // Handle empty filtered state
+        let noMatchRow = tbody.querySelector('.struggle-no-match-row');
+        if (matchedCount === 0) {
+          if (!noMatchRow) {
+            noMatchRow = document.createElement('tr');
+            noMatchRow.className = 'struggle-no-match-row';
+            noMatchRow.innerHTML = '<td colspan="7" class="text-center text-muted py-4"><i class="bi bi-info-circle me-1"></i>No struggling concepts found for this game or activity.</td>';
+            tbody.appendChild(noMatchRow);
+          }
+          noMatchRow.style.display = '';
+        } else if (noMatchRow) {
+          noMatchRow.style.display = 'none';
+        }
+
+        // Re-trigger pagination on visible filtered rows
+        if (typeof setupTablePagination === 'function') {
+          setupTablePagination(cfg.id, cfg.wrap, cfg.info, cfg.nav, 6, 1, false);
+        }
+      });
+    }
+
+    filterSelect.addEventListener('change', applyStruggleFilter);
   }
 
   // Initialize pagination for all tables across both tabs using centralized teacher.js helper
@@ -357,6 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initMostMissedChart();
   initRetryGameFilter();
+  initStruggleGameFilter();
   initStrugglingStudentsModal();
   initUrlHashNavigation();
 });

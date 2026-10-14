@@ -499,13 +499,25 @@
             <h2 class="h5 mb-0"><i class="bi bi-mortarboard-fill me-2 text-warning"></i>Full Struggle Breakdown &amp; Recommendations</h2>
             <p class="text-muted small mb-0">Categorized analysis of missed concepts across interactive games and curriculum lessons with recommendations.</p>
           </div>
+          <!-- Game Filter Dropdown -->
           <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-bold">
-              <i class="bi bi-controller me-1"></i>{{ analytics_missed_activities|length }} Games
-            </span>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold">
-              <i class="bi bi-journal-text me-1"></i>{{ analytics_missed_lessons|length }} Lessons
-            </span>
+            <label for="struggleGameFilter" class="small fw-bold text-muted mb-0 d-none d-md-inline"><i class="bi bi-funnel me-1"></i>Filter Game:</label>
+            <select id="struggleGameFilter" class="form-select form-select-sm rounded-pill fw-semibold" style="width: auto; min-width: 210px;">
+              <option value="all">All Games &amp; Activities</option>
+              {% set seen_struggle_games = [] %}
+              {% for obj in all_struggling_concepts %}
+                {% if obj.activity_type and obj.activity_type not in seen_struggle_games %}
+                  {% set _ = seen_struggle_games.append(obj.activity_type) %}
+                  <option value="{{ obj.activity_type|lower }}">{{ obj.activity_type }}</option>
+                {% endif %}
+              {% endfor %}
+              {% for row in retry_progression %}
+                {% if row.activity_name and row.activity_name not in seen_struggle_games %}
+                  {% set _ = seen_struggle_games.append(row.activity_name) %}
+                  <option value="{{ row.activity_name|lower }}">{{ row.activity_name }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
           </div>
         </div>
 
@@ -550,7 +562,7 @@
                 </thead>
                 <tbody>
                   {% for obj in analytics_missed_activities %}
-                    <tr>
+                    <tr class="struggle-table-row" data-game="{{ obj.activity_type|lower }}" data-lesson="{{ obj.lesson_title|lower }}">
                       <td>
                         {% if obj.students %}
                           <button type="button" 
@@ -638,7 +650,7 @@
                 </thead>
                 <tbody>
                   {% for obj in analytics_missed_lessons %}
-                    <tr>
+                    <tr class="struggle-table-row" data-game="{{ obj.activity_type|lower }}" data-lesson="{{ obj.lesson_title|lower }}">
                       <td>
                         {% if obj.students %}
                           <button type="button" 
@@ -720,7 +732,7 @@
                 </thead>
                 <tbody>
                   {% for obj in all_struggling_concepts %}
-                    <tr>
+                    <tr class="struggle-table-row" data-game="{{ obj.activity_type|lower }}" data-lesson="{{ obj.lesson_title|lower }}">
                       <td>
                         {% if obj.students %}
                           <button type="button" 
