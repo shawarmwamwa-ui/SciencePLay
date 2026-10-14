@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, flash, redirect, url_for, session, request, jsonify
+from flask import Blueprint, render_template, flash, redirect, url_for, session, request, jsonify, has_request_context
 from database.models import db, Lesson, Activity, ProgressLog, LessonProgress, LessonAttemptLog, User, LessonAssignment, ActivityAssignment, AttemptLog, AttemptObjectLog, UserBadge, Badge
 from routes.utils import get_current_user, require_role, log_access, csrf, to_ph_time
 from types import SimpleNamespace
@@ -7,6 +7,32 @@ import json
 from pathlib import Path
 
 student_bp = Blueprint('student', __name__, url_prefix='/student')
+
+
+def safe_student_url_for(endpoint, **values):
+    """Safely builds student URLs inside or outside active Flask request context."""
+    if has_request_context():
+        try:
+            return url_for(endpoint, **values)
+        except Exception:
+            pass
+    path_map = {
+        'student.dashboard': '/student/dashboard',
+        'student.curriculum_terms': '/student/curriculum',
+        'student.lessons': '/student/lessons',
+        'student.activities': '/student/activities',
+        'student.living_non_living_lesson': f"/student/lesson/view/{values.get('lesson_id', 1)}" if 'lesson_id' in values else '/student/lesson/living-non-living',
+        'student.animal_body_parts_lesson': '/student/lesson/animal-body-parts',
+        'student.plant_parts_lesson': '/student/lesson/plant-parts',
+        'student.properties_of_metals_lesson': '/student/lesson/properties-of-metals',
+        'student.recycling_lesson': '/student/lesson/recycling',
+        'student.claw_machine': f"/student/claw_machine?activity_id={values.get('activity_id', 1)}",
+        'student.find_the_part_game': f"/student/find_the_part?activity_id={values.get('activity_id', 7)}",
+        'student.build_a_plant_game': f"/student/build_a_plant?activity_id={values.get('activity_id', 8)}",
+        'student.materials_game': f"/student/materials_game?activity_id={values.get('activity_id', 14)}",
+        'student.recycling_game': f"/student/recycling_game?activity_id={values.get('activity_id', 15)}",
+    }
+    return path_map.get(endpoint, '/student/dashboard')
 
 
 DEFAULT_SORTING_OBJECTS = [
@@ -340,7 +366,7 @@ def check_and_award_badges(student_id):
 
     # Curriculum Champion - Complete all 5 lessons
     if completed_lesson_count >= 5:
-        award_badge_if_earned(student_id, 'Curriculum Champion', 'Mastered all 5 science lessons in the curriculum!', '👑')
+        award_badge_if_earned(student_id, 'Curriculum Champion', 'Mastered all 5 science lessons in the curriculum!', 'bi-trophy-fill')
 
 
 def get_or_create_default_lesson():
@@ -468,6 +494,340 @@ def _get_cached_all_lessons():
         _ALL_LESSONS_CACHE = Lesson.query.all()
         _ALL_LESSONS_CACHE_TIME = now
     return _ALL_LESSONS_CACHE
+
+
+def get_student_curriculum_terms_data(user_id):
+    """
+    Computes curriculum and mastery progress across Terms 1 to 4 (and Supplementary Practice).
+    Enforces sequential prerequisite locking:
+      - Term 1: Unlocked by default.
+      - Term 2: Locked until Term 1 is 100% completed.
+      - Term 3: Locked until Term 2 is 100% completed.
+      - Term 4: Locked until Term 3 is 100% completed.
+      - Supplementary Practice: Always unlocked.
+    """
+    if not user_id:
+        return [], {}
+
+    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
+    core_activities = Activity.query.filter(Activity.engine.in_(playable_engines)).all()
+    engine_to_act = {a.engine: a for a in core_activities if a.engine}
+
+    existing_aa_list = ActivityAssignment.query.filter_by(student_id=user_id).all()
+    existing_act_ids = {aa.activity_id for aa in existing_aa_list}
+    existing_engines = {aa.activity.engine for aa in existing_aa_list if aa.activity and aa.activity.engine}
+
+    existing_la_list = LessonAssignment.query.filter_by(student_id=user_id).all()
+    teacher_id = 1
+    if existing_la_list and existing_la_list[0].assigned_by:
+        teacher_id = existing_la_list[0].assigned_by
+    elif existing_aa_list and existing_aa_list[0].assigned_by:
+        teacher_id = existing_aa_list[0].assigned_by
+
+    needed_commit = False
+    for engine, act in engine_to_act.items():
+        if engine not in existing_engines and act.id not in existing_act_ids:
+            db.session.add(ActivityAssignment(
+                activity_id=act.id,
+                student_id=user_id,
+                assigned_by=teacher_id,
+                status='assigned'
+            ))
+            needed_commit = True
+
+    existing_lesson_ids = {la.lesson_id for la in existing_la_list}
+    core_lesson_ids = [1, 4, 5, 6, 7]
+    for lid in core_lesson_ids:
+        if lid not in existing_lesson_ids:
+            les = Lesson.query.get(lid)
+            if les:
+                db.session.add(LessonAssignment(
+                    lesson_id=les.id,
+                    student_id=user_id,
+                    assigned_by=teacher_id,
+                    status='assigned'
+                ))
+                needed_commit = True
+
+    if needed_commit:
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    lesson_assignment_rows = db.session.query(LessonAssignment, Lesson).join(
+        Lesson, Lesson.id == LessonAssignment.lesson_id
+    ).filter(
+        LessonAssignment.student_id == user_id,
+        (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)
+    ).all()
+    lessons = [lesson for _, lesson in lesson_assignment_rows]
+
+    activity_assignment_rows = db.session.query(ActivityAssignment, Activity).join(
+        Activity, Activity.id == ActivityAssignment.activity_id
+    ).filter(
+        ActivityAssignment.student_id == user_id,
+        (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None),
+        ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted']),
+        Activity.engine.in_(playable_engines)
+    ).all()
+
+    seen_engines = set()
+    activities = []
+    for _, activity in activity_assignment_rows:
+        eng = activity.engine or activity.type
+        if eng not in seen_engines:
+            seen_engines.add(eng)
+            activities.append(activity)
+
+    progress_logs = ProgressLog.query.filter_by(student_id=user_id).all()
+    completed_by_activity = {log.activity_id: log for log in progress_logs}
+
+    all_lessons = _get_cached_all_lessons()
+    from collections import defaultdict
+    lessons_by_title = defaultdict(list)
+    for l in all_lessons:
+        if l.title:
+            lessons_by_title[l.title.strip().lower()].append(l.id)
+
+    user_lps = LessonProgress.query.filter_by(student_id=user_id).all()
+    user_attempts = LessonAttemptLog.query.filter_by(student_id=user_id).all()
+
+    completed_lesson_ids = set()
+    lp_by_lesson_id = {}
+    for lp in user_lps:
+        lp_by_lesson_id[lp.lesson_id] = lp
+        if (lp.completed_at is not None or lp.completed or (lp.revisit_count or 0) > 0 or (lp.progress_percent or 0) >= 100):
+            completed_lesson_ids.add(lp.lesson_id)
+
+    for att in user_attempts:
+        if (att.completed or (att.progress_percent or 0) >= 100):
+            completed_lesson_ids.add(att.lesson_id)
+
+    for assignment, lesson in lesson_assignment_rows:
+        if assignment.status == 'completed':
+            completed_lesson_ids.add(assignment.lesson_id)
+
+    for title_norm, l_ids in lessons_by_title.items():
+        if any(lid in completed_lesson_ids for lid in l_ids):
+            for lid in l_ids:
+                completed_lesson_ids.add(lid)
+
+    lesson_progress_items = []
+    for lesson in lessons:
+        is_done = lesson.id in completed_lesson_ids
+        norm_t = (lesson.title or '').strip().lower()
+        matching_ids = lessons_by_title.get(norm_t, [lesson.id])
+        log = None
+        for mid in matching_ids:
+            if mid in lp_by_lesson_id:
+                log = lp_by_lesson_id[mid]
+                break
+        pct = 100 if is_done else ((log.progress_percent or 0) if log else 0)
+        time_spent = (log.total_time_spent or log.time_spent or 0) if log else 0
+        current_slide = (log.current_slide or 0) if log else 0
+        total_slides = 7
+        if lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'):
+            total_slides = len(lesson.config['slides'])
+        elif lesson.title in ('Plant Parts', 'Animal Body Parts'):
+            total_slides = 12
+
+        if lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'):
+            l_url = safe_student_url_for('student.living_non_living_lesson', lesson_id=lesson.id)
+        elif lesson.title == 'Animal Body Parts':
+            l_url = safe_student_url_for('student.animal_body_parts_lesson')
+        elif lesson.title == 'Plant Parts':
+            l_url = safe_student_url_for('student.plant_parts_lesson')
+        elif lesson.title == 'Properties of Metals':
+            l_url = safe_student_url_for('student.properties_of_metals_lesson')
+        elif lesson.title == 'Recycling':
+            l_url = safe_student_url_for('student.recycling_lesson')
+        else:
+            l_url = safe_student_url_for('student.living_non_living_lesson', lesson_id=lesson.id)
+
+        lesson_progress_items.append({
+            'lesson': lesson,
+            'completed': is_done,
+            'percent': pct,
+            'time_spent': time_spent,
+            'current_slide': current_slide,
+            'total_slides': total_slides,
+            'url': l_url,
+            'is_term_locked': False
+        })
+
+    terms_dict = {
+        'Term 1': {'name': 'Term 1', 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0},
+        'Term 2': {'name': 'Term 2', 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0},
+        'Term 3': {'name': 'Term 3', 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0},
+        'Term 4': {'name': 'Term 4', 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0},
+    }
+
+    for lp_item in lesson_progress_items:
+        l = lp_item['lesson']
+        t_name = 'Supplementary Practice' if getattr(l, 'is_supplementary', False) else (getattr(l, 'term', None) or 'Term 1')
+        if t_name not in terms_dict:
+            terms_dict[t_name] = {'name': t_name, 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0}
+        terms_dict[t_name]['lessons'].append(lp_item)
+        terms_dict[t_name]['lessons_total'] += 1
+        if lp_item['completed'] or lp_item['percent'] >= 100:
+            terms_dict[t_name]['lessons_completed'] += 1
+
+    for act in activities:
+        t_name = 'Supplementary Practice' if getattr(act, 'is_supplementary', False) else (getattr(act, 'term', None) or 'Term 1')
+        if t_name not in terms_dict:
+            terms_dict[t_name] = {'name': t_name, 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0}
+
+        is_act_done = (act.id in completed_by_activity) or any(
+            p.activity and p.activity.engine == act.engine for p in progress_logs
+        )
+        scores = [p.score for p in progress_logs if (p.activity_id == act.id or (p.activity and p.activity.engine == act.engine)) and p.score is not None]
+        best_score = max(scores, default=0)
+        attempts_today = get_attempts_today(user_id, act.id)
+        is_unlocked = is_activity_unlocked(user_id, act)
+
+        if act.engine == 'claw_machine' or 'Claw Machine' in (act.type or ''):
+            act_url = safe_student_url_for('student.claw_machine', activity_id=act.id)
+        elif act.engine == 'find_the_part' or 'Find the Part' in (act.type or ''):
+            act_url = safe_student_url_for('student.find_the_part_game', activity_id=act.id)
+        elif act.engine == 'build_a_plant' or 'Build a Plant' in (act.type or ''):
+            act_url = safe_student_url_for('student.build_a_plant_game', activity_id=act.id)
+        elif act.engine == 'metal_logic' or 'Metal' in (act.type or ''):
+            act_url = safe_student_url_for('student.materials_game', activity_id=act.id)
+        elif act.engine == 'recycle_sorter' or 'Recycl' in (act.type or ''):
+            act_url = safe_student_url_for('student.recycling_game', activity_id=act.id)
+        else:
+            act_url = safe_student_url_for('student.activities')
+
+        terms_dict[t_name]['activities'].append({
+            'activity': act,
+            'completed': is_act_done,
+            'best_score': best_score,
+            'attempts_today': attempts_today,
+            'is_unlocked': is_unlocked,
+            'url': act_url,
+            'is_term_locked': False
+        })
+        terms_dict[t_name]['activities_total'] += 1
+        if is_act_done:
+            terms_dict[t_name]['activities_completed'] += 1
+
+    ordered_keys = ['Term 1', 'Term 2', 'Term 3', 'Term 4']
+    for k in sorted(terms_dict.keys()):
+        if k not in ordered_keys:
+            ordered_keys.append(k)
+
+    term_mastery_list = []
+    prev_term_completed = True
+    prev_term_name = None
+
+    for t_name in ordered_keys:
+        td = terms_dict[t_name]
+        l_total = td['lessons_total']
+        l_comp = td['lessons_completed']
+        l_pct = round((l_comp / l_total) * 100) if l_total else 0
+
+        a_total = td['activities_total']
+        a_comp = td['activities_completed']
+        a_pct = round((a_comp / a_total) * 100) if a_total else 0
+
+        total_items = l_total + a_total
+        total_done = l_comp + a_comp
+        overall_pct = round((total_done / total_items) * 100) if total_items else 0
+
+        td['term_key'] = t_name.lower().replace(' ', '-')
+        td['lessons_percent'] = l_pct
+        td['activities_percent'] = a_pct
+        td['total_items'] = total_items
+        td['total_done'] = total_done
+        td['overall_percent'] = overall_pct
+
+        if 'supplementary' in t_name.lower():
+            td['is_locked'] = False
+            td['lock_reason'] = None
+            if overall_pct >= 100 and total_items > 0:
+                td['status_text'] = 'Mastered'
+                td['status_badge'] = 'brutal-badge-green'
+                td['status_icon'] = 'bi-award-fill'
+            elif overall_pct > 0:
+                td['status_text'] = 'In Progress'
+                td['status_badge'] = 'brutal-badge-yellow'
+                td['status_icon'] = 'bi-stars'
+            else:
+                td['status_text'] = 'Bonus Practice'
+                td['status_badge'] = 'brutal-badge-purple'
+                td['status_icon'] = 'bi-stars'
+        else:
+            if t_name == 'Term 1':
+                td['is_locked'] = False
+                td['lock_reason'] = None
+            else:
+                if not prev_term_completed:
+                    td['is_locked'] = True
+                    td['lock_reason'] = f"{prev_term_name}"
+                else:
+                    td['is_locked'] = False
+                    td['lock_reason'] = None
+
+            if td['is_locked']:
+                td['status_text'] = 'Locked'
+                td['status_badge'] = 'brutal-badge-pink'
+                td['status_icon'] = 'bi-lock-fill'
+            elif overall_pct >= 100 and total_items > 0:
+                td['status_text'] = 'Mastered'
+                td['status_badge'] = 'brutal-badge-green'
+                td['status_icon'] = 'bi-award-fill'
+            elif overall_pct > 0:
+                td['status_text'] = 'In Progress'
+                td['status_badge'] = 'brutal-badge-yellow'
+                td['status_icon'] = 'bi-hourglass-split'
+            else:
+                td['status_text'] = 'Ready to Start'
+                td['status_badge'] = 'brutal-badge-cyan'
+                td['status_icon'] = 'bi-play-circle-fill'
+
+            if td['is_locked'] or overall_pct < 100 or total_items == 0:
+                prev_term_completed = False
+                prev_term_name = t_name
+            else:
+                prev_term_completed = True
+                prev_term_name = t_name
+
+        for l_item in td['lessons']:
+            l_item['is_term_locked'] = td['is_locked']
+        for a_item in td['activities']:
+            a_item['is_term_locked'] = td['is_locked']
+            if td['is_locked']:
+                a_item['is_unlocked'] = False
+
+        term_mastery_list.append(td)
+
+    core_terms = [t for t in term_mastery_list if not 'supplementary' in t['name'].lower()]
+    curriculum_total_tasks = sum(t['total_items'] for t in core_terms)
+    curriculum_completed_tasks = sum(t['total_done'] for t in core_terms)
+    curriculum_overall_percent = round((curriculum_completed_tasks / curriculum_total_tasks) * 100) if curriculum_total_tasks else 0
+
+    overall_stats = {
+        'total_tasks': curriculum_total_tasks,
+        'completed_tasks': curriculum_completed_tasks,
+        'overall_percent': curriculum_overall_percent,
+        'unlocked_terms_count': sum(1 for t in core_terms if not t['is_locked']),
+        'mastered_terms_count': sum(1 for t in core_terms if t['status_text'] == 'Mastered'),
+        'total_terms_count': len(core_terms)
+    }
+
+    return term_mastery_list, overall_stats
+
+
+def is_term_locked_for_student(user_id, term_name):
+    """Returns True if the requested term is locked by prerequisite progression."""
+    if not term_name or term_name in ('Term 1', 'Supplementary Practice'):
+        return False
+    term_mastery_list, _ = get_student_curriculum_terms_data(user_id)
+    for td in term_mastery_list:
+        if td['name'].strip().lower() == term_name.strip().lower():
+            return bool(td.get('is_locked', False))
+    return False
 
 
 @student_bp.route('/dashboard')
@@ -639,98 +999,8 @@ def dashboard():
     ).count()) if user_id else 0
     feedback_messages = [True] * feedback_count
 
-    # Calculate Term / Unit Mastery Breakdown (Term 1, Term 2, Supplementary)
-    terms_dict = {}
-
-    for lp_item in lesson_progress:
-        l = lp_item['lesson']
-        t_name = 'Supplementary Practice' if getattr(l, 'is_supplementary', False) else (getattr(l, 'term', None) or 'Term 1')
-        if t_name not in terms_dict:
-            terms_dict[t_name] = {
-                'name': t_name,
-                'lessons': [],
-                'activities': [],
-                'lessons_completed': 0,
-                'lessons_total': 0,
-                'activities_completed': 0,
-                'activities_total': 0,
-            }
-        terms_dict[t_name]['lessons'].append(lp_item)
-        terms_dict[t_name]['lessons_total'] += 1
-        if lp_item['completed'] or lp_item['percent'] >= 100:
-            terms_dict[t_name]['lessons_completed'] += 1
-
-    for act in activities:
-        t_name = 'Supplementary Practice' if getattr(act, 'is_supplementary', False) else (getattr(act, 'term', None) or 'Term 1')
-        if t_name not in terms_dict:
-            terms_dict[t_name] = {
-                'name': t_name,
-                'lessons': [],
-                'activities': [],
-                'lessons_completed': 0,
-                'lessons_total': 0,
-                'activities_completed': 0,
-                'activities_total': 0,
-            }
-        is_act_done = (act.id in completed_by_activity) or any(
-            p.activity and p.activity.engine == act.engine for p in progress_logs
-        )
-        terms_dict[t_name]['activities'].append({
-            'activity': act,
-            'completed': is_act_done
-        })
-        terms_dict[t_name]['activities_total'] += 1
-        if is_act_done:
-            terms_dict[t_name]['activities_completed'] += 1
-
-    # Guarantee Term 1 container is always visible on the student dashboard
-    if 'Term 1' not in terms_dict:
-        terms_dict['Term 1'] = {
-            'name': 'Term 1',
-            'lessons': [],
-            'activities': [],
-            'lessons_completed': 0,
-            'lessons_total': 0,
-            'activities_completed': 0,
-            'activities_total': 0,
-        }
-
-    term_mastery_list = []
-    def term_sort_key(k):
-        if 'supplementary' in k.lower():
-            return (999, k)
-        return (1, k)
-
-    for t_name in sorted(terms_dict.keys(), key=term_sort_key):
-        td = terms_dict[t_name]
-        l_total = td['lessons_total']
-        l_comp = td['lessons_completed']
-        l_pct = round((l_comp / l_total) * 100) if l_total else 0
-        
-        a_total = td['activities_total']
-        a_comp = td['activities_completed']
-        a_pct = round((a_comp / a_total) * 100) if a_total else 0
-
-        total_items = l_total + a_total
-        total_done = l_comp + a_comp
-        overall_pct = round((total_done / total_items) * 100) if total_items else 0
-
-        if overall_pct >= 100:
-            status_text = 'Mastered'
-            status_badge = 'brutal-badge-green'
-        elif overall_pct > 0:
-            status_text = 'In Progress'
-            status_badge = 'brutal-badge-yellow'
-        else:
-            status_text = 'Ready to Start'
-            status_badge = 'brutal-badge-pink'
-
-        td['lessons_percent'] = l_pct
-        td['activities_percent'] = a_pct
-        td['overall_percent'] = overall_pct
-        td['status_text'] = status_text
-        td['status_badge'] = status_badge
-        term_mastery_list.append(td)
+    # Calculate Term / Unit Mastery Breakdown across Terms 1 to 4 with prerequisite locking
+    term_mastery_list, overall_curriculum_stats = get_student_curriculum_terms_data(user_id)
 
     # Leaderboard and assigned_tasks are not rendered on dashboard (dedicated pages exist)
     leaderboard = []
@@ -756,7 +1026,24 @@ def dashboard():
         lesson_due_dates=lesson_due_dates,
         activity_due_dates=activity_due_dates,
         leaderboard=leaderboard,
-        term_mastery_list=term_mastery_list
+        term_mastery_list=term_mastery_list,
+        overall_curriculum_stats=overall_curriculum_stats
+    )
+
+
+@student_bp.route('/curriculum')
+@student_bp.route('/terms')
+@require_role('student')
+def curriculum_terms():
+    """Dedicated Curriculum & Term Progression page for students (Terms 1 to 4)."""
+    current_user = get_current_user()
+    log_access(current_user, 'page_view', 'student_curriculum_terms')
+    term_mastery_list, overall_stats = get_student_curriculum_terms_data(current_user.id)
+    return render_template(
+        'student/student_terms.html',
+        current_user=current_user,
+        term_mastery_list=term_mastery_list,
+        overall_stats=overall_stats
     )
 
 
@@ -959,7 +1246,7 @@ def lessons():
     lesson_progress = []
     for lesson in lessons:
         lesson_activities = [activity for activity in activities if activity.lesson_id == lesson.id]
-        is_locked = False
+        is_locked = is_term_locked_for_student(user_id, getattr(lesson, 'term', None))
         is_done = has_student_completed_lesson(user_id, lesson.id)
         matching_lesson_ids = [l.id for l in Lesson.query.filter(Lesson.title.ilike(lesson.title.strip())).all()]
         log = LessonProgress.query.filter(
@@ -1255,7 +1542,7 @@ def activities():
         lesson_progress_by_lesson = {log.lesson_id: log for log in lesson_progress}
 
         for activity in activities:
-            unlocked_by_activity[activity.id] = is_activity_unlocked(user_id, activity)
+            unlocked_by_activity[activity.id] = is_activity_unlocked(user_id, activity) and not is_term_locked_for_student(user_id, getattr(activity, 'term', None))
 
     return render_template(
         'student/activities.html',
@@ -1290,6 +1577,11 @@ def living_non_living_lesson(lesson_id=None):
         lesson = Lesson.query.get_or_404(lesson_id)
     else:
         lesson = get_or_create_default_lesson()
+
+    if user_id and lesson and getattr(lesson, 'term', None):
+        if is_term_locked_for_student(user_id, lesson.term):
+            flash(f'{lesson.term} is currently locked! Please complete 100% of the previous term to unlock it.', 'warning')
+            return redirect(url_for('student.curriculum_terms'))
     if user_id:
         attempt, log = start_or_resume_lesson_attempt(user_id, lesson.id)
         initial_slide = log.current_slide if log else 0
@@ -1431,6 +1723,9 @@ def get_or_create_streak_race_activity():
 @require_role('student')
 def plant_parts_lesson():
     current_user = get_current_user()
+    if is_term_locked_for_student(current_user.id, 'Term 2'):
+        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
+        return redirect(url_for('student.curriculum_terms'))
     lesson = get_or_create_plant_parts_lesson()
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
@@ -1473,6 +1768,9 @@ def get_or_create_build_a_plant_activity():
 @require_role('student')
 def build_a_plant_game():
     current_user = get_current_user()
+    if is_term_locked_for_student(current_user.id, 'Term 2'):
+        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
+        return redirect(url_for('student.curriculum_terms'))
     req_act_id = request.args.get('activity_id', type=int)
     activity = Activity.query.get(req_act_id) if req_act_id else None
     if not activity or activity.engine != 'build_a_plant':
@@ -1511,6 +1809,9 @@ def get_or_create_properties_of_metals_lesson():
 @require_role('student')
 def properties_of_metals_lesson():
     current_user = get_current_user()
+    if is_term_locked_for_student(current_user.id, 'Term 3'):
+        flash('Term 3 is currently locked! Please complete 100% of Term 2 tasks to unlock Term 3.', 'warning')
+        return redirect(url_for('student.curriculum_terms'))
     lesson = get_or_create_properties_of_metals_lesson()
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
@@ -1540,6 +1841,9 @@ def get_or_create_recycling_lesson():
 @require_role('student')
 def recycling_lesson():
     current_user = get_current_user()
+    if is_term_locked_for_student(current_user.id, 'Term 4'):
+        flash('Term 4 is currently locked! Please complete 100% of Term 3 tasks to unlock Term 4.', 'warning')
+        return redirect(url_for('student.curriculum_terms'))
     lesson = get_or_create_recycling_lesson()
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
@@ -1573,6 +1877,9 @@ def get_or_create_metals_game_activity():
 @require_role('student')
 def materials_game():
     current_user = get_current_user()
+    if is_term_locked_for_student(current_user.id, 'Term 3'):
+        flash('Term 3 is currently locked! Please complete 100% of Term 2 tasks to unlock Term 3.', 'warning')
+        return redirect(url_for('student.curriculum_terms'))
     req_act_id = request.args.get('activity_id', type=int)
     activity = Activity.query.get(req_act_id) if req_act_id else None
     if not activity or activity.engine != 'metal_logic':
@@ -1617,6 +1924,9 @@ def get_or_create_recycling_game_activity():
 @require_role('student')
 def recycling_game():
     current_user = get_current_user()
+    if is_term_locked_for_student(current_user.id, 'Term 4'):
+        flash('Term 4 is currently locked! Please complete 100% of Term 3 tasks to unlock Term 4.', 'warning')
+        return redirect(url_for('student.curriculum_terms'))
     req_act_id = request.args.get('activity_id', type=int)
     activity = Activity.query.get(req_act_id) if req_act_id else None
     if not activity or activity.engine != 'recycle_sorter':

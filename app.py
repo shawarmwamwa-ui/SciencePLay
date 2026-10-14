@@ -240,6 +240,22 @@ def ensure_default_curriculum():
             get_or_create_metals_game_activity()
             get_or_create_recycling_lesson()
             get_or_create_recycling_game_activity()
+
+            # Ensure terms 1 through 4 are properly mapped across core curriculum
+            try:
+                db.session.execute(text("UPDATE lesson SET term = 'Term 1' WHERE (term IS NULL OR term = '' OR term = 'Term 1') AND title IN ('Living vs Non-Living', 'Animal Body Parts')"))
+                db.session.execute(text("UPDATE lesson SET term = 'Term 2' WHERE (term IS NULL OR term = '' OR term = 'Term 1') AND title = 'Plant Parts'"))
+                db.session.execute(text("UPDATE lesson SET term = 'Term 3' WHERE (term IS NULL OR term = '' OR term = 'Term 1') AND title = 'Properties of Metals'"))
+                db.session.execute(text("UPDATE lesson SET term = 'Term 4' WHERE (term IS NULL OR term = '' OR term = 'Term 1') AND title = 'Recycling'"))
+
+                db.session.execute(text("UPDATE activity SET term = 'Term 1' WHERE (term IS NULL OR term = '' OR term = 'Term 1') AND engine IN ('claw_machine', 'find_the_part', 'quick_check')"))
+                db.session.execute(text("UPDATE activity SET term = 'Term 2' WHERE (term IS NULL OR term = '' OR term = 'Term 1') AND engine = 'build_a_plant'"))
+                db.session.execute(text("UPDATE activity SET term = 'Term 3' WHERE (term IS NULL OR term = '' OR term = 'Term 1') AND engine = 'metal_logic'"))
+                db.session.execute(text("UPDATE activity SET term = 'Term 4' WHERE (term IS NULL OR term = '' OR term = 'Term 1') AND engine = 'recycle_sorter'"))
+                db.session.commit()
+            except Exception as term_err:
+                db.session.rollback()
+                print("[Term Distribution Notice]:", term_err)
         except Exception as e:
             print("Curriculum auto-seed notice:", e)
 
