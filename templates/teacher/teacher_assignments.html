@@ -209,16 +209,16 @@
           <label class="form-label fw-bold small text-muted mb-1" for="assignLessonSelect">2. Lesson</label>
           <select name="lesson_id" id="assignLessonSelect" class="form-select" required>
             <option value="">Select Lesson...</option>
-            <optgroup label="📘 Core Curriculum Lessons">
+            <optgroup label="Core Curriculum Lessons">
               {% for lesson in lessons if not lesson.is_supplementary %}
                 <option value="{{ lesson.id }}" data-supplementary="0">{{ lesson.title }}</option>
               {% endfor %}
             </optgroup>
             {% set supp_lessons = lessons | selectattr('is_supplementary') | list %}
             {% if supp_lessons %}
-            <optgroup label="🌟 Supplementary / Remedial Lessons">
+            <optgroup label="Supplementary / Remedial Lessons">
               {% for lesson in supp_lessons %}
-                <option value="{{ lesson.id }}" data-supplementary="1">⭐ {{ lesson.title }} (Remedial)</option>
+                <option value="{{ lesson.id }}" data-supplementary="1">{{ lesson.title }} (Remedial)</option>
               {% endfor %}
             </optgroup>
             {% endif %}

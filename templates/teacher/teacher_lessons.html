@@ -280,7 +280,7 @@
                     <label class="form-label fw-bold small text-muted mb-1" for="assignLessonSelect">2. Science Lesson</label>
                     <select name="lesson_id" id="assignLessonSelect" class="form-select" required>
                       <option value="">Select Lesson...</option>
-                      <optgroup label="📘 Core Curriculum Lessons">
+                      <optgroup label="Core Curriculum Lessons">
                         {% for lesson in lessons if not lesson.is_supplementary %}
                           <option value="{{ lesson.id }}" data-supplementary="0">
                             {% if lesson.id > 5 %}[Custom] {% endif %}{{ lesson.title }}
@@ -289,10 +289,10 @@
                       </optgroup>
                       {% set supp_lessons = lessons | selectattr('is_supplementary') | list %}
                       {% if supp_lessons %}
-                      <optgroup label="🌟 Supplementary / Remedial Lessons">
+                      <optgroup label="Supplementary / Remedial Lessons">
                         {% for lesson in supp_lessons %}
                           <option value="{{ lesson.id }}" data-supplementary="1">
-                            ⭐ {{ lesson.title }} (Remedial)
+                            {{ lesson.title }} (Remedial)
                           </option>
                         {% endfor %}
                       </optgroup>
@@ -305,7 +305,7 @@
                     <label class="form-label fw-bold small text-muted mb-1" for="assignActivitySelect">2. Game Activity</label>
                     <select name="activity_id" id="assignActivitySelect" class="form-select" disabled>
                       <option value="">Select Game...</option>
-                      <optgroup label="🎮 Core Curriculum Games">
+                      <optgroup label="Core Curriculum Games">
                         {% for act in activities if not act.is_supplementary %}
                           <option value="{{ act.id }}" data-supplementary="0">
                             {% if act.engine == 'claw_machine' and act.id > 1 %}[Custom Claw] {% endif %}{{ act.type }} ({{ act.points }} pts)
@@ -314,10 +314,10 @@
                       </optgroup>
                       {% set supp_activities = activities | selectattr('is_supplementary') | list %}
                       {% if supp_activities %}
-                      <optgroup label="🌟 Supplementary / Practice Games">
+                      <optgroup label="Supplementary / Practice Games">
                         {% for act in supp_activities %}
                           <option value="{{ act.id }}" data-supplementary="1">
-                            ⭐ {{ act.type }} (Practice - {{ act.points }} pts)
+                            {{ act.type }} (Practice - {{ act.points }} pts)
                           </option>
                         {% endfor %}
                       </optgroup>

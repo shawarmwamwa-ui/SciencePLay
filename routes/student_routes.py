@@ -716,13 +716,13 @@ def dashboard():
         overall_pct = round((total_done / total_items) * 100) if total_items else 0
 
         if overall_pct >= 100:
-            status_text = 'Mastered 🏆'
+            status_text = 'Mastered'
             status_badge = 'brutal-badge-green'
         elif overall_pct > 0:
-            status_text = 'In Progress ⚡'
+            status_text = 'In Progress'
             status_badge = 'brutal-badge-yellow'
         else:
-            status_text = 'Ready to Start 🌱'
+            status_text = 'Ready to Start'
             status_badge = 'brutal-badge-pink'
 
         td['lessons_percent'] = l_pct

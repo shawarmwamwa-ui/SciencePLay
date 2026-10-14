@@ -342,11 +342,30 @@ def build_live_lesson_tracker(online_students_set=None):
 
 
 
+def strip_emojis(text):
+    """Remove emoji and pictograph characters from labels and strings."""
+    if not text:
+        return ''
+    import re
+    emoji_pattern = re.compile(
+        "["
+        "\U00010000-\U0010ffff"
+        "\u2600-\u26ff"
+        "\u2700-\u27bf"
+        "\u2300-\u23ff"
+        "\u2b50"
+        "]+",
+        flags=re.UNICODE
+    )
+    cleaned = emoji_pattern.sub('', str(text))
+    return re.sub(r'\s+', ' ', cleaned).strip()
+
+
 def format_item_name(item_id):
-    """Format raw object IDs or question IDs into clean human readable titles without dashes."""
+    """Format raw object IDs or question IDs into clean human readable titles without dashes and emojis."""
     if not item_id:
         return 'Item'
-    s = str(item_id).strip()
+    s = strip_emojis(str(item_id)).strip()
     if ' ' in s:
         return s
     if '_' in s:
@@ -574,6 +593,7 @@ def get_struggling_concepts(is_lesson=True, limit=None):
                     break
         if not obj_name:
             obj_name = format_item_name(obj_id)
+        obj_name = strip_emojis(obj_name)
 
         rec = get_recommendation_for_concept(obj_name, val['activity_type'], val['activity_engine'], val['lesson_title'])
 
@@ -1857,7 +1877,7 @@ def analytics():
     all_struggling_concepts = analytics_missed_lessons + analytics_missed_activities
     all_struggling_concepts.sort(key=lambda x: x['misses'], reverse=True)
 
-    struggle_chart_labels = [c['name'] for c in all_struggling_concepts[:8]]
+    struggle_chart_labels = [strip_emojis(c['name']) for c in all_struggling_concepts[:8]]
     struggle_chart_misses = [c['misses'] for c in all_struggling_concepts[:8]]
     struggle_chart_types = [c['activity_type'] for c in all_struggling_concepts[:8]]
 
@@ -1878,7 +1898,8 @@ def analytics():
                 'types': []
             }
         if len(struggle_chart_by_lesson[lt]['labels']) < 8:
-            struggle_chart_by_lesson[lt]['labels'].append(c['name'])
+            clean_name = strip_emojis(c['name'])
+            struggle_chart_by_lesson[lt]['labels'].append(clean_name)
             struggle_chart_by_lesson[lt]['misses'].append(c['misses'])
             struggle_chart_by_lesson[lt]['types'].append(c['activity_type'])
 

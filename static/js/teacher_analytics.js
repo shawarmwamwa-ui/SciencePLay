@@ -125,7 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
             grid: { display: false },
             ticks: {
               font: { family: 'Plus Jakarta Sans', weight: '600', size: 11 },
-              color: '#475569'
+              color: '#475569',
+              callback: function(value) {
+                const label = this.getLabelForValue(value);
+                if (label && label.length > 22) {
+                  return label.substring(0, 20) + '...';
+                }
+                return label;
+              }
             }
           },
           y: {
