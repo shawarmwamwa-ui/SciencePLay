@@ -662,7 +662,11 @@ def get_student_curriculum_terms_data(user_id):
 
     for lp_item in lesson_progress_items:
         l = lp_item['lesson']
-        t_name = 'Supplementary Practice' if getattr(l, 'is_supplementary', False) else (getattr(l, 'term', None) or 'Term 1')
+        if getattr(l, 'is_supplementary', False):
+            continue
+        t_name = getattr(l, 'term', None)
+        if not t_name or not t_name.startswith('Term '):
+            continue
         if t_name not in terms_dict:
             terms_dict[t_name] = {'name': t_name, 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0}
         terms_dict[t_name]['lessons'].append(lp_item)
@@ -671,7 +675,11 @@ def get_student_curriculum_terms_data(user_id):
             terms_dict[t_name]['lessons_completed'] += 1
 
     for act in activities:
-        t_name = 'Supplementary Practice' if getattr(act, 'is_supplementary', False) else (getattr(act, 'term', None) or 'Term 1')
+        if getattr(act, 'is_supplementary', False):
+            continue
+        t_name = getattr(act, 'term', None)
+        if not t_name or not t_name.startswith('Term '):
+            continue
         if t_name not in terms_dict:
             terms_dict[t_name] = {'name': t_name, 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0}
 
@@ -715,8 +723,6 @@ def get_student_curriculum_terms_data(user_id):
                 return (0, int(k.split(' ')[1]))
             except (ValueError, IndexError):
                 return (0, 999)
-        if 'supplementary' in k.lower():
-            return (2, k)
         return (1, k)
 
     ordered_keys = sorted(terms_dict.keys(), key=term_sort_key)
@@ -724,6 +730,8 @@ def get_student_curriculum_terms_data(user_id):
     term_mastery_list = []
     prev_term_completed = True
     prev_term_name = None
+    prev_lessons_left = 0
+    prev_activities_left = 0
 
     for t_name in ordered_keys:
         td = terms_dict[t_name]
@@ -746,56 +754,145 @@ def get_student_curriculum_terms_data(user_id):
         td['total_done'] = total_done
         td['overall_percent'] = overall_pct
 
-        if 'supplementary' in t_name.lower():
+        if t_name == 'Term 1':
             td['is_locked'] = False
             td['lock_reason'] = None
-            if overall_pct >= 100 and total_items > 0:
-                td['status_text'] = 'Mastered'
-                td['status_badge'] = 'brutal-badge-green'
-                td['status_icon'] = 'bi-award-fill'
-            elif overall_pct > 0:
-                td['status_text'] = 'In Progress'
-                td['status_badge'] = 'brutal-badge-yellow'
-                td['status_icon'] = 'bi-stars'
-            else:
-                td['status_text'] = 'Bonus Practice'
-                td['status_badge'] = 'brutal-badge-purple'
-                td['status_icon'] = 'bi-stars'
         else:
-            if t_name == 'Term 1':
+            if not prev_term_completed:
+                td['is_locked'] = True
+                td['lock_reason'] = f"{prev_term_name}"
+            else:
                 td['is_locked'] = False
                 td['lock_reason'] = None
-            else:
-                if not prev_term_completed:
-                    td['is_locked'] = True
-                    td['lock_reason'] = f"{prev_term_name}"
-                else:
-                    td['is_locked'] = False
-                    td['lock_reason'] = None
 
-            if td['is_locked']:
-                td['status_text'] = 'Locked'
-                td['status_badge'] = 'brutal-badge-pink'
-                td['status_icon'] = 'bi-lock-fill'
-            elif overall_pct >= 100 and total_items > 0:
-                td['status_text'] = 'Mastered'
+        # Fix logic: Locked term must not show progress (show 0% until it unlocks)
+        if td['is_locked']:
+            td['display_percent'] = 0
+            td['lessons_completed_display'] = 0
+            td['activities_completed_display'] = 0
+            td['total_done_display'] = 0
+            td['stars_count'] = 0
+            td['is_completed'] = False
+            td['status_text'] = 'Locked'
+            td['status_badge'] = 'brutal-badge-pink'
+            td['status_icon'] = 'bi-lock-fill'
+        else:
+            td['display_percent'] = overall_pct
+            td['lessons_completed_display'] = l_comp
+            td['activities_completed_display'] = a_comp
+            td['total_done_display'] = total_done
+            if overall_pct >= 100 and total_items > 0:
+                td['status_text'] = 'Completed'
                 td['status_badge'] = 'brutal-badge-green'
                 td['status_icon'] = 'bi-award-fill'
+                td['stars_count'] = 3
+                td['is_completed'] = True
+            elif overall_pct >= 50:
+                td['status_text'] = 'In Progress'
+                td['status_badge'] = 'brutal-badge-yellow'
+                td['status_icon'] = 'bi-play-circle-fill'
+                td['stars_count'] = 2
+                td['is_completed'] = False
             elif overall_pct > 0:
                 td['status_text'] = 'In Progress'
                 td['status_badge'] = 'brutal-badge-yellow'
-                td['status_icon'] = 'bi-hourglass-split'
+                td['status_icon'] = 'bi-play-circle-fill'
+                td['stars_count'] = 1
+                td['is_completed'] = False
             else:
                 td['status_text'] = 'Ready to Start'
                 td['status_badge'] = 'brutal-badge-cyan'
-                td['status_icon'] = 'bi-play-circle-fill'
+                td['status_icon'] = 'bi-stars'
+                td['stars_count'] = 0
+                td['is_completed'] = False
 
-            if td['is_locked'] or overall_pct < 100 or total_items == 0:
-                prev_term_completed = False
-                prev_term_name = t_name
+        # Next Step & Friendly helper lines
+        next_step = None
+        if not td['is_locked']:
+            # Next uncompleted lesson first
+            for lp in td['lessons']:
+                if not lp['completed'] and lp['percent'] < 100:
+                    next_step = {
+                        'type': 'lesson',
+                        'title': lp['lesson'].title,
+                        'text': f"Continue: Learn {lp['lesson'].title} ▶",
+                        'url': lp['url']
+                    }
+                    break
+            # Next uncompleted game
+            if not next_step:
+                for idx, a in enumerate(td['activities'], 1):
+                    if not a['completed']:
+                        act_obj = a['activity']
+                        raw_title = act_obj.type or f"Game {idx}"
+                        if 'Claw' in raw_title:
+                            game_name = 'Claw Machine'
+                        elif 'Part' in raw_title:
+                            game_name = 'Find the Part'
+                        elif 'Plant' in raw_title:
+                            game_name = 'Build a Plant'
+                        else:
+                            game_name = raw_title
+                        next_step = {
+                            'type': 'game',
+                            'title': game_name,
+                            'text': f"Continue: Play {game_name} ▶",
+                            'url': a['url']
+                        }
+                        break
+            # If all done
+            if not next_step:
+                review_url = td['lessons'][0]['url'] if td['lessons'] else (td['activities'][0]['url'] if td['activities'] else '#')
+                next_step = {
+                    'type': 'review',
+                    'title': 'Review',
+                    'text': f"Review {t_name} Lessons & Games ▶",
+                    'url': review_url
+                }
+        td['next_step'] = next_step
+
+        lessons_left = max(0, l_total - l_comp)
+        activities_left = max(0, a_total - a_comp)
+
+        if td['is_locked']:
+            if prev_activities_left == 1 and prev_lessons_left == 0:
+                td['friendly_lock_message'] = f"Finish 1 more game in {prev_term_name} to unlock {t_name} 🔓"
+            elif prev_lessons_left == 1 and prev_activities_left == 0:
+                td['friendly_lock_message'] = f"Finish 1 more lesson in {prev_term_name} to unlock {t_name} 🔓"
+            elif prev_activities_left > 0 and prev_lessons_left == 0:
+                td['friendly_lock_message'] = f"Finish {prev_activities_left} more games in {prev_term_name} to unlock {t_name} 🔓"
             else:
-                prev_term_completed = True
-                prev_term_name = t_name
+                tot_prev = prev_lessons_left + prev_activities_left
+                td['friendly_lock_message'] = f"Finish {tot_prev} more tasks in {prev_term_name} to unlock {t_name} 🔓"
+            td['remaining_label'] = td['friendly_lock_message']
+        elif td.get('is_completed'):
+            td['friendly_lock_message'] = None
+            td['remaining_label'] = f"Great job! All lessons & games finished in {t_name}! 🌟"
+        elif lessons_left == 0 and activities_left == 1:
+            td['friendly_lock_message'] = None
+            td['remaining_label'] = f"1 game left to finish {t_name}!"
+        elif lessons_left == 1 and activities_left == 0:
+            td['friendly_lock_message'] = None
+            td['remaining_label'] = f"1 lesson left to finish {t_name}!"
+        elif lessons_left == 0 and activities_left > 1:
+            td['friendly_lock_message'] = None
+            td['remaining_label'] = f"{activities_left} games left to finish {t_name}!"
+        elif activities_left == 0 and lessons_left > 1:
+            td['friendly_lock_message'] = None
+            td['remaining_label'] = f"{lessons_left} lessons left to finish {t_name}!"
+        else:
+            td['friendly_lock_message'] = None
+            td['remaining_label'] = f"{lessons_left} lesson{'s' if lessons_left > 1 else ''} and {activities_left} game{'s' if activities_left > 1 else ''} left to finish {t_name}!"
+
+        if td['is_locked'] or overall_pct < 100 or total_items == 0:
+            prev_term_completed = False
+            prev_term_name = t_name
+        else:
+            prev_term_completed = True
+            prev_term_name = t_name
+
+        prev_lessons_left = lessons_left
+        prev_activities_left = activities_left
 
         for l_item in td['lessons']:
             l_item['is_term_locked'] = td['is_locked']
@@ -806,9 +903,9 @@ def get_student_curriculum_terms_data(user_id):
 
         term_mastery_list.append(td)
 
-    core_terms = [t for t in term_mastery_list if not 'supplementary' in t['name'].lower()]
+    core_terms = term_mastery_list
     curriculum_total_tasks = sum(t['total_items'] for t in core_terms)
-    curriculum_completed_tasks = sum(t['total_done'] for t in core_terms)
+    curriculum_completed_tasks = sum(t['total_done'] for t in core_terms if not t['is_locked'])
     curriculum_overall_percent = round((curriculum_completed_tasks / curriculum_total_tasks) * 100) if curriculum_total_tasks else 0
 
     overall_stats = {
@@ -816,7 +913,7 @@ def get_student_curriculum_terms_data(user_id):
         'completed_tasks': curriculum_completed_tasks,
         'overall_percent': curriculum_overall_percent,
         'unlocked_terms_count': sum(1 for t in core_terms if not t['is_locked']),
-        'mastered_terms_count': sum(1 for t in core_terms if t['status_text'] == 'Mastered'),
+        'mastered_terms_count': sum(1 for t in core_terms if t.get('is_completed')),
         'total_terms_count': len(core_terms)
     }
 

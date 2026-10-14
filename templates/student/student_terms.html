@@ -3,100 +3,317 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Academic Curriculum &amp; Term Progression — SciencePlay</title>
-  <meta name="description" content="Explore your science learning journey across Terms 1 through 4. Complete each term to unlock the next level of science adventures!">
+  <title>My Science Learning Trail — SciencePlay</title>
+  <meta name="description" content="Follow your science learning trail from Term 1 to Term 2! Finish fun lessons and interactive games to unlock new science adventures.">
 
+  <!-- Kid-friendly Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap" media="print" onload="this.media='all'">
-  <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap">
-  </noscript>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" media="print" onload="this.media='all'">
-  <noscript>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  </noscript>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css', v='20260903_7') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css', v='20260903_8') }}">
 
   <style>
-    .roadmap-track {
+    :root {
+      --trail-border: #0f172a;
+      --term1-bg: #dbeafe;
+      --term1-accent: #2563eb;
+      --term2-bg: #ffedd5;
+      --term2-accent: #ea580c;
+    }
+
+    body.student-page {
+      font-family: 'Fredoka', 'Nunito', system-ui, sans-serif;
+      font-size: 17px;
+      color: #0f172a;
+      background: linear-gradient(135deg, #fef9c3 0%, #dbeafe 50%, #fbcfe8 100%);
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    /* Trail Header */
+    .trail-header {
+      background: #ffffff;
+      border: 3.5px solid var(--trail-border);
+      border-radius: 20px;
+      box-shadow: 4px 4px 0 var(--trail-border);
+      padding: 20px 24px;
+      margin-bottom: 28px;
+    }
+
+    .trail-back-btn {
+      min-height: 48px;
+      min-width: 48px;
+      padding: 10px 20px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #000;
+      background: #fed7aa;
+      border: 3px solid #000;
+      border-radius: 12px;
+      box-shadow: 3px 3px 0 #000;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .trail-back-btn:hover, .trail-back-btn:focus-visible {
+      background: #fdba74;
+      color: #000;
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #000;
+    }
+
+    /* Overall Trail Track */
+    .learning-trail-wrapper {
+      position: relative;
+      margin-bottom: 30px;
+    }
+
+    /* Term Card on the Path */
+    .trail-term-card {
+      border: 3.5px solid var(--trail-border);
+      border-radius: 22px;
+      box-shadow: 5px 5px 0 var(--trail-border);
+      padding: 24px;
+      position: relative;
+      background: #ffffff;
+      transition: transform 0.15s ease;
+    }
+
+    .trail-term-card.term-card-1 {
+      background: var(--term1-bg);
+    }
+
+    .trail-term-card.term-card-2 {
+      background: var(--term2-bg);
+    }
+
+    .trail-term-card.term-card-locked {
+      background: #f1f5f9;
+      opacity: 0.95;
+    }
+
+    /* Speaker Button */
+    .kid-speaker-btn {
+      min-width: 48px;
+      min-height: 48px;
+      width: 48px;
+      height: 48px;
+      border: 3px solid #000;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 2.5px 2.5px 0 #000;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.15s ease;
+    }
+    .kid-speaker-btn:hover, .kid-speaker-btn:focus-visible {
+      transform: scale(1.08);
+      background: #fef08a;
+      outline: 3px solid #2563eb;
+    }
+
+    /* Status Badges */
+    .kid-status-badge {
+      font-size: 0.95rem;
+      font-weight: 900;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 2.5px solid #000;
+      box-shadow: 2px 2px 0 #000;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .kid-badge-completed {
+      background: #4ade80;
+      color: #052e16;
+    }
+    .kid-badge-active {
+      background: #fde047;
+      color: #713f12;
+    }
+    .kid-badge-locked {
+      background: #fecdd3;
+      color: #881337;
+    }
+
+    /* Big Action Button */
+    .kid-big-action-btn {
+      min-height: 54px;
+      padding: 12px 24px;
+      font-size: 1.15rem;
+      font-weight: 900;
+      border: 3.5px solid #000;
+      border-radius: 16px;
+      box-shadow: 4px 4px 0 #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-decoration: none;
+      width: 100%;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .kid-action-continue {
+      background: #22c55e;
+      color: #ffffff;
+    }
+    .kid-action-continue:hover, .kid-action-continue:focus-visible {
+      background: #16a34a;
+      color: #ffffff;
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 #000;
+    }
+    .kid-action-review {
+      background: #ffffff;
+      color: #0f172a;
+    }
+    .kid-action-review:hover, .kid-action-review:focus-visible {
+      background: #f8fafc;
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 #000;
+    }
+    .kid-action-locked {
+      background: #cbd5e1;
+      color: #475569;
+      cursor: not-allowed;
+      box-shadow: 2px 2px 0 #000;
+    }
+
+    /* Stars Row */
+    .kid-stars-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 1.6rem;
+    }
+    .star-filled {
+      color: #eab308;
+      text-shadow: 1px 1px 0 #000;
+    }
+    .star-empty {
+      color: #cbd5e1;
+    }
+
+    /* Trail Connector */
+    .trail-path-connector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 0;
+    }
+    .trail-signpost {
+      background: #ffffff;
+      border: 3px solid #000;
+      border-radius: 999px;
+      padding: 8px 22px;
+      box-shadow: 3px 3px 0 #000;
+      font-weight: 900;
+      font-size: 1.05rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Friendly Info Box */
+    .kid-info-box {
+      background: #ffffff;
+      border: 3px solid #000;
+      border-radius: 14px;
+      padding: 12px 16px;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    /* Celebration Banner */
+    .celebration-banner {
+      background: #fef08a;
+      border: 3px solid #000;
+      border-radius: 14px;
+      padding: 12px 18px;
+      box-shadow: 3px 3px 0 #000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Task Item (Lessons / Games List) */
+    .kid-task-item {
+      min-height: 52px;
+      background: #ffffff;
+      border: 2.5px solid #000;
+      border-radius: 14px;
+      box-shadow: 2.5px 2.5px 0 #000;
+      padding: 12px 16px;
+      margin-bottom: 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      overflow-x: auto;
-      padding-bottom: 6px;
+      text-decoration: none;
+      color: #0f172a;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
-    .roadmap-step {
-      flex: 1;
-      min-width: 140px;
-      border: 3px solid #000;
-      border-radius: 12px;
-      padding: 12px;
-      background: #ffffff;
-      box-shadow: 3px 3px 0 #000;
-      text-align: center;
-      position: relative;
-      transition: transform 0.15s ease;
+    .kid-task-item:hover, .kid-task-item:focus-visible {
+      transform: translate(-1px, -1px);
+      box-shadow: 3.5px 3.5px 0 #000;
+      color: #0f172a;
     }
-    .roadmap-step.active-step {
-      transform: translateY(-2px);
-      box-shadow: 4px 4px 0 #000;
-    }
-    .roadmap-connector {
-      font-size: 1.5rem;
-      color: #000;
-      font-weight: 900;
-    }
-    .term-section-anchor {
-      scroll-margin-top: 20px;
-    }
-    .task-item-card {
-      border: 2.5px solid #000;
-      border-radius: 12px;
-      background: #ffffff;
-      box-shadow: 3px 3px 0 #000;
-      padding: 16px;
-      margin-bottom: 14px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .task-item-card.is-locked-card {
+    .kid-task-locked {
       background: #f8fafc;
-      opacity: 0.92;
+      color: #64748b;
+      cursor: not-allowed;
+      box-shadow: 1.5px 1.5px 0 #000;
     }
-    .locked-callout {
+
+    /* Accordion Toggle */
+    .kid-accordion-btn {
+      min-height: 48px;
+      width: 100%;
+      background: #ffffff;
       border: 3px solid #000;
       border-radius: 12px;
-      background: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      padding: 10px 16px;
       box-shadow: 3px 3px 0 #000;
-      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .kid-accordion-btn:hover, .kid-accordion-btn:focus-visible {
+      background: #fef08a;
     }
   </style>
 </head>
 <body class="student-page container mt-3 mb-5">
 
-  <!-- Top Banner Header -->
-  <header class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 page-top-banner">
+  <!-- Top Banner Header (Single, Clean, Accessible) -->
+  <header class="trail-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-      <h1 class="fw-black display-5 mb-1 d-flex align-items-center gap-2">
-        <i class="bi bi-mortarboard-fill text-primary"></i> Curriculum Progression
+      <h1 class="fw-black fs-1 mb-1 d-flex align-items-center gap-2">
+        <i class="bi bi-compass-fill text-primary"></i> My Learning Trail
       </h1>
-      <p class="text-dark fw-bold fs-5 mb-0">Master each academic term step by step. Complete current tasks to unlock the next term!</p>
+      <p class="text-dark fw-bold fs-5 mb-0">Follow your path from Term 1 to Term 2! Finish each term to unlock the next.</p>
     </div>
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      <a href="{{ url_for('student.dashboard') }}" class="brutal-btn brutal-btn-secondary">
-        <i class="bi bi-arrow-left-circle-fill me-1"></i>
-        <span>Dashboard</span>
-      </a>
-      <a href="{{ url_for('student.activities') }}" class="brutal-btn brutal-btn-yellow">
-        <i class="bi bi-joystick me-1"></i>
-        <span>Games</span>
+    <div>
+      <a href="{{ url_for('student.dashboard') }}" class="trail-back-btn" aria-label="Return to student dashboard">
+        <i class="bi bi-arrow-left-circle-fill fs-5"></i>
+        <span>Back to Dashboard</span>
       </a>
     </div>
   </header>
@@ -106,14 +323,8 @@
     {% if messages %}
       <div class="mb-4">
         {% for category, message in messages %}
-          <div class="alert alert-{{ 'warning' if category == 'warning' else 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show border-3 border-dark fw-bold shadow-sm d-flex align-items-center gap-2" role="alert" style="box-shadow: 3px 3px 0 #000;">
-            {% if category == 'warning' %}
-              <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
-            {% elif category == 'danger' %}
-              <i class="bi bi-shield-lock-fill fs-4 text-danger"></i>
-            {% else %}
-              <i class="bi bi-check-circle-fill fs-4 text-success"></i>
-            {% endif %}
+          <div class="alert alert-{{ 'warning' if category == 'warning' else 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show border-3 border-dark fw-bold shadow-sm d-flex align-items-center gap-2" role="alert" style="box-shadow: 3px 3px 0 #000; border-radius: 14px;">
+            <i class="bi {{ 'bi-exclamation-triangle-fill text-warning' if category == 'warning' else 'bi-shield-lock-fill text-danger' if category == 'danger' else 'bi-check-circle-fill text-success' }} fs-4"></i>
             <div>{{ message }}</div>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
@@ -122,526 +333,312 @@
     {% endif %}
   {% endwith %}
 
-  <!-- Term & Module Mastery Section (Image 2 layout) -->
-  <section class="mb-5" id="all-terms">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-      <div>
-        <h2 class="fw-black text-dark fs-2 mb-1 d-flex align-items-center gap-2">
-          <i class="bi bi-mortarboard-fill text-dark"></i> Term &amp; Module Mastery
-        </h2>
-        <p class="fw-bold text-dark small mb-0">Track your completed lessons and mastered games across each academic term!</p>
-      </div>
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <a href="#all-terms" class="brutal-btn" style="background: #a78bfa; color: #000; font-weight: 800; border: 3px solid #000; box-shadow: 3px 3px 0 #000; padding: 7px 16px; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem;">
-          <i class="bi bi-folder2-open"></i> View All Terms (1 - {{ overall_stats.total_terms_count }})
-        </a>
-        <span class="brutal-badge brutal-badge-green fs-6">
-          <i class="bi bi-award-fill me-1"></i>Curriculum Progression
-        </span>
-      </div>
-    </div>
+  <!-- Main Unified Trail Section -->
+  <main id="main-content" class="learning-trail-wrapper">
+    <div class="row g-4 align-items-stretch">
+      {% for term_data in term_mastery_list %}
+        <div class="col-lg-6 d-flex flex-column">
 
-    <!-- 2-Column Grid of Term Cards -->
-    <div class="row g-4">
-      {% for term_data in term_mastery_list if not 'supplementary' in term_data.name|lower %}
-        <div class="col-md-6 col-xl-6">
-          <div class="brutal-window h-100 d-flex flex-column justify-content-between" style="background: {% if loop.index == 1 %}#c7d2fe{% elif loop.index == 2 %}#fed7aa{% elif loop.index == 3 %}#bae6fd{% else %}#bbf7d0{% endif %};">
-            <div class="brutal-window-header d-flex justify-content-between align-items-center">
-              <div class="brutal-dots">
-                <span class="brutal-dot dot-red"></span>
-                <span class="brutal-dot dot-yellow"></span>
-                <span class="brutal-dot dot-green"></span>
+          <!-- Term Card (No Fake Dots, Kid-Friendly, Voice-Enabled) -->
+          <article 
+            id="term-card-{{ loop.index }}" 
+            class="trail-term-card h-100 d-flex flex-column justify-content-between {{ 'term-card-1' if loop.index == 1 else 'term-card-2' }} {{ 'term-card-locked' if term_data.is_locked else '' }}"
+            data-speech-text="{{ term_data.name }}. {% if term_data.is_locked %}{{ term_data.friendly_lock_message }}. 0 percent complete.{% else %}{{ term_data.lessons_completed_display }} lessons and {{ term_data.activities_completed_display }} games finished out of {{ term_data.total_items }} tasks. {{ term_data.display_percent }} percent complete. {{ term_data.remaining_label }}. Next step: {{ term_data.next_step.text if term_data.next_step else '' }}{% endif %}">
+            
+            <div>
+              <!-- Card Top Bar: Status + Voice Read-Aloud Button -->
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex align-items-center gap-2">
+                  {% if term_data.is_locked %}
+                    <span class="kid-status-badge kid-badge-locked">
+                      <i class="bi bi-lock-fill"></i> Locked
+                    </span>
+                  {% elif term_data.is_completed %}
+                    <span class="kid-status-badge kid-badge-completed">
+                      <i class="bi bi-award-fill"></i> All Done!
+                    </span>
+                  {% else %}
+                    <span class="kid-status-badge kid-badge-active">
+                      <i class="bi bi-play-circle-fill"></i> Current Stop
+                    </span>
+                  {% endif %}
+                </div>
+
+                <!-- Text-to-Speech Button (WCAG AA & Kid Accessible) -->
+                <button 
+                  type="button" 
+                  class="kid-speaker-btn" 
+                  onclick="readTermCard('term-card-{{ loop.index }}')" 
+                  aria-label="Read {{ term_data.name }} details out loud"
+                  title="Listen to this card">
+                  <i class="bi bi-volume-up-fill fs-4" aria-hidden="true"></i>
+                </button>
               </div>
-              {% if term_data.is_locked %}
-                <span class="brutal-badge brutal-badge-pink fs-6 fw-black">
-                  <i class="bi bi-lock-fill me-1"></i>Locked
-                </span>
-              {% else %}
-                <span class="brutal-badge {{ term_data.status_badge }} fs-6 fw-black">
-                  <i class="bi {{ term_data.status_icon }} me-1"></i>{{ term_data.status_text }}
-                </span>
-              {% endif %}
-            </div>
-            <div class="brutal-window-body d-flex flex-column justify-content-between h-100">
-              <div>
-                <div class="d-flex justify-content-between align-items-start mb-3">
+
+              <!-- Term Title & Stars -->
+              <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+                <div>
+                  <h2 class="fw-black text-dark fs-1 mb-1">
+                    {{ term_data.name }}
+                  </h2>
+                  <div class="fw-bold text-dark fs-6">
+                    {% if term_data.is_locked %}
+                      <span class="text-muted"><i class="bi bi-lock"></i> 0 of {{ term_data.total_items }} tasks finished</span>
+                    {% else %}
+                      <span><i class="bi bi-check2-circle text-success"></i> {{ term_data.total_done_display }} of {{ term_data.total_items }} tasks finished</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Percentage + Stars Display -->
+                <div class="text-end">
+                  <div class="fw-black text-dark display-5">
+                    {% if term_data.is_locked %}
+                      0%
+                    {% else %}
+                      {{ term_data.display_percent }}%
+                    {% endif %}
+                  </div>
+                  <!-- Stars for Kids -->
+                  <div class="kid-stars-row" aria-label="{{ term_data.stars_count }} out of 3 stars">
+                    {% for s in range(3) %}
+                      {% if s < term_data.stars_count %}
+                        <i class="bi bi-star-fill star-filled"></i>
+                      {% else %}
+                        <i class="bi bi-star star-empty"></i>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Completion Celebration Banner -->
+              {% if term_data.is_completed %}
+                <div class="celebration-banner">
+                  <i class="bi bi-trophy-fill text-warning fs-2" aria-hidden="true"></i>
                   <div>
-                    <h3 class="fw-black text-dark fs-3 mb-1">
-                      <i class="bi bi-calendar3-range text-dark me-1"></i>{{ term_data.name }}
-                    </h3>
-                    <div class="fw-bold text-dark small">
-                      {{ term_data.lessons_completed + term_data.activities_completed }} of {{ term_data.lessons_total + term_data.activities_total }} Tasks Completed
-                    </div>
-                  </div>
-                  <div class="text-end">
-                    <span class="fw-black text-dark display-6">{{ term_data.overall_percent }}%</span>
+                    <strong class="fs-5 d-block text-dark">Hooray! {{ term_data.name }} Complete!</strong>
+                    <span class="text-dark small fw-bold">You earned all 3 stars! Fantastic work, scientist! ⭐</span>
                   </div>
                 </div>
+              {% endif %}
 
-                <!-- Locked Callout Banner -->
-                {% if term_data.is_locked %}
-                  <div class="p-2 px-3 mb-3 bg-white border border-dark rounded-3 d-flex align-items-center gap-2">
-                    <i class="bi bi-shield-lock-fill text-danger fs-5"></i>
-                    <span class="fw-bold text-dark small">Complete 100% of {{ term_data.lock_reason }} to unlock.</span>
+              <!-- Locked Friendly Message Banner -->
+              {% if term_data.is_locked %}
+                <div class="p-3 mb-3 bg-white border border-dark rounded-4 d-flex align-items-center gap-3" style="box-shadow: 2.5px 2.5px 0 #000;">
+                  <div class="rounded-circle p-2 bg-light border border-dark d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; min-width: 48px;">
+                    <i class="bi bi-shield-lock-fill text-danger fs-3" aria-hidden="true"></i>
                   </div>
-                {% endif %}
-
-                <!-- Overall Term Progress Bar -->
-                <div class="progress mb-4" style="height: 18px; border: 3px solid #000; border-radius: 999px; background: #fff; box-shadow: 2px 2px 0 #000; overflow: hidden;">
-                  <div class="progress-bar" role="progressbar" style="width: {{ term_data.overall_percent }}%; background: {% if term_data.is_locked %}#94a3b8{% else %}#22c55e{% endif %};" aria-valuenow="{{ term_data.overall_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-
-                <!-- Dual Mastery Breakdown (Lessons & Activities) -->
-                <div class="row g-3">
-                  <!-- Lessons Mastery Box -->
-                  <div class="col-sm-6">
-                    <div class="p-3 bg-white brutal-card h-100 d-flex flex-column justify-content-between">
-                      <div>
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                          <span class="fw-black text-dark small d-flex align-items-center gap-1">
-                            <i class="bi bi-book-half text-primary"></i> Lessons Done
-                          </span>
-                          <span class="badge bg-light text-dark border border-dark rounded-pill fw-bold">
-                            {{ term_data.lessons_completed }}/{{ term_data.lessons_total }}
-                          </span>
-                        </div>
-                        <div class="progress my-2" style="height: 10px; border: 2px solid #000; border-radius: 999px; background: #f1f5f9;">
-                          <div class="progress-bar bg-primary" role="progressbar" style="width: {{ term_data.lessons_percent }}%;"></div>
-                        </div>
-                      </div>
-                      <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top border-dark border-1">
-                        <span class="fw-bold text-muted small">Lesson Mastery</span>
-                        <span class="fw-black text-dark small">{{ term_data.lessons_percent }}%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Activities Mastery Box -->
-                  <div class="col-sm-6">
-                    <div class="p-3 bg-white brutal-card h-100 d-flex flex-column justify-content-between">
-                      <div>
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                          <span class="fw-black text-dark small d-flex align-items-center gap-1">
-                            <i class="bi bi-joystick text-success"></i> Games Mastered
-                          </span>
-                          <span class="badge bg-light text-dark border border-dark rounded-pill fw-bold">
-                            {{ term_data.activities_completed }}/{{ term_data.activities_total }}
-                          </span>
-                        </div>
-                        <div class="progress my-2" style="height: 10px; border: 2px solid #000; border-radius: 999px; background: #f1f5f9;">
-                          <div class="progress-bar bg-success" role="progressbar" style="width: {{ term_data.activities_percent }}%;"></div>
-                        </div>
-                      </div>
-                      <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top border-dark border-1">
-                        <span class="fw-bold text-muted small">Game Mastery</span>
-                        <span class="fw-black text-dark small">{{ term_data.activities_percent }}%</span>
-                      </div>
-                    </div>
+                  <div>
+                    <strong class="fs-5 text-dark d-block">Term 2 is Locked</strong>
+                    <span class="text-dark fw-bold fs-6">{{ term_data.friendly_lock_message }}</span>
                   </div>
                 </div>
+              {% endif %}
+
+              <!-- Progress Bar (Shows 0% when locked) -->
+              <div class="progress mb-4" style="height: 20px; border: 3px solid #000; border-radius: 999px; background: #fff; box-shadow: 2px 2px 0 #000; overflow: hidden;" role="progressbar" aria-valuenow="{{ 0 if term_data.is_locked else term_data.display_percent }}" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar" style="width: {{ 0 if term_data.is_locked else term_data.display_percent }}%; background: {{ '#94a3b8' if term_data.is_locked else '#22c55e' }};"></div>
               </div>
 
-              <!-- Card Action Button -->
-              <div class="mt-3">
-                {% if term_data.is_locked %}
-                  <button type="button" class="brutal-btn w-100 text-center opacity-75" disabled style="background: #e2e8f0; cursor: not-allowed; border: 2.5px solid #000; font-weight: 800; font-size: 0.9rem; padding: 8px;">
-                    <i class="bi bi-lock-fill me-1 text-secondary"></i> Locked Prerequisite
-                  </button>
-                {% else %}
-                  <a href="#{{ term_data.term_key }}" class="brutal-btn w-100 text-center" style="background: #ffffff; color: #000; border: 2.5px solid #000; box-shadow: 2.5px 2.5px 0 #000; font-weight: 800; text-decoration: none; display: block; padding: 8px; font-size: 0.9rem;">
-                    <span>Open {{ term_data.name }} Section</span> <i class="bi bi-arrow-right-circle-fill ms-1"></i>
-                  </a>
-                {% endif %}
+              <!-- Lessons & Games Quick Counters -->
+              <div class="row g-3 mb-4">
+                <div class="col-6">
+                  <div class="kid-info-box h-100">
+                    <span class="fw-black text-dark fs-6 d-flex align-items-center gap-1 mb-1">
+                      <i class="bi bi-book-fill text-primary"></i> Lessons
+                    </span>
+                    <span class="fw-black text-dark fs-4">
+                      {{ 0 if term_data.is_locked else term_data.lessons_completed_display }} / {{ term_data.lessons_total }}
+                    </span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="kid-info-box h-100">
+                    <span class="fw-black text-dark fs-6 d-flex align-items-center gap-1 mb-1">
+                      <i class="bi bi-joystick text-success"></i> Games
+                    </span>
+                    <span class="fw-black text-dark fs-4">
+                      {{ 0 if term_data.is_locked else term_data.activities_completed_display }} / {{ term_data.activities_total }}
+                    </span>
+                  </div>
+                </div>
               </div>
 
             </div>
-          </div>
+
+            <!-- Card Bottom: One Obvious Action Button + Remaining helper line -->
+            <div class="mt-2">
+              <!-- Helper Line for next step -->
+              <div class="fw-bold text-dark fs-6 mb-2 d-flex align-items-center gap-2">
+                <i class="bi bi-lightbulb-fill text-warning fs-5"></i>
+                <span>{{ term_data.remaining_label }}</span>
+              </div>
+
+              <!-- Big Bright Next Step Button -->
+              {% if term_data.is_locked %}
+                <button type="button" class="kid-big-action-btn kid-action-locked" disabled aria-disabled="true">
+                  <i class="bi bi-lock-fill fs-5"></i>
+                  <span>Finish Term 1 to Open Term 2!</span>
+                </button>
+              {% elif term_data.is_completed %}
+                <a href="{{ term_data.next_step.url if term_data.next_step else '#' }}" class="kid-big-action-btn kid-action-review" aria-label="Review {{ term_data.name }} lessons and games">
+                  <i class="bi bi-arrow-repeat fs-5"></i>
+                  <span>{{ term_data.next_step.text if term_data.next_step else 'Review Term 1 Lessons & Games ▶' }}</span>
+                </a>
+              {% else %}
+                <a href="{{ term_data.next_step.url if term_data.next_step else '#' }}" class="kid-big-action-btn kid-action-continue" aria-label="{{ term_data.next_step.text if term_data.next_step else 'Continue Term' }}">
+                  <i class="bi bi-play-circle-fill fs-4"></i>
+                  <span>{{ term_data.next_step.text if term_data.next_step else 'Continue ▶' }}</span>
+                </a>
+              {% endif %}
+
+              <!-- Expandable Lessons & Games Drawer for Direct Tapping -->
+              <div class="mt-3">
+                <button 
+                  class="kid-accordion-btn" 
+                  type="button" 
+                  data-bs-toggle="collapse" 
+                  data-bs-target="#collapse-{{ term_data.term_key }}" 
+                  aria-expanded="false" 
+                  aria-controls="collapse-{{ term_data.term_key }}">
+                  <span><i class="bi bi-list-stars me-1"></i> See All {{ term_data.name }} Tasks ({{ term_data.total_items }})</span>
+                  <i class="bi bi-chevron-down"></i>
+                </button>
+
+                <div class="collapse mt-3" id="collapse-{{ term_data.term_key }}">
+                  <!-- Lessons List -->
+                  <div class="mb-3">
+                    <span class="fw-black text-dark fs-6 d-block mb-2">Lessons:</span>
+                    {% for lp in term_data.lessons %}
+                      {% if term_data.is_locked %}
+                        <div class="kid-task-item kid-task-locked" aria-disabled="true">
+                          <span class="fw-bold"><i class="bi bi-lock-fill me-2"></i>{{ lp.lesson.title }}</span>
+                          <span class="badge bg-secondary text-white rounded-pill">Locked</span>
+                        </div>
+                      {% else %}
+                        <a href="{{ lp.url }}" class="kid-task-item" aria-label="Open lesson {{ lp.lesson.title }}">
+                          <span class="fw-bold"><i class="bi bi-book-half text-primary me-2"></i>{{ lp.lesson.title }}</span>
+                          {% if lp.completed or lp.percent >= 100 %}
+                            <span class="badge bg-success text-white rounded-pill fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Done</span>
+                          {% else %}
+                            <span class="badge bg-primary text-white rounded-pill fw-bold">Start ▶</span>
+                          {% endif %}
+                        </a>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+
+                  <!-- Games List -->
+                  <div>
+                    <span class="fw-black text-dark fs-6 d-block mb-2">Games:</span>
+                    {% for a in term_data.activities %}
+                      {% if term_data.is_locked %}
+                        <div class="kid-task-item kid-task-locked" aria-disabled="true">
+                          <span class="fw-bold"><i class="bi bi-lock-fill me-2"></i>{{ a.activity.type or 'Game' }}</span>
+                          <span class="badge bg-secondary text-white rounded-pill">Locked</span>
+                        </div>
+                      {% else %}
+                        <a href="{{ a.url }}" class="kid-task-item" aria-label="Play game {{ a.activity.type or 'Game' }}">
+                          <span class="fw-bold"><i class="bi bi-joystick text-success me-2"></i>{{ a.activity.type or 'Game' }}</span>
+                          {% if a.completed %}
+                            <span class="badge bg-success text-white rounded-pill fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Done</span>
+                          {% else %}
+                            <span class="badge bg-warning text-dark rounded-pill fw-bold">Play ▶</span>
+                          {% endif %}
+                        </a>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </article>
         </div>
       {% endfor %}
     </div>
-  </section>
-
-  <!-- Overall Curriculum Roadmap Card -->
-  <section class="brutal-window mb-4" style="background: #e0e7ff;">
-    <div class="brutal-window-header d-flex justify-content-between align-items-center">
-      <div class="brutal-dots">
-        <span class="brutal-dot dot-red"></span>
-        <span class="brutal-dot dot-yellow"></span>
-        <span class="brutal-dot dot-green"></span>
-      </div>
-      <span class="brutal-badge brutal-badge-green fs-6 fw-black">
-        <i class="bi bi-award-fill me-1"></i>Curriculum Journey
-      </span>
-    </div>
-    <div class="brutal-window-body">
-      <div class="row align-items-center mb-3">
-        <div class="col-md-7">
-          <h2 class="fw-black text-dark fs-2 mb-1">Academic Curriculum Roadmap</h2>
-          <p class="fw-bold text-dark mb-0 small">
-            Completed {{ overall_stats.completed_tasks }} of {{ overall_stats.total_tasks }} Core Curriculum Tasks across active terms.
-          </p>
-        </div>
-        <div class="col-md-5 text-md-end mt-2 mt-md-0">
-          <span class="fw-black text-dark display-6">{{ overall_stats.overall_percent }}%</span>
-          <span class="fw-bold text-muted small d-block">Overall Curriculum Completion</span>
-        </div>
-      </div>
-
-      <!-- Overall Progression Bar -->
-      <div class="progress mb-4" style="height: 20px; border: 3px solid #000; border-radius: 999px; background: #fff; box-shadow: 2px 2px 0 #000; overflow: hidden;">
-        <div class="progress-bar" role="progressbar" style="width: {{ overall_stats.overall_percent }}%; background: #22c55e;" aria-valuenow="{{ overall_stats.overall_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
-      </div>
-
-      <!-- Roadmap Sequence Track (Terms 1 -> 2 -> 3 -> 4) -->
-      <div class="roadmap-track">
-        {% for term_data in term_mastery_list if not 'supplementary' in term_data.name|lower %}
-          <div class="roadmap-step {{ 'active-step' if not term_data.is_locked else '' }}" style="background: {% if term_data.status_text == 'Mastered' %}#bbf7d0{% elif not term_data.is_locked %}#fef08a{% else %}#f1f5f9{% endif %};">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="fw-black text-dark small">{{ term_data.name }}</span>
-              {% if term_data.is_locked %}
-                <i class="bi bi-lock-fill text-danger fs-6"></i>
-              {% elif term_data.status_text == 'Mastered' %}
-                <i class="bi bi-check-circle-fill text-success fs-6"></i>
-              {% else %}
-                <i class="bi bi-play-circle-fill text-primary fs-6"></i>
-              {% endif %}
-            </div>
-            <div class="fw-black text-dark fs-4 mb-1">{{ term_data.overall_percent }}%</div>
-            <span class="badge {{ 'bg-success text-white' if term_data.status_text == 'Mastered' else 'bg-danger text-white' if term_data.is_locked else 'bg-dark text-white' }} rounded-pill small fw-bold">
-              {{ term_data.status_text }}
-            </span>
-          </div>
-          {% if not loop.last %}
-            <div class="roadmap-connector d-none d-md-block">
-              <i class="bi bi-arrow-right"></i>
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-    </div>
-  </section>
-
-  <!-- Detailed Term Sections (Terms 1 to 4 + Supplementary) -->
-  <main id="main-content">
-    {% for term_data in term_mastery_list %}
-      <div id="{{ term_data.term_key }}" class="term-section-anchor mb-5">
-        <section class="brutal-window" style="background: {% if 'supplementary' in term_data.name|lower %}#fef08a{% elif loop.index == 1 %}#c7d2fe{% elif loop.index == 2 %}#fed7aa{% elif loop.index == 3 %}#bae6fd{% else %}#bbf7d0{% endif %};">
-          
-          <!-- Window Header -->
-          <div class="brutal-window-header d-flex justify-content-between align-items-center">
-            <div class="brutal-dots">
-              <span class="brutal-dot dot-red"></span>
-              <span class="brutal-dot dot-yellow"></span>
-              <span class="brutal-dot dot-green"></span>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              {% if term_data.is_locked %}
-                <span class="brutal-badge brutal-badge-pink fs-6 fw-black">
-                  <i class="bi bi-lock-fill me-1"></i>Locked
-                </span>
-              {% else %}
-                <span class="brutal-badge {{ term_data.status_badge }} fs-6 fw-black">
-                  <i class="bi {{ term_data.status_icon }} me-1"></i>{{ term_data.status_text }}
-                </span>
-              {% endif %}
-            </div>
-          </div>
-
-          <!-- Window Body -->
-          <div class="brutal-window-body">
-
-            <!-- Section Title & Score Header -->
-            <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
-              <div>
-                <h2 class="fw-black text-dark fs-2 mb-1 d-flex align-items-center gap-2">
-                  {% if 'supplementary' in term_data.name|lower %}
-                    <i class="bi bi-stars text-warning"></i> {{ term_data.name }}
-                  {% else %}
-                    <i class="bi bi-calendar3-range text-dark"></i> {{ term_data.name }}
-                  {% endif %}
-                </h2>
-                <div class="fw-bold text-dark fs-6">
-                  {{ term_data.lessons_completed + term_data.activities_completed }} of {{ term_data.lessons_total + term_data.activities_total }} Tasks Completed
-                </div>
-              </div>
-              <div class="text-end">
-                <span class="fw-black text-dark display-5">{{ term_data.overall_percent }}%</span>
-              </div>
-            </div>
-
-            <!-- Locked Callout Notice -->
-            {% if term_data.is_locked %}
-              <div class="locked-callout mb-4 d-flex align-items-center gap-3">
-                <div class="rounded-circle p-2 bg-light border border-dark d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; min-width: 52px;">
-                  <i class="bi bi-shield-lock-fill fs-2 text-danger"></i>
-                </div>
-                <div>
-                  <h3 class="fw-black text-dark fs-4 mb-1">This Term is Currently Locked</h3>
-                  <p class="fw-bold text-dark mb-0 fs-6">
-                    Prerequisite rule: You must complete <strong>100% of tasks in {{ term_data.lock_reason }}</strong> to unlock these lessons and interactive activities.
-                  </p>
-                </div>
-              </div>
-            {% endif %}
-
-            <!-- Term Progress Bar -->
-            <div class="progress mb-4" style="height: 18px; border: 3px solid #000; border-radius: 999px; background: #fff; box-shadow: 2px 2px 0 #000; overflow: hidden;">
-              <div class="progress-bar" role="progressbar" style="width: {{ term_data.overall_percent }}%; background: {% if term_data.is_locked %}#94a3b8{% else %}#22c55e{% endif %};" aria-valuenow="{{ term_data.overall_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-
-            <!-- Dual Mastery Mini Cards -->
-            <div class="row g-3 mb-4">
-              <div class="col-sm-6">
-                <div class="p-3 bg-white brutal-card d-flex justify-content-between align-items-center">
-                  <div>
-                    <span class="fw-black text-dark small d-flex align-items-center gap-1">
-                      <i class="bi bi-book-half text-primary"></i> Lessons Completed
-                    </span>
-                    <span class="fw-black text-dark fs-4">{{ term_data.lessons_completed }}/{{ term_data.lessons_total }}</span>
-                  </div>
-                  <span class="badge bg-light text-dark border border-dark rounded-pill fw-bold fs-6">
-                    {{ term_data.lessons_percent }}%
-                  </span>
-                </div>
-              </div>
-              <div class="col-sm-6">
-                <div class="p-3 bg-white brutal-card d-flex justify-content-between align-items-center">
-                  <div>
-                    <span class="fw-black text-dark small d-flex align-items-center gap-1">
-                      <i class="bi bi-joystick text-success"></i> Games Mastered
-                    </span>
-                    <span class="fw-black text-dark fs-4">{{ term_data.activities_completed }}/{{ term_data.activities_total }}</span>
-                  </div>
-                  <span class="badge bg-light text-dark border border-dark rounded-pill fw-bold fs-6">
-                    {{ term_data.activities_percent }}%
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Content Row: Column 1 = Lessons, Column 2 = Activities -->
-            <div class="row g-4">
-              
-              <!-- Column 1: Lessons -->
-              <div class="col-lg-6">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h3 class="fw-black text-dark fs-3 mb-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-journal-bookmark-fill text-primary"></i> Lessons ({{ term_data.lessons|length }})
-                  </h3>
-                  <span class="badge bg-white text-dark border border-dark rounded-pill fw-bold">
-                    {{ term_data.lessons_completed }}/{{ term_data.lessons_total }} Done
-                  </span>
-                </div>
-
-                {% if term_data.lessons %}
-                  {% for l_item in term_data.lessons %}
-                    <div class="task-item-card {{ 'is-locked-card' if l_item.is_term_locked else '' }}">
-                      <div>
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                          <h4 class="fw-black text-dark fs-4 mb-0">
-                            {% if l_item.is_term_locked %}
-                              <i class="bi bi-lock-fill text-secondary me-1"></i>
-                            {% else %}
-                              <i class="bi bi-book text-primary me-1"></i>
-                            {% endif %}
-                            {{ l_item.lesson.title }}
-                          </h4>
-                          {% if l_item.is_term_locked %}
-                            <span class="badge bg-secondary text-white border border-dark rounded-pill fw-bold">Locked</span>
-                          {% elif l_item.percent >= 100 %}
-                            <span class="badge bg-success text-white border border-dark rounded-pill fw-bold">
-                              <i class="bi bi-check2"></i> 100%
-                            </span>
-                          {% elif l_item.percent > 0 %}
-                            <span class="badge bg-primary text-white border border-dark rounded-pill fw-bold">
-                              {{ l_item.percent }}%
-                            </span>
-                          {% else %}
-                            <span class="badge bg-dark text-white border border-dark rounded-pill fw-bold">0%</span>
-                          {% endif %}
-                        </div>
-
-                        <p class="fw-bold text-dark small mb-2">{{ l_item.lesson.description }}</p>
-
-                        <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
-                          <span class="badge bg-light text-dark border border-dark rounded-pill small fw-bold">
-                            <i class="bi bi-collection-play me-1 text-primary"></i>Slide {{ l_item.current_slide }}/{{ l_item.total_slides }}
-                          </span>
-                          <span class="badge bg-light text-dark border border-dark rounded-pill small fw-bold">
-                            <i class="bi bi-stopwatch me-1 text-danger"></i>{{ l_item.time_spent }}s spent
-                          </span>
-                        </div>
-
-                        <div class="progress mb-3" style="height: 10px; border: 2px solid #000; border-radius: 999px; background: #f1f5f9;">
-                          <div class="progress-bar {% if l_item.percent >= 100 %}bg-success{% else %}bg-primary{% endif %}" role="progressbar" style="width: {{ l_item.percent }}%;"></div>
-                        </div>
-                      </div>
-
-                      <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-dark border-1">
-                        <div>
-                          {% if l_item.is_term_locked %}
-                            <span class="fw-bold text-muted small"><i class="bi bi-lock-fill me-1"></i>Requires Previous Term</span>
-                          {% elif l_item.percent >= 100 %}
-                            <span class="fw-black text-success small"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
-                          {% elif l_item.percent > 0 %}
-                            <span class="fw-black text-warning small"><i class="bi bi-hourglass-split me-1"></i>In Progress</span>
-                          {% else %}
-                            <span class="fw-black text-dark small"><i class="bi bi-compass-fill me-1 text-primary"></i>Ready to Start</span>
-                          {% endif %}
-                        </div>
-
-                        <div>
-                          {% if l_item.is_term_locked %}
-                            <button type="button" class="btn btn-secondary fw-bold" disabled style="border-radius: 8px; border: 2px solid #000; cursor: not-allowed; padding: 6px 12px; font-size: 0.88rem;">
-                              <i class="bi bi-lock-fill me-1"></i>Term Locked
-                            </button>
-                          {% elif l_item.percent >= 100 %}
-                            <a href="{{ l_item.url }}" class="brutal-open-btn brutal-open-btn-green" style="padding: 6px 12px; font-size: 0.88rem;">
-                              <span>Review</span>
-                              <i class="bi bi-arrow-repeat ms-1"></i>
-                            </a>
-                          {% elif l_item.percent > 0 %}
-                            <a href="{{ l_item.url }}" class="brutal-open-btn brutal-open-btn-yellow" style="padding: 6px 12px; font-size: 0.88rem;">
-                              <span>Continue</span>
-                              <i class="bi bi-arrow-right-circle-fill ms-1"></i>
-                            </a>
-                          {% else %}
-                            <a href="{{ l_item.url }}" class="brutal-open-btn brutal-open-btn-cyan" style="padding: 6px 12px; font-size: 0.88rem;">
-                              <span>Start</span>
-                              <i class="bi bi-play-circle-fill ms-1"></i>
-                            </a>
-                          {% endif %}
-                        </div>
-                      </div>
-                    </div>
-                  {% endfor %}
-                {% else %}
-                  <div class="p-3 bg-white border border-dark rounded-3 text-center fw-bold text-dark">
-                    No lessons registered in this term yet.
-                  </div>
-                {% endif %}
-              </div>
-
-              <!-- Column 2: Interactive Games & Activities -->
-              <div class="col-lg-6">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h3 class="fw-black text-dark fs-3 mb-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-controller text-success"></i> Interactive Games ({{ term_data.activities|length }})
-                  </h3>
-                  <span class="badge bg-white text-dark border border-dark rounded-pill fw-bold">
-                    {{ term_data.activities_completed }}/{{ term_data.activities_total }} Mastered
-                  </span>
-                </div>
-
-                {% if term_data.activities %}
-                  {% for a_item in term_data.activities %}
-                    <div class="task-item-card {{ 'is-locked-card' if a_item.is_term_locked or not a_item.is_unlocked else '' }}">
-                      <div>
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                          <h4 class="fw-black text-dark fs-4 mb-0">
-                            {% if a_item.is_term_locked or not a_item.is_unlocked %}
-                              <i class="bi bi-lock-fill text-secondary me-1"></i>
-                            {% else %}
-                              <i class="bi bi-joystick text-success me-1"></i>
-                            {% endif %}
-                            {{ a_item.activity.type }}
-                          </h4>
-                          <span class="brutal-badge {{ 'brutal-badge-green' if a_item.completed else 'brutal-badge-yellow' if a_item.is_unlocked and not a_item.is_term_locked else 'brutal-badge-pink' }} fs-6">
-                            {{ 'Mastered' if a_item.completed else 'Unlocked' if a_item.is_unlocked and not a_item.is_term_locked else 'Locked' }}
-                          </span>
-                        </div>
-
-                        <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
-                          <span class="badge bg-light text-dark border border-dark rounded-pill small fw-bold">
-                            <i class="bi bi-trophy-fill me-1 text-warning"></i>Best Score: {{ a_item.best_score }} pts
-                          </span>
-                          <span class="badge bg-light text-dark border border-dark rounded-pill small fw-bold">
-                            <i class="bi bi-arrow-clockwise me-1 text-primary"></i>Today: {{ a_item.attempts_today }}/3
-                          </span>
-                          <span class="badge bg-light text-dark border border-dark rounded-pill small fw-bold">
-                            <i class="bi bi-award me-1 text-success"></i>Max: {{ a_item.activity.points }} pts
-                          </span>
-                        </div>
-                      </div>
-
-                      <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-dark border-1">
-                        <div>
-                          {% if a_item.is_term_locked %}
-                            <span class="fw-bold text-muted small"><i class="bi bi-lock-fill me-1"></i>Term Locked</span>
-                          {% elif not a_item.is_unlocked %}
-                            <span class="fw-bold text-danger small"><i class="bi bi-shield-exclamation me-1"></i>Complete Lesson First</span>
-                          {% elif a_item.attempts_today >= 3 %}
-                            <span class="fw-bold text-muted small"><i class="bi bi-alarm me-1"></i>Daily limit reached</span>
-                          {% elif a_item.completed %}
-                            <span class="fw-black text-success small"><i class="bi bi-check-circle-fill me-1"></i>Mastered</span>
-                          {% else %}
-                            <span class="fw-black text-dark small"><i class="bi bi-play-circle-fill me-1 text-success"></i>Ready to Play</span>
-                          {% endif %}
-                        </div>
-
-                        <div>
-                          {% if a_item.is_term_locked %}
-                            <button type="button" class="btn btn-secondary fw-bold" disabled style="border-radius: 8px; border: 2px solid #000; cursor: not-allowed; padding: 6px 12px; font-size: 0.88rem;">
-                              <i class="bi bi-lock-fill me-1"></i>Term Locked
-                            </button>
-                          {% elif not a_item.is_unlocked %}
-                            <button type="button" class="btn btn-secondary fw-bold" disabled style="border-radius: 8px; border: 2px solid #000; cursor: not-allowed; padding: 6px 12px; font-size: 0.88rem;">
-                              <i class="bi bi-lock-fill me-1"></i>Lesson Required
-                            </button>
-                          {% elif a_item.attempts_today >= 3 %}
-                            <button type="button" class="btn btn-secondary fw-bold" disabled style="border-radius: 8px; border: 2px solid #000; cursor: not-allowed; padding: 6px 12px; font-size: 0.88rem;">
-                              <i class="bi bi-lock-fill me-1"></i>Limit (3/3)
-                            </button>
-                          {% elif a_item.completed %}
-                            <a href="{{ a_item.url }}" class="brutal-open-btn brutal-open-btn-green" style="padding: 6px 12px; font-size: 0.88rem;">
-                              <span>Replay</span>
-                              <i class="bi bi-controller ms-1"></i>
-                            </a>
-                          {% else %}
-                            <a href="{{ a_item.url }}" class="brutal-open-btn brutal-open-btn-pink" style="padding: 6px 12px; font-size: 0.88rem;">
-                              <span>Play Game</span>
-                              <i class="bi bi-controller ms-1"></i>
-                            </a>
-                          {% endif %}
-                        </div>
-                      </div>
-                    </div>
-                  {% endfor %}
-                {% else %}
-                  <div class="p-3 bg-white border border-dark rounded-3 text-center fw-bold text-dark">
-                    No activities registered in this term yet.
-                  </div>
-                {% endif %}
-              </div>
-
-            </div>
-
-          </div>
-        </section>
-      </div>
-    {% endfor %}
   </main>
 
-  <!-- Sticky Quick Nav Bar -->
-  <footer class="mt-4 p-3 bg-white brutal-card d-flex justify-content-between align-items-center flex-wrap gap-2">
-    <div class="fw-black text-dark fs-5">
-      <i class="bi bi-compass-fill text-primary me-1"></i> Jump to Term Section:
-    </div>
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      {% for term_data in term_mastery_list %}
-        <a href="#{{ term_data.term_key }}" class="btn btn-sm fw-black {{ 'btn-secondary text-white' if term_data.is_locked else 'btn-outline-dark' }}" style="border: 2px solid #000; border-radius: 8px;">
-          {% if term_data.is_locked %}
-            <i class="bi bi-lock-fill me-1"></i>
-          {% endif %}
-          {{ term_data.name }} ({{ term_data.overall_percent }}%)
-        </a>
-      {% endfor %}
-      <a href="{{ url_for('student.dashboard') }}" class="btn btn-sm btn-dark fw-black ms-2" style="border: 2px solid #000; border-radius: 8px;">
-        <i class="bi bi-house-door-fill me-1"></i> Dashboard
-      </a>
-    </div>
-  </footer>
+  <!-- Confetti Canvas for Celebration -->
+  <canvas id="celebration-canvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; display: none;"></canvas>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Text-to-Speech Accessible Reader for Grade 3 pupils
+    function readTermCard(cardId) {
+      if (!('speechSynthesis' in window)) {
+        alert("Audio reading is not supported on this browser.");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const speechText = card.getAttribute('data-speech-text') || card.innerText;
+      const utterance = new SpeechSynthesisUtterance(speechText);
+      utterance.rate = 0.9;
+      utterance.pitch = 1.05;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Gentle star celebration for completed term
+    document.addEventListener('DOMContentLoaded', function() {
+      const completedCards = document.querySelectorAll('.kid-badge-completed');
+      if (completedCards.length > 0) {
+        launchKidCelebration();
+      }
+    });
+
+    function launchKidCelebration() {
+      const canvas = document.getElementById('celebration-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      canvas.style.display = 'block';
+
+      const particles = [];
+      const colors = ['#fde047', '#4ade80', '#60a5fa', '#f472b6', '#fb923c'];
+
+      for (let i = 0; i < 40; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height * 0.4,
+          r: Math.random() * 6 + 4,
+          d: Math.random() * 40,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          tilt: Math.floor(Math.random() * 10) - 10,
+          tiltAngleIncremental: (Math.random() * 0.07) + 0.05,
+          tiltAngle: 0
+        });
+      }
+
+      let animationFrames = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.tiltAngle += p.tiltAngleIncremental;
+          p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+          p.tilt = Math.sin(p.tiltAngle - (animationFrames / 3)) * 15;
+
+          ctx.beginPath();
+          ctx.lineWidth = p.r;
+          ctx.strokeStyle = p.color;
+          ctx.moveTo(p.x + p.tilt + (p.r / 2), p.y);
+          ctx.lineTo(p.x + p.tilt, p.y + p.tilt + (p.r / 2));
+          ctx.stroke();
+        });
+
+        animationFrames++;
+        if (animationFrames < 120) {
+          requestAnimationFrame(draw);
+        } else {
+          canvas.style.display = 'none';
+        }
+      }
+      draw();
+    }
+  </script>
 </body>
 </html>
