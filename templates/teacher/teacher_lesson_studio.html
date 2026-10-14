@@ -262,6 +262,15 @@
                             <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
                               <i class="bi bi-easel me-1"></i>Slide Presentation
                             </span>
+                            {% if card.is_supplementary %}
+                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-bandaid me-1"></i>Supplementary / Remedial
+                              </span>
+                            {% else %}
+                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-journal-check me-1"></i>Core Curriculum
+                              </span>
+                            {% endif %}
                             {% if card.has_custom_slides %}
                               <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
                                 <i class="bi bi-check-circle-fill me-1"></i>Published
@@ -269,6 +278,9 @@
                             {% else %}
                               <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">Default Core</span>
                             {% endif %}
+                            <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              {{ card.term or 'Term 1' }}
+                            </span>
                           </div>
                           <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
                           <p class="text-muted small mb-0 text-truncate" title="{{ card.description }}">
@@ -298,6 +310,13 @@
                             <i class="bi bi-pencil-square"></i>
                             <span>Edit Slides</span>
                           </a>
+                          <form method="POST" action="{{ url_for('teacher.toggle_supplementary', item_type='lesson', item_id=card.lesson.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm {% if card.is_supplementary %}btn-warning text-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-2.5 fw-bold shadow-sm d-flex align-items-center gap-1" title="Toggle between Core Curriculum and Supplementary / Remedial">
+                              <i class="bi bi-arrow-left-right"></i>
+                              <span>{% if card.is_supplementary %}Supplementary{% else %}Core{% endif %}</span>
+                            </button>
+                          </form>
                           <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm"
                             onclick="openAssignLessonModal('{{ card.lesson.id }}', '{{ card.title|escape }}')" title="Assign this lesson directly to students">
                             <i class="bi bi-journal-plus"></i>

@@ -197,12 +197,17 @@
                       Manage reusable arcade game engines and create custom sorting activities. Customize chutes, upload high-resolution science images with zero size caps, set difficulty tiers, and enjoy auto-calculated 100-point scoring.
                     </p>
 
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                      <span class="badge bg-light text-dark border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;">
-                        <i class="bi bi-cpu text-primary me-1"></i>1 Engine Ready
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                      <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-controller text-primary me-1"></i>{{ core_games_count }} Core
                       </span>
-                      <span class="badge bg-light text-dark border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;">
-                        <i class="bi bi-controller text-primary me-1"></i>{{ games_count }} Custom Games
+                      {% if supp_games_count > 0 %}
+                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-bandaid me-1"></i>{{ supp_games_count }} Supplementary
+                      </span>
+                      {% endif %}
+                      <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-cpu text-primary me-1"></i>1 Engine Ready
                       </span>
                     </div>
                   </div>
@@ -237,12 +242,17 @@
                       Design custom science slideshows with a dedicated visual Slide Canvas editor. Preview slides in real time, test built-in speech read-aloud voice narration, and add check-for-understanding quick questions for any science topic.
                     </p>
 
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                      <span class="badge bg-light text-dark border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;">
-                        <i class="bi bi-volume-up text-success me-1"></i>Read-Aloud Speech
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                      <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-journal-bookmark text-success me-1"></i>{{ core_lessons_count }} Core
                       </span>
-                      <span class="badge bg-light text-dark border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;">
-                        <i class="bi bi-journal-bookmark text-success me-1"></i>{{ lessons_count }} Lessons
+                      {% if supp_lessons_count > 0 %}
+                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-bandaid me-1"></i>{{ supp_lessons_count }} Supplementary
+                      </span>
+                      {% endif %}
+                      <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-volume-up text-success me-1"></i>Read-Aloud
                       </span>
                     </div>
                   </div>
@@ -261,17 +271,17 @@
             <div class="teacher-summary-grid mb-4">
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">
-                  <div class="metric-label">Custom Games</div>
-                  <div class="metric-value">{{ games_count }}</div>
+                  <div class="metric-label">Core Curriculum</div>
+                  <div class="metric-value">{{ core_lessons_count }} Lessons · {{ core_games_count }} Games</div>
                 </div>
-                <span class="teacher-summary-icon ts-purple"><i class="bi bi-controller"></i></span>
+                <span class="teacher-summary-icon ts-green"><i class="bi bi-journal-check"></i></span>
               </div>
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">
-                  <div class="metric-label">Curriculum Lessons</div>
-                  <div class="metric-value">{{ lessons_count }}</div>
+                  <div class="metric-label">Supplementary Practice</div>
+                  <div class="metric-value">{{ supp_lessons_count }} Lessons · {{ supp_games_count }} Games</div>
                 </div>
-                <span class="teacher-summary-icon ts-green"><i class="bi bi-journal-bookmark-fill"></i></span>
+                <span class="teacher-summary-icon ts-amber"><i class="bi bi-bandaid-fill"></i></span>
               </div>
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">
@@ -283,9 +293,9 @@
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">
                   <div class="metric-label">Speech Synthesis</div>
-                  <div class="metric-value">Zero Audio Setup</div>
+                  <div class="metric-value">Active Voiceover</div>
                 </div>
-                <span class="teacher-summary-icon ts-amber"><i class="bi bi-volume-up-fill"></i></span>
+                <span class="teacher-summary-icon ts-purple"><i class="bi bi-volume-up-fill"></i></span>
               </div>
             </div>
 

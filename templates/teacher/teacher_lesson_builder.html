@@ -471,15 +471,52 @@
                     <label class="form-label fw-bold text-dark small d-none d-md-block">&nbsp;</label>
                     <div class="dropdown w-100">
                       <button class="btn btn-outline-secondary dropdown-toggle w-100 rounded-3 py-2 fw-bold" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-magic me-1"></i>Lesson Templates
+                        <i class="bi bi-magic me-1 text-primary"></i>Lesson Templates
                       </button>
                       <ul class="dropdown-menu shadow-lg border-0 rounded-3 w-100">
-                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('living_vs_nonliving'); return false;">🌱 Living vs Non-Living</a></li>
-                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('states_of_matter'); return false;">🧊 States of Matter</a></li>
-                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('recycling'); return false;">♻️ Eco Recycling & Waste</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('living_vs_nonliving'); return false;"><i class="bi bi-flower1 text-success me-2"></i>Living vs Non-Living</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('states_of_matter'); return false;"><i class="bi bi-droplet-half text-primary me-2"></i>States of Matter</a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="loadLessonPreset('recycling'); return false;"><i class="bi bi-recycle text-success me-2"></i>Eco Recycling &amp; Waste</a></li>
                       </ul>
                     </div>
                   </div>
+
+                  <!-- Curriculum Classification & Academic Term -->
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold text-dark small d-flex align-items-center justify-content-between" for="lessonSupplementaryInput">
+                      <span>Curriculum Classification <span class="text-danger">*</span></span>
+                      <span class="badge bg-light text-muted border rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">Curriculum Role</span>
+                    </label>
+                    <select class="form-select rounded-3 fw-bold" name="is_supplementary" id="lessonSupplementaryInput">
+                      <option value="0" {% if not (lesson and lesson.is_supplementary) and not (config and config.get('is_supplementary')) %}selected{% endif %}>
+                        Core Curriculum Lesson
+                      </option>
+                      <option value="1" {% if (lesson and lesson.is_supplementary) or (config and config.get('is_supplementary')) %}selected{% endif %}>
+                        Supplementary / Remedial Lesson
+                      </option>
+                    </select>
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                      Core lessons appear under Core Curriculum; Supplementary lessons are categorized for remedial intervention.
+                    </small>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold text-dark small d-flex align-items-center justify-content-between" for="lessonTermInput">
+                      <span>Curriculum Term <span class="text-danger">*</span></span>
+                      <span class="badge bg-light text-muted border rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">Academic Period</span>
+                    </label>
+                    <select class="form-select rounded-3 fw-bold" name="term" id="lessonTermInput">
+                      {% set cur_term = (lesson.term if lesson and lesson.term else (config.term if config and config.term else 'Term 1')) %}
+                      <option value="Term 1" {% if cur_term == 'Term 1' %}selected{% endif %}>Term 1</option>
+                      <option value="Term 2" {% if cur_term == 'Term 2' %}selected{% endif %}>Term 2</option>
+                      <option value="Term 3" {% if cur_term == 'Term 3' %}selected{% endif %}>Term 3</option>
+                      <option value="Term 4" {% if cur_term == 'Term 4' %}selected{% endif %}>Term 4</option>
+                    </select>
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                      Assigns this lesson to a specific grading period in Student Progress &amp; Analytics.
+                    </small>
+                  </div>
+
                   <div class="col-12">
                     <label class="form-label fw-bold text-dark small">Lesson Curriculum Description</label>
                     <textarea class="form-control rounded-3" name="description" id="lessonDescInput" rows="2" placeholder="Brief summary of learning objectives for students and parents...">{{ config.description or (lesson.description if lesson else 'Learn how to classify living organisms from inanimate non-living matter.') }}</textarea>

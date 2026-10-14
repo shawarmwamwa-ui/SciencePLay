@@ -510,9 +510,9 @@
                   <div class="col-6 col-md-3">
                     <label class="form-label fw-bold text-dark small">Difficulty Level</label>
                     <select class="form-select rounded-3 fw-bold" name="difficulty" id="difficultyLevelInput" onchange="updateLiveCanvas()">
-                      <option value="Level 1 — Easy" {% if config.difficulty == 'Level 1 — Easy' or not config.difficulty %}selected{% endif %}>🟢 Level 1 — Easy</option>
-                      <option value="Level 2 — Medium" {% if config.difficulty == 'Level 2 — Medium' %}selected{% endif %}>🟡 Level 2 — Medium</option>
-                      <option value="Level 3 — Hard" {% if config.difficulty == 'Level 3 — Hard' %}selected{% endif %}>🔴 Level 3 — Hard</option>
+                      <option value="Level 1 — Easy" {% if config.difficulty == 'Level 1 — Easy' or not config.difficulty %}selected{% endif %}>Level 1 — Easy</option>
+                      <option value="Level 2 — Medium" {% if config.difficulty == 'Level 2 — Medium' %}selected{% endif %}>Level 2 — Medium</option>
+                      <option value="Level 3 — Hard" {% if config.difficulty == 'Level 3 — Hard' %}selected{% endif %}>Level 3 — Hard</option>
                     </select>
                     <small class="text-muted fw-bold" style="font-size: 0.7rem;">Curriculum challenge tier</small>
                   </div>
@@ -538,12 +538,48 @@
                       </button>
                       <ul class="dropdown-menu dropdown-menu-end shadow-lg border border-light-subtle rounded-3 py-2" style="min-width: 320px; z-index: 1060;">
                         <li class="dropdown-header text-uppercase fw-bold text-muted" style="font-size: 0.7rem; letter-spacing: 0.05em;">Load Ready-to-Play Template</li>
-                        <li><a class="dropdown-item py-2 fw-semibold d-flex align-items-center gap-2" href="#" onclick="loadTopicPreset('living_vs_nonliving'); return false;"><span>🌱</span><span>Living vs Non-Living (2 Chutes)</span></a></li>
-                        <li><a class="dropdown-item py-2 fw-semibold d-flex align-items-center gap-2" href="#" onclick="loadTopicPreset('states_of_matter'); return false;"><span>🧊</span><span>Solid vs Liquid (2 Chutes)</span></a></li>
-                        <li><a class="dropdown-item py-2 fw-semibold d-flex align-items-center gap-2" href="#" onclick="loadTopicPreset('waste_sorting'); return false;"><span>♻️</span><span>Organic vs Recyclable (2 Chutes)</span></a></li>
-                        <li><a class="dropdown-item py-2 fw-semibold d-flex align-items-center gap-2" href="#" onclick="loadTopicPreset('herbivore_vs_carnivore'); return false;"><span>🌿</span><span>Herbivore vs Carnivore (2 Chutes)</span></a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold d-flex align-items-center gap-2" href="#" onclick="loadTopicPreset('living_vs_nonliving'); return false;"><i class="bi bi-flower1 text-success me-1"></i><span>Living vs Non-Living (2 Chutes)</span></a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold d-flex align-items-center gap-2" href="#" onclick="loadTopicPreset('states_of_matter'); return false;"><i class="bi bi-droplet-half text-primary me-1"></i><span>Solid vs Liquid (2 Chutes)</span></a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold d-flex align-items-center gap-2" href="#" onclick="loadTopicPreset('waste_sorting'); return false;"><i class="bi bi-recycle text-success me-1"></i><span>Organic vs Recyclable (2 Chutes)</span></a></li>
+                        <li><a class="dropdown-item py-2 fw-semibold d-flex align-items-center gap-2" href="#" onclick="loadTopicPreset('herbivore_vs_carnivore'); return false;"><i class="bi bi-egg-fried text-warning me-1"></i><span>Herbivore vs Carnivore (2 Chutes)</span></a></li>
                       </ul>
                     </div>
+                  </div>
+
+                  <!-- Curriculum Classification & Academic Term -->
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold text-dark small d-flex align-items-center justify-content-between" for="activitySupplementaryInput">
+                      <span>Curriculum Classification <span class="text-danger">*</span></span>
+                      <span class="badge bg-light text-muted border rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">Curriculum Role</span>
+                    </label>
+                    <select class="form-select rounded-3 fw-bold" name="is_supplementary" id="activitySupplementaryInput">
+                      <option value="0" {% if not (activity and activity.is_supplementary) and not (config and config.get('is_supplementary')) %}selected{% endif %}>
+                        Core Curriculum Game
+                      </option>
+                      <option value="1" {% if (activity and activity.is_supplementary) or (config and config.get('is_supplementary')) %}selected{% endif %}>
+                        Supplementary / Remedial Practice
+                      </option>
+                    </select>
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                      Core games reinforce standard classroom modules; Supplementary games are targeted for intervention &amp; practice.
+                    </small>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold text-dark small d-flex align-items-center justify-content-between" for="activityTermInput">
+                      <span>Curriculum Term <span class="text-danger">*</span></span>
+                      <span class="badge bg-light text-muted border rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">Academic Period</span>
+                    </label>
+                    <select class="form-select rounded-3 fw-bold" name="term" id="activityTermInput">
+                      {% set cur_term = (activity.term if activity and activity.term else (config.term if config and config.term else 'Term 1')) %}
+                      <option value="Term 1" {% if cur_term == 'Term 1' %}selected{% endif %}>Term 1</option>
+                      <option value="Term 2" {% if cur_term == 'Term 2' %}selected{% endif %}>Term 2</option>
+                      <option value="Term 3" {% if cur_term == 'Term 3' %}selected{% endif %}>Term 3</option>
+                      <option value="Term 4" {% if cur_term == 'Term 4' %}selected{% endif %}>Term 4</option>
+                    </select>
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                      Assigns this game to a specific grading period in Student Progress &amp; Analytics.
+                    </small>
                   </div>
                 </div>
               </div>
@@ -566,7 +602,7 @@
                 <div class="simulator-marquee">
                   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
                     <div class="simulator-marquee-title" id="canvasMarqueeTitle">Solid vs Liquid Sorting</div>
-                    <span class="badge bg-warning-subtle text-dark border fw-bold" id="canvasDifficultyBadge">🟢 Level 1 — Easy</span>
+                    <span class="badge bg-warning-subtle text-dark border fw-bold" id="canvasDifficultyBadge">Level 1 — Easy</span>
                   </div>
                   <p class="simulator-marquee-instructions" id="canvasMarqueeInstructions">Sort each object into the correct chute to win stars.</p>
                 </div>

@@ -1171,6 +1171,12 @@ def assign_lesson():
             return redirect(request.referrer or url_for('teacher.lessons'))
 
         assigned_count = 0
+        lesson_supp = getattr(lesson, 'is_supplementary', False)
+        lesson_term = getattr(lesson, 'term', None) or 'Term 1'
+        paired_act_obj = Activity.query.get(act_id) if act_id else None
+        act_supp = getattr(paired_act_obj, 'is_supplementary', False) or lesson_supp
+        act_term = getattr(paired_act_obj, 'term', None) or lesson_term
+
         for st in all_students:
             existing_la = LessonAssignment.query.filter_by(student_id=st.id, lesson_id=lesson_id).first()
             if not existing_la:
@@ -1178,7 +1184,9 @@ def assign_lesson():
                     lesson_id=lesson_id,
                     student_id=st.id,
                     assigned_by=current_user.id,
-                    due_date=due_date
+                    due_date=due_date,
+                    term=lesson_term,
+                    is_supplementary=lesson_supp
                 ))
                 assigned_count += 1
             if act_id:
@@ -1188,12 +1196,16 @@ def assign_lesson():
                         activity_id=act_id,
                         student_id=st.id,
                         assigned_by=current_user.id,
-                        due_date=due_date
+                        due_date=due_date,
+                        term=act_term,
+                        is_supplementary=act_supp
                     ))
                 elif existing_aa.status in ('completed', 'attempts_exhausted'):
                     existing_aa.status = 'assigned'
                     existing_aa.assigned_at = datetime.utcnow()
                     existing_aa.due_date = due_date
+                    existing_aa.term = act_term
+                    existing_aa.is_supplementary = act_supp
 
         db.session.commit()
         log_access(current_user, 'assign_lesson_all', f'lesson_id={lesson_id}')
@@ -1207,6 +1219,12 @@ def assign_lesson():
     except (ValueError, TypeError):
         flash('Invalid student selection.', 'danger')
         return redirect(request.referrer or url_for('teacher.lessons'))
+
+    lesson_supp = getattr(lesson, 'is_supplementary', False)
+    lesson_term = getattr(lesson, 'term', None) or 'Term 1'
+    paired_act_obj = Activity.query.get(act_id) if act_id else None
+    act_supp = getattr(paired_act_obj, 'is_supplementary', False) or lesson_supp
+    act_term = getattr(paired_act_obj, 'term', None) or lesson_term
 
     existing_lesson_assign = LessonAssignment.query.filter_by(student_id=student_id, lesson_id=lesson_id).first()
     student = User.query.get(student_id)
@@ -1228,6 +1246,8 @@ def assign_lesson():
             existing_act_assign.status = 'assigned'
             existing_act_assign.assigned_at = datetime.utcnow()
             existing_act_assign.due_date = due_date
+            existing_act_assign.term = act_term
+            existing_act_assign.is_supplementary = act_supp
             db.session.commit()
             log_access(current_user, 'reassign_activity', f'activity_id={act_id} student_id={student_id}')
             flash(f'Paired activity "{act_name}" reassigned successfully to {student_name} with 3 fresh attempts.', 'success')
@@ -1237,7 +1257,9 @@ def assign_lesson():
                 activity_id=act_id,
                 student_id=student_id,
                 assigned_by=current_user.id,
-                due_date=due_date
+                due_date=due_date,
+                term=act_term,
+                is_supplementary=act_supp
             )
             db.session.add(act_assign)
             db.session.commit()
@@ -1250,7 +1272,9 @@ def assign_lesson():
         lesson_id=lesson_id,
         student_id=student_id,
         assigned_by=current_user.id,
-        due_date=due_date
+        due_date=due_date,
+        term=lesson_term,
+        is_supplementary=lesson_supp
     )
     db.session.add(assignment)
 
@@ -1260,13 +1284,17 @@ def assign_lesson():
             existing_act_assign.status = 'assigned'
             existing_act_assign.assigned_at = datetime.utcnow()
             existing_act_assign.due_date = due_date
+            existing_act_assign.term = act_term
+            existing_act_assign.is_supplementary = act_supp
             activity_msg = f' and paired activity "{act_name}" reassigned'
         else:
             act_assign = ActivityAssignment(
                 activity_id=act_id,
                 student_id=student_id,
                 assigned_by=current_user.id,
-                due_date=due_date
+                due_date=due_date,
+                term=act_term,
+                is_supplementary=act_supp
             )
             db.session.add(act_assign)
             activity_msg = f' and paired activity "{act_name}"'
@@ -1297,6 +1325,8 @@ def assign_activity():
 
     activity = Activity.query.get(activity_id)
     act_name = activity.type if activity else f"Activity #{activity_id}"
+    activity_supp = getattr(activity, 'is_supplementary', False)
+    activity_term = getattr(activity, 'term', None) or 'Term 1'
 
     due_date = None
     if due_date_raw:
@@ -1319,12 +1349,16 @@ def assign_activity():
                     activity_id=activity_id,
                     student_id=st.id,
                     assigned_by=current_user.id,
-                    due_date=due_date
+                    due_date=due_date,
+                    term=activity_term,
+                    is_supplementary=activity_supp
                 ))
             elif existing.status in ('attempts_exhausted', 'completed'):
                 existing.status = 'assigned'
                 existing.assigned_at = datetime.utcnow()
                 existing.due_date = due_date
+                existing.term = activity_term
+                existing.is_supplementary = activity_supp
 
         db.session.commit()
         log_access(current_user, 'assign_activity_all', f'activity_id={activity_id}')
@@ -1347,6 +1381,8 @@ def assign_activity():
             existing.status = 'assigned'
             existing.assigned_at = datetime.utcnow()
             existing.due_date = due_date
+            existing.term = activity_term
+            existing.is_supplementary = activity_supp
             db.session.commit()
             log_access(current_user, 'reassign_activity', f'activity_id={activity_id} student_id={student_id}')
             flash(f'Activity "{act_name}" reassigned successfully to {student_name} with 3 fresh attempts.', 'success')
@@ -1355,7 +1391,14 @@ def assign_activity():
             flash(f'"{act_name}" is already actively assigned to {student_name}.', 'warning')
             return redirect(request.referrer or url_for('teacher.lessons'))
 
-    assignment = ActivityAssignment(activity_id=activity_id, student_id=student_id, assigned_by=current_user.id, due_date=due_date)
+    assignment = ActivityAssignment(
+        activity_id=activity_id,
+        student_id=student_id,
+        assigned_by=current_user.id,
+        due_date=due_date,
+        term=activity_term,
+        is_supplementary=activity_supp
+    )
     db.session.add(assignment)
     db.session.commit()
     log_access(current_user, 'assign_activity', f'activity_id={activity_id} student_id={student_id}')
@@ -2436,6 +2479,8 @@ def _get_active_game_cards(default_claw_id):
     activity_cards = []
     for act in raw_activities:
         cfg = load_sorting_activity_config(act.id)
+        is_supp = bool(getattr(act, 'is_supplementary', False))
+        term = getattr(act, 'term', None) or 'Term 1'
         activity_cards.append({
             'activity': act,
             'config': cfg,
@@ -2444,7 +2489,9 @@ def _get_active_game_cards(default_claw_id):
             'bins': cfg.get('bins', []),
             'objects_count': len(cfg.get('objects', [])),
             'round_size': cfg.get('round_size', 12),
-            'is_default': (act.id == default_claw_id)
+            'is_default': (act.id == default_claw_id),
+            'is_supplementary': is_supp,
+            'term': term
         })
     return activity_cards
 
@@ -2500,6 +2547,8 @@ def _get_active_lesson_cards():
             cfg = getattr(lsn, 'config', None) or {}
             slides = cfg.get('slides', []) if isinstance(cfg, dict) else []
             slides_count = len(slides) if slides else _get_default_lesson_slide_count(lsn.title)
+            is_supp = bool(getattr(lsn, 'is_supplementary', False))
+            term = getattr(lsn, 'term', None) or 'Term 1'
             lesson_cards.append({
                 'lesson': lsn,
                 'title': lsn.title,
@@ -2507,7 +2556,9 @@ def _get_active_lesson_cards():
                 'slides_count': slides_count,
                 'has_custom_slides': bool(slides),
                 'grade_level': cfg.get('grade_level', 'Grade 3') if isinstance(cfg, dict) else 'Grade 3',
-                'config': cfg
+                'config': cfg,
+                'is_supplementary': is_supp,
+                'term': term
             })
     except Exception as e:
         print("[Lesson Studio] Notice loading lessons:", e)
@@ -2590,13 +2641,50 @@ def content_management():
     activity_cards = _get_active_game_cards(default_claw.id)
     lesson_cards = _get_active_lesson_cards()
 
+    core_lessons_count = sum(1 for c in lesson_cards if not c['is_supplementary'])
+    supp_lessons_count = sum(1 for c in lesson_cards if c['is_supplementary'])
+    core_games_count = sum(1 for c in activity_cards if not c['is_supplementary'])
+    supp_games_count = sum(1 for c in activity_cards if c['is_supplementary'])
+
     return render_template(
         'teacher/teacher_content.html',
         current_user=current_user,
         games_count=len(activity_cards),
         lessons_count=len(lesson_cards),
+        core_lessons_count=core_lessons_count,
+        supp_lessons_count=supp_lessons_count,
+        core_games_count=core_games_count,
+        supp_games_count=supp_games_count,
         active_engines_count=1
     )
+
+
+@teacher_bp.route('/content/toggle_supplementary/<string:item_type>/<int:item_id>', methods=['POST'])
+@require_role('teacher')
+def toggle_supplementary(item_type, item_id):
+    """Quick 1-click toggle between Core Curriculum and Supplementary/Remedial"""
+    current_user = get_current_user()
+    if item_type == 'lesson':
+        lesson = Lesson.query.get_or_404(item_id)
+        lesson.is_supplementary = not bool(lesson.is_supplementary)
+        if lesson.config and isinstance(lesson.config, dict):
+            lesson.config['is_supplementary'] = lesson.is_supplementary
+        db.session.commit()
+        status = "Supplementary / Remedial" if lesson.is_supplementary else "Core Curriculum"
+        flash(f"Lesson '{lesson.title}' is now categorized as {status}.", "success")
+        log_access(current_user, 'toggle_supplementary_lesson', f'lesson_id={item_id} is_supplementary={lesson.is_supplementary}')
+        return redirect(request.referrer or url_for('teacher.lesson_studio'))
+    elif item_type in ['activity', 'game']:
+        act = Activity.query.get_or_404(item_id)
+        act.is_supplementary = not bool(act.is_supplementary)
+        if act.config and isinstance(act.config, dict):
+            act.config['is_supplementary'] = act.is_supplementary
+        db.session.commit()
+        status = "Supplementary / Remedial Practice" if act.is_supplementary else "Core Curriculum"
+        flash(f"Game '{act.type}' is now categorized as {status}.", "success")
+        log_access(current_user, 'toggle_supplementary_activity', f'activity_id={item_id} is_supplementary={act.is_supplementary}')
+        return redirect(request.referrer or url_for('teacher.game_studio'))
+    return redirect(url_for('teacher.content_management'))
 
 
 @teacher_bp.route('/content/games')
@@ -2726,6 +2814,9 @@ def save_claw_machine():
     round_size = request.form.get('round_size', 8, type=int)
     lesson_id = request.form.get('lesson_id', type=int)
 
+    is_supplementary = (str(request.form.get('is_supplementary', '')).strip().lower() in ['1', 'true', 'on'])
+    term = request.form.get('term', 'Term 1').strip() or 'Term 1'
+
     bins_json = request.form.get('bins_data', '[]')
     objects_json = request.form.get('objects_data', '[]')
 
@@ -2794,6 +2885,8 @@ def save_claw_machine():
         "instructions": instructions,
         "difficulty": difficulty,
         "round_size": round_size,
+        "is_supplementary": is_supplementary,
+        "term": term,
         "bins": bins,
         "objects": objects
     }
@@ -2805,10 +2898,13 @@ def save_claw_machine():
             return redirect(url_for('teacher.content_management'))
         activity.type = title
         activity.points = points
+        activity.term = term
+        activity.is_supplementary = is_supplementary
         if lesson_id:
             activity.lesson_id = lesson_id
         activity.config = config_payload
-        flash(f"Activity '{title}' updated successfully!", "success")
+        role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
+        flash(f"{role_label} game '{title}' updated successfully!", "success")
     else:
         if not lesson_id:
             from routes.student_routes import get_or_create_default_lesson
@@ -2820,10 +2916,13 @@ def save_claw_machine():
             type=title,
             engine='claw_machine',
             points=points,
+            term=term,
+            is_supplementary=is_supplementary,
             config=config_payload
         )
         db.session.add(activity)
-        flash(f"New custom activity '{title}' created successfully!", "success")
+        role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
+        flash(f"New {role_label} custom game '{title}' created successfully!", "success")
 
     db.session.commit()
     log_access(current_user, 'save_custom_activity', f'activity_id={activity.id} title={title}')
@@ -3565,6 +3664,8 @@ def save_lesson():
     description = request.form.get('description', '').strip()
     grade_level = request.form.get('grade_level', 'Grade 3').strip()
     slides_json = request.form.get('slides_data', '[]')
+    is_supplementary = (str(request.form.get('is_supplementary', '')).strip().lower() in ['1', 'true', 'on'])
+    term = request.form.get('term', 'Term 1').strip() or 'Term 1'
 
     try:
         slides = json.loads(slides_json)
@@ -3594,6 +3695,8 @@ def save_lesson():
         "title": title,
         "description": description,
         "grade_level": grade_level,
+        "is_supplementary": is_supplementary,
+        "term": term,
         "slides": slides
     }
 
@@ -3603,12 +3706,15 @@ def save_lesson():
             title=title,
             description=description,
             config=config_payload,
+            term=term,
+            is_supplementary=is_supplementary,
             is_archived=False
         )
         db.session.add(new_lesson)
         db.session.commit()
-        flash(f"New configured lesson '{title}' created successfully! It is now available to assign.", "success")
-        log_access(current_user, 'create_configured_lesson', f'lesson_id={new_lesson.id} title={title}')
+        role_label = "Supplementary / Remedial" if is_supplementary else "Core Curriculum"
+        flash(f"New {role_label} lesson '{title}' created successfully! It is now available to assign.", "success")
+        log_access(current_user, 'create_configured_lesson', f'lesson_id={new_lesson.id} title={title} is_supplementary={is_supplementary}')
         return redirect(url_for('teacher.lesson_studio'))
     else:
         lesson = Lesson.query.get(lesson_id)
@@ -3618,9 +3724,12 @@ def save_lesson():
         lesson.title = title
         lesson.description = description
         lesson.config = config_payload
+        lesson.term = term
+        lesson.is_supplementary = is_supplementary
         db.session.commit()
-        flash(f"Lesson '{title}' updated successfully!", "success")
-        log_access(current_user, 'save_custom_lesson', f'lesson_id={lesson.id} title={title}')
+        role_label = "Supplementary / Remedial" if is_supplementary else "Core Curriculum"
+        flash(f"{role_label} lesson '{title}' updated successfully!", "success")
+        log_access(current_user, 'save_custom_lesson', f'lesson_id={lesson.id} title={title} is_supplementary={is_supplementary}')
         return redirect(url_for('teacher.lesson_studio'))
 
 
