@@ -45,6 +45,8 @@ class Lesson(BaseModel, ArchivableMixin):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     config = db.Column(db.JSON, nullable=True)
+    term = db.Column(db.String(50), default='Term 1')
+    is_supplementary = db.Column(db.Boolean, default=False)
 
 class Activity(BaseModel, ArchivableMixin):
     __tablename__ = 'activity'
@@ -54,6 +56,8 @@ class Activity(BaseModel, ArchivableMixin):
     engine = db.Column(db.String(50), nullable=True)
     points = db.Column(db.Integer)
     config = db.Column(db.JSON, nullable=True)
+    term = db.Column(db.String(50), default='Term 1')
+    is_supplementary = db.Column(db.Boolean, default=False)
     lesson = db.relationship('Lesson', backref='activities')
 
 
@@ -107,6 +111,7 @@ class LessonAssignment(BaseModel, ArchivableMixin):
     due_date = db.Column(db.DateTime)
     status = db.Column(db.String(30), default='assigned')
     notes = db.Column(db.Text)
+    is_supplementary = db.Column(db.Boolean, default=False)
     lesson = db.relationship('Lesson', backref='assignments')
     student = db.relationship('User', foreign_keys=[student_id], backref='lesson_assignments')
     assigned_by_user = db.relationship('User', foreign_keys=[assigned_by])
@@ -121,6 +126,7 @@ class ActivityAssignment(BaseModel, ArchivableMixin):
     assigned_at = db.Column(db.DateTime, default=datetime.utcnow)
     due_date = db.Column(db.DateTime)
     status = db.Column(db.String(30), default='assigned')
+    is_supplementary = db.Column(db.Boolean, default=False)
     activity = db.relationship('Activity', backref='assignments')
     student = db.relationship('User', foreign_keys=[student_id], backref='activity_assignments')
     assigned_by_user = db.relationship('User', foreign_keys=[assigned_by])

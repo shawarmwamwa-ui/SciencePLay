@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const includeActivityCheck = document.getElementById('includeActivityCheck');
   const duplicateWarning = document.getElementById('duplicateWarning');
   const duplicateWarningText = document.getElementById('duplicateWarningText');
+  const suppBadge = document.getElementById('supplementaryPracticeBadge');
   const submitBtn = document.getElementById('assignSubmitBtn');
   const btnText = document.getElementById('assignBtnText');
   const assignHeadingText = document.getElementById('assignFormHeadingText');
@@ -155,6 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const activityId = parseInt(activitySelect.value, 10);
 
     if (!activityId) {
+      if (suppBadge) suppBadge.style.setProperty('display', 'none', 'important');
       if (duplicateWarning) duplicateWarning.style.setProperty('display', 'none', 'important');
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -162,6 +164,12 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       if (btnText) btnText.textContent = 'Assign Game Activity';
       return;
+    }
+
+    const selActOpt = activitySelect.options[activitySelect.selectedIndex];
+    const isActSupp = selActOpt && (selActOpt.getAttribute('data-supplementary') === '1' || selActOpt.text.includes('Practice'));
+    if (suppBadge) {
+      suppBadge.style.setProperty('display', isActSupp ? 'flex' : 'none', 'important');
     }
 
     const isAll = studentSelect.value === 'all';
@@ -211,6 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!lessonId) {
       if (detailsArea) detailsArea.style.display = 'none';
+      if (suppBadge) suppBadge.style.setProperty('display', 'none', 'important');
       if (duplicateWarning) duplicateWarning.style.setProperty('display', 'none', 'important');
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -221,6 +230,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (detailsArea) detailsArea.style.display = 'block';
+
+    const selLessonOpt = lessonSelect.options[lessonSelect.selectedIndex];
+    const isLessonSupp = selLessonOpt && (selLessonOpt.getAttribute('data-supplementary') === '1' || selLessonOpt.text.includes('Remedial'));
+    if (suppBadge) {
+      suppBadge.style.setProperty('display', isLessonSupp ? 'flex' : 'none', 'important');
+    }
     const pairedData = lessonActivityMap[lessonId];
 
     if (pairedData) {

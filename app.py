@@ -165,10 +165,34 @@ def ensure_database_schema_migrations():
                             else:
                                 db.session.execute(text(f'ALTER TABLE {q_l} ADD COLUMN config TEXT NULL'))
                             db.session.commit()
-                            print("[Migration] Added config column (TEXT fallback) to lesson table")
                     except Exception as e:
                         db.session.rollback()
                         print(f"[Migration] config on lesson notice: {e}")
+
+            # Check term and is_supplementary on lesson, activity, lesson_assignment, activity_assignment
+            for tbl in ['lesson', 'activity', 'lesson_assignment', 'activity_assignment']:
+                if tbl in existing_tables:
+                    cols = {column['name'] for column in inspector.get_columns(tbl)}
+                    q_tbl = quote_tbl(tbl)
+                    if 'is_supplementary' not in cols:
+                        try:
+                            if dialect_name == 'mysql':
+                                db.session.execute(text(f'ALTER TABLE {q_tbl} ADD COLUMN is_supplementary TINYINT(1) DEFAULT 0'))
+                            else:
+                                db.session.execute(text(f'ALTER TABLE {q_tbl} ADD COLUMN is_supplementary BOOLEAN DEFAULT FALSE'))
+                            db.session.commit()
+                            print(f"[Migration] Added is_supplementary to {tbl}")
+                        except Exception as e:
+                            db.session.rollback()
+                            print(f"[Migration] is_supplementary on {tbl}: {e}")
+                    if tbl in ['lesson', 'activity'] and 'term' not in cols:
+                        try:
+                            db.session.execute(text(f"ALTER TABLE {q_tbl} ADD COLUMN term VARCHAR(50) DEFAULT 'Term 1'"))
+                            db.session.commit()
+                            print(f"[Migration] Added term to {tbl}")
+                        except Exception as e:
+                            db.session.rollback()
+                            print(f"[Migration] term on {tbl}: {e}")
         except Exception as e:
             print("[Migration Notice]:", e)
 

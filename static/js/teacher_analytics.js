@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  let mostMissedChartInstance = null;
+
   // Initialize Most Missed Concepts Visual Chart (Chart.js)
   function initMostMissedChart() {
     const canvas = document.getElementById('mostMissedChart');
@@ -48,18 +50,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let labels = [];
     let misses = [];
     let types = [];
+    let chartByLesson = {};
     try {
       labels = JSON.parse(canvas.getAttribute('data-chart-labels') || '[]');
       misses = JSON.parse(canvas.getAttribute('data-chart-misses') || '[]');
       types = JSON.parse(canvas.getAttribute('data-chart-types') || '[]');
+      chartByLesson = JSON.parse(canvas.getAttribute('data-chart-by-lesson') || '{}');
     } catch (e) {
       return;
     }
 
-    if (!labels.length || !misses.length) return;
+    if (!labels.length && !Object.keys(chartByLesson).length) return;
 
     const ctx = canvas.getContext('2d');
-    new Chart(ctx, {
+    mostMissedChartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: labels,
@@ -107,7 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
             callbacks: {
               afterLabel: function(ctx) {
                 const idx = ctx.dataIndex;
-                return types[idx] ? `Context: ${types[idx]}` : '';
+                const activeTypes = (mostMissedChartInstance && mostMissedChartInstance._activeTypes) || types;
+                return activeTypes[idx] ? `Context: ${activeTypes[idx]}` : '';
               },
               label: function(ctx) {
                 return ` ${ctx.parsed.y} miss${ctx.parsed.y === 1 ? '' : 'es'}`;
@@ -138,6 +143,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    mostMissedChartInstance._activeTypes = types;
+
+    // Dynamically filter chart by selected Lesson / Module
+    const chartLessonFilter = document.getElementById('chartLessonFilter');
+    if (chartLessonFilter) {
+      chartLessonFilter.addEventListener('change', function () {
+        const selectedLesson = this.value;
+        const targetData = (chartByLesson && chartByLesson[selectedLesson]) 
+          ? chartByLesson[selectedLesson] 
+          : { labels, misses, types };
+
+        mostMissedChartInstance.data.labels = targetData.labels || [];
+        mostMissedChartInstance.data.datasets[0].data = targetData.misses || [];
+        mostMissedChartInstance._activeTypes = targetData.types || [];
+        mostMissedChartInstance.update();
+
+        const countBadge = document.getElementById('chartConceptsCountBadge');
+        if (countBadge) {
+          countBadge.textContent = (targetData.labels || []).length;
+        }
+      });
+    }
   }
 
   // Initialize retry table game filter
@@ -295,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initialize Struggling Students Modal
+  // Initialize Struggling Students Modal with 1-Click Batch Intervention
   function initStrugglingStudentsModal() {
     const modalEl = document.getElementById('strugglingStudentsModal');
     if (!modalEl) return;
@@ -307,7 +335,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const countPillEl = document.getElementById('strugglingModalCountPill');
     const studentListEl = document.getElementById('strugglingModalStudentList');
 
+    const assignLessonBtn = document.getElementById('modalBatchAssignLessonBtn');
+    const assignGameBtn = document.getElementById('modalBatchAssignGameBtn');
+    const createSuppBtn = document.getElementById('modalCreateSupplementaryBtn');
+    const feedbackAlert = document.getElementById('modalBatchFeedbackAlert');
+
     let currentStudents = [];
+    let currentLessonId = null;
+    let currentLessonTitle = '';
+    let currentActivityId = null;
+    let currentActivityType = '';
+    let currentActivityEngine = '';
+    let currentItemName = '';
+
+    function showFeedback(message, type = 'success') {
+      if (!feedbackAlert) return;
+      feedbackAlert.className = `alert alert-${type} mt-2 mb-0 py-2 px-3 small d-block border-0`;
+      feedbackAlert.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'} me-1.5"></i>${message}`;
+      feedbackAlert.classList.remove('d-none');
+    }
+
+    function clearFeedback() {
+      if (feedbackAlert) {
+        feedbackAlert.className = 'alert mt-2 mb-0 py-2 px-3 small d-none';
+        feedbackAlert.innerHTML = '';
+      }
+    }
 
     function renderStudents() {
       if (!studentListEl) return;
@@ -344,14 +397,86 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Modal Batch Intervention Assignment Handler
+    async function executeBatchAssign(assignType) {
+      clearFeedback();
+      const studentIds = currentStudents.map(s => (typeof s === 'object' && s.id ? s.id : s)).filter(Boolean);
+      if (!studentIds.length) {
+        showFeedback('No valid student accounts found in this struggle group.', 'warning');
+        return;
+      }
+
+      const activeBtn = assignType === 'lesson' ? assignLessonBtn : assignGameBtn;
+      const originalHtml = activeBtn ? activeBtn.innerHTML : '';
+      if (activeBtn) {
+        activeBtn.disabled = true;
+        activeBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Assigning...`;
+      }
+
+      try {
+        const payload = {
+          assign_type: assignType,
+          student_ids: studentIds,
+          lesson_id: currentLessonId,
+          activity_id: currentActivityId,
+          is_supplementary: true
+        };
+
+        const res = await fetch('/teacher/batch_assign_intervention', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok && data.status === 'ok') {
+          showFeedback(data.message || 'Intervention successfully assigned to cohort!', 'success');
+        } else {
+          showFeedback(data.message || 'Unable to complete batch intervention assignment.', 'danger');
+        }
+      } catch (err) {
+        console.error('Batch assign error:', err);
+        showFeedback('Server communication error during intervention assignment.', 'danger');
+      } finally {
+        if (activeBtn) {
+          activeBtn.disabled = false;
+          activeBtn.innerHTML = originalHtml;
+        }
+      }
+    }
+
+    if (assignLessonBtn) {
+      assignLessonBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        executeBatchAssign('lesson');
+      });
+    }
+
+    if (assignGameBtn) {
+      assignGameBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        executeBatchAssign('activity');
+      });
+    }
+
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('.open-struggling-students-modal-btn');
       if (!btn) return;
       e.preventDefault();
+      clearFeedback();
 
       const itemName = btn.getAttribute('data-item-name') || 'Activity Item';
       const context = btn.getAttribute('data-context') || 'Exercise';
       const misses = btn.getAttribute('data-misses') || '0';
+      const lessonId = btn.getAttribute('data-lesson-id') || null;
+      const lessonTitle = btn.getAttribute('data-lesson-title') || '';
+      const activityId = btn.getAttribute('data-activity-id') || null;
+      const activityType = btn.getAttribute('data-activity-type') || '';
+      const activityEngine = btn.getAttribute('data-activity-engine') || '';
+
       let students = [];
       try {
         students = JSON.parse(btn.getAttribute('data-students') || '[]');
@@ -360,11 +485,32 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       currentStudents = students;
+      currentLessonId = lessonId;
+      currentLessonTitle = lessonTitle;
+      currentActivityId = activityId;
+      currentActivityType = activityType;
+      currentActivityEngine = activityEngine;
+      currentItemName = itemName;
 
       if (itemNameEl) itemNameEl.textContent = itemName;
       if (contextBadgeEl) contextBadgeEl.textContent = context;
       if (missesEl) missesEl.textContent = `${misses} miss${misses == 1 ? '' : 'es'}`;
       if (countPillEl) countPillEl.textContent = `${students.length} Student${students.length == 1 ? '' : 's'}`;
+
+      if (assignLessonBtn) {
+        assignLessonBtn.style.display = currentLessonId ? 'inline-flex' : 'none';
+      }
+      if (assignGameBtn) {
+        assignGameBtn.style.display = currentActivityId ? 'inline-flex' : 'none';
+      }
+
+      if (createSuppBtn) {
+        if (activityEngine === 'claw_machine' && activityId) {
+          createSuppBtn.href = `/teacher/claw_machine_builder?activity_id=${activityId}&concept=${encodeURIComponent(itemName)}`;
+        } else {
+          createSuppBtn.href = `/teacher/content_management?concept=${encodeURIComponent(itemName)}&lesson=${encodeURIComponent(lessonTitle)}`;
+        }
+      }
 
       renderStudents();
 

@@ -469,7 +469,16 @@ def get_recommendation_for_concept(concept_name, activity_type='', engine='', le
         return "Review Lesson: Recycling"
     elif any(k in combined for k in ['living', 'non-living', 'alive', 'claw machine']):
         return "Review Lesson: Living vs Non-Living"
-    elif lesson_title and lesson_title != 'General Science Module':
+    # Dynamically match against custom/future lessons in the database
+    try:
+        active_custom_lessons = Lesson.query.filter((Lesson.is_archived == False) | (Lesson.is_archived == None)).all()
+        for cl in active_custom_lessons:
+            if cl.title and any(word in combined for word in cl.title.lower().split() if len(word) > 3):
+                return f"Review Lesson: {cl.title}"
+    except Exception:
+        pass
+
+    if lesson_title and lesson_title != 'General Science Module':
         return f"Review Lesson: {lesson_title}"
     else:
         return f"Review Lesson on {concept_name.title()}"
@@ -1357,6 +1366,171 @@ def reassign_activity(assignment_id):
     return redirect(request.referrer or url_for('teacher.lessons'))
 
 
+@teacher_bp.route('/batch_assign_intervention', methods=['POST'])
+@require_role('teacher')
+def batch_assign_intervention():
+    current_user = get_current_user()
+    data = request.get_json(force=True, silent=True) or request.form or {}
+    
+    student_ids = data.get('student_ids')
+    lesson_id = data.get('lesson_id')
+    activity_id = data.get('activity_id')
+    due_date_raw = data.get('due_date')
+    assign_type = data.get('assign_type', 'lesson')
+    is_supplementary = bool(data.get('is_supplementary', True))
+
+    if isinstance(student_ids, str):
+        try:
+            student_ids = [int(s.strip()) for s in student_ids.split(',') if s.strip()]
+        except Exception:
+            student_ids = []
+    elif isinstance(student_ids, list):
+        try:
+            student_ids = [int(s) for s in student_ids]
+        except Exception:
+            student_ids = []
+
+    if not student_ids:
+        return jsonify({'status': 'error', 'message': 'No students selected for intervention.'}), 400
+
+    due_date = None
+    if due_date_raw:
+        try:
+            due_date = datetime.fromisoformat(due_date_raw)
+        except Exception:
+            due_date = None
+
+    assigned_count = 0
+
+    try:
+        if assign_type == 'activity' and activity_id:
+            try:
+                activity_id = int(activity_id)
+            except (ValueError, TypeError):
+                return jsonify({'status': 'error', 'message': 'Invalid activity ID.'}), 400
+            
+            activity = Activity.query.get(activity_id)
+            if not activity:
+                return jsonify({'status': 'error', 'message': 'Activity not found.'}), 404
+            
+            act_name = activity.type or f"Activity #{activity_id}"
+
+            for sid in student_ids:
+                st = User.query.get(sid)
+                if not st:
+                    continue
+                existing = ActivityAssignment.query.filter_by(student_id=sid, activity_id=activity_id).first()
+                if not existing:
+                    new_aa = ActivityAssignment(
+                        activity_id=activity_id,
+                        student_id=sid,
+                        assigned_by=current_user.id,
+                        due_date=due_date,
+                        is_supplementary=is_supplementary,
+                        status='assigned'
+                    )
+                    db.session.add(new_aa)
+                    assigned_count += 1
+                else:
+                    existing.status = 'assigned'
+                    existing.assigned_at = datetime.utcnow()
+                    existing.due_date = due_date
+                    existing.is_supplementary = is_supplementary
+                    assigned_count += 1
+
+            db.session.commit()
+            log_access(current_user, 'batch_assign_intervention', f'activity_id={activity_id} student_count={assigned_count}')
+            return jsonify({
+                'status': 'ok',
+                'assigned_count': assigned_count,
+                'target_name': act_name,
+                'type': 'activity',
+                'message': f'Practice game "{act_name}" assigned to {assigned_count} struggling student(s) with 3 fresh attempts.'
+            })
+
+        elif lesson_id:
+            try:
+                lesson_id = int(lesson_id)
+            except (ValueError, TypeError):
+                return jsonify({'status': 'error', 'message': 'Invalid lesson ID.'}), 400
+
+            lesson = Lesson.query.get(lesson_id)
+            if not lesson:
+                return jsonify({'status': 'error', 'message': 'Lesson not found.'}), 404
+
+            lesson_title = lesson.title or f"Lesson #{lesson_id}"
+
+            paired_act_id = None
+            if activity_id:
+                try:
+                    paired_act_id = int(activity_id)
+                except Exception:
+                    paired_act_id = None
+            if not paired_act_id and lesson.activities:
+                for a in lesson.activities:
+                    if not a.is_archived:
+                        paired_act_id = a.id
+                        break
+
+            for sid in student_ids:
+                st = User.query.get(sid)
+                if not st:
+                    continue
+                existing_la = LessonAssignment.query.filter_by(student_id=sid, lesson_id=lesson_id).first()
+                if not existing_la:
+                    new_la = LessonAssignment(
+                        lesson_id=lesson_id,
+                        student_id=sid,
+                        assigned_by=current_user.id,
+                        due_date=due_date,
+                        is_supplementary=is_supplementary,
+                        status='assigned'
+                    )
+                    db.session.add(new_la)
+                    assigned_count += 1
+                else:
+                    existing_la.status = 'assigned'
+                    existing_la.assigned_at = datetime.utcnow()
+                    existing_la.due_date = due_date
+                    existing_la.is_supplementary = is_supplementary
+                    assigned_count += 1
+
+                if paired_act_id:
+                    existing_aa = ActivityAssignment.query.filter_by(student_id=sid, activity_id=paired_act_id).first()
+                    if not existing_aa:
+                        db.session.add(ActivityAssignment(
+                            activity_id=paired_act_id,
+                            student_id=sid,
+                            assigned_by=current_user.id,
+                            due_date=due_date,
+                            is_supplementary=is_supplementary,
+                            status='assigned'
+                        ))
+                    else:
+                        existing_aa.status = 'assigned'
+                        existing_aa.assigned_at = datetime.utcnow()
+                        existing_aa.due_date = due_date
+                        existing_aa.is_supplementary = is_supplementary
+
+            db.session.commit()
+            log_access(current_user, 'batch_assign_intervention', f'lesson_id={lesson_id} student_count={assigned_count}')
+            paired_info = " & paired game" if paired_act_id else ""
+            return jsonify({
+                'status': 'ok',
+                'assigned_count': assigned_count,
+                'target_name': lesson_title,
+                'type': 'lesson',
+                'message': f'Review lesson "{lesson_title}"{paired_info} assigned to {assigned_count} struggling student(s).'
+            })
+
+        else:
+            return jsonify({'status': 'error', 'message': 'Neither a lesson nor an activity was specified.'}), 400
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': f'Error assigning intervention: {str(e)}'}), 500
+
+
 @teacher_bp.route('/archive_assignment/<string:assign_type>/<int:assignment_id>', methods=['POST'])
 @require_role('teacher')
 def archive_assignment(assign_type, assignment_id):
@@ -1687,6 +1861,29 @@ def analytics():
     struggle_chart_misses = [c['misses'] for c in all_struggling_concepts[:8]]
     struggle_chart_types = [c['activity_type'] for c in all_struggling_concepts[:8]]
 
+    # Dynamic struggle aggregation per lesson/module for chart filtering
+    struggle_chart_by_lesson = {
+        'all': {
+            'labels': struggle_chart_labels,
+            'misses': struggle_chart_misses,
+            'types': struggle_chart_types
+        }
+    }
+    for c in all_struggling_concepts:
+        lt = c.get('lesson_title') or 'Other / Standalone Games'
+        if lt not in struggle_chart_by_lesson:
+            struggle_chart_by_lesson[lt] = {
+                'labels': [],
+                'misses': [],
+                'types': []
+            }
+        if len(struggle_chart_by_lesson[lt]['labels']) < 8:
+            struggle_chart_by_lesson[lt]['labels'].append(c['name'])
+            struggle_chart_by_lesson[lt]['misses'].append(c['misses'])
+            struggle_chart_by_lesson[lt]['types'].append(c['activity_type'])
+
+    struggle_lessons_list = sorted([k for k in struggle_chart_by_lesson.keys() if k != 'all'])
+
     # --- Per-game leaderboards for dashboard widget ---
     def build_teacher_game_lb(activity_type_fragment):
         rows = db.session.query(
@@ -1754,7 +1951,9 @@ def analytics():
         all_struggling_concepts=all_struggling_concepts,
         struggle_chart_labels=struggle_chart_labels,
         struggle_chart_misses=struggle_chart_misses,
-        struggle_chart_types=struggle_chart_types
+        struggle_chart_types=struggle_chart_types,
+        struggle_chart_by_lesson=struggle_chart_by_lesson,
+        struggle_lessons_list=struggle_lessons_list
     )
 
 

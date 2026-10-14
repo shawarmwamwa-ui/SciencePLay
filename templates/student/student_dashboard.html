@@ -149,6 +149,116 @@
     </div>
   </div>
 
+  <!-- Term Mastery Containers Section -->
+  {% if term_mastery_list %}
+  <div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <div>
+        <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
+          <i class="bi bi-mortarboard-fill text-dark"></i> Term &amp; Module Mastery
+        </h2>
+        <p class="fw-bold text-dark small mb-0">Track your completed lessons and mastered games across each academic term!</p>
+      </div>
+      <span class="brutal-badge brutal-badge-green fs-6">
+        <i class="bi bi-award-fill me-1"></i>Curriculum Progression
+      </span>
+    </div>
+
+    <div class="row g-4">
+      {% for term_data in term_mastery_list %}
+        <div class="col-md-6 col-xl-{{ '12' if term_mastery_list|length == 1 else '6' }}">
+          <div class="brutal-window h-100" style="background: {% if 'supplementary' in term_data.name|lower %}#fef08a{% elif loop.index % 2 == 1 %}#c7d2fe{% else %}#fed7aa{% endif %};">
+            <div class="brutal-window-header d-flex justify-content-between align-items-center">
+              <div class="brutal-dots">
+                <span class="brutal-dot dot-red"></span>
+                <span class="brutal-dot dot-yellow"></span>
+                <span class="brutal-dot dot-green"></span>
+              </div>
+              <span class="brutal-badge {{ term_data.status_badge }} fs-6 fw-black">
+                {{ term_data.status_text }}
+              </span>
+            </div>
+            <div class="brutal-window-body">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h3 class="fw-black text-dark fs-3 mb-1">
+                    {% if 'supplementary' in term_data.name|lower %}
+                      <i class="bi bi-stars text-warning me-1"></i>{{ term_data.name }}
+                    {% else %}
+                      <i class="bi bi-calendar3-range text-dark me-1"></i>{{ term_data.name }}
+                    {% endif %}
+                  </h3>
+                  <div class="fw-bold text-dark small">
+                    {{ term_data.lessons_completed + term_data.activities_completed }} of {{ term_data.lessons_total + term_data.activities_total }} Tasks Completed
+                  </div>
+                </div>
+                <div class="text-end">
+                  <span class="fw-black text-dark display-6">{{ term_data.overall_percent }}%</span>
+                </div>
+              </div>
+
+              <!-- Overall Term Progress Bar -->
+              <div class="progress mb-4" style="height: 18px; border: 3px solid #000; border-radius: 999px; background: #fff; box-shadow: 2px 2px 0 #000; overflow: hidden;">
+                <div class="progress-bar" role="progressbar" style="width: {{ term_data.overall_percent }}%; background: #22c55e;" aria-valuenow="{{ term_data.overall_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+
+              <!-- Dual Mastery Breakdown (Lessons & Activities) -->
+              <div class="row g-3">
+                <!-- Lessons Mastery Box -->
+                <div class="col-sm-6">
+                  <div class="p-3 bg-white brutal-card h-100 d-flex flex-column justify-content-between">
+                    <div>
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-black text-dark small d-flex align-items-center gap-1">
+                          <i class="bi bi-book-half text-primary"></i> Lessons Done
+                        </span>
+                        <span class="badge bg-light text-dark border border-dark rounded-pill fw-bold">
+                          {{ term_data.lessons_completed }}/{{ term_data.lessons_total }}
+                        </span>
+                      </div>
+                      <div class="progress my-2" style="height: 10px; border: 2px solid #000; border-radius: 999px; background: #f1f5f9;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ term_data.lessons_percent }}%;"></div>
+                      </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top border-dark border-1">
+                      <span class="fw-bold text-muted small">Lesson Mastery</span>
+                      <span class="fw-black text-dark small">{{ term_data.lessons_percent }}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Activities Mastery Box -->
+                <div class="col-sm-6">
+                  <div class="p-3 bg-white brutal-card h-100 d-flex flex-column justify-content-between">
+                    <div>
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-black text-dark small d-flex align-items-center gap-1">
+                          <i class="bi bi-joystick text-success"></i> Games Mastered
+                        </span>
+                        <span class="badge bg-light text-dark border border-dark rounded-pill fw-bold">
+                          {{ term_data.activities_completed }}/{{ term_data.activities_total }}
+                        </span>
+                      </div>
+                      <div class="progress my-2" style="height: 10px; border: 2px solid #000; border-radius: 999px; background: #f1f5f9;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ term_data.activities_percent }}%;"></div>
+                      </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top border-dark border-1">
+                      <span class="fw-bold text-muted small">Game Mastery</span>
+                      <span class="fw-black text-dark small">{{ term_data.activities_percent }}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Combined Layout Row (2 Large Combined Containers) -->
   <div class="row g-4 mb-4">
 

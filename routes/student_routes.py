@@ -639,6 +639,87 @@ def dashboard():
     ).count()) if user_id else 0
     feedback_messages = [True] * feedback_count
 
+    # Calculate Term / Unit Mastery Breakdown (Term 1, Term 2, Supplementary)
+    terms_dict = {}
+
+    for lp_item in lesson_progress:
+        l = lp_item['lesson']
+        t_name = 'Supplementary Practice' if getattr(l, 'is_supplementary', False) else (getattr(l, 'term', None) or 'Term 1')
+        if t_name not in terms_dict:
+            terms_dict[t_name] = {
+                'name': t_name,
+                'lessons': [],
+                'activities': [],
+                'lessons_completed': 0,
+                'lessons_total': 0,
+                'activities_completed': 0,
+                'activities_total': 0,
+            }
+        terms_dict[t_name]['lessons'].append(lp_item)
+        terms_dict[t_name]['lessons_total'] += 1
+        if lp_item['completed'] or lp_item['percent'] >= 100:
+            terms_dict[t_name]['lessons_completed'] += 1
+
+    for act in activities:
+        t_name = 'Supplementary Practice' if getattr(act, 'is_supplementary', False) else (getattr(act, 'term', None) or 'Term 1')
+        if t_name not in terms_dict:
+            terms_dict[t_name] = {
+                'name': t_name,
+                'lessons': [],
+                'activities': [],
+                'lessons_completed': 0,
+                'lessons_total': 0,
+                'activities_completed': 0,
+                'activities_total': 0,
+            }
+        is_act_done = (act.id in completed_by_activity) or any(
+            p.activity and p.activity.engine == act.engine for p in progress_logs
+        )
+        terms_dict[t_name]['activities'].append({
+            'activity': act,
+            'completed': is_act_done
+        })
+        terms_dict[t_name]['activities_total'] += 1
+        if is_act_done:
+            terms_dict[t_name]['activities_completed'] += 1
+
+    term_mastery_list = []
+    def term_sort_key(k):
+        if 'supplementary' in k.lower():
+            return (999, k)
+        return (1, k)
+
+    for t_name in sorted(terms_dict.keys(), key=term_sort_key):
+        td = terms_dict[t_name]
+        l_total = td['lessons_total']
+        l_comp = td['lessons_completed']
+        l_pct = round((l_comp / l_total) * 100) if l_total else 100
+        
+        a_total = td['activities_total']
+        a_comp = td['activities_completed']
+        a_pct = round((a_comp / a_total) * 100) if a_total else 100
+
+        total_items = l_total + a_total
+        total_done = l_comp + a_comp
+        overall_pct = round((total_done / total_items) * 100) if total_items else 0
+
+        if overall_pct >= 100:
+            status_text = 'Mastered 🏆'
+            status_badge = 'brutal-badge-green'
+        elif overall_pct > 0:
+            status_text = 'In Progress ⚡'
+            status_badge = 'brutal-badge-yellow'
+        else:
+            status_text = 'Ready to Start 🌱'
+            status_badge = 'brutal-badge-pink'
+
+        td['lessons_percent'] = l_pct
+        td['activities_percent'] = a_pct
+        td['overall_percent'] = overall_pct
+        td['status_text'] = status_text
+        td['status_badge'] = status_badge
+        term_mastery_list.append(td)
+
     # Leaderboard and assigned_tasks are not rendered on dashboard (dedicated pages exist)
     leaderboard = []
     assigned_tasks = []
@@ -663,6 +744,7 @@ def dashboard():
         lesson_due_dates=lesson_due_dates,
         activity_due_dates=activity_due_dates,
         leaderboard=leaderboard,
+        term_mastery_list=term_mastery_list
     )
 
 

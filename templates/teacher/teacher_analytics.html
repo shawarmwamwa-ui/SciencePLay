@@ -470,9 +470,18 @@
             <h2 class="h5 mb-0"><i class="bi bi-bar-chart-fill me-2 text-danger"></i>Most Missed Concepts Chart</h2>
             <p class="text-muted small mb-0">Visual struggle ranking across quick-check lessons and interactive science games.</p>
           </div>
-          <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1 fw-bold">
-            <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ all_struggling_concepts|length }} Concepts Flagged
-          </span>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <label for="chartLessonFilter" class="small fw-bold text-muted mb-0 d-none d-md-inline"><i class="bi bi-funnel me-1"></i>Filter Lesson / Module:</label>
+            <select id="chartLessonFilter" class="form-select form-select-sm rounded-pill fw-semibold" style="width: auto; min-width: 190px;">
+              <option value="all">All Lessons &amp; Games</option>
+              {% for ltitle in struggle_lessons_list %}
+                <option value="{{ ltitle }}">{{ ltitle }}</option>
+              {% endfor %}
+            </select>
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1 fw-bold">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i><span id="chartConceptsCountBadge">{{ all_struggling_concepts|length }}</span> Concepts Flagged
+            </span>
+          </div>
         </div>
         <div class="p-3">
           {% if all_struggling_concepts %}
@@ -480,7 +489,8 @@
               <canvas id="mostMissedChart" 
                       data-chart-labels='{{ struggle_chart_labels|tojson|forceescape }}'
                       data-chart-misses='{{ struggle_chart_misses|tojson|forceescape }}'
-                      data-chart-types='{{ struggle_chart_types|tojson|forceescape }}'></canvas>
+                      data-chart-types='{{ struggle_chart_types|tojson|forceescape }}'
+                      data-chart-by-lesson='{{ struggle_chart_by_lesson|tojson|forceescape }}'></canvas>
             </div>
           {% else %}
             <div class="text-center text-muted py-4">
@@ -570,6 +580,11 @@
                                   data-item-name="{{ obj.name }}"
                                   data-context="{{ obj.activity_type }}"
                                   data-misses="{{ obj.misses }}"
+                                  data-lesson-id="{{ obj.lesson_id or '' }}"
+                                  data-lesson-title="{{ obj.lesson_title or '' }}"
+                                  data-activity-id="{{ obj.activity_id or '' }}"
+                                  data-activity-type="{{ obj.activity_type or '' }}"
+                                  data-activity-engine="{{ obj.activity_engine or '' }}"
                                   data-students='{{ obj.students|tojson|forceescape }}'>
                             <i class="bi bi-people-fill text-danger"></i>
                             <span>{{ obj.students|length }} Student{% if obj.students|length != 1 %}s{% endif %}</span>
@@ -658,6 +673,11 @@
                                   data-item-name="{{ obj.name }}"
                                   data-context="{{ obj.activity_type }}"
                                   data-misses="{{ obj.misses }}"
+                                  data-lesson-id="{{ obj.lesson_id or '' }}"
+                                  data-lesson-title="{{ obj.lesson_title or '' }}"
+                                  data-activity-id="{{ obj.activity_id or '' }}"
+                                  data-activity-type="{{ obj.activity_type or '' }}"
+                                  data-activity-engine="{{ obj.activity_engine or '' }}"
                                   data-students='{{ obj.students|tojson|forceescape }}'>
                             <i class="bi bi-people-fill text-danger"></i>
                             <span>{{ obj.students|length }} Student{% if obj.students|length != 1 %}s{% endif %}</span>
@@ -740,6 +760,11 @@
                                   data-item-name="{{ obj.name }}"
                                   data-context="{{ obj.activity_type }}"
                                   data-misses="{{ obj.misses }}"
+                                  data-lesson-id="{{ obj.lesson_id or '' }}"
+                                  data-lesson-title="{{ obj.lesson_title or '' }}"
+                                  data-activity-id="{{ obj.activity_id or '' }}"
+                                  data-activity-type="{{ obj.activity_type or '' }}"
+                                  data-activity-engine="{{ obj.activity_engine or '' }}"
                                   data-students='{{ obj.students|tojson|forceescape }}'>
                             <i class="bi bi-people-fill text-danger"></i>
                             <span>{{ obj.students|length }} Student{% if obj.students|length != 1 %}s{% endif %}</span>
@@ -1383,9 +1408,45 @@
             <!-- Dynamically populated via JavaScript -->
           </div>
 
+          <!-- Batch Remedial Intervention Toolbar -->
+          <div class="p-3 rounded-3 border bg-light mt-3" id="strugglingModalInterventionSection">
+            <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+              <div>
+                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1.5">
+                  <i class="bi bi-lightning-charge-fill text-warning"></i>
+                  <span>Batch Intervention for this Cohort</span>
+                </h6>
+                <small class="text-muted">Target only these struggling students with a single click</small>
+              </div>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold">
+                <i class="bi bi-shield-check me-1"></i>Remedial Intervention
+              </span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm" id="modalBatchAssignLessonBtn">
+                <i class="bi bi-book-half"></i>
+                <span id="modalBatchAssignLessonText">Assign Review Lesson</span>
+              </button>
+
+              <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm" id="modalBatchAssignGameBtn">
+                <i class="bi bi-joystick"></i>
+                <span id="modalBatchAssignGameText">Assign Practice Game (3 Attempts)</span>
+              </button>
+
+              <a href="{{ url_for('teacher.content_management') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm" id="modalCreateSupplementaryBtn">
+                <i class="bi bi-magic"></i>
+                <span>Create Supplementary in Studio</span>
+              </a>
+            </div>
+
+            <!-- Real-time alert status box -->
+            <div id="modalBatchFeedbackAlert" class="alert mt-2 mb-0 py-2 px-3 small d-none" role="alert"></div>
+          </div>
+
           <div class="alert alert-info py-2 px-3 small mt-3 mb-0 rounded-3 border-0 bg-info-subtle text-dark">
             <i class="bi bi-lightbulb-fill text-warning me-1"></i>
-            <strong>Teaching Tip:</strong> Consider reviewing this specific question or game mechanics with these students during follow-up instruction.
+            <strong>Teaching Tip:</strong> Supplementary assignments will be tagged as remedial practice with 3 fresh attempts for struggling students.
           </div>
         </div>
         <div class="modal-footer border-top py-2 px-4 bg-light">
