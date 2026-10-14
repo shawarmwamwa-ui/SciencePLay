@@ -658,9 +658,6 @@ def get_student_curriculum_terms_data(user_id):
 
     terms_dict = {
         'Term 1': {'name': 'Term 1', 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0},
-        'Term 2': {'name': 'Term 2', 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0},
-        'Term 3': {'name': 'Term 3', 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0},
-        'Term 4': {'name': 'Term 4', 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0},
     }
 
     for lp_item in lesson_progress_items:
@@ -712,10 +709,17 @@ def get_student_curriculum_terms_data(user_id):
         if is_act_done:
             terms_dict[t_name]['activities_completed'] += 1
 
-    ordered_keys = ['Term 1', 'Term 2', 'Term 3', 'Term 4']
-    for k in sorted(terms_dict.keys()):
-        if k not in ordered_keys:
-            ordered_keys.append(k)
+    def term_sort_key(k):
+        if k.startswith('Term '):
+            try:
+                return (0, int(k.split(' ')[1]))
+            except (ValueError, IndexError):
+                return (0, 999)
+        if 'supplementary' in k.lower():
+            return (2, k)
+        return (1, k)
+
+    ordered_keys = sorted(terms_dict.keys(), key=term_sort_key)
 
     term_mastery_list = []
     prev_term_completed = True
@@ -846,8 +850,8 @@ def dashboard():
     lessons = [lesson for _, lesson in lesson_assignment_rows]
     lesson_due_dates = {lesson.id: assignment.due_date for assignment, lesson in lesson_assignment_rows}
 
-    # Auto-sync core curriculum activities for enrolled student
-    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
+    # Auto-sync core curriculum activities for enrolled student (Terms 1 & 2)
+    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant']
     core_activities = Activity.query.filter(Activity.engine.in_(playable_engines)).all()
     engine_to_act = {}
     for a in core_activities:
