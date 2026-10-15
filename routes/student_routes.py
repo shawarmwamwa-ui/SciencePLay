@@ -676,6 +676,8 @@ def get_student_curriculum_terms_data(user_id):
 
     terms_dict = {
         'Term 1': {'name': 'Term 1', 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0},
+        'Term 2': {'name': 'Term 2', 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0},
+        'Term 3': {'name': 'Term 3', 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0},
     }
 
     for lp_item in lesson_progress_items:
@@ -771,6 +773,7 @@ def get_student_curriculum_terms_data(user_id):
         td['total_items'] = total_items
         td['total_done'] = total_done
         td['overall_percent'] = overall_pct
+        td['is_empty'] = (total_items == 0)
 
         if t_name == 'Term 1':
             td['is_locked'] = False
@@ -783,8 +786,18 @@ def get_student_curriculum_terms_data(user_id):
                 td['is_locked'] = False
                 td['lock_reason'] = None
 
-        # Fix logic: Locked term must not show progress (show 0% until it unlocks)
-        if td['is_locked']:
+        if td['is_empty']:
+            td['is_locked'] = True
+            td['display_percent'] = 0
+            td['lessons_completed_display'] = 0
+            td['activities_completed_display'] = 0
+            td['total_done_display'] = 0
+            td['stars_count'] = 0
+            td['is_completed'] = False
+            td['status_text'] = 'Coming Soon'
+            td['status_badge'] = 'kid-badge-locked'
+            td['status_icon'] = 'bi-clock-history'
+        elif td['is_locked']:
             td['display_percent'] = 0
             td['lessons_completed_display'] = 0
             td['activities_completed_display'] = 0
@@ -826,7 +839,14 @@ def get_student_curriculum_terms_data(user_id):
 
         # Next Step & Friendly helper lines
         next_step = None
-        if not td['is_locked']:
+        if td['is_empty']:
+            next_step = {
+                'type': 'empty',
+                'title': 'Coming Soon',
+                'text': f"{t_name} Coming Soon 🔒",
+                'url': '#'
+            }
+        elif not td['is_locked']:
             # Next uncompleted lesson first
             for lp in td['lessons']:
                 if not lp['completed'] and lp['percent'] < 100:
@@ -849,6 +869,10 @@ def get_student_curriculum_terms_data(user_id):
                             game_name = 'Find the Part'
                         elif 'Plant' in raw_title:
                             game_name = 'Build a Plant'
+                        elif 'Metal' in raw_title:
+                            game_name = 'Metal Clue Detective'
+                        elif 'Recycl' in raw_title:
+                            game_name = 'EcoSwipe Sorter'
                         else:
                             game_name = raw_title
                         next_step = {
@@ -872,7 +896,10 @@ def get_student_curriculum_terms_data(user_id):
         lessons_left = max(0, l_total - l_comp)
         activities_left = max(0, a_total - a_comp)
 
-        if td['is_locked']:
+        if td['is_empty']:
+            td['friendly_lock_message'] = f"{t_name} has no lessons or games yet. Content will appear here when added by your teacher!"
+            td['remaining_label'] = f"Content coming soon for {t_name}!"
+        elif td['is_locked']:
             if prev_activities_left == 1 and prev_lessons_left == 0:
                 td['friendly_lock_message'] = f"Finish 1 more game in {prev_term_name} to unlock {t_name} 🔓"
             elif prev_lessons_left == 1 and prev_activities_left == 0:
@@ -966,7 +993,7 @@ def dashboard():
     lesson_due_dates = {lesson.id: assignment.due_date for assignment, lesson in lesson_assignment_rows}
 
     # Auto-sync core curriculum activities for enrolled student (Terms 1 & 2)
-    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant']
+    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
     core_activities = Activity.query.filter(Activity.engine.in_(playable_engines)).all()
     engine_to_act = {}
     for a in core_activities:
@@ -1928,8 +1955,8 @@ def get_or_create_properties_of_metals_lesson():
 @require_role('student')
 def properties_of_metals_lesson():
     current_user = get_current_user()
-    if is_term_locked_for_student(current_user.id, 'Term 3'):
-        flash('Term 3 is currently locked! Please complete 100% of Term 2 tasks to unlock Term 3.', 'warning')
+    if is_term_locked_for_student(current_user.id, 'Term 2'):
+        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
         return redirect(url_for('student.curriculum_terms'))
     lesson = get_or_create_properties_of_metals_lesson()
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
@@ -1960,8 +1987,8 @@ def get_or_create_recycling_lesson():
 @require_role('student')
 def recycling_lesson():
     current_user = get_current_user()
-    if is_term_locked_for_student(current_user.id, 'Term 4'):
-        flash('Term 4 is currently locked! Please complete 100% of Term 3 tasks to unlock Term 4.', 'warning')
+    if is_term_locked_for_student(current_user.id, 'Term 2'):
+        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
         return redirect(url_for('student.curriculum_terms'))
     lesson = get_or_create_recycling_lesson()
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
@@ -1996,8 +2023,8 @@ def get_or_create_metals_game_activity():
 @require_role('student')
 def materials_game():
     current_user = get_current_user()
-    if is_term_locked_for_student(current_user.id, 'Term 3'):
-        flash('Term 3 is currently locked! Please complete 100% of Term 2 tasks to unlock Term 3.', 'warning')
+    if is_term_locked_for_student(current_user.id, 'Term 2'):
+        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
         return redirect(url_for('student.curriculum_terms'))
     req_act_id = request.args.get('activity_id', type=int)
     activity = Activity.query.get(req_act_id) if req_act_id else None
@@ -2043,8 +2070,8 @@ def get_or_create_recycling_game_activity():
 @require_role('student')
 def recycling_game():
     current_user = get_current_user()
-    if is_term_locked_for_student(current_user.id, 'Term 4'):
-        flash('Term 4 is currently locked! Please complete 100% of Term 3 tasks to unlock Term 4.', 'warning')
+    if is_term_locked_for_student(current_user.id, 'Term 2'):
+        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
         return redirect(url_for('student.curriculum_terms'))
     req_act_id = request.args.get('activity_id', type=int)
     activity = Activity.query.get(req_act_id) if req_act_id else None

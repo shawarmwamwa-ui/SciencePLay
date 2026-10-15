@@ -4,6 +4,10 @@
   --term1-accent: #2563eb;
   --term2-bg: #ffedd5;
   --term2-accent: #ea580c;
+  --term3-bg: #dcfce7;
+  --term3-accent: #16a34a;
+  --term4-bg: #f3e8ff;
+  --term4-accent: #9333ea;
 }
 
 body.student-page {
@@ -72,6 +76,14 @@ body.student-page {
 
 .trail-term-card.term-card-2 {
   background: var(--term2-bg);
+}
+
+.trail-term-card.term-card-3 {
+  background: var(--term3-bg);
+}
+
+.trail-term-card.term-card-4 {
+  background: var(--term4-bg);
 }
 
 .trail-term-card.term-card-locked {

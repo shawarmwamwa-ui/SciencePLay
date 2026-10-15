@@ -241,15 +241,15 @@ def ensure_default_curriculum():
             get_or_create_recycling_lesson()
             get_or_create_recycling_game_activity()
 
-            # Ensure terms 1 and 2 are properly mapped across core curriculum (Terms 3 and 4 can be added later by teachers via Content Studio)
+            # Ensure all 5 default curriculum lessons and games are properly categorized as Core Curriculum (is_supplementary = 0)
+            # Terms 1 and 2 are active curriculum; Term 3 container is ready for teachers to add modules via Content Studio
             try:
                 db.session.execute(text("UPDATE lesson SET term = 'Term 1', is_supplementary = 0 WHERE title IN ('Living vs Non-Living', 'Animal Body Parts')"))
-                db.session.execute(text("UPDATE lesson SET term = 'Term 2', is_supplementary = 0 WHERE title = 'Plant Parts'"))
-                db.session.execute(text("UPDATE lesson SET term = NULL, is_supplementary = 1 WHERE title IN ('Properties of Metals', 'Recycling') OR term IN ('Term 3', 'Term 4')"))
-
+                db.session.execute(text("UPDATE lesson SET term = 'Term 2', is_supplementary = 0 WHERE title IN ('Plant Parts', 'Properties of Metals', 'Recycling')"))
                 db.session.execute(text("UPDATE activity SET term = 'Term 1', is_supplementary = 0 WHERE engine IN ('claw_machine', 'find_the_part', 'quick_check')"))
-                db.session.execute(text("UPDATE activity SET term = 'Term 2', is_supplementary = 0 WHERE engine = 'build_a_plant'"))
-                db.session.execute(text("UPDATE activity SET term = NULL, is_supplementary = 1 WHERE engine IN ('metal_logic', 'recycle_sorter') OR term IN ('Term 3', 'Term 4')"))
+                db.session.execute(text("UPDATE activity SET term = 'Term 2', is_supplementary = 0 WHERE engine IN ('build_a_plant', 'metal_logic', 'recycle_sorter')"))
+                db.session.execute(text("UPDATE lesson_assignment SET is_supplementary = 0 WHERE lesson_id IN (SELECT id FROM lesson WHERE title IN ('Living vs Non-Living', 'Animal Body Parts', 'Plant Parts', 'Properties of Metals', 'Recycling'))"))
+                db.session.execute(text("UPDATE activity_assignment SET is_supplementary = 0 WHERE activity_id IN (SELECT id FROM activity WHERE engine IN ('claw_machine', 'find_the_part', 'quick_check', 'build_a_plant', 'metal_logic', 'recycle_sorter'))"))
                 db.session.commit()
             except Exception as term_err:
                 db.session.rollback()
