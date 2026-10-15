@@ -385,7 +385,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const assignLessonBtn = document.getElementById('modalBatchAssignLessonBtn');
     const assignGameBtn = document.getElementById('modalBatchAssignGameBtn');
-    const createSuppBtn = document.getElementById('modalCreateSupplementaryBtn');
+    const createRemedialLessonBtn = document.getElementById('modalCreateRemedialLessonBtn');
+    const createRemedialGameBtn = document.getElementById('modalCreateRemedialGameBtn');
     const feedbackAlert = document.getElementById('modalBatchFeedbackAlert');
 
     let currentStudents = [];
@@ -395,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentActivityType = '';
     let currentActivityEngine = '';
     let currentItemName = '';
-    let pendingAssignType = 'activity';
+    let pendingAssignType = 'nudge';
 
     function showFeedback(message, type = 'success') {
       if (!feedbackAlert) return;
@@ -441,14 +442,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (confirmDueDateInput) confirmDueDateInput.value = '';
 
+      const b1 = document.getElementById('confirmBadge1');
+      const b2 = document.getElementById('confirmBadge2');
+
       if (assignType === 'activity') {
-        if (confirmTargetIcon) confirmTargetIcon.className = 'bi bi-joystick text-success fs-5';
+        if (confirmTargetIcon) confirmTargetIcon.className = 'bi bi-controller text-success fs-5';
         if (confirmTargetTypeBadge) confirmTargetTypeBadge.textContent = 'Interactive Practice Game';
-        if (confirmTargetTitle) confirmTargetTitle.textContent = currentActivityType ? `${currentActivityType} (Focused Practice)` : `${currentItemName} Practice`;
+        if (confirmTargetTitle) confirmTargetTitle.textContent = currentActivityType ? `${currentActivityType} (Practice Game)` : `${currentItemName} Practice`;
+        if (b1) {
+          b1.className = 'badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5';
+          b1.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>3 Bonus Attempts Unlocked Today';
+        }
+        if (b2) {
+          b2.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5';
+          b2.innerHTML = '<i class="bi bi-tag-fill me-1"></i>Tagged: Supplementary Practice';
+        }
       } else {
-        if (confirmTargetIcon) confirmTargetIcon.className = 'bi bi-book-half text-primary fs-5';
-        if (confirmTargetTypeBadge) confirmTargetTypeBadge.textContent = 'Curriculum Review Lesson';
-        if (confirmTargetTitle) confirmTargetTitle.textContent = currentLessonTitle ? `Review Lesson: ${currentLessonTitle}` : `${currentItemName} Review Module`;
+        if (confirmTargetIcon) confirmTargetIcon.className = 'bi bi-bell-fill text-warning fs-5';
+        if (confirmTargetTypeBadge) confirmTargetTypeBadge.textContent = 'Targeted Review Nudge';
+        if (confirmTargetTitle) confirmTargetTitle.textContent = currentLessonTitle ? `Review Reminder: ${currentLessonTitle} (${currentItemName})` : `Review: ${currentItemName}`;
+        if (b1) {
+          b1.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5';
+          b1.innerHTML = '<i class="bi bi-bell me-1"></i>Direct Dashboard Alert';
+        }
+        if (b2) {
+          b2.className = 'badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-2 py-0.5';
+          b2.innerHTML = '<i class="bi bi-check2 me-1"></i>Zero Assignment Clutter';
+        }
       }
 
       renderConfirmChecklist();
@@ -542,7 +562,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (confirmCheckedCount) confirmCheckedCount.textContent = checkedCount;
       if (confirmTotalCount) confirmTotalCount.textContent = totalCount;
-      if (confirmSubmitText) confirmSubmitText.textContent = `Confirm & Assign to ${checkedCount} Student${checkedCount === 1 ? '' : 's'}`;
+      if (confirmSubmitText) {
+        if (pendingAssignType === 'activity') {
+          confirmSubmitText.textContent = `Unlock 3 Attempts for ${checkedCount} Student${checkedCount === 1 ? '' : 's'}`;
+        } else {
+          confirmSubmitText.textContent = `Send Review Nudge to ${checkedCount} Student${checkedCount === 1 ? '' : 's'}`;
+        }
+      }
       if (confirmSubmitBtn) confirmSubmitBtn.disabled = (checkedCount === 0);
 
       if (confirmToggleSelectAllBtn) {
@@ -588,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const originalBtnHtml = confirmSubmitBtn.innerHTML;
         confirmSubmitBtn.disabled = true;
-        confirmSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1.5" role="status" aria-hidden="true"></span>Assigning...';
+        confirmSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1.5" role="status" aria-hidden="true"></span>Processing...';
 
         try {
           const payload = {
@@ -596,6 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
             student_ids: studentIds,
             lesson_id: currentLessonId,
             activity_id: currentActivityId,
+            concept: currentItemName,
             due_date: confirmDueDateInput && confirmDueDateInput.value ? confirmDueDateInput.value : null,
             is_supplementary: true
           };
@@ -611,20 +638,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
           const data = await res.json();
           if (res.ok && data.status === 'ok') {
-            showConfirmFeedback(data.message || 'Intervention successfully assigned to selected cohort!', 'success');
-            confirmSubmitBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Assigned!';
+            showConfirmFeedback(data.message || 'Intervention successfully processed for selected cohort!', 'success');
+            confirmSubmitBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Completed!';
             setTimeout(() => {
               switchToOverview();
-              showFeedback(data.message || 'Intervention successfully assigned to selected cohort!', 'success');
+              showFeedback(data.message || 'Intervention successfully processed for selected cohort!', 'success');
             }, 1600);
           } else {
-            showConfirmFeedback(data.message || 'Unable to complete batch intervention assignment.', 'danger');
+            showConfirmFeedback(data.message || 'Unable to complete batch intervention.', 'danger');
             confirmSubmitBtn.disabled = false;
             confirmSubmitBtn.innerHTML = originalBtnHtml;
           }
         } catch (err) {
           console.error('Batch assign error:', err);
-          showConfirmFeedback('Server communication error during intervention assignment.', 'danger');
+          showConfirmFeedback('Server communication error during intervention.', 'danger');
           confirmSubmitBtn.disabled = false;
           confirmSubmitBtn.innerHTML = originalBtnHtml;
         }
@@ -634,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (assignLessonBtn) {
       assignLessonBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        switchToConfirm('lesson');
+        switchToConfirm('nudge');
       });
     }
 
@@ -718,14 +745,11 @@ document.addEventListener('DOMContentLoaded', () => {
         assignGameBtn.style.display = currentActivityId ? 'inline-flex' : 'none';
       }
 
-      if (createSuppBtn) {
-        if (activityId) {
-          createSuppBtn.href = `/teacher/content/claw_machine/builder?activity_id=${activityId}&concept=${encodeURIComponent(itemName)}&mode=supplementary&is_supplementary=1`;
-        } else if (lessonId) {
-          createSuppBtn.href = `/teacher/content/lesson/builder?lesson_id=${lessonId}&concept=${encodeURIComponent(itemName)}&mode=supplementary&is_supplementary=1`;
-        } else {
-          createSuppBtn.href = `/teacher/content?concept=${encodeURIComponent(itemName)}&lesson=${encodeURIComponent(lessonTitle)}&mode=supplementary&is_supplementary=1`;
-        }
+      if (createRemedialLessonBtn) {
+        createRemedialLessonBtn.href = `/teacher/content/lesson/builder?mode=supplementary&is_supplementary=1&concept=${encodeURIComponent(itemName)}&lesson_id=${lessonId || ''}`;
+      }
+      if (createRemedialGameBtn) {
+        createRemedialGameBtn.href = `/teacher/content/claw_machine/builder?mode=supplementary&is_supplementary=1&concept=${encodeURIComponent(itemName)}&activity_id=${activityId || ''}`;
       }
 
       renderStudents();

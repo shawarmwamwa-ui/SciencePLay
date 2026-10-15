@@ -200,3 +200,18 @@ class TeacherAsset(BaseModel, ArchivableMixin):
 
     teacher = db.relationship('User', backref=db.backref('assets', lazy=True))
 
+
+class StudentNotification(BaseModel):
+    __tablename__ = 'student_notification'
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(150), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    concept = db.Column(db.String(100), nullable=True)
+    action_url = db.Column(db.String(255), nullable=True)
+    action_label = db.Column(db.String(50), default='Review Lesson')
+    is_read = db.Column(db.Boolean, default=False)
+    student = db.relationship('User', foreign_keys=[student_id], backref='student_notifications')
+    teacher = db.relationship('User', foreign_keys=[teacher_id])
+

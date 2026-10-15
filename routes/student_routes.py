@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, session, request, jsonify, has_request_context
-from database.models import db, Lesson, Activity, ProgressLog, LessonProgress, LessonAttemptLog, User, LessonAssignment, ActivityAssignment, AttemptLog, AttemptObjectLog, UserBadge, Badge
+from database.models import db, Lesson, Activity, ProgressLog, LessonProgress, LessonAttemptLog, User, LessonAssignment, ActivityAssignment, AttemptLog, AttemptObjectLog, UserBadge, Badge, StudentNotification
 from routes.utils import get_current_user, require_role, log_access, csrf, to_ph_time
 from types import SimpleNamespace
 from datetime import datetime, time, timedelta
@@ -1310,6 +1310,12 @@ def dashboard():
     # Calculate Term / Unit Mastery Breakdown across Terms 1 to 4 with prerequisite locking
     term_mastery_list, overall_curriculum_stats = get_student_curriculum_terms_data(user_id)
 
+    # Active teacher notifications / review nudges
+    active_notifications = StudentNotification.query.filter_by(
+        student_id=user_id,
+        is_read=False
+    ).order_by(StudentNotification.created_at.desc()).all() if user_id else []
+
     # Leaderboard and assigned_tasks are not rendered on dashboard (dedicated pages exist)
     leaderboard = []
     assigned_tasks = []
@@ -1335,8 +1341,20 @@ def dashboard():
         activity_due_dates=activity_due_dates,
         leaderboard=leaderboard,
         term_mastery_list=term_mastery_list,
-        overall_curriculum_stats=overall_curriculum_stats
+        overall_curriculum_stats=overall_curriculum_stats,
+        active_notifications=active_notifications
     )
+
+
+@student_bp.route('/notifications/<int:notif_id>/dismiss', methods=['POST'])
+@require_role('student')
+def dismiss_notification(notif_id):
+    current_user = get_current_user()
+    notif = StudentNotification.query.filter_by(id=notif_id, student_id=current_user.id).first()
+    if notif:
+        notif.is_read = True
+        db.session.commit()
+    return redirect(url_for('student.dashboard'))
 
 
 @student_bp.route('/curriculum')

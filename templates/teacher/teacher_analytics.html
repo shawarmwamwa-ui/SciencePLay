@@ -1468,20 +1468,27 @@
                 </span>
               </div>
 
-              <div class="d-flex flex-wrap gap-2 mt-2">
-                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm" id="modalBatchAssignLessonBtn">
-                  <i class="bi bi-book-half me-1.5"></i>
-                  <span id="modalBatchAssignLessonText">Assign Review Lesson</span>
+              <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm" id="modalBatchAssignLessonBtn" title="Send a direct review reminder to struggling students without assignment clutter">
+                  <i class="bi bi-bell-fill text-warning me-1"></i>
+                  <span id="modalBatchAssignLessonText">Send Review Nudge</span>
                 </button>
 
-                <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm" id="modalBatchAssignGameBtn">
-                  <i class="bi bi-joystick me-1.5"></i>
-                  <span id="modalBatchAssignGameText">Assign Practice Game (3 Attempts)</span>
+                <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm" id="modalBatchAssignGameBtn" title="Grant 3 bonus practice attempts today for these students">
+                  <i class="bi bi-controller me-1"></i>
+                  <span id="modalBatchAssignGameText">Grant 3 Bonus Attempts</span>
                 </button>
 
-                <a href="{{ url_for('teacher.content_management') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm" id="modalCreateSupplementaryBtn">
-                  <i class="bi bi-magic me-1.5"></i>
-                  <span>Create Supplementary in Studio</span>
+                <div class="vr my-1 d-none d-sm-block text-secondary opacity-50"></div>
+
+                <a href="#" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm" id="modalCreateRemedialLessonBtn" title="Auto-draft a focused 2-slide review deck in Lesson Builder">
+                  <i class="bi bi-journal-plus text-primary me-1"></i>
+                  <span>Create Remedial Lesson</span>
+                </a>
+
+                <a href="#" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm" id="modalCreateRemedialGameBtn" title="Create a focused practice game in Game Studio">
+                  <i class="bi bi-joystick text-success me-1"></i>
+                  <span>Create Remedial Game</span>
                 </a>
               </div>
 
@@ -1491,7 +1498,7 @@
 
             <div class="alert alert-info py-2 px-3 small mt-3 mb-0 rounded-3 border-0 bg-info-subtle text-dark">
               <i class="bi bi-lightbulb-fill text-warning me-1"></i>
-              <strong>Teaching Tip:</strong> Supplementary assignments will be tagged as remedial practice with 3 fresh attempts for struggling students.
+              <strong>Teaching Tip:</strong> <strong>Send Review Nudge</strong> alerts students on their dashboard with 0 assignment clutter. <strong>Grant 3 Bonus Attempts</strong> unlocks fresh game tries today. Or click <strong>Create Remedial Lesson</strong> to auto-draft a 2-slide focused micro-deck!
             </div>
           </div>
 
@@ -1502,8 +1509,8 @@
                 <i class="bi bi-arrow-left"></i>
                 <span>Back to Insights</span>
               </button>
-              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold">
-                <i class="bi bi-check2-circle me-1"></i>Confirm Remedial Assignment
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold" id="confirmHeaderBadge">
+                <i class="bi bi-check2-circle me-1"></i>Confirm Intervention
               </span>
             </div>
 
@@ -1511,17 +1518,17 @@
             <div class="p-3 rounded-3 border bg-white shadow-sm mb-3">
               <div class="d-flex align-items-start gap-2.5">
                 <div class="p-2.5 rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
-                  <i id="confirmTargetIcon" class="bi bi-joystick fs-5"></i>
+                  <i id="confirmTargetIcon" class="bi bi-bell-fill fs-5 text-warning"></i>
                 </div>
                 <div class="flex-grow-1" style="min-width: 0;">
-                  <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-0.5 small fw-semibold" id="confirmTargetTypeBadge">Interactive Practice Game</span>
+                  <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-0.5 small fw-semibold" id="confirmTargetTypeBadge">Targeted Review Nudge</span>
                   <h6 class="fw-bold text-dark mb-1 mt-1 text-truncate" id="confirmTargetTitle">Activity Name</h6>
-                  <div class="d-flex align-items-center gap-2 flex-wrap small text-muted">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5">
-                      <i class="bi bi-arrow-repeat me-1"></i>3 Fresh Attempts Unlocked
+                  <div class="d-flex align-items-center gap-2 flex-wrap small text-muted" id="confirmBadgeRow">
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5" id="confirmBadge1">
+                      <i class="bi bi-bell me-1"></i>Direct Dashboard Alert
                     </span>
-                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5">
-                      <i class="bi bi-tag-fill me-1"></i>Tagged: Supplementary Remedial
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-2 py-0.5" id="confirmBadge2">
+                      <i class="bi bi-check2 me-1"></i>Zero Assignment Clutter
                     </span>
                   </div>
                 </div>

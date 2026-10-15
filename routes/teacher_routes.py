@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app, Response
-from database.models import db, Lesson, Activity, User, ProgressLog, LessonAssignment, ActivityAssignment, AttemptLog, UserBadge, LessonProgress, LessonAttemptLog, Badge, AttemptObjectLog, TeacherAsset
+from database.models import db, Lesson, Activity, User, ProgressLog, LessonAssignment, ActivityAssignment, AttemptLog, UserBadge, LessonProgress, LessonAttemptLog, Badge, AttemptObjectLog, TeacherAsset, StudentNotification
 from routes.utils import get_current_user, require_role, log_access, csrf, to_ph_time, ensure_trixia_lesson_progress, format_relative_time
 
 
@@ -1501,7 +1501,52 @@ def batch_assign_intervention():
     assigned_count = 0
 
     try:
-        if assign_type == 'activity' and activity_id:
+        if assign_type == 'nudge':
+            try:
+                lesson_id_int = int(lesson_id) if lesson_id else None
+            except (ValueError, TypeError):
+                lesson_id_int = None
+
+            lesson = Lesson.query.get(lesson_id_int) if lesson_id_int else None
+            lesson_title = lesson.title if lesson else (data.get('lesson_title') or "Science Lesson")
+            concept_item = (data.get('concept') or '').strip()
+
+            target_url = url_for('student.living_non_living_lesson', lesson_id=lesson.id) if lesson else url_for('student.lessons')
+
+            for sid in student_ids:
+                st = User.query.get(sid)
+                if not st:
+                    continue
+
+                notif_msg = f"Teacher reminder: Please review '{lesson_title}'"
+                if concept_item:
+                    notif_msg += f" — focus on '{concept_item}'!"
+                else:
+                    notif_msg += " to strengthen your science mastery!"
+
+                new_notif = StudentNotification(
+                    student_id=sid,
+                    teacher_id=current_user.id,
+                    title=f"Review Reminder: {lesson_title}",
+                    message=notif_msg,
+                    concept=concept_item,
+                    action_url=target_url,
+                    action_label="Review Lesson"
+                )
+                db.session.add(new_notif)
+                assigned_count += 1
+
+            db.session.commit()
+            log_access(current_user, 'batch_send_review_nudge', f'lesson_id={lesson_id} concept={concept_item} student_count={assigned_count}')
+            return jsonify({
+                'status': 'ok',
+                'assigned_count': assigned_count,
+                'target_name': lesson_title,
+                'type': 'nudge',
+                'message': f'Review reminder sent directly to {assigned_count} struggling student(s) for "{concept_item or lesson_title}".'
+            })
+
+        elif assign_type == 'activity' and activity_id:
             try:
                 activity_id = int(activity_id)
             except (ValueError, TypeError):
@@ -1537,13 +1582,13 @@ def batch_assign_intervention():
                     assigned_count += 1
 
             db.session.commit()
-            log_access(current_user, 'batch_assign_intervention', f'activity_id={activity_id} student_count={assigned_count}')
+            log_access(current_user, 'batch_grant_bonus_attempts', f'activity_id={activity_id} student_count={assigned_count}')
             return jsonify({
                 'status': 'ok',
                 'assigned_count': assigned_count,
                 'target_name': act_name,
                 'type': 'activity',
-                'message': f'Practice game "{act_name}" assigned to {assigned_count} struggling student(s) with 3 fresh attempts.'
+                'message': f'3 bonus practice attempts unlocked today for {assigned_count} student(s) on "{act_name}".'
             })
 
         elif lesson_id:
@@ -1557,18 +1602,6 @@ def batch_assign_intervention():
                 return jsonify({'status': 'error', 'message': 'Lesson not found.'}), 404
 
             lesson_title = lesson.title or f"Lesson #{lesson_id}"
-
-            paired_act_id = None
-            if activity_id:
-                try:
-                    paired_act_id = int(activity_id)
-                except Exception:
-                    paired_act_id = None
-            if not paired_act_id and lesson.activities:
-                for a in lesson.activities:
-                    if not a.is_archived:
-                        paired_act_id = a.id
-                        break
 
             for sid in student_ids:
                 st = User.query.get(sid)
@@ -1593,32 +1626,14 @@ def batch_assign_intervention():
                     existing_la.is_supplementary = is_supplementary
                     assigned_count += 1
 
-                if paired_act_id:
-                    existing_aa = ActivityAssignment.query.filter_by(student_id=sid, activity_id=paired_act_id).first()
-                    if not existing_aa:
-                        db.session.add(ActivityAssignment(
-                            activity_id=paired_act_id,
-                            student_id=sid,
-                            assigned_by=current_user.id,
-                            due_date=due_date,
-                            is_supplementary=is_supplementary,
-                            status='assigned'
-                        ))
-                    else:
-                        existing_aa.status = 'assigned'
-                        existing_aa.assigned_at = datetime.utcnow()
-                        existing_aa.due_date = due_date
-                        existing_aa.is_supplementary = is_supplementary
-
             db.session.commit()
             log_access(current_user, 'batch_assign_intervention', f'lesson_id={lesson_id} student_count={assigned_count}')
-            paired_info = " & paired game" if paired_act_id else ""
             return jsonify({
                 'status': 'ok',
                 'assigned_count': assigned_count,
                 'target_name': lesson_title,
                 'type': 'lesson',
-                'message': f'Review lesson "{lesson_title}"{paired_info} assigned to {assigned_count} struggling student(s).'
+                'message': f'Review lesson "{lesson_title}" assigned to {assigned_count} struggling student(s).'
             })
 
         else:
@@ -3787,13 +3802,64 @@ def lesson_builder(lesson_id=None):
             }
             config = lesson_presets.get(preset_key, lesson_presets['living_vs_nonliving'])
         else:
-            # Blank canvas by default when creating from scratch
-            config = {
-                "title": "",
-                "description": "",
-                "grade_level": "Grade 3",
-                "slides": []
-            }
+            concept_arg = request.args.get('concept', '').strip()
+            mode_arg = request.args.get('mode', '').strip()
+            is_supp = (request.args.get('is_supplementary', '') == '1') or (mode_arg == 'supplementary')
+
+            if concept_arg and is_supp:
+                matched_img = "/static/images/tree.webp"
+                c_low = concept_arg.lower()
+                if "leaf" in c_low or "leaves" in c_low or "plant" in c_low:
+                    matched_img = "/static/images/plant.webp"
+                elif "flower" in c_low:
+                    matched_img = "/static/images/flower.webp"
+                elif "bird" in c_low or "wing" in c_low or "feather" in c_low:
+                    matched_img = "/static/images/bird.webp"
+                elif "fish" in c_low or "fin" in c_low:
+                    matched_img = "/static/images/fish.webp"
+                elif "metal" in c_low or "rock" in c_low or "solid" in c_low:
+                    matched_img = "/static/images/rock.webp"
+                elif "liquid" in c_low or "water" in c_low or "puddle" in c_low:
+                    matched_img = "/static/images/puddle.webp"
+                elif "dog" in c_low or "animal" in c_low:
+                    matched_img = "/static/images/dog.webp"
+                elif "cat" in c_low:
+                    matched_img = "/static/images/cat.webp"
+
+                config = {
+                    "title": f"Review Focus: {concept_arg}",
+                    "description": f"Targeted remedial micro-lesson to reinforce mastery on {concept_arg}.",
+                    "grade_level": "Grade 3",
+                    "slides": [
+                        {
+                            "id": "slide-1",
+                            "title": f"Review Anchor: {concept_arg}",
+                            "type": "concept",
+                            "image": matched_img,
+                            "explanation": f"Let's review {concept_arg}! Pay close attention to its appearance, traits, and scientific role in this topic."
+                        },
+                        {
+                            "id": "slide-2",
+                            "title": f"Quick Check: {concept_arg}",
+                            "type": "quick-check",
+                            "prompt": f"Which item correctly shows or describes {concept_arg}? ✨",
+                            "image": matched_img,
+                            "explanation": f"Great job! That correctly identifies {concept_arg}.",
+                            "options": [
+                                {"id": "opt-1", "label": concept_arg, "icon": matched_img, "isCorrect": True},
+                                {"id": "opt-2", "label": "Other Item", "icon": "/static/images/rock.webp", "isCorrect": False}
+                            ]
+                        }
+                    ]
+                }
+            else:
+                # Blank canvas by default when creating from scratch
+                config = {
+                    "title": "",
+                    "description": "",
+                    "grade_level": "Grade 3",
+                    "slides": []
+                }
 
     preset_images = [
         {"label": "Tree", "src": "/static/images/tree.webp"},

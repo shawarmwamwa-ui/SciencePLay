@@ -70,6 +70,45 @@
   <!-- Main Landmark -->
   <main id="main-content">
 
+  <!-- Teacher Review Reminders (Nudges) -->
+  {% if active_notifications %}
+    <div class="brutal-window mb-4" style="background: #fed7aa; border: 3px solid #000; box-shadow: 4px 4px 0 #000;">
+      <div class="brutal-window-header d-flex align-items-center justify-content-between" style="background: #fb923c; border-bottom: 3px solid #000; padding: 0.5rem 1rem;">
+        <div class="d-flex align-items-center gap-2">
+          <div class="brutal-dots">
+            <span class="brutal-dot dot-red"></span>
+            <span class="brutal-dot dot-yellow"></span>
+            <span class="brutal-dot dot-green"></span>
+          </div>
+          <span class="fw-black text-white ms-2"><i class="bi bi-bell-fill me-1 text-warning"></i>Teacher Review Reminders ({{ active_notifications|length }})</span>
+        </div>
+        <span class="badge bg-dark text-white rounded-pill px-2.5 py-1 fw-bold">Teacher Nudge</span>
+      </div>
+      <div class="brutal-window-body py-3 px-3 px-md-4">
+        {% for notif in active_notifications %}
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 py-2 {% if not loop.last %}border-bottom border-dark border-opacity-25 pb-3 mb-2{% endif %}">
+            <div style="max-width: 700px;">
+              <span class="fw-black text-dark fs-5 d-block mb-1">
+                <i class="bi bi-chat-heart-fill text-danger me-1"></i>{{ notif.title }}
+              </span>
+              <p class="mb-0 fw-bold text-dark" style="color: #1f2937 !important;">{{ notif.message }}</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <a href="{{ notif.action_url or url_for('student.lessons') }}" class="brutal-btn brutal-btn-primary text-decoration-none py-1.5 px-3">
+                <i class="bi bi-book-half me-1"></i>{{ notif.action_label or 'Review Lesson' }}
+              </a>
+              <form action="{{ url_for('student.dismiss_notification', notif_id=notif.id) }}" method="POST" class="d-inline">
+                <button type="submit" class="brutal-btn brutal-btn-danger py-1 px-2.5" title="Dismiss Reminder">
+                  <i class="bi bi-check-lg"></i> Got it
+                </button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
   <!-- Stat Cards Grid: Separated Lessons & Activities -->
   <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 student-summary mb-4 g-3">
     <!-- Card 1: Lessons Done -->
