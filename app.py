@@ -227,7 +227,8 @@ def ensure_default_curriculum():
             get_or_create_properties_of_metals_lesson,
             get_or_create_metals_game_activity,
             get_or_create_recycling_lesson,
-            get_or_create_recycling_game_activity
+            get_or_create_recycling_game_activity,
+            get_or_create_basic_needs_lesson
         )
         try:
             get_or_create_default_lesson()
@@ -240,8 +241,9 @@ def ensure_default_curriculum():
             get_or_create_metals_game_activity()
             get_or_create_recycling_lesson()
             get_or_create_recycling_game_activity()
+            get_or_create_basic_needs_lesson()
 
-            # Ensure all 5 default curriculum lessons and games are properly categorized as Core Curriculum (is_supplementary = 0)
+            # Ensure all default curriculum lessons and games are properly categorized as Core Curriculum (is_supplementary = 0)
             # Terms 1 and 2 are active curriculum; Term 3 container is ready for teachers to add modules via Content Studio
             try:
                 # Term 1: Matter & Materials
@@ -249,7 +251,7 @@ def ensure_default_curriculum():
                 db.session.execute(text("UPDATE activity SET term = 'Term 1', is_supplementary = 0 WHERE engine IN ('metal_logic', 'recycle_sorter')"))
 
                 # Term 2: Living Things & Their Environment
-                db.session.execute(text("UPDATE lesson SET term = 'Term 2', is_supplementary = 0 WHERE title IN ('Living vs Non-Living', 'Animal Body Parts', 'Plant Parts')"))
+                db.session.execute(text("UPDATE lesson SET term = 'Term 2', is_supplementary = 0 WHERE title IN ('Living vs Non-Living', 'Animal Body Parts', 'Plant Parts', 'Basic Needs of Living Things')"))
                 db.session.execute(text("UPDATE activity SET term = 'Term 2', is_supplementary = 0 WHERE engine IN ('claw_machine', 'find_the_part', 'build_a_plant')"))
 
                 # Explicitly ensure each core game is linked to its core lesson ID
@@ -259,7 +261,7 @@ def ensure_default_curriculum():
                 db.session.execute(text("UPDATE activity SET lesson_id = (SELECT id FROM lesson WHERE title = 'Animal Body Parts' LIMIT 1) WHERE engine = 'find_the_part' AND (lesson_id IS NULL OR lesson_id = 0)"))
                 db.session.execute(text("UPDATE activity SET lesson_id = (SELECT id FROM lesson WHERE title = 'Plant Parts' LIMIT 1) WHERE engine = 'build_a_plant' AND (lesson_id IS NULL OR lesson_id = 0)"))
 
-                db.session.execute(text("UPDATE lesson_assignment SET is_supplementary = 0 WHERE lesson_id IN (SELECT id FROM lesson WHERE title IN ('Properties of Metals', 'Recycling', 'Living vs Non-Living', 'Animal Body Parts', 'Plant Parts'))"))
+                db.session.execute(text("UPDATE lesson_assignment SET is_supplementary = 0 WHERE lesson_id IN (SELECT id FROM lesson WHERE title IN ('Properties of Metals', 'Recycling', 'Living vs Non-Living', 'Animal Body Parts', 'Plant Parts', 'Basic Needs of Living Things'))"))
                 db.session.execute(text("UPDATE activity_assignment SET is_supplementary = 0 WHERE activity_id IN (SELECT id FROM activity WHERE engine IN ('metal_logic', 'recycle_sorter', 'claw_machine', 'find_the_part', 'build_a_plant'))"))
                 # Formative slide quiz checks & quick checks are internal lesson assessments, not standalone games
                 db.session.execute(text("UPDATE activity SET term = NULL, is_supplementary = 0 WHERE engine IN ('quick_check', 'lesson', 'slide_questions') OR type LIKE '%Quick Check%' OR type LIKE '%Slide Questions%'"))

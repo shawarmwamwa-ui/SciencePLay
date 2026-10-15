@@ -1571,6 +1571,7 @@ def lessons():
         'living vs non-living': 3,
         'animal body parts': 4,
         'plant parts': 5,
+        'basic needs of living things': 6,
     }
     term_rank = {'Term 1': 1, 'Term 2': 2, 'Term 3': 3, 'Term 4': 4}
     lessons.sort(key=lambda l: (
@@ -2202,6 +2203,109 @@ def recycling_lesson():
         lesson=lesson,
         initial_slide=initial_slide,
     )
+
+
+# ── Term 2, Weeks 5-7 — Basic Needs of Living Things ───────────────────────────
+
+BASIC_NEEDS_DEFAULT_SLIDES = [
+    {
+        "id": "bn-1", "title": "What Do Living Things Need?", "type": "concept",
+        "images": ["/static/images/tree.webp", "/static/images/dog.webp", "/static/images/butterfly.webp", "/static/images/fish.webp"],
+        "captions": ["Tree", "Dog", "Butterfly", "Fish"],
+        "explanation": "Plants, animals, and people are all living things. To stay alive and healthy, every one of them has basic needs!"
+    },
+    {
+        "id": "bn-2", "title": "Air", "type": "concept",
+        "images": ["/static/images/bird.webp"], "captions": ["Air"],
+        "explanation": "Living things need air. Animals and people breathe in air, and plants take in air through their leaves."
+    },
+    {
+        "id": "bn-3", "title": "Food and Water", "type": "concept",
+        "images": ["/static/images/plant.webp", "/static/images/puddle.webp"],
+        "captions": ["Food", "Water"],
+        "explanation": "Living things need food for energy and water to grow. Plants make their own food using sunlight, water, and air. Animals eat plants or other animals."
+    },
+    {
+        "id": "bn-4", "title": "Quick Check: Basic Needs", "type": "quick-check",
+        "prompt": "Which one is something living things need to survive?",
+        "image": "/static/images/puddle.webp",
+        "explanation": "Water is a basic need of all living things.",
+        "options": [
+            {"id": "opt-1", "label": "Water", "icon": "/static/images/puddle.webp", "isCorrect": True},
+            {"id": "opt-2", "label": "Rock", "icon": "/static/images/rock.webp", "isCorrect": False},
+            {"id": "opt-3", "label": "Ball", "icon": "/static/images/ball.webp", "isCorrect": False}
+        ]
+    },
+    {
+        "id": "bn-5", "title": "Shelter", "type": "concept",
+        "images": ["/static/images/tree.webp", "/static/images/bird.webp"],
+        "captions": ["Tree (home)", "Bird (lives in the tree)"],
+        "explanation": "Shelter keeps living things safe from weather and enemies. Birds build nests in trees, and animals live in burrows, caves, and homes."
+    },
+    {
+        "id": "bn-6", "title": "We Depend on One Another", "type": "concept",
+        "images": ["/static/images/flower.webp", "/static/images/butterfly.webp"],
+        "captions": ["Flower", "Butterfly"],
+        "explanation": "Living things depend on each other and their environment. Butterflies drink nectar from flowers, and in return they help flowers make seeds."
+    },
+    {
+        "id": "bn-7", "title": "Quick Check: Shelter", "type": "quick-check",
+        "prompt": "Where does a bird find shelter?",
+        "image": "/static/images/bird.webp",
+        "explanation": "Birds build nests in trees for shelter.",
+        "options": [
+            {"id": "opt-1", "label": "Tree", "icon": "/static/images/tree.webp", "isCorrect": True},
+            {"id": "opt-2", "label": "Puddle", "icon": "/static/images/puddle.webp", "isCorrect": False}
+        ]
+    },
+    {
+        "id": "bn-8", "title": "Protect Our Environment", "type": "concept",
+        "images": ["/static/images/plant.webp", "/static/images/tree.webp"],
+        "captions": ["Plant", "Tree"],
+        "explanation": "If we harm the environment, living things lose air, food, water, and shelter. We must protect and conserve nature so living things can survive."
+    },
+    {
+        "id": "bn-9", "title": "Basic Needs Expert!", "type": "summary",
+        "image": "/static/images/star.webp",
+        "explanation": "Great job! Living things need air, food, water, and shelter, and we must take care of the environment that provides them."
+    }
+]
+
+def get_or_create_basic_needs_lesson():
+    lesson = Lesson.query.filter_by(title='Basic Needs of Living Things').first()
+    cfg = {
+        "title": "Basic Needs of Living Things",
+        "description": "Term 2, Weeks 5-7: Learn that living things need air, food, water, and shelter, depend on one another and the environment, and must be protected.",
+        "grade_level": "Grade 3",
+        "term": "Term 2",
+        "is_supplementary": False,
+        "slides": BASIC_NEEDS_DEFAULT_SLIDES
+    }
+    if lesson:
+        existing_slides = (lesson.config.get('slides') if isinstance(lesson.config, dict) else None)
+        if not existing_slides or len(existing_slides) == 0:
+            lesson.config = cfg
+            lesson.term = 'Term 2'
+            lesson.is_supplementary = False
+            db.session.commit()
+        return lesson
+
+    lesson = Lesson(
+        title='Basic Needs of Living Things',
+        description='Term 2, Weeks 5-7: Learn that living things need air, food, water, and shelter, depend on one another and the environment, and must be protected.',
+        term='Term 2',
+        is_supplementary=False,
+        config=cfg
+    )
+    db.session.add(lesson)
+    db.session.commit()
+    return lesson
+
+
+@student_bp.route('/lesson/basic-needs')
+def basic_needs_lesson():
+    lesson = get_or_create_basic_needs_lesson()
+    return redirect(url_for('student.living_non_living_lesson', lesson_id=lesson.id))
 
 
 def get_or_create_metals_game_activity():

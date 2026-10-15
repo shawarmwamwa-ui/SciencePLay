@@ -2573,7 +2573,9 @@ def _get_archived_game_cards():
 def _get_default_lesson_slide_count(title):
     """Returns the actual slide count for default core curriculum lessons"""
     t_lower = (title or '').lower()
-    if 'living' in t_lower:
+    if 'basic' in t_lower or 'needs' in t_lower:
+        return 9
+    elif 'living' in t_lower:
         return 7
     elif 'animal' in t_lower:
         return 12
