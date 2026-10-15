@@ -293,8 +293,19 @@
               <a href="{{ a.url }}" class="kid-task-item" aria-label="Play game {{ a.activity.type or 'Game' }}">
                 <span class="fw-bold"><i class="bi bi-joystick text-success me-2"></i>{{ a.activity.type or 'Game' }}</span>
                 {% if a.completed %}
-                <span class="badge bg-success text-white rounded-pill fw-bold"><i
-                    class="bi bi-check-circle-fill me-1"></i>Done</span>
+                  {% if a.is_perfect %}
+                  <span class="badge bg-success text-white rounded-pill fw-bold">
+                    <i class="bi bi-star-fill text-warning me-1"></i>Mastered (100%)
+                  </span>
+                  {% else %}
+                  <span class="badge bg-success text-white rounded-pill fw-bold">
+                    <i class="bi bi-check-circle-fill me-1"></i>Mastered ({{ a.best_score }}%)
+                  </span>
+                  {% endif %}
+                {% elif a.has_played %}
+                <span class="badge bg-warning text-dark rounded-pill fw-bold" title="Score 80%+ to master this game">
+                  <i class="bi bi-arrow-repeat me-1"></i>{{ a.best_score }}% (Need 80%+) ▶
+                </span>
                 {% else %}
                 <span class="badge bg-warning text-dark rounded-pill fw-bold">Play ▶</span>
                 {% endif %}

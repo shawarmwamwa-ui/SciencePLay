@@ -526,6 +526,15 @@ def is_lesson_unlocked_for_student(user_id, lesson):
         matching = Lesson.query.filter(Lesson.title.ilike(t_name)).all()
         return any(has_student_completed_lesson(user_id, m.id) for m in matching)
 
+    def is_engine_mastered(eng, min_score=80):
+        logs = ProgressLog.query.filter_by(student_id=user_id).all()
+        scores = [
+            p.score for p in logs 
+            if p.activity and (p.activity.engine == eng or eng in (p.activity.type or ''))
+            and p.score is not None
+        ]
+        return max(scores, default=0) >= min_score
+
     # Term 1: Matter & Materials
     if title.lower() == 'properties of metals':
         return True
@@ -533,25 +542,42 @@ def is_lesson_unlocked_for_student(user_id, lesson):
     if title.lower() == 'recycling':
         return is_title_completed('Properties of Metals')
 
-    # Term 2: Living Things & Their Environment
+    # Term 2: Living Things & Their Environment (Requires Term 1 lessons + games mastered with 80%+)
     if title.lower() == 'living vs non-living':
-        return is_title_completed('Properties of Metals') and is_title_completed('Recycling')
+        return (
+            is_title_completed('Properties of Metals') and 
+            is_title_completed('Recycling') and
+            is_engine_mastered('metal_logic') and
+            is_engine_mastered('recycle_sorter')
+        )
 
     if title.lower() == 'animal body parts':
-        return is_title_completed('Living vs Non-Living')
+        return is_title_completed('Living vs Non-Living') and is_engine_mastered('claw_machine')
 
     if title.lower() == 'plant parts':
-        return is_title_completed('Living vs Non-Living') and is_title_completed('Animal Body Parts')
+        return (
+            is_title_completed('Living vs Non-Living') and 
+            is_title_completed('Animal Body Parts') and
+            is_engine_mastered('find_the_part')
+        )
 
     term = getattr(lesson, 'term', None)
     if not term or term == 'Term 1':
         return True
 
     if term == 'Term 2':
-        return is_title_completed('Properties of Metals') and is_title_completed('Recycling')
+        return (
+            is_title_completed('Properties of Metals') and 
+            is_title_completed('Recycling') and
+            is_engine_mastered('metal_logic') and
+            is_engine_mastered('recycle_sorter')
+        )
 
     if term == 'Term 3':
-        return is_title_completed('Plant Parts')
+        return (
+            is_title_completed('Plant Parts') and
+            is_engine_mastered('build_a_plant')
+        )
 
     return True
 
@@ -794,11 +820,12 @@ def get_student_curriculum_terms_data(user_id):
         if t_name not in terms_dict:
             terms_dict[t_name] = {'name': t_name, 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0}
 
-        is_act_done = (act.id in completed_by_activity) or any(
-            p.activity and p.activity.engine == act.engine for p in progress_logs
-        )
         scores = [p.score for p in progress_logs if (p.activity_id == act.id or (p.activity and p.activity.engine == act.engine)) and p.score is not None]
         best_score = max(scores, default=0)
+        has_played = len(scores) > 0
+        # 80%+ Mastery Standard: Student must score >= 80% to mark a game as Mastered / Done
+        is_act_done = best_score >= 80
+        is_perfect = best_score >= 100
         attempts_today = get_attempts_today(user_id, act.id)
         is_unlocked = is_activity_unlocked(user_id, act)
 
@@ -818,6 +845,8 @@ def get_student_curriculum_terms_data(user_id):
         terms_dict[t_name]['activities'].append({
             'activity': act,
             'completed': is_act_done,
+            'is_perfect': is_perfect,
+            'has_played': has_played,
             'best_score': best_score,
             'attempts_today': attempts_today,
             'is_unlocked': is_unlocked,
@@ -894,7 +923,7 @@ def get_student_curriculum_terms_data(user_id):
             td['is_locked'] = False
             td['lock_reason'] = None
         else:
-            if td['lessons_completed'] > 0 or prev_term_completed:
+            if prev_term_completed:
                 td['is_locked'] = False
                 td['lock_reason'] = None
             else:
@@ -990,10 +1019,16 @@ def get_student_curriculum_terms_data(user_id):
                             game_name = 'EcoSwipe Sorter'
                         else:
                             game_name = raw_title
+
+                        if a.get('has_played') and not a.get('completed'):
+                            next_text = f"Master {game_name} ({a.get('best_score')}%) ▶"
+                        else:
+                            next_text = f"Continue: Play {game_name} ▶"
+
                         next_step = {
                             'type': 'game',
                             'title': game_name,
-                            'text': f"Continue: Play {game_name} ▶",
+                            'text': next_text,
                             'url': a['url']
                         }
                         break
@@ -1016,36 +1051,40 @@ def get_student_curriculum_terms_data(user_id):
             td['remaining_label'] = f"Content coming soon for {t_name}!"
         elif td['is_locked']:
             if prev_activities_left == 1 and prev_lessons_left == 0:
-                td['friendly_lock_message'] = f"Finish 1 more game in {prev_term_name} to unlock {t_name} 🔓"
+                td['friendly_lock_message'] = f"Master 1 more game (80%+) in {prev_term_name} to unlock {t_name} 🔓"
             elif prev_lessons_left == 1 and prev_activities_left == 0:
                 td['friendly_lock_message'] = f"Finish 1 more lesson in {prev_term_name} to unlock {t_name} 🔓"
             elif prev_activities_left > 0 and prev_lessons_left == 0:
-                td['friendly_lock_message'] = f"Finish {prev_activities_left} more games in {prev_term_name} to unlock {t_name} 🔓"
+                td['friendly_lock_message'] = f"Master {prev_activities_left} more games (80%+) in {prev_term_name} to unlock {t_name} 🔓"
             else:
                 tot_prev = prev_lessons_left + prev_activities_left
-                td['friendly_lock_message'] = f"Finish {tot_prev} more tasks in {prev_term_name} to unlock {t_name} 🔓"
+                td['friendly_lock_message'] = f"Finish & master {tot_prev} more tasks in {prev_term_name} to unlock {t_name} 🔓"
             td['remaining_label'] = td['friendly_lock_message']
         elif td.get('is_completed'):
             td['friendly_lock_message'] = None
-            td['remaining_label'] = f"Great job! All lessons & games finished in {t_name}! 🌟"
+            td['remaining_label'] = f"Great job! All lessons & games mastered in {t_name}! 🌟"
         elif lessons_left == 0 and activities_left == 1:
             td['friendly_lock_message'] = None
-            td['remaining_label'] = f"1 game left to finish {t_name}!"
+            td['remaining_label'] = f"1 game left to master (80%+) in {t_name}!"
         elif lessons_left == 1 and activities_left == 0:
             td['friendly_lock_message'] = None
-            td['remaining_label'] = f"1 lesson left to finish {t_name}!"
+            td['remaining_label'] = f"1 lesson left to finish in {t_name}!"
         elif lessons_left == 0 and activities_left > 1:
             td['friendly_lock_message'] = None
-            td['remaining_label'] = f"{activities_left} games left to finish {t_name}!"
+            td['remaining_label'] = f"{activities_left} games left to master (80%+) in {t_name}!"
         elif activities_left == 0 and lessons_left > 1:
             td['friendly_lock_message'] = None
-            td['remaining_label'] = f"{lessons_left} lessons left to finish {t_name}!"
+            td['remaining_label'] = f"{lessons_left} lessons left to finish in {t_name}!"
         else:
             td['friendly_lock_message'] = None
-            td['remaining_label'] = f"{lessons_left} lesson{'s' if lessons_left > 1 else ''} and {activities_left} game{'s' if activities_left > 1 else ''} left to finish {t_name}!"
+            td['remaining_label'] = f"{lessons_left} lesson{'s' if lessons_left > 1 else ''} and {activities_left} game{'s' if activities_left > 1 else ''} left to master in {t_name}!"
 
-        # Previous term unlocks the next term if its core lessons are completed, or 100% of tasks are completed
-        is_this_term_done = (td['lessons_completed'] >= td['lessons_total'] and td['lessons_total'] > 0) or (overall_pct >= 100 and total_items > 0)
+        # Previous term unlocks the next term ONLY if all core lessons are finished AND all games are mastered (80%+)
+        is_this_term_done = (
+            td['lessons_completed'] >= td['lessons_total'] and
+            td['activities_completed'] >= td['activities_total'] and
+            total_items > 0
+        )
         if td['is_locked'] or not is_this_term_done or total_items == 0:
             prev_term_completed = False
             prev_term_name = t_name
