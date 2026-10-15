@@ -573,13 +573,12 @@
               <table id="struggle-games-table" class="table align-middle mb-0">
                 <thead>
                   <tr>
-                    <th style="min-width: 140px;">Student(s)</th>
+                    <th style="min-width: 140px;" title="Click student count to view student roster and assign remedial practice">Struggling Students</th>
                     <th style="min-width: 150px;">Curriculum Lesson</th>
                     <th style="min-width: 150px;">Game / Activity</th>
-                    <th style="min-width: 130px;">Missed Game Item</th>
+                    <th style="min-width: 140px;">Missed Game Item</th>
                     <th class="text-center" style="width: 90px;">Total Misses</th>
-                    <th style="min-width: 240px;">Recommended Lesson</th>
-                    <th class="text-end text-nowrap" style="min-width: 160px;">Intervention Actions</th>
+                    <th style="min-width: 250px;">Recommended Lesson</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -589,6 +588,7 @@
                         {% if obj.students %}
                           <button type="button" 
                                   class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 fw-bold d-inline-flex align-items-center gap-1 open-struggling-students-modal-btn shadow-sm"
+                                  title="View students &amp; assign remedial practice"
                                   data-item-name="{{ obj.name }}"
                                   data-context="{{ obj.activity_type }}"
                                   data-misses="{{ obj.misses }}"
@@ -620,7 +620,7 @@
                           <i class="bi bi-controller me-1 text-success"></i>{{ obj.activity_type }}
                         </span>
                       </td>
-                      <td style="max-width: 260px;">
+                      <td style="max-width: 280px;">
                         <div class="concept-text-preview fw-bold text-dark" 
                              data-bs-toggle="tooltip" 
                              data-bs-placement="top" 
@@ -648,26 +648,10 @@
                           <i class="bi bi-journal-bookmark-fill text-primary me-1"></i><strong>{{ obj.recommendation }}</strong>
                         </div>
                       </td>
-                      <td class="text-end text-nowrap">
-                        <div class="d-inline-flex align-items-center gap-1">
-                          <a href="{{ url_for('teacher.lessons') }}#create-assignment-card" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Reassign game in Lessons &amp; Assignments">
-                            <i class="bi bi-arrow-repeat me-1"></i>Reassign
-                          </a>
-                          {% if obj.activity_engine == 'claw_machine' and obj.activity_id %}
-                            <a href="{{ url_for('teacher.claw_machine_builder', activity_id=obj.activity_id) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Tweak game items and chutes in Claw Machine Builder">
-                              <i class="bi bi-sliders me-1"></i>Tweak
-                            </a>
-                          {% else %}
-                            <a href="{{ url_for('teacher.content_management') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Review supplementary material and games in Content Studio">
-                              <i class="bi bi-sliders me-1"></i>Studio
-                            </a>
-                          {% endif %}
-                        </div>
-                      </td>
                     </tr>
                   {% else %}
                     <tr>
-                      <td colspan="7" class="text-center text-muted py-4">No game struggles recorded yet. Students are demonstrating strong mastery in interactive games!</td>
+                      <td colspan="6" class="text-center text-muted py-4">No game struggles recorded yet. Students are demonstrating strong mastery in interactive games!</td>
                     </tr>
                   {% endfor %}
                 </tbody>
@@ -685,13 +669,12 @@
               <table id="struggle-lessons-table" class="table align-middle mb-0">
                 <thead>
                   <tr>
-                    <th style="min-width: 140px;">Student(s)</th>
+                    <th style="min-width: 140px;" title="Click student count to view student roster and assign remedial practice">Struggling Students</th>
                     <th style="min-width: 160px;">Curriculum Lesson</th>
                     <th style="min-width: 140px;">Slide Activity</th>
-                    <th style="min-width: 150px;">Missed Question / Concept</th>
+                    <th style="min-width: 160px;">Missed Question / Concept</th>
                     <th class="text-center" style="width: 90px;">Total Misses</th>
-                    <th style="min-width: 240px;">Recommended Lesson</th>
-                    <th class="text-end text-nowrap" style="min-width: 160px;">Intervention Actions</th>
+                    <th style="min-width: 250px;">Recommended Lesson</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -701,6 +684,7 @@
                         {% if obj.students %}
                           <button type="button" 
                                   class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 fw-bold d-inline-flex align-items-center gap-1 open-struggling-students-modal-btn shadow-sm"
+                                  title="View students &amp; assign remedial practice"
                                   data-item-name="{{ obj.name }}"
                                   data-context="{{ obj.activity_type }}"
                                   data-misses="{{ obj.misses }}"
@@ -732,7 +716,7 @@
                           <i class="bi bi-journal-check me-1 text-primary"></i>{{ obj.activity_type }}
                         </span>
                       </td>
-                      <td style="max-width: 260px;">
+                      <td style="max-width: 280px;">
                         <div class="concept-text-preview fw-bold text-dark" 
                              data-bs-toggle="tooltip" 
                              data-bs-placement="top" 
@@ -760,20 +744,10 @@
                           <i class="bi bi-journal-bookmark-fill text-primary me-1"></i><strong>{{ obj.recommendation }}</strong>
                         </div>
                       </td>
-                      <td class="text-end text-nowrap">
-                        <div class="d-inline-flex align-items-center gap-1">
-                          <a href="{{ url_for('teacher.lessons') }}#create-assignment-card" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Reassign lesson module in Lessons &amp; Assignments">
-                            <i class="bi bi-arrow-repeat me-1"></i>Reassign
-                          </a>
-                          <a href="{{ url_for('teacher.content_management') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Review lesson slides in Content Studio">
-                            <i class="bi bi-sliders me-1"></i>Studio
-                          </a>
-                        </div>
-                      </td>
                     </tr>
                   {% else %}
                     <tr>
-                      <td colspan="7" class="text-center text-muted py-4">No lesson slide struggles recorded yet. High quick-check pass rate!</td>
+                      <td colspan="6" class="text-center text-muted py-4">No lesson slide struggles recorded yet. High quick-check pass rate!</td>
                     </tr>
                   {% endfor %}
                 </tbody>
@@ -791,13 +765,12 @@
               <table id="struggle-breakdown-table" class="table align-middle mb-0">
                 <thead>
                   <tr>
-                    <th style="min-width: 140px;">Student(s)</th>
+                    <th style="min-width: 140px;" title="Click student count to view student roster and assign remedial practice">Struggling Students</th>
                     <th style="min-width: 150px;">Curriculum Lesson</th>
                     <th style="min-width: 150px;">Activity / Question</th>
-                    <th style="min-width: 130px;">Missed Concept</th>
+                    <th style="min-width: 140px;">Missed Concept</th>
                     <th class="text-center" style="width: 90px;">Total Misses</th>
-                    <th style="min-width: 240px;">Recommended Lesson</th>
-                    <th class="text-end text-nowrap" style="min-width: 160px;">Intervention Actions</th>
+                    <th style="min-width: 250px;">Recommended Lesson</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -807,6 +780,7 @@
                         {% if obj.students %}
                           <button type="button" 
                                   class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 fw-bold d-inline-flex align-items-center gap-1 open-struggling-students-modal-btn shadow-sm"
+                                  title="View students &amp; assign remedial practice"
                                   data-item-name="{{ obj.name }}"
                                   data-context="{{ obj.activity_type }}"
                                   data-misses="{{ obj.misses }}"
@@ -838,7 +812,7 @@
                           <i class="bi bi-controller me-1 text-success"></i>{{ obj.activity_type }}
                         </span>
                       </td>
-                      <td style="max-width: 260px;">
+                      <td style="max-width: 280px;">
                         <div class="concept-text-preview fw-bold text-dark" 
                              data-bs-toggle="tooltip" 
                              data-bs-placement="top" 
@@ -866,26 +840,10 @@
                           <i class="bi bi-journal-bookmark-fill text-primary me-1"></i><strong>{{ obj.recommendation }}</strong>
                         </div>
                       </td>
-                      <td class="text-end text-nowrap">
-                        <div class="d-inline-flex align-items-center gap-1">
-                          <a href="{{ url_for('teacher.lessons') }}#create-assignment-card" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Reassign lesson or game in Lessons &amp; Assignments">
-                            <i class="bi bi-arrow-repeat me-1"></i>Reassign
-                          </a>
-                          {% if obj.activity_engine == 'claw_machine' and obj.activity_id %}
-                            <a href="{{ url_for('teacher.claw_machine_builder', activity_id=obj.activity_id) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Tweak game items and chutes in Claw Machine Builder">
-                              <i class="bi bi-sliders me-1"></i>Tweak
-                            </a>
-                          {% else %}
-                            <a href="{{ url_for('teacher.content_management') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 fw-bold text-nowrap shadow-sm" title="Review supplementary material and games in Content Studio">
-                              <i class="bi bi-sliders me-1"></i>Studio
-                            </a>
-                          {% endif %}
-                        </div>
-                      </td>
                     </tr>
                   {% else %}
                     <tr>
-                      <td colspan="7" class="text-center text-muted py-4">No struggling concepts logged yet. Class is demonstrating strong mastery!</td>
+                      <td colspan="6" class="text-center text-muted py-4">No struggling concepts logged yet. Class is demonstrating strong mastery!</td>
                     </tr>
                   {% endfor %}
                 </tbody>

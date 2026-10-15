@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!noMatchRow) {
             noMatchRow = document.createElement('tr');
             noMatchRow.className = 'struggle-no-match-row';
-            noMatchRow.innerHTML = '<td colspan="7" class="text-center text-muted py-4"><i class="bi bi-info-circle me-1"></i>No struggling concepts found matching the selected filter criteria.</td>';
+            noMatchRow.innerHTML = '<td colspan="6" class="text-center text-muted py-4"><i class="bi bi-info-circle me-1"></i>No struggling concepts found matching the selected filter criteria.</td>';
             tbody.appendChild(noMatchRow);
           }
           noMatchRow.style.display = '';
