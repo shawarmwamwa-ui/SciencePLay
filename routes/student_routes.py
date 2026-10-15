@@ -516,6 +516,10 @@ def get_student_curriculum_terms_data(user_id):
         teacher_id = existing_la_list[0].assigned_by
     elif existing_aa_list and existing_aa_list[0].assigned_by:
         teacher_id = existing_aa_list[0].assigned_by
+    else:
+        teacher_user = User.query.filter_by(role='teacher').first() or User.query.filter_by(role='admin').first()
+        if teacher_user:
+            teacher_id = teacher_user.id
 
     # 1. Fetch all active curriculum lessons that belong to an academic term (Term 1, Term 2, etc.)
     all_term_lessons_query = Lesson.query.filter(
@@ -622,7 +626,7 @@ def get_student_curriculum_terms_data(user_id):
         if (att.completed or (att.progress_percent or 0) >= 100):
             completed_lesson_ids.add(att.lesson_id)
 
-    for assignment, lesson in lesson_assignment_rows:
+    for assignment, lesson in assigned_lesson_rows:
         if assignment.status == 'completed':
             completed_lesson_ids.add(assignment.lesson_id)
 
@@ -1007,6 +1011,10 @@ def dashboard():
     teacher_id = 1
     if lesson_assignment_rows and lesson_assignment_rows[0][0].assigned_by:
         teacher_id = lesson_assignment_rows[0][0].assigned_by
+    else:
+        teacher_user = User.query.filter_by(role='teacher').first() or User.query.filter_by(role='admin').first()
+        if teacher_user:
+            teacher_id = teacher_user.id
 
     needed_commit = False
     for engine, act in engine_to_act.items():
