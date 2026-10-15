@@ -248,6 +248,12 @@ def ensure_default_curriculum():
                 db.session.execute(text("UPDATE lesson SET term = 'Term 2', is_supplementary = 0 WHERE title IN ('Plant Parts', 'Properties of Metals', 'Recycling')"))
                 db.session.execute(text("UPDATE activity SET term = 'Term 1', is_supplementary = 0 WHERE engine IN ('claw_machine', 'find_the_part')"))
                 db.session.execute(text("UPDATE activity SET term = 'Term 2', is_supplementary = 0 WHERE engine IN ('build_a_plant', 'metal_logic', 'recycle_sorter')"))
+                # Explicitly ensure each core game is linked to its core lesson ID
+                db.session.execute(text("UPDATE activity SET lesson_id = (SELECT id FROM lesson WHERE title = 'Living vs Non-Living' LIMIT 1) WHERE engine = 'claw_machine' AND (lesson_id IS NULL OR lesson_id = 0)"))
+                db.session.execute(text("UPDATE activity SET lesson_id = (SELECT id FROM lesson WHERE title = 'Animal Body Parts' LIMIT 1) WHERE engine = 'find_the_part' AND (lesson_id IS NULL OR lesson_id = 0)"))
+                db.session.execute(text("UPDATE activity SET lesson_id = (SELECT id FROM lesson WHERE title = 'Plant Parts' LIMIT 1) WHERE engine = 'build_a_plant' AND (lesson_id IS NULL OR lesson_id = 0)"))
+                db.session.execute(text("UPDATE activity SET lesson_id = (SELECT id FROM lesson WHERE title = 'Properties of Metals' LIMIT 1) WHERE engine = 'metal_logic' AND (lesson_id IS NULL OR lesson_id = 0)"))
+                db.session.execute(text("UPDATE activity SET lesson_id = (SELECT id FROM lesson WHERE title = 'Recycling' LIMIT 1) WHERE engine = 'recycle_sorter' AND (lesson_id IS NULL OR lesson_id = 0)"))
                 db.session.execute(text("UPDATE lesson_assignment SET is_supplementary = 0 WHERE lesson_id IN (SELECT id FROM lesson WHERE title IN ('Living vs Non-Living', 'Animal Body Parts', 'Plant Parts', 'Properties of Metals', 'Recycling'))"))
                 db.session.execute(text("UPDATE activity_assignment SET is_supplementary = 0 WHERE activity_id IN (SELECT id FROM activity WHERE engine IN ('claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter'))"))
                 # Formative slide quiz checks & quick checks are internal lesson assessments, not standalone games

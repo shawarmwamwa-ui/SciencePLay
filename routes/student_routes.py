@@ -476,9 +476,23 @@ def is_activity_unlocked(user_id, activity):
     if not activity or activity.id is None:
         return False
 
-    # If the activity is linked to a lesson, student must have completed the lesson
+    ENGINE_LESSON_TITLES = {
+        'claw_machine': 'Living vs Non-Living',
+        'find_the_part': 'Animal Body Parts',
+        'build_a_plant': 'Plant Parts',
+        'metal_logic': 'Properties of Metals',
+        'recycle_sorter': 'Recycling'
+    }
+
+    # If the activity is linked to a lesson, check if student has completed it
     if activity.lesson_id:
-        return has_student_completed_lesson(user_id, activity.lesson_id)
+        if has_student_completed_lesson(user_id, activity.lesson_id):
+            return True
+
+    # Fallback: check by engine matching if lesson_id wasn't satisfied or set
+    if activity.engine in ENGINE_LESSON_TITLES:
+        matching_lessons = Lesson.query.filter(Lesson.title.ilike(ENGINE_LESSON_TITLES[activity.engine])).all()
+        return any(has_student_completed_lesson(user_id, l.id) for l in matching_lessons)
 
     # Standalone activity with no lesson requirement
     return True
@@ -852,12 +866,12 @@ def get_student_curriculum_terms_data(user_id):
             td['is_locked'] = False
             td['lock_reason'] = None
         else:
-            if not prev_term_completed:
-                td['is_locked'] = True
-                td['lock_reason'] = f"{prev_term_name}"
-            else:
+            if td['lessons_completed'] > 0 or prev_term_completed:
                 td['is_locked'] = False
                 td['lock_reason'] = None
+            else:
+                td['is_locked'] = True
+                td['lock_reason'] = f"{prev_term_name}"
 
         if td['is_empty']:
             td['is_locked'] = True
@@ -1002,7 +1016,9 @@ def get_student_curriculum_terms_data(user_id):
             td['friendly_lock_message'] = None
             td['remaining_label'] = f"{lessons_left} lesson{'s' if lessons_left > 1 else ''} and {activities_left} game{'s' if activities_left > 1 else ''} left to finish {t_name}!"
 
-        if td['is_locked'] or overall_pct < 100 or total_items == 0:
+        # Previous term unlocks the next term if its core lessons are completed, or 100% of tasks are completed
+        is_this_term_done = (td['lessons_completed'] >= td['lessons_total'] and td['lessons_total'] > 0) or (overall_pct >= 100 and total_items > 0)
+        if td['is_locked'] or not is_this_term_done or total_items == 0:
             prev_term_completed = False
             prev_term_name = t_name
         else:
@@ -1018,6 +1034,8 @@ def get_student_curriculum_terms_data(user_id):
             a_item['is_term_locked'] = td['is_locked']
             if td['is_locked']:
                 a_item['is_unlocked'] = False
+            else:
+                a_item['is_unlocked'] = is_activity_unlocked(user_id, a_item['activity'])
 
         term_mastery_list.append(td)
 
@@ -1766,7 +1784,7 @@ def activities():
         lesson_progress_by_lesson = {log.lesson_id: log for log in lesson_progress}
 
         for activity in activities:
-            unlocked_by_activity[activity.id] = is_activity_unlocked(user_id, activity) and not is_term_locked_for_student(user_id, getattr(activity, 'term', None))
+            unlocked_by_activity[activity.id] = is_activity_unlocked(user_id, activity)
 
     return render_template(
         'student/activities.html',
@@ -1992,9 +2010,6 @@ def get_or_create_build_a_plant_activity():
 @require_role('student')
 def build_a_plant_game():
     current_user = get_current_user()
-    if is_term_locked_for_student(current_user.id, 'Term 2'):
-        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
-        return redirect(url_for('student.curriculum_terms'))
     req_act_id = request.args.get('activity_id', type=int)
     activity = Activity.query.get(req_act_id) if req_act_id else None
     if not activity or activity.engine != 'build_a_plant':
@@ -2101,9 +2116,6 @@ def get_or_create_metals_game_activity():
 @require_role('student')
 def materials_game():
     current_user = get_current_user()
-    if is_term_locked_for_student(current_user.id, 'Term 2'):
-        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
-        return redirect(url_for('student.curriculum_terms'))
     req_act_id = request.args.get('activity_id', type=int)
     activity = Activity.query.get(req_act_id) if req_act_id else None
     if not activity or activity.engine != 'metal_logic':
@@ -2148,9 +2160,6 @@ def get_or_create_recycling_game_activity():
 @require_role('student')
 def recycling_game():
     current_user = get_current_user()
-    if is_term_locked_for_student(current_user.id, 'Term 2'):
-        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
-        return redirect(url_for('student.curriculum_terms'))
     req_act_id = request.args.get('activity_id', type=int)
     activity = Activity.query.get(req_act_id) if req_act_id else None
     if not activity or activity.engine != 'recycle_sorter':

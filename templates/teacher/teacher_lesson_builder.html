@@ -14,6 +14,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260903_4') }}">
+  <script defer src="{{ url_for('static', filename='js/lottie.min.js') }}"></script>
 
   <style>
     .builder-step-card {
@@ -592,6 +593,7 @@
                         <!-- Hero Media Box (For Concept/Intro/Summary) -->
                         <div class="canvas-hero-box" id="canvasHeroBox">
                           <img src="/static/images/tree.webp" alt="Slide Illustration" class="canvas-hero-img" id="canvasHeroImg">
+                          <div id="canvasLottieContainer" class="d-none" style="width: 100%; height: 210px; max-height: 220px; margin: 0 auto;"></div>
                         </div>
 
                         <!-- Spoken Narration Text -->
@@ -648,18 +650,25 @@
                         </select>
                       </div>
 
-                      <!-- Image Picker -->
+                      <!-- Media / Illustration / Animation Picker -->
                       <div class="mb-3">
-                        <label class="form-label text-muted small fw-bold mb-1">Illustration Image</label>
-                        <div class="d-flex align-items-center gap-2">
+                        <label class="form-label text-muted small fw-bold mb-1">Slide Media (Images &amp; Animations)</label>
+                        <div class="d-flex align-items-center flex-wrap gap-2">
                           <img src="/static/images/tree.webp" alt="Thumb" class="rounded-3 border p-1" style="width: 44px; height: 44px; object-fit: contain;" id="editSlideThumb">
                           <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="openSlidePresetPicker()">
-                            <i class="bi bi-images me-1"></i>Presets
+                            <i class="bi bi-images me-1"></i>Images
+                          </button>
+                          <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold" onclick="openAnimationPresetPicker()">
+                            <i class="bi bi-play-circle-fill me-1"></i>Animations
                           </button>
                           <label class="btn btn-sm btn-outline-primary rounded-pill px-3 mb-0" style="cursor: pointer;">
-                            <i class="bi bi-upload me-1"></i>Upload
-                            <input type="file" accept=".png,.jpg,.jpeg,.webp,image/*" class="d-none" onchange="handleSlideFileUpload(this)">
+                            <i class="bi bi-upload me-1"></i>Upload (.json, .gif, .webp, .png)
+                            <input type="file" accept=".png,.jpg,.jpeg,.webp,.gif,.json,image/*,application/json" class="d-none" onchange="handleSlideFileUpload(this)">
                           </label>
+                        </div>
+                        <div id="activeAnimationBadge" class="d-none mt-2">
+                          <span class="badge bg-info text-dark border px-2 py-1"><i class="bi bi-film me-1"></i><span id="activeAnimationName">Animation Attached</span></span>
+                          <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-danger fw-bold" onclick="clearSlideAnimation()" title="Remove animation">✕ Remove</button>
                         </div>
                       </div>
 
@@ -731,6 +740,58 @@
               <div class="small fw-bold text-dark text-truncate">{{ img.label }}</div>
             </div>
             {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preset Animation Selector Modal -->
+  <div class="modal fade" id="presetAnimationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-bottom pb-3">
+          <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-play-circle-fill text-info"></i>
+            <span>Select Science Animation</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="text-muted small mb-3">Click any science animation preset to attach it to this slide. No coding or JSON knowledge needed!</p>
+          <div class="preset-picker-grid">
+            <div class="preset-picker-item" onclick="chooseSlidePresetAnimation('/static/animations/dog-walking.json', '🐕 Walking Dog')">
+              <div class="fs-1 text-center py-2">🐕</div>
+              <div class="small fw-bold text-dark text-truncate">Walking Dog</div>
+            </div>
+            <div class="preset-picker-item" onclick="chooseSlidePresetAnimation('/static/animations/dog eyes-mouth.json', '🐕 Dog Eyes & Mouth')">
+              <div class="fs-1 text-center py-2">👀</div>
+              <div class="small fw-bold text-dark text-truncate">Dog Eyes &amp; Mouth</div>
+            </div>
+            <div class="preset-picker-item" onclick="chooseSlidePresetAnimation('/static/animations/bird-flying.json', '🦅 Flying Bird')">
+              <div class="fs-1 text-center py-2">🦅</div>
+              <div class="small fw-bold text-dark text-truncate">Flying Bird</div>
+            </div>
+            <div class="preset-picker-item" onclick="chooseSlidePresetAnimation('/static/animations/fish-swimming.json', '🐟 Swimming Fish')">
+              <div class="fs-1 text-center py-2">🐟</div>
+              <div class="small fw-bold text-dark text-truncate">Swimming Fish</div>
+            </div>
+            <div class="preset-picker-item" onclick="chooseSlidePresetAnimation('/static/animations/frog-jumping.json', '🐸 Jumping Frog')">
+              <div class="fs-1 text-center py-2">🐸</div>
+              <div class="small fw-bold text-dark text-truncate">Jumping Frog</div>
+            </div>
+            <div class="preset-picker-item" onclick="chooseSlidePresetAnimation('/static/animations/eating-cow.json', '🐄 Eating Cow')">
+              <div class="fs-1 text-center py-2">🐄</div>
+              <div class="small fw-bold text-dark text-truncate">Eating Cow</div>
+            </div>
+            <div class="preset-picker-item" onclick="chooseSlidePresetAnimation('/static/animations/running-fox.json', '🦊 Running Fox')">
+              <div class="fs-1 text-center py-2">🦊</div>
+              <div class="small fw-bold text-dark text-truncate">Running Fox</div>
+            </div>
+            <div class="preset-picker-item" onclick="chooseSlidePresetAnimation('/static/animations/chicken-pecking.json', '🐔 Pecking Chicken')">
+              <div class="fs-1 text-center py-2">🐔</div>
+              <div class="small fw-bold text-dark text-truncate">Pecking Chicken</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1041,7 +1102,18 @@
       document.getElementById('editSlideTitle').value = slide.title || '';
       document.getElementById('editSlideType').value = slide.type || 'concept';
       document.getElementById('editSlideExplanation').value = slide.explanation || '';
-      document.getElementById('editSlideThumb').src = slide.image || '/static/images/tree.webp';
+      
+      const badge = document.getElementById('activeAnimationBadge');
+      const isAnim = Boolean(slide.animationSrc || (typeof slide.image === 'string' && slide.image.endsWith('.json')));
+      if (isAnim) {
+        if (badge) badge.classList.remove('d-none');
+        const nameEl = document.getElementById('activeAnimationName');
+        if (nameEl) nameEl.textContent = slide.animationLabel || 'Animation Attached';
+        document.getElementById('editSlideThumb').src = 'https://api.iconify.design/twemoji:film-projector.svg';
+      } else {
+        if (badge) badge.classList.add('d-none');
+        document.getElementById('editSlideThumb').src = slide.image || '/static/images/tree.webp';
+      }
 
       const quizBox = document.getElementById('quickCheckEditFields');
       if (slide.type === 'quick-check') {
@@ -1174,7 +1246,39 @@
       } else {
         quizBox.classList.add('d-none');
         heroBox.classList.remove('d-none');
-        heroImg.src = slide.image || '/static/images/tree.webp';
+        const lottieBox = document.getElementById('canvasLottieContainer');
+        const animSrc = slide.animationSrc || (typeof slide.image === 'string' && slide.image.endsWith('.json') ? slide.image : null);
+
+        if (animSrc && window.lottie) {
+          heroImg.classList.add('d-none');
+          if (lottieBox) {
+            lottieBox.classList.remove('d-none');
+            lottieBox.innerHTML = '';
+            if (window._builderLottieAnim) {
+              window._builderLottieAnim.destroy();
+              window._builderLottieAnim = null;
+            }
+            try {
+              window._builderLottieAnim = lottie.loadAnimation({
+                container: lottieBox,
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: animSrc
+              });
+            } catch (err) {
+              console.warn("Lottie preview notice:", err);
+            }
+          }
+        } else {
+          if (window._builderLottieAnim) {
+            window._builderLottieAnim.destroy();
+            window._builderLottieAnim = null;
+          }
+          if (lottieBox) lottieBox.classList.add('d-none');
+          heroImg.classList.remove('d-none');
+          heroImg.src = slide.image || '/static/images/tree.webp';
+        }
       }
 
       const nextBtn = document.getElementById('canvasNextBtn');
@@ -1220,28 +1324,82 @@
       bootstrap.Modal.getInstance(modalEl)?.hide();
     }
 
-    // File upload (no size limit)
+    // Preset Animation Picker
+    function openAnimationPresetPicker() {
+      const modalEl = document.getElementById('presetAnimationModal');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+    }
+
+    function chooseSlidePresetAnimation(src, label) {
+      const slide = slides[currentSlideIndex];
+      if (slide) {
+        slide.animationSrc = src;
+        slide.animationLabel = label;
+        slide.image = src;
+        loadSlideIntoEditor();
+        updateCanvasPreview();
+        showBuilderToast(`Animation attached: ${label}`, "success");
+      }
+      const modalEl = document.getElementById('presetAnimationModal');
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+    }
+
+    function clearSlideAnimation() {
+      const slide = slides[currentSlideIndex];
+      if (slide) {
+        delete slide.animationSrc;
+        delete slide.animationLabel;
+        slide.image = '/static/images/tree.webp';
+        loadSlideIntoEditor();
+        updateCanvasPreview();
+        showBuilderToast("Animation removed", "info");
+      }
+    }
+
+    // File upload (images + animations)
     function handleSlideFileUpload(input) {
       if (input.files && input.files[0]) {
         const file = input.files[0];
-        const validExtensions = ['png', 'jpg', 'jpeg', 'webp'];
+        const validExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'json'];
         const ext = (file.name.split('.').pop() || '').toLowerCase();
-        const isImageMime = file.type.startsWith('image/');
 
-        if (!validExtensions.includes(ext) || !isImageMime) {
-          showBuilderToast("Only image files (.png, .jpg, .jpeg, .webp) are supported.", "danger");
+        if (!validExtensions.includes(ext)) {
+          showBuilderToast("Supported files: .png, .jpg, .webp, .gif, or .json animation", "danger");
           input.value = '';
           return;
         }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          slides[currentSlideIndex].image = e.target.result;
-          document.getElementById('editSlideThumb').src = e.target.result;
-          updateCanvasPreview();
-          showBuilderToast("Custom image attached to slide", "success");
-        };
-        reader.readAsDataURL(file);
+        if (ext === 'json') {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            try {
+              JSON.parse(e.target.result); // validate JSON syntax
+              const slide = slides[currentSlideIndex];
+              slide.animationSrc = e.target.result;
+              slide.animationLabel = file.name;
+              slide.image = e.target.result;
+              loadSlideIntoEditor();
+              updateCanvasPreview();
+              showBuilderToast(`Custom animation attached: ${file.name}`, "success");
+            } catch (err) {
+              showBuilderToast("Invalid Lottie JSON animation file.", "danger");
+            }
+          };
+          reader.readAsDataURL(file);
+        } else {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const slide = slides[currentSlideIndex];
+            delete slide.animationSrc;
+            delete slide.animationLabel;
+            slide.image = e.target.result;
+            loadSlideIntoEditor();
+            updateCanvasPreview();
+            showBuilderToast("Custom media attached to slide", "success");
+          };
+          reader.readAsDataURL(file);
+        }
       }
     }
 
