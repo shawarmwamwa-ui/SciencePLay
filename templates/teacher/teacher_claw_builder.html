@@ -493,7 +493,7 @@
                 <div class="row g-3">
                   <div class="col-12 col-md-7">
                     <label class="form-label fw-bold text-dark small">Game Title <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="activityTitleInput" value="{{ config.title or (activity.type if activity else 'Solid vs Liquid Sorting') }}" required placeholder="e.g. Solid vs Liquid Sorting">
+                    <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="activityTitleInput" value="{{ config.title if config and config.title else (activity.type if activity and activity.type else '') }}" required placeholder="e.g. Magnetic vs Non-Magnetic">
                   </div>
                   <div class="col-12 col-md-5">
                     <label class="form-label fw-bold text-dark small">Link to Curriculum Lesson</label>
@@ -646,6 +646,34 @@
                 </div>
               </div>
 
+              <!-- Teacher Quick Guide / Instructions -->
+              <div class="alert alert-info border-0 rounded-4 p-3 mb-4 shadow-sm d-flex align-items-start gap-3" style="background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);">
+                <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white" style="width: 38px; height: 38px; min-width: 38px;">
+                  <i class="bi bi-lightbulb-fill fs-5"></i>
+                </div>
+                <div class="small text-dark w-100">
+                  <strong class="d-block text-primary fs-6 mb-1">Teacher Guide: 4 Steps to Build Your Sorting Claw Game</strong>
+                  <div class="row g-2 mt-1">
+                    <div class="col-12 col-md-6 col-lg-3">
+                      <span class="badge bg-primary text-white rounded-pill px-2 me-1">1</span>
+                      <strong>Curriculum Details:</strong> Name your game and choose its <strong>Curriculum Term</strong> above.
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                      <span class="badge bg-primary text-white rounded-pill px-2 me-1">2</span>
+                      <strong>Name 2 Chutes:</strong> Label your Left Drop Zone &amp; Right Drop Zone (e.g. <em>Magnetic</em> vs <em>Non-Magnetic</em>).
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                      <span class="badge bg-primary text-white rounded-pill px-2 me-1">3</span>
+                      <strong>Add Objects:</strong> Click <strong>+ Add Sorting Object</strong> to add items with photos and explanations.
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                      <span class="badge bg-primary text-white rounded-pill px-2 me-1">4</span>
+                      <strong>Publish:</strong> Click <strong>Save &amp; Publish Activity</strong> to launch in your classroom arcade!
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- 2-Chute Cabinet Guidance Callout -->
               <div class="alert alert-warning border-2 rounded-4 p-3 mb-4 d-flex align-items-start gap-3 shadow-sm" style="border-color: #f59e0b !important; background: #fffbeb;">
                 <div class="fs-3 text-warning"><i class="bi bi-lightbulb-fill"></i></div>
@@ -780,7 +808,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // Initial data from server: strictly 2 chutes
-    let rawBins = {{ (config.bins if config and config.bins else [
+    let rawBins = {{ (config.bins if config is not none and 'bins' in config else [
       {"id": "solid", "label": "Solid", "icon": "🧊", "color": "#60a5fa"},
       {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"}
     ])|tojson }};
@@ -788,11 +816,11 @@
     let chutes = Array.isArray(rawBins) && rawBins.length >= 2 
       ? rawBins.slice(0, 2) 
       : [
-          {"id": "solid", "label": "Solid", "icon": "🧊", "color": "#60a5fa"},
-          {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"}
+          {"id": "category_1", "label": "", "icon": "📦", "color": "#3b82f6"},
+          {"id": "category_2", "label": "", "icon": "⭐", "color": "#10b981"}
         ];
 
-    let objects = {{ (config.objects if config and config.objects else [
+    let objects = {{ (config.objects if config is not none and 'objects' in config else [
       {"id": 1, "label": "Ice Cube", "categoryId": "solid", "explanation": "Ice has a fixed shape and volume as a solid.", "image": "/static/images/rock.webp"},
       {"id": 2, "label": "Water Puddle", "categoryId": "liquid", "explanation": "Water flows and takes the shape of its container.", "image": "/static/images/puddle.webp"},
       {"id": 3, "label": "Wooden Chair", "categoryId": "solid", "explanation": "A chair is solid and keeps its own rigid shape.", "image": "/static/images/chair.webp"}
@@ -1024,6 +1052,23 @@
     function renderObjects() {
       const container = document.getElementById('objectsContainer');
       container.innerHTML = '';
+
+      if (objects.length === 0) {
+        container.innerHTML = `
+          <div class="text-center p-4 border-2 border-dashed rounded-4 bg-light my-2">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary mb-3" style="width: 54px; height: 54px; font-size: 1.5rem;">
+              <i class="bi bi-box-seam"></i>
+            </div>
+            <h5 class="h6 fw-bold text-dark mb-1">Your Arcade Object Pool is Clean &amp; Empty</h5>
+            <p class="text-muted small mb-3">Add 4 to 8 sorting items for students to grab with the claw and drop into your 2 target chutes.</p>
+            <button type="button" class="btn btn-primary rounded-pill fw-bold px-3 py-1.5 shadow-sm" onclick="addNewObject()">
+              <i class="bi bi-plus-lg me-1"></i>Add First Sorting Item
+            </button>
+          </div>
+        `;
+        updateLiveCanvas();
+        return;
+      }
 
       const validCategoryIds = new Set(chutes.map(c => c.id));
 

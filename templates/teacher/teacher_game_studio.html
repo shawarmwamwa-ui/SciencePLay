@@ -257,9 +257,9 @@
 
                     <div class="mt-auto pt-3 border-top d-flex gap-2">
                       {% if tmpl.is_available %}
-                        <a href="{{ url_for('teacher.claw_machine_builder') }}" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
+                        <button type="button" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#newClawChoiceModal">
                           <i class="bi bi-plus-lg me-1"></i>Create Activity
-                        </a>
+                        </button>
                         <a href="{{ url_for('teacher.preview_activity', activity_id=default_claw_id) }}" class="btn btn-outline-dark rounded-pill fw-bold py-2 px-3" title="Live Test Play">
                           <i class="bi bi-play-fill"></i>
                         </a>
@@ -611,6 +611,80 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  <!-- Modal: Choice for Starting New Claw Game (Blank Canvas vs Topic Preset) -->
+  <div class="modal fade" id="newClawChoiceModal" tabindex="-1" aria-labelledby="newClawChoiceLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-header bg-primary text-white border-0 py-3 px-4">
+          <h5 class="modal-title fw-black fs-5 d-flex align-items-center gap-2" id="newClawChoiceLabel">
+            <i class="bi bi-controller fs-4"></i>
+            <span>Create Sorting Claw Activity</span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="text-muted fw-bold mb-4">Choose how you would like to build your arcade sorting game:</p>
+          <div class="row g-4">
+            <!-- Option 1: Start from Scratch (Blank) -->
+            <div class="col-12 col-md-6">
+              <div class="card h-100 border-2 rounded-4 p-4 shadow-sm text-center d-flex flex-column justify-content-between hover-card" style="border-color: #3b82f6; background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);">
+                <div>
+                  <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-primary text-white mb-3" style="width: 60px; height: 60px; font-size: 1.75rem;">
+                    <i class="bi bi-box-seam-fill"></i>
+                  </div>
+                  <h3 class="h5 fw-bold text-dark mb-2">Start from Scratch</h3>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold mb-3">Clean Workspace</span>
+                  <p class="text-muted small mb-3" style="line-height: 1.55;">
+                    Begin with an empty 2-chute arcade cabinet. Follow step-by-step teacher instructions to name your categories and add your custom sorting items.
+                  </p>
+                </div>
+                <a href="{{ url_for('teacher.claw_machine_builder', mode='blank') }}" class="btn btn-primary rounded-pill fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                  <span>Start Blank Game</span>
+                  <i class="bi bi-arrow-right"></i>
+                </a>
+              </div>
+            </div>
+
+            <!-- Option 2: Start from Topic Preset -->
+            <div class="col-12 col-md-6">
+              <div class="card h-100 border-2 rounded-4 p-4 shadow-sm d-flex flex-column justify-content-between hover-card" style="border-color: #cbd5e1; background: #ffffff;">
+                <div>
+                  <div class="text-center">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-warning-subtle text-warning-emphasis mb-3" style="width: 60px; height: 60px; font-size: 1.75rem;">
+                      <i class="bi bi-magic"></i>
+                    </div>
+                    <h3 class="h5 fw-bold text-dark mb-2">Use a Topic Preset</h3>
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold mb-3">Pre-Configured</span>
+                    <p class="text-muted small mb-3" style="line-height: 1.55;">
+                      Start with pre-loaded categories, items, and kid-friendly explanations ready to play or customize.
+                    </p>
+                  </div>
+                  
+                  <div class="d-grid gap-2 mb-2">
+                    <a href="{{ url_for('teacher.claw_machine_builder', preset='states_of_matter') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
+                      <span><i class="bi bi-droplet-half text-primary me-2"></i>Solid vs Liquid Sorting</span>
+                      <i class="bi bi-chevron-right text-muted small"></i>
+                    </a>
+                    <a href="{{ url_for('teacher.claw_machine_builder', preset='living_vs_nonliving') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
+                      <span><i class="bi bi-flower1 text-success me-2"></i>Living vs Non-Living</span>
+                      <i class="bi bi-chevron-right text-muted small"></i>
+                    </a>
+                    <a href="{{ url_for('teacher.claw_machine_builder', preset='waste_sorting') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
+                      <span><i class="bi bi-recycle text-success me-2"></i>Organic vs Recyclable</span>
+                      <i class="bi bi-chevron-right text-muted small"></i>
+                    </a>
+                    <a href="{{ url_for('teacher.claw_machine_builder', preset='herbivore_vs_carnivore') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
+                      <span><i class="bi bi-egg-fried text-warning me-2"></i>Herbivore vs Carnivore</span>
+                      <i class="bi bi-chevron-right text-muted small"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

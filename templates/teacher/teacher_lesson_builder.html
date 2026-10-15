@@ -464,7 +464,7 @@
                 <div class="row g-3">
                   <div class="col-12 col-md-8">
                     <label class="form-label fw-bold text-dark small">Lesson Title <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="lessonTitleInput" value="{{ config.title or (lesson.title if lesson else 'Living vs Non-Living') }}" required placeholder="e.g. Living vs Non-Living">
+                    <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="lessonTitleInput" value="{{ config.title if config and config.title else (lesson.title if lesson and lesson.title else '') }}" required placeholder="e.g. Magnets and Electricity">
                     <input type="hidden" name="grade_level" id="gradeLevelInput" value="Grade 3">
                   </div>
                   <div class="col-12 col-md-4 d-flex flex-column justify-content-end">
@@ -520,7 +520,7 @@
 
                   <div class="col-12">
                     <label class="form-label fw-bold text-dark small">Lesson Curriculum Description</label>
-                    <textarea class="form-control rounded-3" name="description" id="lessonDescInput" rows="2" placeholder="Brief summary of learning objectives for students and parents...">{{ config.description or (lesson.description if lesson else 'Learn how to classify living organisms from inanimate non-living matter.') }}</textarea>
+                    <textarea class="form-control rounded-3" name="description" id="lessonDescInput" rows="2" placeholder="Brief summary of learning objectives for students and parents...">{{ config.description if config and config.description else (lesson.description if lesson and lesson.description else '') }}</textarea>
                   </div>
                 </div>
               </div>
@@ -536,8 +536,36 @@
                     </div>
                   </div>
                   <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill fw-bold" id="slidesCountBadge">
-                    {{ config.slides|length if config and config.slides else 7 }} Slides
+                    {{ config.slides|length if config and config.slides else 1 }} Slides
                   </span>
+                </div>
+
+                <!-- Teacher Quick Guide / Instructions -->
+                <div class="alert alert-info border-0 rounded-4 p-3 mb-4 shadow-sm d-flex align-items-start gap-3" style="background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white" style="width: 38px; height: 38px; min-width: 38px;">
+                    <i class="bi bi-lightbulb-fill fs-5"></i>
+                  </div>
+                  <div class="small text-dark w-100">
+                    <strong class="d-block text-primary fs-6 mb-1">Teacher Guide: 4 Steps to Build Your Lesson</strong>
+                    <div class="row g-2 mt-1">
+                      <div class="col-12 col-md-6 col-lg-3">
+                        <span class="badge bg-primary text-white rounded-pill px-2 me-1">1</span>
+                        <strong>Curriculum Settings:</strong> Name your lesson and select its <strong>Curriculum Term</strong> above.
+                      </div>
+                      <div class="col-12 col-md-6 col-lg-3">
+                        <span class="badge bg-primary text-white rounded-pill px-2 me-1">2</span>
+                        <strong>Add Slides:</strong> Click <strong>+ Add Slide</strong> below to add Concept Slides or Quick Check Quizzes.
+                      </div>
+                      <div class="col-12 col-md-6 col-lg-3">
+                        <span class="badge bg-primary text-white rounded-pill px-2 me-1">3</span>
+                        <strong>Visuals &amp; Audio:</strong> Upload pictures/animations or pick presets, then write kid-friendly explanations.
+                      </div>
+                      <div class="col-12 col-md-6 col-lg-3">
+                        <span class="badge bg-primary text-white rounded-pill px-2 me-1">4</span>
+                        <strong>Publish:</strong> Click <strong>Save &amp; Publish Lesson</strong> to assign it to students!
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="lesson-workspace-grid">
@@ -1008,7 +1036,18 @@
 
     // State
     let currentSlideIndex = 0;
-    let slides = {{ (config.slides if config and config.slides else None)|tojson }} || DEFAULT_SLIDES;
+    let rawSlides = {{ (config.slides if config is not none and 'slides' in config else DEFAULT_SLIDES)|tojson }};
+    let slides = Array.isArray(rawSlides) && rawSlides.length > 0 
+      ? rawSlides 
+      : [
+          {
+            id: `slide-${Date.now()}`,
+            title: "Lesson Introduction",
+            type: "concept",
+            image: "/static/images/tree.webp",
+            explanation: "Welcome to this lesson! Type your introductory science concept here for students."
+          }
+        ];
 
     function renderSlideStrip() {
       const container = document.getElementById('slideStripContainer');

@@ -2751,22 +2751,94 @@ def claw_machine_builder(activity_id=None):
         activity = Activity.query.get_or_404(activity_id)
         config = load_sorting_activity_config(activity.id)
     else:
-        # Default starter configuration for a brand new sorting game (strictly 2 chutes for claw machine)
-        config = {
-            "title": "Solid vs Liquid Sorting",
-            "instructions": "Sort each object into the correct chute to win stars.",
-            "round_size": 8,
-            "bins": [
-                {"id": "solid", "label": "Solid", "icon": "🧊", "color": "#60a5fa"},
-                {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"}
-            ],
-            "objects": [
-                {"id": 1, "label": "Ice Cube", "categoryId": "solid", "explanation": "Ice has a fixed shape and volume as a solid.", "image": "/static/images/rock.webp"},
-                {"id": 2, "label": "Water", "categoryId": "liquid", "explanation": "Water flows and takes the shape of its container.", "image": "/static/images/puddle.webp"},
-                {"id": 3, "label": "Wooden Chair", "categoryId": "solid", "explanation": "A chair is solid and keeps its own shape.", "image": "/static/images/chair.webp"},
-                {"id": 4, "label": "Rock", "categoryId": "solid", "explanation": "Rocks are rigid solids that do not flow.", "image": "/static/images/rock.webp"}
-            ]
-        }
+        mode = request.args.get('mode', '')
+        preset_key = request.args.get('preset', '')
+        if mode == 'blank':
+            # Clean blank arcade cabinet with empty categories and objects
+            config = {
+                "title": "",
+                "instructions": "Sort each object into the correct chute to win stars.",
+                "round_size": 6,
+                "bins": [
+                    {"id": "category_1", "label": "", "icon": "📦", "color": "#3b82f6"},
+                    {"id": "category_2", "label": "", "icon": "⭐", "color": "#10b981"}
+                ],
+                "objects": []
+            }
+        elif preset_key:
+            presets = {
+                'states_of_matter': {
+                    "title": "Solid vs Liquid Sorting",
+                    "instructions": "Sort each object into the correct chute to win stars.",
+                    "round_size": 6,
+                    "bins": [
+                        {"id": "solid", "label": "Solid", "icon": "🧊", "color": "#60a5fa"},
+                        {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"}
+                    ],
+                    "objects": [
+                        {"id": 1, "label": "Ice Cube", "categoryId": "solid", "explanation": "Ice has a fixed shape and volume as a solid.", "image": "/static/images/rock.webp"},
+                        {"id": 2, "label": "Water", "categoryId": "liquid", "explanation": "Water flows and takes the shape of its container.", "image": "/static/images/puddle.webp"},
+                        {"id": 3, "label": "Wooden Chair", "categoryId": "solid", "explanation": "A chair is solid and keeps its own shape.", "image": "/static/images/chair.webp"},
+                        {"id": 4, "label": "Rock", "categoryId": "solid", "explanation": "Rocks are rigid solids that do not flow.", "image": "/static/images/rock.webp"}
+                    ]
+                },
+                'living_vs_nonliving': {
+                    "title": "Living vs Non-Living Sorting",
+                    "instructions": "Sort objects into Living and Non-Living chutes to win stars.",
+                    "round_size": 6,
+                    "bins": [
+                        {"id": "living", "label": "Living", "icon": "🌱", "color": "#4ade80"},
+                        {"id": "non-living", "label": "Non-Living", "icon": "🪨", "color": "#fb923c"}
+                    ],
+                    "objects": [
+                        {"id": 1, "label": "Dog", "categoryId": "living", "explanation": "Dogs are living animals that breathe and grow.", "image": "/static/images/dog.webp"},
+                        {"id": 2, "label": "Cat", "categoryId": "living", "explanation": "Cats are living animals.", "image": "/static/images/cat.webp"},
+                        {"id": 3, "label": "Tree", "categoryId": "living", "explanation": "Trees are living plants.", "image": "/static/images/tree.webp"},
+                        {"id": 4, "label": "Rock", "categoryId": "non-living", "explanation": "Rocks do not eat, breathe, or grow.", "image": "/static/images/rock.webp"},
+                        {"id": 5, "label": "Wooden Chair", "categoryId": "non-living", "explanation": "Chairs are non-living objects.", "image": "/static/images/chair.webp"}
+                    ]
+                },
+                'waste_sorting': {
+                    "title": "Eco Waste & Recycling Sort",
+                    "instructions": "Sort materials into Organic Compost or Recyclable chutes.",
+                    "round_size": 6,
+                    "bins": [
+                        {"id": "organic", "label": "Organic Compost", "icon": "🍂", "color": "#84cc16"},
+                        {"id": "recyclable", "label": "Recyclable", "icon": "♻️", "color": "#06b6d4"}
+                    ],
+                    "objects": [
+                        {"id": 1, "label": "Fallen Leaves", "categoryId": "organic", "explanation": "Leaves decompose naturally into compost.", "image": "/static/images/plant.webp"},
+                        {"id": 2, "label": "Tree Branch", "categoryId": "organic", "explanation": "Branches break down organically.", "image": "/static/images/tree.webp"},
+                        {"id": 3, "label": "Plastic Bottle", "categoryId": "recyclable", "explanation": "Plastics can be recycled into new products.", "image": "/static/images/puddle.webp"}
+                    ]
+                },
+                'herbivore_vs_carnivore': {
+                    "title": "Herbivore vs Carnivore Animals",
+                    "instructions": "Sort animals by their diet into Herbivore or Carnivore.",
+                    "round_size": 6,
+                    "bins": [
+                        {"id": "herbivore", "label": "Herbivore (Plant Eater)", "icon": "🌿", "color": "#22c55e"},
+                        {"id": "carnivore", "label": "Carnivore (Meat Eater)", "icon": "🥩", "color": "#ef4444"}
+                    ],
+                    "objects": [
+                        {"id": 1, "label": "Butterfly", "categoryId": "herbivore", "explanation": "Butterflies feed on plant nectar.", "image": "/static/images/butterfly.webp"},
+                        {"id": 2, "label": "Cat", "categoryId": "carnivore", "explanation": "Cats are carnivores that eat meat.", "image": "/static/images/cat.webp"}
+                    ]
+                }
+            }
+            config = presets.get(preset_key, presets['states_of_matter'])
+        else:
+            # Default to blank mode if creating fresh without parameters
+            config = {
+                "title": "",
+                "instructions": "Sort each object into the correct chute to win stars.",
+                "round_size": 6,
+                "bins": [
+                    {"id": "category_1", "label": "", "icon": "📦", "color": "#3b82f6"},
+                    {"id": "category_2", "label": "", "icon": "⭐", "color": "#10b981"}
+                ],
+                "objects": []
+            }
 
     preset_images = [
         {"label": "Dog", "src": "/static/images/dog.webp"},
@@ -3608,6 +3680,9 @@ def lesson_builder(lesson_id=None):
     config = None
     is_core_lesson = False
 
+    mode = request.args.get('mode', '')
+    preset_key = request.args.get('preset', '')
+
     if lesson_id:
         lesson = Lesson.query.get_or_404(lesson_id)
         has_custom = bool(lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'))
@@ -3623,6 +3698,45 @@ def lesson_builder(lesson_id=None):
             }
         else:
             config = lesson.config or {}
+    else:
+        # Creating a brand new lesson
+        if preset_key:
+            lesson_presets = {
+                'living_vs_nonliving': {
+                    "title": "Living vs Non-Living",
+                    "description": "Learn how to tell living things from non-living things!",
+                    "grade_level": "Grade 3",
+                    "slides": _get_core_lesson_starter_slides("Living vs Non-Living")
+                },
+                'states_of_matter': {
+                    "title": "States of Matter: Solid vs Liquid",
+                    "description": "Explore the different forms matter can take around us.",
+                    "grade_level": "Grade 3",
+                    "slides": [
+                        {"id": "slide-1", "title": "What is Matter?", "type": "concept", "image": "/static/images/rock.webp", "explanation": "Everything around us is made of matter! Matter can be a solid, liquid, or gas."},
+                        {"id": "slide-2", "title": "Solids Keep Their Shape", "type": "concept", "image": "/static/images/chair.webp", "explanation": "A wooden chair is a solid. It keeps its firm shape and fixed volume."},
+                        {"id": "slide-3", "title": "Quick Check: Find the Solid", "type": "quick-check", "prompt": "Which object keeps its rigid shape and is a solid? 🧊", "image": "/static/images/rock.webp", "explanation": "Ice and rocks hold a definite shape as solids.", "options": [{"id": "opt-1", "label": "Ice Cube", "icon": "/static/images/rock.webp", "isCorrect": True}, {"id": "opt-2", "label": "Water Puddle", "icon": "/static/images/puddle.webp", "isCorrect": False}]}
+                    ]
+                },
+                'recycling': {
+                    "title": "Eco Recycling & Waste Sorting",
+                    "description": "Discover how sorting waste protects our planet.",
+                    "grade_level": "Grade 3",
+                    "slides": [
+                        {"id": "slide-1", "title": "Why Recycle?", "type": "concept", "image": "/static/images/tree.webp", "explanation": "Recycling turns old materials into useful new goods!"},
+                        {"id": "slide-2", "title": "Quick Check: Recyclable Items", "type": "quick-check", "prompt": "Which item can be melted and recycled? ♻️", "image": "/static/images/puddle.webp", "explanation": "Clean plastics, metals, and glass can be recycled.", "options": [{"id": "opt-1", "label": "Plastic Bottle", "icon": "/static/images/puddle.webp", "isCorrect": True}, {"id": "opt-2", "label": "Food Waste", "icon": "/static/images/plant.webp", "isCorrect": False}]}
+                    ]
+                }
+            }
+            config = lesson_presets.get(preset_key, lesson_presets['living_vs_nonliving'])
+        else:
+            # Blank canvas by default when creating from scratch
+            config = {
+                "title": "",
+                "description": "",
+                "grade_level": "Grade 3",
+                "slides": []
+            }
 
     preset_images = [
         {"label": "Tree", "src": "/static/images/tree.webp"},
