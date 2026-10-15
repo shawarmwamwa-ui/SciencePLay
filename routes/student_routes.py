@@ -375,7 +375,8 @@ def get_or_create_default_lesson():
         return lesson
     lesson = Lesson(
         title='Living vs Non-Living',
-        description='Learn to distinguish between living and non-living things.'
+        description='Learn to distinguish between living and non-living things.',
+        term='Term 2'
     )
     db.session.add(lesson)
     db.session.commit()
@@ -403,6 +404,7 @@ def get_or_create_claw_machine_activity():
         lesson_id=lesson.id,
         type='Living vs Non-Living Claw Machine',
         engine='claw_machine',
+        term='Term 2',
         points=100
     )
     db.session.add(activity)
@@ -500,17 +502,17 @@ def is_activity_unlocked(user_id, activity):
 
 def is_lesson_unlocked_for_student(user_id, lesson):
     """
-    Pedagogical unlocking rule for lessons:
-    - First lesson ("Living vs Non-Living") is always unlocked.
-    - Subsequent lessons unlock when earlier prerequisite lessons are completed.
-    - Specifically:
-        * "Living vs Non-Living": Always unlocked
+    Pedagogical unlocking rule for lessons aligned with DepEd Philippines Grade 3 Science:
+    - Term 1: Matter & Materials
+        * "Properties of Metals": Always unlocked (Curriculum Start)
+        * "Recycling": Unlocked if "Properties of Metals" is completed
+    - Term 2: Living Things & Their Environment
+        * "Living vs Non-Living": Unlocked if Term 1 ("Properties of Metals" and "Recycling") is completed
         * "Animal Body Parts": Unlocked if "Living vs Non-Living" is completed
         * "Plant Parts": Unlocked if both "Living vs Non-Living" and "Animal Body Parts" are completed
-        * "Properties of Metals": Unlocked if "Plant Parts" is completed
-        * "Recycling": Unlocked if "Properties of Metals" is completed
-        * Term 3+ or Custom lessons: Unlocked if preceding term lessons are done (or if assigned)
-    - Supplementary lessons are always unlocked.
+    - Term 3+ or Custom lessons:
+        * Supplementary lessons are always unlocked.
+        * Unlocked if preceding term lessons are done (or if assigned)
     """
     if not user_id or not lesson:
         return True
@@ -520,12 +522,20 @@ def is_lesson_unlocked_for_student(user_id, lesson):
 
     title = (lesson.title or '').strip()
 
-    if title.lower() == 'living vs non-living':
-        return True
-
     def is_title_completed(t_name):
         matching = Lesson.query.filter(Lesson.title.ilike(t_name)).all()
         return any(has_student_completed_lesson(user_id, m.id) for m in matching)
+
+    # Term 1: Matter & Materials
+    if title.lower() == 'properties of metals':
+        return True
+
+    if title.lower() == 'recycling':
+        return is_title_completed('Properties of Metals')
+
+    # Term 2: Living Things & Their Environment
+    if title.lower() == 'living vs non-living':
+        return is_title_completed('Properties of Metals') and is_title_completed('Recycling')
 
     if title.lower() == 'animal body parts':
         return is_title_completed('Living vs Non-Living')
@@ -533,21 +543,15 @@ def is_lesson_unlocked_for_student(user_id, lesson):
     if title.lower() == 'plant parts':
         return is_title_completed('Living vs Non-Living') and is_title_completed('Animal Body Parts')
 
-    if title.lower() == 'properties of metals':
-        return is_title_completed('Plant Parts')
-
-    if title.lower() == 'recycling':
-        return is_title_completed('Properties of Metals')
-
     term = getattr(lesson, 'term', None)
     if not term or term == 'Term 1':
         return True
 
     if term == 'Term 2':
-        return is_title_completed('Living vs Non-Living') and is_title_completed('Animal Body Parts')
+        return is_title_completed('Properties of Metals') and is_title_completed('Recycling')
 
     if term == 'Term 3':
-        return is_title_completed('Plant Parts') and is_title_completed('Properties of Metals') and is_title_completed('Recycling')
+        return is_title_completed('Plant Parts')
 
     return True
 
@@ -823,6 +827,30 @@ def get_student_curriculum_terms_data(user_id):
         terms_dict[t_name]['activities_total'] += 1
         if is_act_done:
             terms_dict[t_name]['activities_completed'] += 1
+
+    curriculum_lesson_order = {
+        'properties of metals': 1,
+        'recycling': 2,
+        'living vs non-living': 3,
+        'animal body parts': 4,
+        'plant parts': 5,
+    }
+    curriculum_activity_order = {
+        'metal_logic': 1,
+        'recycle_sorter': 2,
+        'claw_machine': 3,
+        'find_the_part': 4,
+        'build_a_plant': 5,
+    }
+    for td in terms_dict.values():
+        td['lessons'].sort(key=lambda lp: (
+            curriculum_lesson_order.get((lp['lesson'].title or '').strip().lower(), 99),
+            lp['lesson'].id
+        ))
+        td['activities'].sort(key=lambda a: (
+            curriculum_activity_order.get(a['activity'].engine, 99),
+            a['activity'].id
+        ))
 
     def term_sort_key(k):
         if k.startswith('Term '):
@@ -1477,6 +1505,22 @@ def lessons():
     else:
         lessons = []
         activities = []
+
+    # Sort lessons by Academic Term then curriculum progression (Term 1: Metals -> Recycling; Term 2: Living -> Animal -> Plant)
+    curriculum_order = {
+        'properties of metals': 1,
+        'recycling': 2,
+        'living vs non-living': 3,
+        'animal body parts': 4,
+        'plant parts': 5,
+    }
+    term_rank = {'Term 1': 1, 'Term 2': 2, 'Term 3': 3, 'Term 4': 4}
+    lessons.sort(key=lambda l: (
+        term_rank.get(getattr(l, 'term', None), 9),
+        curriculum_order.get((l.title or '').strip().lower(), 99),
+        l.id
+    ))
+
     progress_logs = []
     completed_by_activity = {}
 
@@ -1822,7 +1866,7 @@ def living_non_living_lesson(lesson_id=None):
 
     if user_id and lesson and getattr(lesson, 'term', None):
         if not is_lesson_unlocked_for_student(user_id, lesson):
-            flash('Please complete the prerequisite lesson first before starting this lesson.', 'warning')
+            flash('Please complete Term 1 (Properties of Metals and Recycling) before starting Living vs Non-Living.', 'warning')
             return redirect(url_for('student.lessons'))
     if user_id:
         attempt, log = start_or_resume_lesson_attempt(user_id, lesson.id)
@@ -1878,6 +1922,7 @@ def get_or_create_animal_body_parts_lesson():
     lesson = Lesson(
         title='Animal Body Parts',
         description='Discover how the head, legs, and wings help animals move and find food.',
+        term='Term 2'
     )
     db.session.add(lesson)
     db.session.commit()
@@ -1896,6 +1941,7 @@ def get_or_create_find_the_part_activity():
         lesson_id=lesson.id,
         type='Animal Body Parts — Find the Part',
         engine='find_the_part',
+        term='Term 2',
         points=100,
     )
     db.session.add(activity)
@@ -1908,6 +1954,9 @@ def get_or_create_find_the_part_activity():
 def animal_body_parts_lesson():
     current_user = get_current_user()
     lesson = get_or_create_animal_body_parts_lesson()
+    if not is_lesson_unlocked_for_student(current_user.id, lesson):
+        flash('Please complete Living vs Non-Living before starting Animal Body Parts.', 'warning')
+        return redirect(url_for('student.lessons'))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
     return render_template(
@@ -1949,6 +1998,7 @@ def get_or_create_plant_parts_lesson():
     lesson = Lesson(
         title='Plant Parts',
         description='Explore how roots, stem, and leaves work together to keep a plant alive.',
+        term='Term 2'
     )
     db.session.add(lesson)
     db.session.commit()
@@ -1999,6 +2049,7 @@ def get_or_create_build_a_plant_activity():
         lesson_id=lesson.id,
         type='Plant Parts — Build a Plant',
         engine='build_a_plant',
+        term='Term 2',
         points=100,
     )
     db.session.add(activity)
@@ -2038,6 +2089,7 @@ def get_or_create_properties_of_metals_lesson():
     lesson = Lesson(
         title='Properties of Metals',
         description='Explore the properties of Iron, Copper, Gold, and Silver through interactive experiments.',
+        term='Term 1'
     )
     db.session.add(lesson)
     db.session.commit()
@@ -2050,7 +2102,7 @@ def properties_of_metals_lesson():
     current_user = get_current_user()
     lesson = get_or_create_properties_of_metals_lesson()
     if not is_lesson_unlocked_for_student(current_user.id, lesson):
-        flash('Please complete Plant Parts before starting Properties of Metals.', 'warning')
+        flash('Please complete earlier prerequisites before starting Properties of Metals.', 'warning')
         return redirect(url_for('student.lessons'))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
@@ -2070,6 +2122,7 @@ def get_or_create_recycling_lesson():
     lesson = Lesson(
         title='Recycling',
         description='Discover the recycling process and practice sorting recyclable materials from food waste.',
+        term='Term 1'
     )
     db.session.add(lesson)
     db.session.commit()
@@ -2105,6 +2158,7 @@ def get_or_create_metals_game_activity():
         lesson_id=lesson.id,
         type='Properties of Metals — Metal Clue Detective',
         engine='metal_logic',
+        term='Term 1',
         points=100
     )
     db.session.add(activity)
@@ -2149,6 +2203,7 @@ def get_or_create_recycling_game_activity():
         lesson_id=lesson.id,
         type='Recycling — EcoSwipe Sorter',
         engine='recycle_sorter',
+        term='Term 1',
         points=100
     )
     db.session.add(activity)
