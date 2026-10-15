@@ -609,10 +609,10 @@ def get_struggling_concepts(is_lesson=True, limit=None):
         avg_miss = round(total_misses / max(student_total, 1), 1)
 
         # Severity classification:
-        # High: Multiple students with repeated misses, or heavy misses (>= 10)
-        # Medium: Moderate struggle (>= 3 students, or total misses >= 4, or repeated misses)
-        # Low: Isolated 1-time slip-ups (1 student with 1 miss, or 1-2 minor slips)
-        if repeated_count >= 2 or (repeated_count >= 1 and total_misses >= 5) or total_misses >= 12:
+        # High: Persistent struggle (repeated_count >= 2) OR class-wide struggle (>= 5 students failed, or total_misses >= 8)
+        # Medium: Moderate struggle (>= 3 students, or total misses >= 4, or repeated misses >= 1)
+        # Low: Isolated 1-time slip-ups (1-2 students with only 1 miss)
+        if repeated_count >= 2 or student_total >= 5 or total_misses >= 8:
             severity = 'high'
             severity_label = 'High Struggle'
         elif student_total >= 3 or total_misses >= 4 or repeated_count >= 1:
@@ -623,7 +623,7 @@ def get_struggling_concepts(is_lesson=True, limit=None):
             severity_label = 'Minor Slip'
 
         # Weighted pedagogical score prioritizes persistent struggles over single accidental slips
-        weighted_score = (repeated_count * 12) + (total_misses * 2) + student_total
+        weighted_score = (repeated_count * 15) + (total_misses * 2) + (student_total * 3)
 
         items.append({
             'name': obj_name,

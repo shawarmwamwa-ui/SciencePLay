@@ -180,6 +180,18 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
   if (totalRows === 0) {
     if (wrap) wrap.classList.add('d-none');
     table.querySelectorAll('tbody tr.table-spacer-row').forEach(r => r.remove());
+    table.querySelectorAll('tbody tr:not(.struggle-no-match-row)').forEach(r => {
+      r.style.display = 'none';
+    });
+    table._currentPage = 1;
+    table._showPage = function() {
+      table.querySelectorAll('tbody tr.table-spacer-row').forEach(r => r.remove());
+      table.querySelectorAll('tbody tr:not(.struggle-no-match-row)').forEach(r => {
+        r.style.display = 'none';
+      });
+      const noMatch = table.querySelector('.struggle-no-match-row');
+      if (noMatch) noMatch.style.display = '';
+    };
     return;
   }
 
@@ -189,8 +201,16 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
     if (info) info.textContent = `Showing 1 to ${totalRows} of ${totalRows} entries`;
     if (nav) nav.innerHTML = '';
     if (wrap) wrap.classList.remove('d-none');
+    table.querySelectorAll('tbody tr:not(.struggle-no-match-row)').forEach(r => {
+      if (!rows.includes(r)) {
+        r.style.display = 'none';
+      }
+    });
     rows.forEach(r => r.style.display = '');
     table._currentPage = 1;
+    table._showPage = function() {
+      rows.forEach(r => r.style.display = '');
+    };
     table.querySelectorAll('tbody tr.table-spacer-row').forEach(r => r.remove());
     return;
   }
@@ -211,6 +231,10 @@ function setupTablePagination(tableSelector, wrapSelector, infoSelector, navSele
 
     let visibleInThisPage = 0;
     rows.forEach((row, idx) => {
+      if (row.classList.contains('filter-hidden') || row.getAttribute('data-filtered') === 'true') {
+        row.style.display = 'none';
+        return;
+      }
       if (idx >= start && idx < end) {
         row.style.display = '';
         visibleInThisPage++;
