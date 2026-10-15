@@ -45,9 +45,17 @@ def get_current_user():
     user_id = session.get('user_id')
     if not user_id:
         return None
-    if hasattr(g, '_cached_current_user') and g._cached_current_user and g._cached_current_user.id == user_id:
-        return g._cached_current_user
-    user = User.query.get(user_id)
+    cached_id = getattr(g, '_cached_user_id', None)
+    cached_user = getattr(g, '_cached_current_user', None)
+    if cached_id == user_id and cached_user is not None:
+        try:
+            from sqlalchemy.orm import object_session
+            if object_session(cached_user) is db.session:
+                return cached_user
+        except Exception:
+            pass
+    user = db.session.get(User, user_id)
+    g._cached_user_id = user_id
     g._cached_current_user = user
     return user
 

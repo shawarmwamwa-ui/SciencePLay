@@ -1347,6 +1347,7 @@ def dashboard():
 
 
 @student_bp.route('/notifications/<int:notif_id>/dismiss', methods=['POST'])
+@csrf.exempt
 @require_role('student')
 def dismiss_notification(notif_id):
     current_user = get_current_user()

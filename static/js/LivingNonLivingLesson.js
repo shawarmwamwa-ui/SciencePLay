@@ -57,6 +57,7 @@ function getActiveLessonSlides() {
         type: normalizedType,
         image: slide.image || '',
         images: Array.isArray(slide.images) && slide.images.length > 0 ? slide.images : (slide.image ? [slide.image] : []),
+        captions: Array.isArray(slide.captions) ? slide.captions : [],
         description: slide.description || slide.explanation || slide.metadata?.hintText || '',
         prompt: slide.prompt || slide.contentData?.prompt || 'Answer the question.',
         options: rawOptions.map((item, itemIndex) => ({
@@ -344,18 +345,23 @@ function renderIntroSlide(slide, container) {
     ? slide.images
     : (slide.image ? [slide.image] : []);
 
+  const caps = Array.isArray(slide.captions) ? slide.captions : [];
+  const capHtml = (i) => caps[i] ? `<span class="lesson-img-caption">${String(caps[i]).replace(/</g, '&lt;')}</span>` : '';
+
   let mediaHtml = '';
   if (images.length === 1) {
-    mediaHtml = `<img src="${images[0]}" alt="Lesson illustration" class="lesson-intro-image">`;
+    mediaHtml = `<div class="lesson-single-captioned"><img src="${images[0]}" alt="Lesson illustration" class="lesson-intro-image">${capHtml(0)}</div>`;
   } else if (images.length === 2) {
     mediaHtml = `
       <div class="lesson-compare-container">
         <div class="lesson-compare-card">
           <img src="${images[0]}" alt="Comparison item 1" class="lesson-compare-img">
+          ${capHtml(0)}
         </div>
         <div class="lesson-compare-vs">VS</div>
         <div class="lesson-compare-card">
           <img src="${images[1]}" alt="Comparison item 2" class="lesson-compare-img">
+          ${capHtml(1)}
         </div>
       </div>
     `;
@@ -365,6 +371,7 @@ function renderIntroSlide(slide, container) {
         ${images.map((src, i) => `
           <div class="lesson-gallery-card">
             <img src="${src}" alt="Gallery item ${i + 1}" class="lesson-gallery-img">
+            ${capHtml(i)}
           </div>
         `).join('')}
       </div>

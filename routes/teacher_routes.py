@@ -1465,6 +1465,7 @@ def reassign_activity(assignment_id):
 
 
 @teacher_bp.route('/batch_assign_intervention', methods=['POST'])
+@csrf.exempt
 @require_role('teacher')
 def batch_assign_intervention():
     current_user = get_current_user()
