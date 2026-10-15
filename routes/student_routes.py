@@ -509,76 +509,94 @@ def get_student_curriculum_terms_data(user_id):
     if not user_id:
         return [], {}
 
-    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
-    core_activities = Activity.query.filter(Activity.engine.in_(playable_engines)).all()
-    engine_to_act = {a.engine: a for a in core_activities if a.engine}
-
-    existing_aa_list = ActivityAssignment.query.filter_by(student_id=user_id).all()
-    existing_act_ids = {aa.activity_id for aa in existing_aa_list}
-    existing_engines = {aa.activity.engine for aa in existing_aa_list if aa.activity and aa.activity.engine}
-
     existing_la_list = LessonAssignment.query.filter_by(student_id=user_id).all()
+    existing_aa_list = ActivityAssignment.query.filter_by(student_id=user_id).all()
     teacher_id = 1
     if existing_la_list and existing_la_list[0].assigned_by:
         teacher_id = existing_la_list[0].assigned_by
     elif existing_aa_list and existing_aa_list[0].assigned_by:
         teacher_id = existing_aa_list[0].assigned_by
 
+    # 1. Fetch all active curriculum lessons that belong to an academic term (Term 1, Term 2, etc.)
+    all_term_lessons_query = Lesson.query.filter(
+        Lesson.term.isnot(None),
+        Lesson.term.like('Term %'),
+        (Lesson.is_archived == False) | (Lesson.is_archived == None),
+        (Lesson.is_supplementary == False) | (Lesson.is_supplementary == None)
+    ).all()
+
+    # Also include any lesson explicitly assigned to this student with an academic term
+    assigned_lesson_rows = db.session.query(LessonAssignment, Lesson).join(
+        Lesson, Lesson.id == LessonAssignment.lesson_id
+    ).filter(
+        LessonAssignment.student_id == user_id,
+        (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)
+    ).all()
+
+    lessons_dict = {}
+    for l in all_term_lessons_query:
+        lessons_dict[l.id] = l
+    for la, l in assigned_lesson_rows:
+        if l and l.term and l.term.startswith('Term '):
+            lessons_dict[l.id] = l
+    lessons = list(lessons_dict.values())
+
+    # 2. Fetch all active curriculum activities that belong to an academic term (Term 1, Term 2, etc.)
+    all_term_activities_query = Activity.query.filter(
+        Activity.term.isnot(None),
+        Activity.term.like('Term %'),
+        (Activity.is_archived == False) | (Activity.is_archived == None),
+        (Activity.is_supplementary == False) | (Activity.is_supplementary == None)
+    ).all()
+
+    # Also include any activity explicitly assigned to this student with an academic term
+    assigned_activity_rows = db.session.query(ActivityAssignment, Activity).join(
+        Activity, Activity.id == ActivityAssignment.activity_id
+    ).filter(
+        ActivityAssignment.student_id == user_id,
+        (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None),
+        ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted'])
+    ).all()
+
+    activities_dict = {}
+    for a in all_term_activities_query:
+        activities_dict[a.id] = a
+    for aa, a in assigned_activity_rows:
+        if a and a.term and a.term.startswith('Term '):
+            activities_dict[a.id] = a
+    activities = list(activities_dict.values())
+
+    # Auto-sync assignments for student so progress logging works smoothly
     needed_commit = False
-    for engine, act in engine_to_act.items():
-        if engine not in existing_engines and act.id not in existing_act_ids:
-            db.session.add(ActivityAssignment(
-                activity_id=act.id,
+    existing_la_ids = {la.lesson_id for la in existing_la_list}
+    for l in lessons:
+        if l.id not in existing_la_ids:
+            db.session.add(LessonAssignment(
+                lesson_id=l.id,
                 student_id=user_id,
                 assigned_by=teacher_id,
                 status='assigned'
             ))
+            existing_la_ids.add(l.id)
             needed_commit = True
 
-    existing_lesson_ids = {la.lesson_id for la in existing_la_list}
-    core_lesson_ids = [1, 4, 5, 6, 7]
-    for lid in core_lesson_ids:
-        if lid not in existing_lesson_ids:
-            les = Lesson.query.get(lid)
-            if les:
-                db.session.add(LessonAssignment(
-                    lesson_id=les.id,
-                    student_id=user_id,
-                    assigned_by=teacher_id,
-                    status='assigned'
-                ))
-                needed_commit = True
+    existing_act_ids = {aa.activity_id for aa in existing_aa_list}
+    for a in activities:
+        if a.id not in existing_act_ids:
+            db.session.add(ActivityAssignment(
+                activity_id=a.id,
+                student_id=user_id,
+                assigned_by=teacher_id,
+                status='assigned'
+            ))
+            existing_act_ids.add(a.id)
+            needed_commit = True
 
     if needed_commit:
         try:
             db.session.commit()
         except Exception:
             db.session.rollback()
-
-    lesson_assignment_rows = db.session.query(LessonAssignment, Lesson).join(
-        Lesson, Lesson.id == LessonAssignment.lesson_id
-    ).filter(
-        LessonAssignment.student_id == user_id,
-        (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)
-    ).all()
-    lessons = [lesson for _, lesson in lesson_assignment_rows]
-
-    activity_assignment_rows = db.session.query(ActivityAssignment, Activity).join(
-        Activity, Activity.id == ActivityAssignment.activity_id
-    ).filter(
-        ActivityAssignment.student_id == user_id,
-        (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None),
-        ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted']),
-        Activity.engine.in_(playable_engines)
-    ).all()
-
-    seen_engines = set()
-    activities = []
-    for _, activity in activity_assignment_rows:
-        eng = activity.engine or activity.type
-        if eng not in seen_engines:
-            seen_engines.add(eng)
-            activities.append(activity)
 
     progress_logs = ProgressLog.query.filter_by(student_id=user_id).all()
     completed_by_activity = {log.activity_id: log for log in progress_logs}
