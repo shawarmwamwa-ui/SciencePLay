@@ -796,4 +796,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initStruggleConceptFilters();
   initStrugglingStudentsModal();
   initUrlHashNavigation();
+
+  // Initialize Bootstrap tooltips for concept preview hover
+  if (window.bootstrap && window.bootstrap.Tooltip) {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    [...tooltipTriggerList].forEach(el => bootstrap.Tooltip.getOrCreateInstance(el));
+  }
 });
