@@ -27,6 +27,8 @@ def _get_admin_dashboard_data():
     online_threshold = datetime.utcnow() - timedelta(minutes=3)
 
     try:
+        from routes.utils import sync_user_last_seen
+        sync_user_last_seen()
         users = User.query.all()
     except Exception:
         db.session.rollback()
@@ -83,6 +85,9 @@ def dashboard():
 def user_management():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'admin_user_management')
+    from routes.utils import sync_user_last_seen, get_all_users_effective_last_seen_map
+    sync_user_last_seen()
+    effective_last_seen_map = get_all_users_effective_last_seen_map()
     online_threshold = datetime.utcnow() - timedelta(minutes=3)
     active_users = User.query.filter((User.is_archived == False) | (User.is_archived == None)).order_by(User.created_at.desc()).all()
     archived_users = User.query.filter(User.is_archived == True).order_by(User.deleted_at.desc()).all()
@@ -92,7 +97,8 @@ def user_management():
         users=active_users,
         archived_users=archived_users,
         current_user=current_user,
-        online_threshold=online_threshold
+        online_threshold=online_threshold,
+        effective_last_seen_map=effective_last_seen_map
     )
 
 @admin_bp.route('/create_user', methods=['POST'])

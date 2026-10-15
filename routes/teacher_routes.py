@@ -1,10 +1,14 @@
+import os
 import json
+import base64
+import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
-from database.models import db, Lesson, Activity, User, ProgressLog, LessonAssignment, ActivityAssignment, AttemptLog, UserBadge, LessonProgress, LessonAttemptLog, Badge, AttemptObjectLog
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app, Response
+from database.models import db, Lesson, Activity, User, ProgressLog, LessonAssignment, ActivityAssignment, AttemptLog, UserBadge, LessonProgress, LessonAttemptLog, Badge, AttemptObjectLog, TeacherAsset
 from routes.utils import get_current_user, require_role, log_access, csrf, to_ph_time, ensure_trixia_lesson_progress, format_relative_time
+
 
 teacher_bp = Blueprint('teacher', __name__, url_prefix='/teacher')
 
@@ -3933,5 +3937,157 @@ def permanent_delete_lesson(lesson_id):
         flash(f"Could not delete lesson: {e}", "danger")
 
     return redirect(url_for('teacher.lesson_studio'))
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# TEACHER ASSET LIBRARY (PERMANENT MEDIA STORAGE)
+# ═══════════════════════════════════════════════════════════════════════
+
+@teacher_bp.route('/api/assets', methods=['GET'])
+@require_role('teacher')
+def get_teacher_assets():
+    """Returns permanently saved teacher illustration images or Lottie animations."""
+    current_user = get_current_user()
+    asset_type = request.args.get('type')  # 'image' or 'animation'
+
+    query = TeacherAsset.query.filter(
+        (TeacherAsset.is_archived == False) | (TeacherAsset.is_archived == None)
+    )
+    if asset_type:
+        query = query.filter(TeacherAsset.asset_type == asset_type)
+
+    query = query.filter(
+        (TeacherAsset.teacher_id == current_user.id) | (TeacherAsset.teacher_id == None)
+    )
+    assets = query.order_by(TeacherAsset.created_at.desc()).all()
+
+    # Self-heal / restore files to disk if ephemeral disk reset occurred on Render
+    upload_dir = os.path.join(current_app.static_folder, 'uploads', 'assets')
+    os.makedirs(upload_dir, exist_ok=True)
+
+    data = []
+    for a in assets:
+        if a.file_url and a.file_url.startswith('/static/uploads/assets/'):
+            filename = os.path.basename(a.file_url)
+            local_path = os.path.join(upload_dir, filename)
+            if not os.path.exists(local_path) and a.file_data:
+                try:
+                    if a.asset_type == 'animation':
+                        with open(local_path, 'w', encoding='utf-8') as f:
+                            f.write(a.file_data)
+                    elif a.file_data.startswith('data:'):
+                        _, b64 = a.file_data.split(',', 1)
+                        with open(local_path, 'wb') as f:
+                            f.write(base64.b64decode(b64))
+                except Exception:
+                    pass
+
+        data.append({
+            'id': a.id,
+            'title': a.title,
+            'asset_type': a.asset_type,
+            'file_url': a.file_url,
+            'file_data': a.file_data if a.asset_type == 'animation' else None,
+            'created_at': a.created_at.strftime('%b %d, %Y') if a.created_at else ''
+        })
+
+    return jsonify({'status': 'success', 'assets': data})
+
+
+@teacher_bp.route('/api/assets/upload', methods=['POST'])
+@require_role('teacher')
+def upload_teacher_asset():
+    """Uploads and permanently persists an illustration image or animation to the teacher's library."""
+    current_user = get_current_user()
+    file = request.files.get('file')
+    if not file or not file.filename:
+        return jsonify({'status': 'error', 'message': 'No file was provided.'}), 400
+
+    ext = (file.filename.rsplit('.', 1)[-1] if '.' in file.filename else '').lower()
+    valid_exts = {'png', 'jpg', 'jpeg', 'webp', 'svg', 'gif', 'json'}
+    if ext not in valid_exts:
+        return jsonify({'status': 'error', 'message': f'Unsupported file format .{ext}. Allowed: PNG, JPG, WEBP, SVG, GIF, or JSON.'}), 400
+
+    content = file.read()
+    if len(content) > 10 * 1024 * 1024:
+        return jsonify({'status': 'error', 'message': 'File exceeds maximum 10MB limit.'}), 400
+
+    title = request.form.get('title', '').strip()
+    if not title:
+        base_name = file.filename.rsplit('.', 1)[0]
+        title = base_name.replace('_', ' ').replace('-', ' ').title()
+
+    asset_type = 'animation' if ext == 'json' else 'image'
+    file_data = None
+
+    if asset_type == 'animation':
+        try:
+            text_content = content.decode('utf-8')
+            json.loads(text_content)  # validate valid Lottie JSON
+            file_data = text_content
+        except Exception:
+            return jsonify({'status': 'error', 'message': 'The uploaded file is not valid Lottie JSON.'}), 400
+    else:
+        mime = f'image/{ext}' if ext != 'svg' else 'image/svg+xml'
+        if ext == 'jpg':
+            mime = 'image/jpeg'
+        b64 = base64.b64encode(content).decode('utf-8')
+        file_data = f'data:{mime};base64,{b64}'
+
+    safe_uuid = uuid.uuid4().hex[:10]
+    clean_name = "".join(c for c in file.filename if c.isalnum() or c in '._-')
+    filename = f"{safe_uuid}_{clean_name}"
+
+    upload_dir = os.path.join(current_app.static_folder, 'uploads', 'assets')
+    os.makedirs(upload_dir, exist_ok=True)
+    local_path = os.path.join(upload_dir, filename)
+
+    try:
+        with open(local_path, 'wb') as f:
+            f.write(content)
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Failed saving asset: {e}'}), 500
+
+    file_url = f"/static/uploads/assets/{filename}"
+
+    asset = TeacherAsset(
+        teacher_id=current_user.id,
+        title=title,
+        asset_type=asset_type,
+        file_url=file_url,
+        file_data=file_data
+    )
+    db.session.add(asset)
+    db.session.commit()
+    log_access(current_user, 'upload_teacher_asset', f'id={asset.id} title={title} type={asset_type}')
+
+    return jsonify({
+        'status': 'success',
+        'message': f'"{title}" permanently saved to your library!',
+        'asset': {
+            'id': asset.id,
+            'title': asset.title,
+            'asset_type': asset.asset_type,
+            'file_url': asset.file_url,
+            'file_data': asset.file_data if asset.asset_type == 'animation' else None,
+            'created_at': asset.created_at.strftime('%b %d, %Y') if asset.created_at else ''
+        }
+    })
+
+
+@teacher_bp.route('/api/assets/<int:asset_id>/delete', methods=['POST'])
+@require_role('teacher')
+def delete_teacher_asset(asset_id):
+    """Archives an asset from the teacher's picker."""
+    current_user = get_current_user()
+    asset = TeacherAsset.query.get_or_404(asset_id)
+    if asset.teacher_id and asset.teacher_id != current_user.id and current_user.role != 'admin':
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    asset.archive()
+    db.session.commit()
+    log_access(current_user, 'delete_teacher_asset', f'id={asset.id} title={asset.title}')
+    return jsonify({'status': 'success', 'message': 'Asset removed from library.'})
+
 
 

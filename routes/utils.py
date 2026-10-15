@@ -2,9 +2,10 @@ from functools import wraps
 from datetime import datetime, timedelta
 from flask import session, flash, redirect, url_for, g
 from flask_wtf.csrf import CSRFProtect
-from database.models import db, User, AccessLog, LessonProgress, LessonAttemptLog, LessonAssignment
+from database.models import db, User, AccessLog, LessonProgress, LessonAttemptLog, LessonAssignment, AttemptLog, ProgressLog
 
 csrf = CSRFProtect()
+
 
 
 def to_ph_time(dt):
@@ -77,11 +78,80 @@ def log_access(user, event_type, details=''):
     if not user:
         return
     try:
+        now = datetime.utcnow()
+        if hasattr(user, 'id'):
+            User.query.filter_by(id=user.id).update({'last_seen': now})
         log = AccessLog(user_id=user.id, event_type=event_type, event_details=details)
         db.session.add(log)
         db.session.commit()
     except Exception:
         db.session.rollback()
+
+
+def get_all_users_effective_last_seen_map():
+    """Returns a dict {user_id: datetime} representing the most recent activity timestamp across all tables."""
+    result = {}
+    try:
+        users = User.query.all()
+        for u in users:
+            if u.last_seen:
+                result[u.id] = u.last_seen
+
+        acl_max = db.session.query(
+            AccessLog.user_id, db.func.max(AccessLog.created_at)
+        ).filter(AccessLog.created_at.isnot(None)).group_by(AccessLog.user_id).all()
+        for u_id, ts in acl_max:
+            if u_id and ts and (u_id not in result or ts > result[u_id]):
+                result[u_id] = ts
+
+        al_max = db.session.query(
+            AttemptLog.student_id, db.func.max(AttemptLog.created_at)
+        ).filter(AttemptLog.created_at.isnot(None)).group_by(AttemptLog.student_id).all()
+        for s_id, ts in al_max:
+            if s_id and ts and (s_id not in result or ts > result[s_id]):
+                result[s_id] = ts
+
+        lal_max = db.session.query(
+            LessonAttemptLog.student_id, db.func.max(LessonAttemptLog.created_at)
+        ).filter(LessonAttemptLog.created_at.isnot(None)).group_by(LessonAttemptLog.student_id).all()
+        for s_id, ts in lal_max:
+            if s_id and ts and (s_id not in result or ts > result[s_id]):
+                result[s_id] = ts
+
+        lp_max = db.session.query(
+            LessonProgress.student_id,
+            db.func.max(db.func.coalesce(LessonProgress.updated_at, LessonProgress.completed_at))
+        ).group_by(LessonProgress.student_id).all()
+        for s_id, ts in lp_max:
+            if s_id and ts and (s_id not in result or ts > result[s_id]):
+                result[s_id] = ts
+
+        pl_max = db.session.query(
+            ProgressLog.student_id, db.func.max(ProgressLog.completed_at)
+        ).filter(ProgressLog.completed_at.isnot(None)).group_by(ProgressLog.student_id).all()
+        for s_id, ts in pl_max:
+            if s_id and ts and (s_id not in result or ts > result[s_id]):
+                result[s_id] = ts
+    except Exception:
+        pass
+    return result
+
+
+def sync_user_last_seen():
+    """Synchronizes User.last_seen with the latest timestamp across all activity logs."""
+    try:
+        eff_map = get_all_users_effective_last_seen_map()
+        updated = False
+        for u in User.query.all():
+            eff_ts = eff_map.get(u.id)
+            if eff_ts and (not u.last_seen or eff_ts > u.last_seen):
+                u.last_seen = eff_ts
+                updated = True
+        if updated:
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
 
 
 def ensure_trixia_lesson_progress():

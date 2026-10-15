@@ -174,7 +174,8 @@
                       <span class="role-pill role-{{ user.role }}">{{ user.role|title }}</span>
                     </td>
                     <td>
-                      {% if user.last_seen and user.last_seen >= online_threshold %}
+                      {% set user_ls = (effective_last_seen_map.get(user.id) if effective_last_seen_map else None) or user.last_seen %}
+                      {% if user_ls and user_ls >= online_threshold %}
                         <span class="badge bg-success-subtle text-success border border-success-subtle d-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill">
                           <span class="p-1 bg-success rounded-circle"></span> Online
                         </span>
@@ -182,9 +183,15 @@
                         <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle d-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill mb-1">
                           <span class="p-1 bg-secondary rounded-circle"></span> Offline
                         </span>
-                        <div class="text-secondary small fw-medium" style="font-size: 0.74rem;" title="{{ user.last_seen | to_ph_time }}">
-                          <i class="bi bi-clock-history me-1 text-muted"></i>{{ user.last_seen | relative_time }}
+                        {% if user_ls %}
+                        <div class="text-secondary small fw-medium" style="font-size: 0.74rem;" title="{{ user_ls | to_ph_time }}">
+                          <i class="bi bi-clock-history me-1 text-muted"></i>{{ user_ls | relative_time }}
                         </div>
+                        {% else %}
+                        <div class="text-secondary small fw-medium" style="font-size: 0.74rem;">
+                          <i class="bi bi-clock-history me-1 text-muted"></i>Never active
+                        </div>
+                        {% endif %}
                       {% endif %}
                     </td>
                     <td class="text-end">

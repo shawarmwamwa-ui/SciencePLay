@@ -186,3 +186,17 @@ class AccessLog(BaseModel, ArchivableMixin):
     event_type = db.Column(db.String(50), nullable=False)
     event_details = db.Column(db.Text)
     user = db.relationship('User', backref='access_logs')
+
+
+class TeacherAsset(BaseModel, ArchivableMixin):
+    __tablename__ = 'teacher_asset'
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    title = db.Column(db.String(150), nullable=False)
+    asset_type = db.Column(db.String(20), nullable=False)  # 'image' or 'animation'
+    file_url = db.Column(db.Text, nullable=False)
+    file_data = db.Column(db.Text, nullable=True)  # permanent storage backup (raw JSON or base64 data)
+    thumbnail_url = db.Column(db.Text, nullable=True)
+
+    teacher = db.relationship('User', backref=db.backref('assets', lazy=True))
+

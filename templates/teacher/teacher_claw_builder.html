@@ -750,26 +750,70 @@
     </div>
   </div>
 
-  <!-- Preset Image Selector Modal -->
+  <!-- Preset Image Selector Modal with Permanent Library -->
   <div class="modal fade" id="presetImageModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content rounded-4 border-0 shadow-lg">
         <div class="modal-header border-bottom pb-3">
-          <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
-            <i class="bi bi-images text-primary"></i>
-            <span>Select Preset Science Image</span>
-          </h5>
+          <div class="d-flex align-items-center gap-3">
+            <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2 mb-0">
+              <i class="bi bi-images text-primary"></i>
+              <span>Select Science Image</span>
+            </h5>
+          </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body p-4">
-          <p class="text-muted small mb-3">Click any science icon to attach it to this object, or upload your own PNG/JPG/WEBP image.</p>
-          <div class="preset-picker-grid" id="presetGrid">
-            {% for img in preset_images %}
-            <div class="preset-picker-item" onclick="choosePresetImage('{{ img.src }}', '{{ img.label }}')">
-              <img src="{{ img.src }}" alt="{{ img.label }}">
-              <div class="small fw-bold text-dark text-truncate">{{ img.label }}</div>
+          <!-- Navigation Tabs -->
+          <ul class="nav nav-pills gap-2 mb-3" id="clawImageModalTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active rounded-pill px-3 py-1.5 fw-bold small" id="tab-claw-presets" data-bs-toggle="pill" data-bs-target="#pane-claw-presets" type="button" role="tab">
+                <i class="bi bi-star-fill text-warning me-1"></i>Built-in Presets
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link rounded-pill px-3 py-1.5 fw-bold small" id="tab-claw-library" data-bs-toggle="pill" data-bs-target="#pane-claw-library" type="button" role="tab" onclick="loadClawTeacherAssets()">
+                <i class="bi bi-folder-fill text-primary me-1"></i>My Uploaded Library
+                <span class="badge bg-primary text-white rounded-pill ms-1" id="badgeClawImgLibraryCount">0</span>
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content">
+            <!-- TAB 1: Built-in Presets -->
+            <div class="tab-pane fade show active" id="pane-claw-presets" role="tabpanel">
+              <p class="text-muted small mb-3">Click any science icon to attach it to this object, or upload your own image.</p>
+              <div class="preset-picker-grid" id="presetGrid">
+                {% for img in preset_images %}
+                <div class="preset-picker-item" onclick="choosePresetImage('{{ img.src }}', '{{ img.label }}')">
+                  <img src="{{ img.src }}" alt="{{ img.label }}">
+                  <div class="small fw-bold text-dark text-truncate">{{ img.label }}</div>
+                </div>
+                {% endfor %}
+              </div>
             </div>
-            {% endfor %}
+
+            <!-- TAB 2: My Uploaded Library -->
+            <div class="tab-pane fade" id="pane-claw-library" role="tabpanel">
+              <p class="text-muted small mb-3">Custom illustrations uploaded by you. Saved permanently in your library for all future games and slides.</p>
+
+              <!-- Quick Upload Dropzone -->
+              <div class="upload-dropzone p-3 text-center border-2 border-dashed rounded-4 mb-3 bg-light" style="cursor: pointer; border-color: #cbd5e1; transition: all 0.2s;" onclick="document.getElementById('libraryClawImageUploadInput').click()" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1'">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-cloud-arrow-up-fill text-primary fs-4"></i>
+                  <div class="text-start">
+                    <span class="fw-bold text-dark d-block" style="font-size: 0.9rem;">Upload New Illustration to Library</span>
+                    <span class="text-muted" style="font-size: 0.75rem;">PNG, JPG, WebP, SVG, GIF (Stored permanently)</span>
+                  </div>
+                </div>
+                <input type="file" id="libraryClawImageUploadInput" class="d-none" accept=".png,.jpg,.jpeg,.webp,.svg,.gif" onchange="uploadClawLibraryAsset(this)">
+              </div>
+
+              <!-- Uploaded Library Grid -->
+              <div id="libraryClawImagesGrid" class="preset-picker-grid">
+                <!-- Dynamically loaded -->
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1200,11 +1244,126 @@
       }
     }
 
+    let clawTeacherAssetsCache = [];
+
+    async function loadClawTeacherAssets() {
+      const grid = document.getElementById('libraryClawImagesGrid');
+      const badge = document.getElementById('badgeClawImgLibraryCount');
+      if (!grid) return;
+
+      grid.innerHTML = '<div class="text-center py-4 text-muted small w-100" style="grid-column: 1 / -1;"><span class="spinner-border spinner-border-sm me-2 text-primary"></span>Loading permanent library...</div>';
+
+      try {
+        const res = await fetch('/teacher/api/assets?type=image');
+        const data = await res.json();
+        if (data.status === 'success') {
+          clawTeacherAssetsCache = data.assets || [];
+          if (badge) badge.textContent = clawTeacherAssetsCache.length;
+          renderClawLibraryGrid();
+        } else {
+          grid.innerHTML = '<div class="text-center py-3 text-danger small w-100" style="grid-column: 1 / -1;">Failed loading library</div>';
+        }
+      } catch (err) {
+        grid.innerHTML = '<div class="text-center py-3 text-danger small w-100" style="grid-column: 1 / -1;">Could not connect to library</div>';
+      }
+    }
+
+    function renderClawLibraryGrid() {
+      const grid = document.getElementById('libraryClawImagesGrid');
+      if (!grid) return;
+
+      if (clawTeacherAssetsCache.length === 0) {
+        grid.innerHTML = `
+          <div class="text-center py-4 text-muted w-100" style="grid-column: 1 / -1;">
+            <i class="bi bi-inbox fs-2 d-block mb-1 text-secondary opacity-50"></i>
+            <div class="small fw-bold">No uploaded illustrations in your library yet</div>
+            <div style="font-size: 0.75rem;">Use the upload box above to permanently save files for all games and slides!</div>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = '';
+      clawTeacherAssetsCache.forEach(asset => {
+        const item = document.createElement('div');
+        item.className = 'preset-picker-item position-relative';
+        item.style.cursor = 'pointer';
+        item.innerHTML = `
+          <img src="${asset.file_url}" alt="${asset.title}" onerror="this.src='/static/images/tree.webp'">
+          <div class="small fw-bold text-dark text-truncate" title="${asset.title}">${asset.title}</div>
+          <button type="button" class="btn btn-sm btn-light text-danger position-absolute top-0 end-0 m-1 rounded-circle p-0 shadow-sm border d-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Delete" onclick="deleteClawLibraryAsset(event, ${asset.id})">
+            <i class="bi bi-trash3-fill"></i>
+          </button>
+        `;
+        item.onclick = (e) => {
+          if (e.target.closest('button')) return;
+          choosePresetImage(asset.file_url, asset.title);
+        };
+        grid.appendChild(item);
+      });
+    }
+
+    async function uploadClawLibraryAsset(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('csrf_token', '{{ csrf_token() }}');
+
+      showBuilderToast(`Uploading "${file.name}" to your library...`, 'info');
+
+      try {
+        const res = await fetch('/teacher/api/assets/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+          showBuilderToast(result.message, 'success');
+          input.value = '';
+          await loadClawTeacherAssets();
+          choosePresetImage(result.asset.file_url, result.asset.title);
+        } else {
+          showBuilderToast(result.message || 'Upload failed', 'danger');
+          input.value = '';
+        }
+      } catch (err) {
+        showBuilderToast('Error uploading asset to server', 'danger');
+        input.value = '';
+      }
+    }
+
+    async function deleteClawLibraryAsset(event, assetId) {
+      event.stopPropagation();
+      if (!confirm('Remove this illustration from your permanent library?')) return;
+
+      const formData = new FormData();
+      formData.append('csrf_token', '{{ csrf_token() }}');
+
+      try {
+        const res = await fetch(`/teacher/api/assets/${assetId}/delete`, {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+          showBuilderToast('Asset removed from library', 'info');
+          await loadClawTeacherAssets();
+        } else {
+          showBuilderToast(result.message || 'Could not delete asset', 'danger');
+        }
+      } catch (err) {
+        showBuilderToast('Failed communicating with server', 'danger');
+      }
+    }
+
     function openPresetPicker(idx) {
       activeObjectPickerIndex = idx;
       const modalEl = document.getElementById('presetImageModal');
       const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
       modal.show();
+      loadClawTeacherAssets();
     }
 
     function choosePresetImage(src, label) {

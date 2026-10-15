@@ -306,16 +306,14 @@ def update_last_seen():
     try:
         user_id = session.get('user_id')
         if user_id:
-            user = User.query.get(user_id)
-            if user:
-                now = datetime.utcnow()
-                # Throttle DB updates to once every 10 seconds
-                if not user.last_seen or (now - user.last_seen).total_seconds() > 10:
-                    user.last_seen = now
-                    try:
-                        db.session.commit()
-                    except Exception:
-                        db.session.rollback()
+            if request.path.startswith('/static'):
+                return
+            now = datetime.utcnow()
+            User.query.filter_by(id=user_id).update({'last_seen': now})
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
     except Exception:
         db.session.rollback()
 
