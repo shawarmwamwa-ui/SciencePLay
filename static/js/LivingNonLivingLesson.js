@@ -56,6 +56,7 @@ function getActiveLessonSlides() {
         title: slide.title || `Slide ${index + 1}`,
         type: normalizedType,
         image: slide.image || '',
+        images: Array.isArray(slide.images) && slide.images.length > 0 ? slide.images : (slide.image ? [slide.image] : []),
         description: slide.description || slide.explanation || slide.metadata?.hintText || '',
         prompt: slide.prompt || slide.contentData?.prompt || 'Answer the question.',
         options: rawOptions.map((item, itemIndex) => ({
@@ -339,9 +340,40 @@ function canAdvance() {
 }
 
 function renderIntroSlide(slide, container) {
+  const images = (Array.isArray(slide.images) && slide.images.length > 0)
+    ? slide.images
+    : (slide.image ? [slide.image] : []);
+
+  let mediaHtml = '';
+  if (images.length === 1) {
+    mediaHtml = `<img src="${images[0]}" alt="Lesson illustration" class="lesson-intro-image">`;
+  } else if (images.length === 2) {
+    mediaHtml = `
+      <div class="lesson-compare-container">
+        <div class="lesson-compare-card">
+          <img src="${images[0]}" alt="Comparison item 1" class="lesson-compare-img">
+        </div>
+        <div class="lesson-compare-vs">VS</div>
+        <div class="lesson-compare-card">
+          <img src="${images[1]}" alt="Comparison item 2" class="lesson-compare-img">
+        </div>
+      </div>
+    `;
+  } else if (images.length > 2) {
+    mediaHtml = `
+      <div class="lesson-gallery-grid count-${images.length}">
+        ${images.map((src, i) => `
+          <div class="lesson-gallery-card">
+            <img src="${src}" alt="Gallery item ${i + 1}" class="lesson-gallery-img">
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
   container.innerHTML = `
     <div class="lesson-intro">
-      ${slide.image ? `<img src="${slide.image}" alt="Lesson intro" class="lesson-intro-image">` : ''}
+      ${mediaHtml}
       ${slide.description ? `<p class="lesson-intro-description">${slide.description}</p>` : ''}
     </div>
   `;

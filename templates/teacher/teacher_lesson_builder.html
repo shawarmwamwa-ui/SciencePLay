@@ -50,13 +50,21 @@
     /* Lesson Workspace Grid */
     .lesson-workspace-grid {
       display: grid;
-      grid-template-columns: 260px 1fr 340px;
+      grid-template-columns: 220px minmax(520px, 1fr) 330px;
       gap: 1.25rem;
       align-items: start;
+      transition: all 0.3s ease;
+    }
+    .lesson-workspace-grid.canvas-expanded {
+      grid-template-columns: 1fr;
+    }
+    .lesson-workspace-grid.canvas-expanded .slide-strip-col,
+    .lesson-workspace-grid.canvas-expanded .slide-editor-col {
+      display: none !important;
     }
     @media (max-width: 1200px) {
       .lesson-workspace-grid {
-        grid-template-columns: 240px 1fr;
+        grid-template-columns: 220px 1fr;
       }
       .slide-editor-col {
         grid-column: 1 / -1;
@@ -139,18 +147,18 @@
     /* Neubrutalist Slide Canvas */
     .neubrutal-slide-canvas {
       background: #ffffff;
-      border: 3px solid #0f172a;
+      border: 3.5px solid #0f172a;
       border-radius: 1.25rem;
       box-shadow: 6px 6px 0px #0f172a;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      min-height: 500px;
+      min-height: 560px;
     }
     .canvas-window-header {
       background: #f8fafc;
-      border-bottom: 3px solid #0f172a;
-      padding: 0.65rem 1rem;
+      border-bottom: 3.5px solid #0f172a;
+      padding: 0.75rem 1.15rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -170,7 +178,7 @@
     .c-dot-green { background: #10b981; }
 
     .canvas-slide-body {
-      padding: 1.5rem;
+      padding: 1.75rem;
       display: flex;
       flex-direction: column;
       flex-grow: 1;
@@ -179,12 +187,12 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1rem;
+      margin-bottom: 1.15rem;
       flex-wrap: wrap;
       gap: 0.5rem;
     }
     .canvas-slide-title {
-      font-size: 1.35rem;
+      font-size: 1.45rem;
       font-weight: 900;
       color: #0f172a;
       margin: 0;
@@ -211,22 +219,159 @@
     }
 
     .canvas-hero-box {
-      border: 2px dashed #cbd5e1;
-      border-radius: 1rem;
+      border: 2.5px dashed #cbd5e1;
+      border-radius: 1.25rem;
       background: #f8fafc;
-      padding: 1.5rem;
+      padding: 1.25rem;
       text-align: center;
       margin-bottom: 1.25rem;
-      min-height: 160px;
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .canvas-single-hero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+    .canvas-hero-img {
+      max-height: 210px;
+      max-width: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.06));
+    }
+
+    /* Multi-Image Comparison in Canvas (2 images) */
+    .canvas-compare-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      width: 100%;
+      padding: 0.25rem;
+    }
+    .canvas-compare-card {
+      flex: 1;
+      max-width: 260px;
+      background: #ffffff;
+      border: 2.5px solid #0f172a;
+      border-radius: 14px;
+      box-shadow: 3.5px 3.5px 0px #0f172a;
+      padding: 1rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease;
+    }
+    .canvas-compare-card:hover {
+      transform: translateY(-2px);
+    }
+    .canvas-compare-card img {
+      max-height: 150px;
+      max-width: 100%;
+      object-fit: contain;
+    }
+    .canvas-vs-badge {
+      background: #fde047;
+      border: 2px solid #0f172a;
+      box-shadow: 2.5px 2.5px 0px #0f172a;
+      border-radius: 9999px;
+      padding: 0.4rem 0.85rem;
+      font-weight: 900;
+      font-size: 0.85rem;
+      color: #0f172a;
+      flex-shrink: 0;
+    }
+
+    /* Multi-Image Grid in Canvas (3-4 images) */
+    .canvas-gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.85rem;
+      width: 100%;
+      padding: 0.25rem;
+    }
+    .canvas-gallery-card {
+      background: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 12px;
+      box-shadow: 2.5px 2.5px 0px #0f172a;
+      padding: 0.75rem 0.5rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
     }
-    .canvas-hero-img {
-      max-height: 140px;
+    .canvas-gallery-card img {
+      max-height: 110px;
       max-width: 100%;
       object-fit: contain;
+    }
+
+    /* Multi-Image Manager in Editor */
+    .slide-media-strip {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+    .slide-media-thumb-item {
+      position: relative;
+      border: 2px solid #0f172a;
+      border-radius: 10px;
+      padding: 3px;
+      background: #ffffff;
+      box-shadow: 2px 2px 0px #0f172a;
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slide-media-thumb-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .slide-media-thumb-badge {
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      width: 18px;
+      height: 18px;
+      background: #0284c7;
+      color: #ffffff;
+      font-size: 0.65rem;
+      font-weight: 900;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #0f172a;
+    }
+    .slide-media-thumb-del {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 18px;
+      height: 18px;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 0.65rem;
+      font-weight: 900;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #0f172a;
+      cursor: pointer;
     }
 
     .canvas-narration-box {
@@ -570,7 +715,7 @@
 
                 <div class="lesson-workspace-grid">
                   <!-- Col 1: Slide Strip Navigator -->
-                  <div>
+                  <div class="slide-strip-col">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                       <span class="fw-bold text-muted small text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">Slide Deck</span>
                       <div class="btn-group btn-group-sm">
@@ -596,7 +741,7 @@
                   </div>
 
                   <!-- Col 2: Center Neubrutalist Slide Canvas Preview -->
-                  <div>
+                  <div class="canvas-col">
                     <div class="neubrutal-slide-canvas">
                       <div class="canvas-window-header">
                         <div class="canvas-dots">
@@ -604,9 +749,14 @@
                           <span class="c-dot c-dot-yellow"></span>
                           <span class="c-dot c-dot-green"></span>
                         </div>
-                        <span class="badge bg-dark text-info border border-secondary small fw-bold">
-                          <i class="bi bi-broadcast me-1"></i>Live Student View Canvas
-                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                          <button type="button" class="btn btn-sm btn-outline-dark rounded-pill fw-bold py-1 px-3" id="btnToggleExpandCanvas" onclick="toggleCanvasExpand()" title="Expand canvas view">
+                            <i class="bi bi-arrows-angle-expand me-1"></i>Expand Canvas
+                          </button>
+                          <span class="badge bg-dark text-info border border-secondary small fw-bold">
+                            <i class="bi bi-broadcast me-1"></i>Live Student View Canvas
+                          </span>
+                        </div>
                       </div>
 
                       <div class="canvas-slide-body">
@@ -618,10 +768,12 @@
                           </button>
                         </div>
 
-                        <!-- Hero Media Box (For Concept/Intro/Summary) -->
+                        <!-- Hero Media Box (For Concept/Intro/Summary) Supports 1, 2, or 3-4 images or animation -->
                         <div class="canvas-hero-box" id="canvasHeroBox">
-                          <img src="/static/images/tree.webp" alt="Slide Illustration" class="canvas-hero-img" id="canvasHeroImg">
-                          <div id="canvasLottieContainer" class="d-none" style="width: 100%; height: 210px; max-height: 220px; margin: 0 auto;"></div>
+                          <div id="canvasMediaDisplayArea" class="w-100 h-100 d-flex align-items-center justify-content-center">
+                            <img src="/static/images/tree.webp" alt="Slide Illustration" class="canvas-hero-img" id="canvasHeroImg">
+                          </div>
+                          <div id="canvasLottieContainer" class="d-none" style="width: 100%; height: 230px; max-height: 240px; margin: 0 auto;"></div>
                         </div>
 
                         <!-- Spoken Narration Text -->
@@ -678,19 +830,35 @@
                         </select>
                       </div>
 
-                      <!-- Media / Illustration / Animation Picker -->
+                      <!-- Media / Illustration / Animation Picker (Supports Multiple Images) -->
                       <div class="mb-3">
-                        <label class="form-label text-muted small fw-bold mb-1">Slide Media (Images &amp; Animations)</label>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                          <label class="form-label text-muted small fw-bold mb-0">Slide Media (Images &amp; Animations)</label>
+                          <span class="badge bg-white text-dark border small fw-bold" id="slideMediaCountBadge">1 Image</span>
+                        </div>
+
+                        <!-- Attached Images Thumbnail Strip -->
+                        <div class="p-2 bg-white rounded-3 border mb-2">
+                          <div class="slide-media-strip" id="slideImagesThumbStrip">
+                            <!-- Rendered via JS -->
+                          </div>
+                        </div>
+
+                        <!-- Layout info hint -->
+                        <div class="mb-2 small text-muted fw-bold d-flex align-items-center gap-1" id="slideMediaLayoutHint">
+                          <i class="bi bi-info-circle text-primary"></i>
+                          <span id="slideMediaLayoutText">1 Image: Spotlight Hero Layout</span>
+                        </div>
+
                         <div class="d-flex align-items-center flex-wrap gap-2">
-                          <img src="/static/images/tree.webp" alt="Thumb" class="rounded-3 border p-1" style="width: 44px; height: 44px; object-fit: contain;" id="editSlideThumb">
-                          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="openSlidePresetPicker()">
-                            <i class="bi bi-images me-1"></i>Images
+                          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" id="btnAddSlideImageBtn" onclick="openSlidePresetPicker('add')">
+                            <i class="bi bi-plus-circle me-1"></i>Add Image
                           </button>
                           <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold" onclick="openAnimationPresetPicker()">
                             <i class="bi bi-play-circle-fill me-1"></i>Animations
                           </button>
-                          <label class="btn btn-sm btn-outline-primary rounded-pill px-3 mb-0" style="cursor: pointer;">
-                            <i class="bi bi-upload me-1"></i>Upload (.json, .gif, .webp, .png)
+                          <label class="btn btn-sm btn-outline-secondary rounded-pill px-3 mb-0" style="cursor: pointer;">
+                            <i class="bi bi-upload me-1"></i>Upload File
                             <input type="file" accept=".png,.jpg,.jpeg,.webp,.gif,.json,image/*,application/json" class="d-none" onchange="handleSlideFileUpload(this)">
                           </label>
                         </div>
@@ -1222,6 +1390,20 @@
       showBuilderToast("Slide removed", "warning");
     }
 
+    function ensureSlideImages(slide) {
+      if (!Array.isArray(slide.images) || slide.images.length === 0) {
+        if (slide.image && typeof slide.image === 'string') {
+          slide.images = [slide.image];
+        } else {
+          slide.images = ['/static/images/tree.webp'];
+          slide.image = '/static/images/tree.webp';
+        }
+      } else {
+        slide.image = slide.images[0];
+      }
+      return slide.images;
+    }
+
     function loadSlideIntoEditor() {
       const slide = slides[currentSlideIndex];
       if (!slide) return;
@@ -1236,11 +1418,12 @@
         if (badge) badge.classList.remove('d-none');
         const nameEl = document.getElementById('activeAnimationName');
         if (nameEl) nameEl.textContent = slide.animationLabel || 'Animation Attached';
-        document.getElementById('editSlideThumb').src = 'https://api.iconify.design/twemoji:film-projector.svg';
       } else {
         if (badge) badge.classList.add('d-none');
-        document.getElementById('editSlideThumb').src = slide.image || '/static/images/tree.webp';
       }
+
+      // Render Attached Images Thumbnail Strip
+      renderSlideMediaStrip(slide);
 
       const quizBox = document.getElementById('quickCheckEditFields');
       if (slide.type === 'quick-check') {
@@ -1249,6 +1432,74 @@
         renderQuizOptionsEditor();
       } else {
         quizBox.classList.add('d-none');
+      }
+    }
+
+    function renderSlideMediaStrip(slide) {
+      const container = document.getElementById('slideImagesThumbStrip');
+      const countBadge = document.getElementById('slideMediaCountBadge');
+      const layoutHint = document.getElementById('slideMediaLayoutText');
+      const addBtn = document.getElementById('btnAddSlideImageBtn');
+      if (!container) return;
+
+      const imgs = ensureSlideImages(slide);
+      container.innerHTML = '';
+
+      if (countBadge) countBadge.textContent = `${imgs.length} Image${imgs.length === 1 ? '' : 's'}`;
+      if (layoutHint) {
+        if (imgs.length === 1) {
+          layoutHint.textContent = '1 Image: Spotlight Hero Showcase';
+        } else if (imgs.length === 2) {
+          layoutHint.textContent = '2 Images: Side-by-Side Comparison (Left vs Right)';
+        } else {
+          layoutHint.textContent = `${imgs.length} Images: Balanced Photo Gallery Grid`;
+        }
+      }
+
+      imgs.forEach((imgSrc, idx) => {
+        const item = document.createElement('div');
+        item.className = 'slide-media-thumb-item';
+        item.title = `Image #${idx + 1} (Click to change/replace)`;
+        item.innerHTML = `
+          <span class="slide-media-thumb-badge">${idx + 1}</span>
+          <img src="${imgSrc}" alt="Slide Image ${idx + 1}">
+          ${imgs.length > 1 ? `<span class="slide-media-thumb-del" title="Remove this image" onclick="event.stopPropagation(); removeSlideImage(${idx});">✕</span>` : ''}
+        `;
+        item.onclick = () => openSlidePresetPicker('replace', idx);
+        container.appendChild(item);
+      });
+
+      if (addBtn) {
+        addBtn.disabled = imgs.length >= 4;
+        addBtn.classList.toggle('disabled', imgs.length >= 4);
+      }
+    }
+
+    function removeSlideImage(imgIdx) {
+      const slide = slides[currentSlideIndex];
+      if (!slide || !Array.isArray(slide.images) || slide.images.length <= 1) {
+        showBuilderToast("Each concept slide needs at least 1 image.", "warning");
+        return;
+      }
+      slide.images.splice(imgIdx, 1);
+      slide.image = slide.images[0];
+      loadSlideIntoEditor();
+      updateCanvasPreview();
+      showBuilderToast("Image removed from slide.", "info");
+    }
+
+    function toggleCanvasExpand() {
+      const grid = document.querySelector('.lesson-workspace-grid');
+      const btn = document.getElementById('btnToggleExpandCanvas');
+      if (!grid || !btn) return;
+      const isExpanded = grid.classList.toggle('canvas-expanded');
+      if (isExpanded) {
+        btn.innerHTML = '<i class="bi bi-arrows-angle-contract me-1"></i>Standard View';
+        btn.classList.replace('btn-outline-dark', 'btn-dark');
+        showBuilderToast("Canvas expanded to full width preview", "info");
+      } else {
+        btn.innerHTML = '<i class="bi bi-arrows-angle-expand me-1"></i>Expand Canvas';
+        btn.classList.replace('btn-dark', 'btn-outline-dark');
       }
     }
 
@@ -1374,10 +1625,11 @@
         quizBox.classList.add('d-none');
         heroBox.classList.remove('d-none');
         const lottieBox = document.getElementById('canvasLottieContainer');
+        const mediaDisplay = document.getElementById('canvasMediaDisplayArea');
         const animSrc = slide.animationSrc || (typeof slide.image === 'string' && slide.image.endsWith('.json') ? slide.image : null);
 
         if (animSrc && window.lottie) {
-          heroImg.classList.add('d-none');
+          if (mediaDisplay) mediaDisplay.classList.add('d-none');
           if (lottieBox) {
             lottieBox.classList.remove('d-none');
             lottieBox.innerHTML = '';
@@ -1403,8 +1655,43 @@
             window._builderLottieAnim = null;
           }
           if (lottieBox) lottieBox.classList.add('d-none');
-          heroImg.classList.remove('d-none');
-          heroImg.src = slide.image || '/static/images/tree.webp';
+          if (mediaDisplay) {
+            mediaDisplay.classList.remove('d-none');
+            const imgs = ensureSlideImages(slide);
+
+            if (imgs.length === 1) {
+              mediaDisplay.innerHTML = `
+                <div class="canvas-single-hero">
+                  <img src="${imgs[0]}" alt="Slide Illustration" class="canvas-hero-img">
+                </div>
+              `;
+            } else if (imgs.length === 2) {
+              mediaDisplay.innerHTML = `
+                <div class="canvas-compare-row">
+                  <div class="canvas-compare-card">
+                    <span class="badge bg-primary-subtle text-primary border small mb-2 fw-bold">Image 1</span>
+                    <img src="${imgs[0]}" alt="Comparison item 1">
+                  </div>
+                  <div class="canvas-vs-badge">VS</div>
+                  <div class="canvas-compare-card">
+                    <span class="badge bg-warning-subtle text-dark border small mb-2 fw-bold">Image 2</span>
+                    <img src="${imgs[1]}" alt="Comparison item 2">
+                  </div>
+                </div>
+              `;
+            } else {
+              mediaDisplay.innerHTML = `
+                <div class="canvas-gallery-grid">
+                  ${imgs.map((src, i) => `
+                    <div class="canvas-gallery-card">
+                      <span class="badge bg-light text-dark border small mb-1">#${i + 1}</span>
+                      <img src="${src}" alt="Gallery item ${i + 1}">
+                    </div>
+                  `).join('')}
+                </div>
+              `;
+            }
+          }
         }
       }
 
@@ -1572,7 +1859,10 @@
       }
     }
 
-    function openSlidePresetPicker() {
+    let activeImagePickerMode = { action: 'add', index: null };
+
+    function openSlidePresetPicker(mode = 'add', targetIdx = null) {
+      activeImagePickerMode = { action: mode, index: targetIdx };
       const modalEl = document.getElementById('presetImageModal');
       const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
       modal.show();
@@ -1582,8 +1872,23 @@
     function chooseSlidePresetImage(src, label) {
       const slide = slides[currentSlideIndex];
       if (slide) {
-        slide.image = src;
-        document.getElementById('editSlideThumb').src = src;
+        const imgs = ensureSlideImages(slide);
+        if (activeImagePickerMode?.action === 'add') {
+          if (imgs.length < 4) {
+            imgs.push(src);
+            showBuilderToast(`Added ${label || 'illustration'} to slide!`, "success");
+          } else {
+            showBuilderToast("Maximum 4 images allowed per slide.", "warning");
+          }
+        } else if (activeImagePickerMode?.action === 'replace') {
+          const idx = activeImagePickerMode.index ?? 0;
+          imgs[idx] = src;
+          showBuilderToast(`Replaced Image #${idx + 1}!`, "success");
+        } else {
+          slide.images = [src];
+        }
+        slide.image = imgs[0];
+        loadSlideIntoEditor();
         updateCanvasPreview();
       }
       const modalEl = document.getElementById('presetImageModal');
@@ -1660,10 +1965,17 @@
             const slide = slides[currentSlideIndex];
             delete slide.animationSrc;
             delete slide.animationLabel;
-            slide.image = e.target.result;
+            const imgs = ensureSlideImages(slide);
+            if (imgs.length < 4) {
+              imgs.push(e.target.result);
+              showBuilderToast(`Added custom image to slide (${imgs.length}/4)`, "success");
+            } else {
+              imgs[imgs.length - 1] = e.target.result;
+              showBuilderToast("Updated latest image on slide", "success");
+            }
+            slide.image = imgs[0];
             loadSlideIntoEditor();
             updateCanvasPreview();
-            showBuilderToast("Custom media attached to slide", "success");
           };
           reader.readAsDataURL(file);
         }

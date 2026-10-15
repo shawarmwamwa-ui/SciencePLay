@@ -856,3 +856,102 @@ img {
   -webkit-user-drag: none !important;
   user-select: none !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════════ */
+/* Multi-Image Support for Student Lesson Presentation                   */
+/* ══════════════════════════════════════════════════════════════════════ */
+.lesson-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.5vh, 16px);
+  width: 100%;
+}
+
+.lesson-intro-image {
+  max-height: clamp(140px, 26vh, 220px);
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 14px;
+}
+
+.lesson-intro-description {
+  font-size: clamp(14px, 1.25vw, 18px);
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--brutal-dark);
+  text-align: center;
+  margin: 0;
+  max-width: 780px;
+}
+
+.lesson-compare-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vw, 24px);
+  width: 100%;
+  padding: 4px;
+}
+
+.lesson-compare-card {
+  flex: 1;
+  max-width: 280px;
+  background: #ffffff;
+  border: 2.5px solid var(--brutal-border);
+  border-radius: 16px;
+  box-shadow: 3.5px 3.5px 0px var(--brutal-border);
+  padding: clamp(8px, 1.5vh, 16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+}
+
+.lesson-compare-card:hover {
+  transform: translateY(-2px);
+}
+
+.lesson-compare-img {
+  max-height: clamp(110px, 20vh, 165px);
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.lesson-compare-vs {
+  background: var(--brutal-yellow);
+  border: 2px solid var(--brutal-border);
+  border-radius: 9999px;
+  box-shadow: 2.5px 2.5px 0px var(--brutal-border);
+  font-weight: 900;
+  font-size: clamp(12px, 1vw, 15px);
+  padding: 4px 12px;
+  flex-shrink: 0;
+}
+
+.lesson-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: clamp(8px, 1.2vw, 16px);
+  width: 100%;
+  max-width: 600px;
+}
+
+.lesson-gallery-card {
+  background: #ffffff;
+  border: 2px solid var(--brutal-border);
+  border-radius: 14px;
+  box-shadow: 3px 3px 0px var(--brutal-border);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lesson-gallery-img {
+  max-height: clamp(80px, 14vh, 120px);
+  max-width: 100%;
+  object-fit: contain;
+}
+
