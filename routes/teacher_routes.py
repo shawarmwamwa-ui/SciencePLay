@@ -3799,6 +3799,75 @@ def lesson_builder(lesson_id=None):
                         {"id": "slide-1", "title": "Why Recycle?", "type": "concept", "image": "/static/images/tree.webp", "explanation": "Recycling turns old materials into useful new goods!"},
                         {"id": "slide-2", "title": "Quick Check: Recyclable Items", "type": "quick-check", "prompt": "Which item can be melted and recycled? ♻️", "image": "/static/images/puddle.webp", "explanation": "Clean plastics, metals, and glass can be recycled.", "options": [{"id": "opt-1", "label": "Plastic Bottle", "icon": "/static/images/puddle.webp", "isCorrect": True}, {"id": "opt-2", "label": "Food Waste", "icon": "/static/images/plant.webp", "isCorrect": False}]}
                     ]
+                },
+                'basic_needs': {
+                    "title": "Basic Needs of Living Things",
+                    "description": "Term 2, Weeks 5-7: Learn that living things need air, food, water, and shelter, depend on one another and the environment, and must be protected.",
+                    "grade_level": "Grade 3",
+                    "term": "Term 2",
+                    "slides": [
+                        {
+                            "id": "bn-1", "title": "What Do Living Things Need?", "type": "concept",
+                            "images": ["/static/images/tree.webp", "/static/images/dog.webp", "/static/images/butterfly.webp", "/static/images/fish.webp"],
+                            "captions": ["Tree", "Dog", "Butterfly", "Fish"],
+                            "explanation": "Plants, animals, and people are all living things. To stay alive and healthy, every one of them has basic needs!"
+                        },
+                        {
+                            "id": "bn-2", "title": "Air", "type": "concept",
+                            "images": ["/static/images/bird.webp"], "captions": ["Air"],
+                            "explanation": "Living things need air. Animals and people breathe in air, and plants take in air through their leaves."
+                        },
+                        {
+                            "id": "bn-3", "title": "Food and Water", "type": "concept",
+                            "images": ["/static/images/plant.webp", "/static/images/puddle.webp"],
+                            "captions": ["Food", "Water"],
+                            "explanation": "Living things need food for energy and water to grow. Plants make their own food using sunlight, water, and air. Animals eat plants or other animals."
+                        },
+                        {
+                            "id": "bn-4", "title": "Quick Check: Basic Needs", "type": "quick-check",
+                            "prompt": "Which one is something living things need to survive?",
+                            "image": "/static/images/puddle.webp",
+                            "explanation": "Water is a basic need of all living things.",
+                            "options": [
+                                {"id": "opt-1", "label": "Water", "icon": "/static/images/puddle.webp", "isCorrect": True},
+                                {"id": "opt-2", "label": "Rock", "icon": "/static/images/rock.webp", "isCorrect": False},
+                                {"id": "opt-3", "label": "Ball", "icon": "/static/images/ball.webp", "isCorrect": False}
+                            ]
+                        },
+                        {
+                            "id": "bn-5", "title": "Shelter", "type": "concept",
+                            "images": ["/static/images/tree.webp", "/static/images/bird.webp"],
+                            "captions": ["Tree (home)", "Bird (lives in the tree)"],
+                            "explanation": "Shelter keeps living things safe from weather and enemies. Birds build nests in trees, and animals live in burrows, caves, and homes."
+                        },
+                        {
+                            "id": "bn-6", "title": "We Depend on One Another", "type": "concept",
+                            "images": ["/static/images/flower.webp", "/static/images/butterfly.webp"],
+                            "captions": ["Flower", "Butterfly"],
+                            "explanation": "Living things depend on each other and their environment. Butterflies drink nectar from flowers, and in return they help flowers make seeds."
+                        },
+                        {
+                            "id": "bn-7", "title": "Quick Check: Shelter", "type": "quick-check",
+                            "prompt": "Where does a bird find shelter?",
+                            "image": "/static/images/bird.webp",
+                            "explanation": "Birds build nests in trees for shelter.",
+                            "options": [
+                                {"id": "opt-1", "label": "Tree", "icon": "/static/images/tree.webp", "isCorrect": True},
+                                {"id": "opt-2", "label": "Puddle", "icon": "/static/images/puddle.webp", "isCorrect": False}
+                            ]
+                        },
+                        {
+                            "id": "bn-8", "title": "Protect Our Environment", "type": "concept",
+                            "images": ["/static/images/plant.webp", "/static/images/tree.webp"],
+                            "captions": ["Plant", "Tree"],
+                            "explanation": "If we harm the environment, living things lose air, food, water, and shelter. We must protect and conserve nature so living things can survive."
+                        },
+                        {
+                            "id": "bn-9", "title": "Basic Needs Expert!", "type": "summary",
+                            "image": "/static/images/star.webp",
+                            "explanation": "Great job! Living things need air, food, water, and shelter, and we must take care of the environment that provides them."
+                        }
+                    ]
                 }
             }
             config = lesson_presets.get(preset_key, lesson_presets['living_vs_nonliving'])

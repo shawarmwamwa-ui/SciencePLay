@@ -81,27 +81,40 @@
     }
     .lesson-workspace-grid {
       display: grid;
-      grid-template-columns: 240px minmax(640px, 1fr) 350px;
-      gap: 1.5rem;
+      grid-template-columns: 210px minmax(0, 1fr) 320px;
+      gap: 1.25rem;
       align-items: start;
+      width: 100%;
+      box-sizing: border-box;
       transition: all 0.3s ease;
     }
+    .slide-strip-col,
+    .canvas-col,
+    .slide-editor-col {
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .neubrutal-slide-canvas {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
     .lesson-workspace-grid.canvas-expanded {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr !important;
     }
     .lesson-workspace-grid.canvas-expanded .slide-strip-col,
     .lesson-workspace-grid.canvas-expanded .slide-editor-col {
       display: none !important;
     }
-    @media (max-width: 1400px) {
-      .lesson-workspace-grid {
-        grid-template-columns: 220px minmax(500px, 1fr) 330px;
-        gap: 1.15rem;
-      }
+    .lesson-workspace-grid.canvas-expanded .canvas-col {
+      grid-column: 1 / -1 !important;
+      width: 100% !important;
     }
-    @media (max-width: 1100px) {
+    @media (max-width: 1250px) {
       .lesson-workspace-grid {
-        grid-template-columns: 220px 1fr;
+        grid-template-columns: 210px minmax(0, 1fr);
+        gap: 1.25rem;
       }
       .slide-editor-col {
         grid-column: 1 / -1;
@@ -110,6 +123,10 @@
     @media (max-width: 860px) {
       .lesson-workspace-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .slide-editor-col {
+        grid-column: auto;
       }
     }
 
