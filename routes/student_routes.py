@@ -423,6 +423,7 @@ def get_or_create_quick_check_activity():
         lesson_id=lesson.id,
         type='Living vs Non-Living Quick Check',
         engine='quick_check',
+        term=None,
         points=10
     )
     db.session.add(activity)
@@ -480,6 +481,60 @@ def is_activity_unlocked(user_id, activity):
         return has_student_completed_lesson(user_id, activity.lesson_id)
 
     # Standalone activity with no lesson requirement
+    return True
+
+
+def is_lesson_unlocked_for_student(user_id, lesson):
+    """
+    Pedagogical unlocking rule for lessons:
+    - First lesson ("Living vs Non-Living") is always unlocked.
+    - Subsequent lessons unlock when earlier prerequisite lessons are completed.
+    - Specifically:
+        * "Living vs Non-Living": Always unlocked
+        * "Animal Body Parts": Unlocked if "Living vs Non-Living" is completed
+        * "Plant Parts": Unlocked if both "Living vs Non-Living" and "Animal Body Parts" are completed
+        * "Properties of Metals": Unlocked if "Plant Parts" is completed
+        * "Recycling": Unlocked if "Properties of Metals" is completed
+        * Term 3+ or Custom lessons: Unlocked if preceding term lessons are done (or if assigned)
+    - Supplementary lessons are always unlocked.
+    """
+    if not user_id or not lesson:
+        return True
+
+    if getattr(lesson, 'is_supplementary', False):
+        return True
+
+    title = (lesson.title or '').strip()
+
+    if title.lower() == 'living vs non-living':
+        return True
+
+    def is_title_completed(t_name):
+        matching = Lesson.query.filter(Lesson.title.ilike(t_name)).all()
+        return any(has_student_completed_lesson(user_id, m.id) for m in matching)
+
+    if title.lower() == 'animal body parts':
+        return is_title_completed('Living vs Non-Living')
+
+    if title.lower() == 'plant parts':
+        return is_title_completed('Living vs Non-Living') and is_title_completed('Animal Body Parts')
+
+    if title.lower() == 'properties of metals':
+        return is_title_completed('Plant Parts')
+
+    if title.lower() == 'recycling':
+        return is_title_completed('Properties of Metals')
+
+    term = getattr(lesson, 'term', None)
+    if not term or term == 'Term 1':
+        return True
+
+    if term == 'Term 2':
+        return is_title_completed('Living vs Non-Living') and is_title_completed('Animal Body Parts')
+
+    if term == 'Term 3':
+        return is_title_completed('Plant Parts') and is_title_completed('Properties of Metals') and is_title_completed('Recycling')
+
     return True
 
 
@@ -546,11 +601,16 @@ def get_student_curriculum_terms_data(user_id):
     lessons = list(lessons_dict.values())
 
     # 2. Fetch all active curriculum activities that belong to an academic term (Term 1, Term 2, etc.)
+    # Strictly filter for real playable games — SLIDE QUESTIONS / QUICK CHECKS ARE NEVER GAMES!
+    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
     all_term_activities_query = Activity.query.filter(
         Activity.term.isnot(None),
         Activity.term.like('Term %'),
         (Activity.is_archived == False) | (Activity.is_archived == None),
-        (Activity.is_supplementary == False) | (Activity.is_supplementary == None)
+        (Activity.is_supplementary == False) | (Activity.is_supplementary == None),
+        ~Activity.engine.in_(['quick_check', 'lesson', 'slide_questions']),
+        ~Activity.type.ilike('%Quick Check%'),
+        ~Activity.type.ilike('%Slide Questions%')
     ).all()
 
     # Also include any activity explicitly assigned to this student with an academic term
@@ -559,15 +619,20 @@ def get_student_curriculum_terms_data(user_id):
     ).filter(
         ActivityAssignment.student_id == user_id,
         (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None),
-        ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted'])
+        ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted']),
+        ~Activity.engine.in_(['quick_check', 'lesson', 'slide_questions']),
+        ~Activity.type.ilike('%Quick Check%'),
+        ~Activity.type.ilike('%Slide Questions%')
     ).all()
 
     activities_dict = {}
     for a in all_term_activities_query:
-        activities_dict[a.id] = a
+        if a and (a.engine in playable_engines or a.config):
+            activities_dict[a.id] = a
     for aa, a in assigned_activity_rows:
         if a and a.term and a.term.startswith('Term '):
-            activities_dict[a.id] = a
+            if a.engine in playable_engines or a.config:
+                activities_dict[a.id] = a
     activities = list(activities_dict.values())
 
     # Auto-sync assignments for student so progress logging works smoothly
@@ -700,6 +765,10 @@ def get_student_curriculum_terms_data(user_id):
 
     for act in activities:
         if getattr(act, 'is_supplementary', False):
+            continue
+        if act.engine in ('quick_check', 'lesson', 'slide_questions'):
+            continue
+        if 'Quick Check' in (act.type or '') or 'Slide Questions' in (act.type or ''):
             continue
         t_name = getattr(act, 'term', None)
         if not t_name or not t_name.startswith('Term '):
@@ -1400,7 +1469,7 @@ def lessons():
     lesson_progress = []
     for lesson in lessons:
         lesson_activities = [activity for activity in activities if activity.lesson_id == lesson.id]
-        is_locked = is_term_locked_for_student(user_id, getattr(lesson, 'term', None))
+        is_locked = not is_lesson_unlocked_for_student(user_id, lesson)
         is_done = has_student_completed_lesson(user_id, lesson.id)
         matching_lesson_ids = [l.id for l in Lesson.query.filter(Lesson.title.ilike(lesson.title.strip())).all()]
         log = LessonProgress.query.filter(
@@ -1615,6 +1684,7 @@ def lesson_question_attempt():
             lesson_id=lesson.id,
             type=f'{lesson.title} Slide Questions',
             engine='lesson',
+            term=None,
             points=0
         )
         db.session.add(activity)
@@ -1733,9 +1803,9 @@ def living_non_living_lesson(lesson_id=None):
         lesson = get_or_create_default_lesson()
 
     if user_id and lesson and getattr(lesson, 'term', None):
-        if is_term_locked_for_student(user_id, lesson.term):
-            flash(f'{lesson.term} is currently locked! Please complete 100% of the previous term to unlock it.', 'warning')
-            return redirect(url_for('student.curriculum_terms'))
+        if not is_lesson_unlocked_for_student(user_id, lesson):
+            flash('Please complete the prerequisite lesson first before starting this lesson.', 'warning')
+            return redirect(url_for('student.lessons'))
     if user_id:
         attempt, log = start_or_resume_lesson_attempt(user_id, lesson.id)
         initial_slide = log.current_slide if log else 0
@@ -1877,10 +1947,10 @@ def get_or_create_streak_race_activity():
 @require_role('student')
 def plant_parts_lesson():
     current_user = get_current_user()
-    if is_term_locked_for_student(current_user.id, 'Term 2'):
-        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
-        return redirect(url_for('student.curriculum_terms'))
     lesson = get_or_create_plant_parts_lesson()
+    if not is_lesson_unlocked_for_student(current_user.id, lesson):
+        flash('Please complete Animal Body Parts before starting Plant Parts.', 'warning')
+        return redirect(url_for('student.lessons'))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
     return render_template(
@@ -1963,10 +2033,10 @@ def get_or_create_properties_of_metals_lesson():
 @require_role('student')
 def properties_of_metals_lesson():
     current_user = get_current_user()
-    if is_term_locked_for_student(current_user.id, 'Term 2'):
-        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
-        return redirect(url_for('student.curriculum_terms'))
     lesson = get_or_create_properties_of_metals_lesson()
+    if not is_lesson_unlocked_for_student(current_user.id, lesson):
+        flash('Please complete Plant Parts before starting Properties of Metals.', 'warning')
+        return redirect(url_for('student.lessons'))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
     return render_template(
@@ -1995,10 +2065,10 @@ def get_or_create_recycling_lesson():
 @require_role('student')
 def recycling_lesson():
     current_user = get_current_user()
-    if is_term_locked_for_student(current_user.id, 'Term 2'):
-        flash('Term 2 is currently locked! Please complete 100% of Term 1 tasks to unlock Term 2.', 'warning')
-        return redirect(url_for('student.curriculum_terms'))
     lesson = get_or_create_recycling_lesson()
+    if not is_lesson_unlocked_for_student(current_user.id, lesson):
+        flash('Please complete Properties of Metals before starting Recycling.', 'warning')
+        return redirect(url_for('student.lessons'))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
     return render_template(

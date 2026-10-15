@@ -246,10 +246,13 @@ def ensure_default_curriculum():
             try:
                 db.session.execute(text("UPDATE lesson SET term = 'Term 1', is_supplementary = 0 WHERE title IN ('Living vs Non-Living', 'Animal Body Parts')"))
                 db.session.execute(text("UPDATE lesson SET term = 'Term 2', is_supplementary = 0 WHERE title IN ('Plant Parts', 'Properties of Metals', 'Recycling')"))
-                db.session.execute(text("UPDATE activity SET term = 'Term 1', is_supplementary = 0 WHERE engine IN ('claw_machine', 'find_the_part', 'quick_check')"))
+                db.session.execute(text("UPDATE activity SET term = 'Term 1', is_supplementary = 0 WHERE engine IN ('claw_machine', 'find_the_part')"))
                 db.session.execute(text("UPDATE activity SET term = 'Term 2', is_supplementary = 0 WHERE engine IN ('build_a_plant', 'metal_logic', 'recycle_sorter')"))
                 db.session.execute(text("UPDATE lesson_assignment SET is_supplementary = 0 WHERE lesson_id IN (SELECT id FROM lesson WHERE title IN ('Living vs Non-Living', 'Animal Body Parts', 'Plant Parts', 'Properties of Metals', 'Recycling'))"))
-                db.session.execute(text("UPDATE activity_assignment SET is_supplementary = 0 WHERE activity_id IN (SELECT id FROM activity WHERE engine IN ('claw_machine', 'find_the_part', 'quick_check', 'build_a_plant', 'metal_logic', 'recycle_sorter'))"))
+                db.session.execute(text("UPDATE activity_assignment SET is_supplementary = 0 WHERE activity_id IN (SELECT id FROM activity WHERE engine IN ('claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter'))"))
+                # Formative slide quiz checks & quick checks are internal lesson assessments, not standalone games
+                db.session.execute(text("UPDATE activity SET term = NULL, is_supplementary = 0 WHERE engine IN ('quick_check', 'lesson', 'slide_questions') OR type LIKE '%Quick Check%' OR type LIKE '%Slide Questions%'"))
+                db.session.execute(text("UPDATE activity_assignment SET is_archived = 1 WHERE activity_id IN (SELECT id FROM activity WHERE engine IN ('quick_check', 'lesson', 'slide_questions') OR type LIKE '%Quick Check%' OR type LIKE '%Slide Questions%')"))
                 db.session.commit()
             except Exception as term_err:
                 db.session.rollback()
