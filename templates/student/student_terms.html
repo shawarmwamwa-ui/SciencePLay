@@ -1,21 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Science Learning Trail — SciencePlay</title>
-  <meta name="description" content="Follow your science learning trail from Term 1 to Term 2! Finish fun lessons and interactive games to unlock new science adventures.">
+  <meta name="description"
+    content="Follow your science learning trail from Term 1 to Term 2! Finish fun lessons and interactive games to unlock new science adventures.">
 
-  <!-- Kid-friendly Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap"
+    rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css', v='20260903_8') }}">
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/curriculumTrail.css', v='20261015_1') }}">
 </head>
+
 <body class="student-page container mt-3 mb-5">
 
   <!-- Top Banner Header (Single, Clean, Accessible) -->
@@ -24,7 +28,8 @@
       <h1 class="fw-black fs-1 mb-1 d-flex align-items-center gap-2">
         <i class="bi bi-compass-fill text-primary"></i> My Learning Trail
       </h1>
-      <p class="text-dark fw-bold fs-5 mb-0">Follow your learning trail across each term! Finish each term to unlock the next.</p>
+      <p class="text-dark fw-bold fs-5 mb-0">Follow your learning trail across each term! Finish each term to unlock the
+        next.</p>
     </div>
     <div>
       <a href="{{ url_for('student.dashboard') }}" class="trail-back-btn" aria-label="Return to student dashboard">
@@ -36,273 +41,283 @@
 
   <!-- Flash Messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="mb-4">
-        {% for category, message in messages %}
-          <div class="alert alert-{{ 'warning' if category == 'warning' else 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show border-3 border-dark fw-bold shadow-sm d-flex align-items-center gap-2" role="alert" style="box-shadow: 3px 3px 0 #000; border-radius: 14px;">
-            <i class="bi {{ 'bi-exclamation-triangle-fill text-warning' if category == 'warning' else 'bi-shield-lock-fill text-danger' if category == 'danger' else 'bi-check-circle-fill text-success' }} fs-4"></i>
-            <div>{{ message }}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
+  {% if messages %}
+  <div class="mb-4">
+    {% for category, message in messages %}
+    <div
+      class="alert alert-{{ 'warning' if category == 'warning' else 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show border-3 border-dark fw-bold shadow-sm d-flex align-items-center gap-2"
+      role="alert" style="box-shadow: 3px 3px 0 #000; border-radius: 14px;">
+      <i
+        class="bi {{ 'bi-exclamation-triangle-fill text-warning' if category == 'warning' else 'bi-shield-lock-fill text-danger' if category == 'danger' else 'bi-check-circle-fill text-success' }} fs-4"></i>
+      <div>{{ message }}</div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
   {% endwith %}
 
-  <!-- Main Unified Trail Section -->
+  <!-- Main Unified Trail Section (Horizontal Adventure Cards) -->
   <main id="main-content" class="learning-trail-wrapper">
-    <div class="row g-4 align-items-stretch">
+    <div class="trail-horizontal-container">
       {% for term_data in term_mastery_list %}
-        <div class="col-12 col-md-6 {% if term_mastery_list|length >= 3 %}col-xl-4{% endif %} d-flex flex-column">
 
-          <!-- Term Card (No Fake Dots, Kid-Friendly, Voice-Enabled) -->
-          <article 
-            id="term-card-{{ loop.index }}" 
-            class="trail-term-card h-100 d-flex flex-column justify-content-between term-card-{{ loop.index }} {{ 'term-card-locked' if term_data.is_locked else '' }}"
-            data-speech-text="{{ term_data.name }}. {% if term_data.is_empty %}Content coming soon. 0 percent complete.{% elif term_data.is_locked %}{{ term_data.friendly_lock_message }}. 0 percent complete.{% else %}{{ term_data.lessons_completed_display }} lessons and {{ term_data.activities_completed_display }} games finished out of {{ term_data.total_items }} tasks. {{ term_data.display_percent }} percent complete. {{ term_data.remaining_label }}. Next step: {{ term_data.next_step.text if term_data.next_step else '' }}{% endif %}">
-            
-            <div>
-              <!-- Card Top Bar: Status + Voice Read-Aloud Button -->
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="d-flex align-items-center gap-2">
-                  {% if term_data.is_empty %}
-                    <span class="kid-status-badge kid-badge-locked">
-                      <i class="bi bi-clock-history"></i> Coming Soon
-                    </span>
-                  {% elif term_data.is_locked %}
-                    <span class="kid-status-badge kid-badge-locked">
-                      <i class="bi bi-lock-fill"></i> Locked
-                    </span>
-                  {% elif term_data.is_completed %}
-                    <span class="kid-status-badge kid-badge-completed">
-                      <i class="bi bi-award-fill"></i> All Done!
-                    </span>
-                  {% else %}
-                    <span class="kid-status-badge kid-badge-active">
-                      <i class="bi bi-play-circle-fill"></i> Current Stop
-                    </span>
-                  {% endif %}
-                </div>
+      {% if not loop.first %}
+      <!-- Trail Stepping Connector -->
+      <div class="trail-step-connector" aria-hidden="true">
+        <span class="trail-step-pill">
+          🐾 Next Adventure: {{ term_data.name }}
+        </span>
+      </div>
+      {% endif %}
 
-                <!-- Text-to-Speech Button (WCAG AA & Kid Accessible) -->
-                <button 
-                  type="button" 
-                  class="kid-speaker-btn" 
-                  onclick="readTermCard('term-card-{{ loop.index }}')" 
-                  aria-label="Read {{ term_data.name }} details out loud"
-                  title="Listen to this card">
-                  <i class="bi bi-volume-up-fill fs-4" aria-hidden="true"></i>
-                </button>
-              </div>
+      <!-- Horizontal Term Adventure Card -->
+      <article id="term-card-{{ loop.index }}"
+        class="trail-term-card trail-horizontal-card term-card-{{ loop.index }} {{ 'term-card-locked' if term_data.is_locked else '' }}"
+        data-speech-text="{{ term_data.name }}. {% if term_data.is_empty %}Content coming soon. 0 percent complete.{% elif term_data.is_locked %}{{ term_data.friendly_lock_message }}. 0 percent complete.{% else %}{{ term_data.lessons_completed_display }} lessons and {{ term_data.activities_completed_display }} games finished out of {{ term_data.total_items }} tasks. {{ term_data.display_percent }} percent complete. {{ term_data.remaining_label }}. Next step: {{ term_data.next_step.text if term_data.next_step else '' }}{% endif %}">
 
-              <!-- Term Title & Stars -->
-              <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
-                <div>
-                  <h2 class="fw-black text-dark fs-1 mb-1">
-                    {{ term_data.name }}
-                  </h2>
-                  <div class="fw-bold text-dark fs-6">
-                    {% if term_data.is_empty %}
-                      <span class="text-muted"><i class="bi bi-clock-history"></i> Coming Soon</span>
-                    {% elif term_data.is_locked %}
-                      <span class="text-muted"><i class="bi bi-lock"></i> 0 of {{ term_data.total_items }} tasks finished</span>
-                    {% else %}
-                      <span><i class="bi bi-check2-circle text-success"></i> {{ term_data.total_done_display }} of {{ term_data.total_items }} tasks finished</span>
-                    {% endif %}
-                  </div>
-                </div>
+        <!-- Card Top Bar: Status + Voice Read-Aloud Button -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="d-flex align-items-center gap-2">
+            {% if term_data.is_empty %}
+            <span class="kid-status-badge kid-badge-locked">
+              <i class="bi bi-clock-history"></i> Coming Soon
+            </span>
+            {% elif term_data.is_locked %}
+            <span class="kid-status-badge kid-badge-locked">
+              <i class="bi bi-lock-fill"></i> Locked
+            </span>
+            {% elif term_data.is_completed %}
+            <span class="kid-status-badge kid-badge-completed">
+              <i class="bi bi-award-fill"></i> All Done!
+            </span>
+            {% else %}
+            <span class="kid-status-badge kid-badge-active">
+              <i class="bi bi-play-circle-fill"></i> Current Stop
+            </span>
+            {% endif %}
+          </div>
 
-                <!-- Percentage + Stars Display -->
-                <div class="text-end">
-                  <div class="fw-black text-dark display-5">
-                    {% if term_data.is_locked or term_data.is_empty %}
-                      0%
-                    {% else %}
-                      {{ term_data.display_percent }}%
-                    {% endif %}
-                  </div>
-                  <!-- Stars for Kids -->
-                  <div class="kid-stars-row" aria-label="{{ term_data.stars_count }} out of 3 stars">
-                    {% for s in range(3) %}
-                      {% if s < term_data.stars_count %}
-                        <i class="bi bi-star-fill star-filled"></i>
-                      {% else %}
-                        <i class="bi bi-star star-empty"></i>
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Completion Celebration Banner -->
-              {% if term_data.is_completed %}
-                <div class="celebration-banner">
-                  <i class="bi bi-trophy-fill text-warning fs-2" aria-hidden="true"></i>
-                  <div>
-                    <strong class="fs-5 d-block text-dark">Hooray! {{ term_data.name }} Complete!</strong>
-                    <span class="text-dark small fw-bold">You earned all 3 stars! Fantastic work, scientist! ⭐</span>
-                  </div>
-                </div>
-              {% endif %}
-
-              <!-- Locked / Coming Soon Friendly Message Banner -->
-              {% if term_data.is_locked %}
-                <div class="p-3 mb-3 bg-white border border-dark rounded-4 d-flex align-items-center gap-3" style="box-shadow: 2.5px 2.5px 0 #000;">
-                  <div class="rounded-circle p-2 bg-light border border-dark d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; min-width: 48px;">
-                    <i class="bi {% if term_data.is_empty %}bi-clock-history text-secondary{% else %}bi-shield-lock-fill text-danger{% endif %} fs-3" aria-hidden="true"></i>
-                  </div>
-                  <div>
-                    <strong class="fs-5 text-dark d-block">{% if term_data.is_empty %}{{ term_data.name }} Coming Soon{% else %}{{ term_data.name }} is Locked{% endif %}</strong>
-                    <span class="text-dark fw-bold fs-6">{{ term_data.friendly_lock_message }}</span>
-                  </div>
-                </div>
-              {% endif %}
-
-              <!-- Progress Bar (Shows 0% when locked) -->
-              <div class="progress mb-4" style="height: 20px; border: 3px solid #000; border-radius: 999px; background: #fff; box-shadow: 2px 2px 0 #000; overflow: hidden;" role="progressbar" aria-valuenow="{{ 0 if term_data.is_locked else term_data.display_percent }}" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar" style="width: {{ 0 if term_data.is_locked else term_data.display_percent }}%; background: {{ '#94a3b8' if term_data.is_locked else '#22c55e' }};"></div>
-              </div>
-
-              <!-- Lessons & Games Quick Counters -->
-              <div class="row g-3 mb-4">
-                <div class="col-6">
-                  <div class="kid-info-box h-100">
-                    <span class="fw-black text-dark fs-6 d-flex align-items-center gap-1 mb-1">
-                      <i class="bi bi-book-fill text-primary"></i> Lessons
-                    </span>
-                    <span class="fw-black text-dark fs-4">
-                      {{ 0 if term_data.is_locked else term_data.lessons_completed_display }} / {{ term_data.lessons_total }}
-                    </span>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="kid-info-box h-100">
-                    <span class="fw-black text-dark fs-6 d-flex align-items-center gap-1 mb-1">
-                      <i class="bi bi-joystick text-success"></i> Games
-                    </span>
-                    <span class="fw-black text-dark fs-4">
-                      {{ 0 if term_data.is_locked else term_data.activities_completed_display }} / {{ term_data.activities_total }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Card Bottom: One Obvious Action Button + Remaining helper line -->
-            <div class="mt-2">
-              <!-- Helper Line for next step -->
-              <div class="fw-bold text-dark fs-6 mb-2 d-flex align-items-center gap-2">
-                <i class="bi bi-lightbulb-fill text-warning fs-5"></i>
-                <span>{{ term_data.remaining_label }}</span>
-              </div>
-
-              <!-- Big Bright Next Step Button -->
-              {% if term_data.is_empty %}
-                <button type="button" class="kid-big-action-btn kid-action-locked" disabled aria-disabled="true">
-                  <i class="bi bi-clock-history fs-5"></i>
-                  <span>{{ term_data.name }} Coming Soon 🔒</span>
-                </button>
-              {% elif term_data.is_locked %}
-                <button type="button" class="kid-big-action-btn kid-action-locked" disabled aria-disabled="true">
-                  <i class="bi bi-lock-fill fs-5"></i>
-                  <span>Finish {{ term_data.lock_reason or 'earlier terms' }} to Open {{ term_data.name }}!</span>
-                </button>
-              {% elif term_data.is_completed %}
-                <a href="{{ term_data.next_step.url if term_data.next_step else '#' }}" class="kid-big-action-btn kid-action-review" aria-label="Review {{ term_data.name }} lessons and games">
-                  <i class="bi bi-arrow-repeat fs-5"></i>
-                  <span>{{ term_data.next_step.text if term_data.next_step else 'Review ' ~ term_data.name ~ ' Lessons & Games ▶' }}</span>
-                </a>
-              {% else %}
-                <a href="{{ term_data.next_step.url if term_data.next_step else '#' }}" class="kid-big-action-btn kid-action-continue" aria-label="{{ term_data.next_step.text if term_data.next_step else 'Continue Term' }}">
-                  <i class="bi bi-play-circle-fill fs-4"></i>
-                  <span>{{ term_data.next_step.text if term_data.next_step else 'Continue ▶' }}</span>
-                </a>
-              {% endif %}
-
-              <!-- Expandable Lessons & Games Drawer for Direct Tapping -->
-              <div class="mt-3">
-                <button 
-                  class="kid-accordion-btn" 
-                  type="button" 
-                  data-bs-toggle="collapse" 
-                  data-bs-target="#collapse-{{ term_data.term_key }}" 
-                  aria-expanded="false" 
-                  aria-controls="collapse-{{ term_data.term_key }}">
-                  <span><i class="bi bi-list-stars me-1"></i> See All {{ term_data.name }} Tasks ({{ term_data.total_items }})</span>
-                  <i class="bi bi-chevron-down"></i>
-                </button>
-
-                <div class="collapse mt-3" id="collapse-{{ term_data.term_key }}">
-                  {% if term_data.total_items == 0 %}
-                    <div class="p-3 text-center text-muted fw-bold">
-                      <i class="bi bi-info-circle fs-4 d-block mb-1 text-secondary"></i>
-                      <span>No lessons or games added yet for {{ term_data.name }}. Content will appear here when created by your teacher!</span>
-                    </div>
-                  {% else %}
-                    <!-- Lessons List -->
-                    {% if term_data.lessons %}
-                    <div class="mb-3">
-                      <span class="fw-black text-dark fs-6 d-block mb-2">Lessons:</span>
-                      {% for lp in term_data.lessons %}
-                        {% if term_data.is_locked %}
-                          <div class="kid-task-item kid-task-locked" aria-disabled="true">
-                            <span class="fw-bold"><i class="bi bi-lock-fill me-2"></i>{{ lp.lesson.title }}</span>
-                            <span class="badge bg-secondary text-white rounded-pill">Locked</span>
-                          </div>
-                        {% else %}
-                          <a href="{{ lp.url }}" class="kid-task-item" aria-label="Open lesson {{ lp.lesson.title }}">
-                            <span class="fw-bold"><i class="bi bi-book-half text-primary me-2"></i>{{ lp.lesson.title }}</span>
-                            {% if lp.completed or lp.percent >= 100 %}
-                              <span class="badge bg-success text-white rounded-pill fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Done</span>
-                            {% else %}
-                              <span class="badge bg-primary text-white rounded-pill fw-bold">Start ▶</span>
-                            {% endif %}
-                          </a>
-                        {% endif %}
-                      {% endfor %}
-                    </div>
-                    {% endif %}
-
-                    <!-- Games List -->
-                    {% if term_data.activities %}
-                    <div>
-                      <span class="fw-black text-dark fs-6 d-block mb-2">Games:</span>
-                      {% for a in term_data.activities %}
-                        {% if term_data.is_locked %}
-                          <div class="kid-task-item kid-task-locked" aria-disabled="true">
-                            <span class="fw-bold"><i class="bi bi-lock-fill me-2"></i>{{ a.activity.type or 'Game' }}</span>
-                            <span class="badge bg-secondary text-white rounded-pill">Locked</span>
-                          </div>
-                        {% else %}
-                          <a href="{{ a.url }}" class="kid-task-item" aria-label="Play game {{ a.activity.type or 'Game' }}">
-                            <span class="fw-bold"><i class="bi bi-joystick text-success me-2"></i>{{ a.activity.type or 'Game' }}</span>
-                            {% if a.completed %}
-                              <span class="badge bg-success text-white rounded-pill fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Done</span>
-                            {% else %}
-                              <span class="badge bg-warning text-dark rounded-pill fw-bold">Play ▶</span>
-                            {% endif %}
-                          </a>
-                        {% endif %}
-                      {% endfor %}
-                    </div>
-                    {% endif %}
-                  {% endif %}
-                </div>
-              </div>
-
-            </div>
-
-          </article>
+          <!-- Text-to-Speech Button (WCAG AA & Kid Accessible) -->
+          <button type="button" class="kid-speaker-btn" onclick="readTermCard('term-card-{{ loop.index }}')"
+            aria-label="Read {{ term_data.name }} details out loud" title="Listen to this card">
+            <i class="bi bi-volume-up-fill fs-4" aria-hidden="true"></i>
+          </button>
         </div>
+
+        <!-- 3-Column Horizontal Layout on Desktop / Stacked on Mobile -->
+        <div class="row g-4 align-items-center">
+
+          <!-- Col 1: Title, Percentage, Stars, and Progress Bar -->
+          <div class="col-12 col-lg-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h2 class="fw-black text-dark fs-2 mb-0">
+                  {{ term_data.name }}
+                </h2>
+                <div class="fw-bold text-dark small mt-1">
+                  {% if term_data.is_empty %}
+                  <span class="text-muted"><i class="bi bi-clock-history"></i> Coming Soon</span>
+                  {% elif term_data.is_locked %}
+                  <span class="text-muted"><i class="bi bi-lock"></i> 0 of {{ term_data.total_items }} tasks finished</span>
+                  {% else %}
+                  <span><i class="bi bi-check2-circle text-success"></i> {{ term_data.total_done_display }} of {{ term_data.total_items }} tasks finished</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Percent and Stars -->
+              <div class="text-end">
+                <div class="fw-black text-dark fs-2">
+                  {% if term_data.is_locked or term_data.is_empty %}
+                  0%
+                  {% else %}
+                  {{ term_data.display_percent }}%
+                  {% endif %}
+                </div>
+                <div class="kid-stars-row" aria-label="{{ term_data.stars_count }} out of 3 stars">
+                  {% for s in range(3) %}
+                  {% if s < term_data.stars_count %}
+                  <i class="bi bi-star-fill star-filled"></i>
+                  {% else %}
+                  <i class="bi bi-star star-empty"></i>
+                  {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress"
+              style="height: 18px; border: 3px solid #000; border-radius: 999px; background: #fff; box-shadow: 2px 2px 0 #000; overflow: hidden;"
+              role="progressbar" aria-valuenow="{{ 0 if term_data.is_locked else term_data.display_percent }}"
+              aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-bar"
+                style="width: {{ 0 if term_data.is_locked else term_data.display_percent }}%; background: {{ '#94a3b8' if term_data.is_locked else '#22c55e' }};">
+              </div>
+            </div>
+          </div>
+
+          <!-- Col 2: Celebration Banner / Lock Notice & Counters -->
+          <div class="col-12 col-lg-4">
+            {% if term_data.is_completed %}
+            <div class="celebration-banner mb-2 p-2">
+              <i class="bi bi-trophy-fill text-warning fs-3" aria-hidden="true"></i>
+              <div>
+                <strong class="fs-6 d-block text-dark">Hooray! {{ term_data.name }} Complete!</strong>
+                <span class="text-dark small fw-bold">All 3 stars earned! Fantastic work! ⭐</span>
+              </div>
+            </div>
+            {% elif term_data.is_locked %}
+            <div class="p-2 mb-2 bg-white border border-dark rounded-3 d-flex align-items-center gap-2"
+              style="box-shadow: 2px 2px 0 #000;">
+              <i class="bi {% if term_data.is_empty %}bi-clock-history text-secondary{% else %}bi-shield-lock-fill text-danger{% endif %} fs-4"
+                aria-hidden="true"></i>
+              <span class="text-dark fw-bold small">{{ term_data.friendly_lock_message }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Lessons & Games Quick Counters -->
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="kid-info-box p-2 text-center h-100">
+                  <span class="fw-black text-dark small d-flex align-items-center justify-content-center gap-1 mb-1">
+                    <i class="bi bi-book-fill text-primary"></i> Lessons
+                  </span>
+                  <span class="fw-black text-dark fs-5">
+                    {{ 0 if term_data.is_locked else term_data.lessons_completed_display }} / {{ term_data.lessons_total }}
+                  </span>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="kid-info-box p-2 text-center h-100">
+                  <span class="fw-black text-dark small d-flex align-items-center justify-content-center gap-1 mb-1">
+                    <i class="bi bi-joystick text-success"></i> Games
+                  </span>
+                  <span class="fw-black text-dark fs-5">
+                    {{ 0 if term_data.is_locked else term_data.activities_completed_display }} / {{ term_data.activities_total }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Col 3: Action Button & Next Step Hint -->
+          <div class="col-12 col-lg-4 d-flex flex-column justify-content-center">
+            <!-- Helper Line for next step -->
+            <div class="fw-bold text-dark small mb-2 d-flex align-items-center gap-1">
+              <i class="bi bi-lightbulb-fill text-warning fs-5"></i>
+              <span>{{ term_data.remaining_label }}</span>
+            </div>
+
+            <!-- Big Bright Next Step Button -->
+            {% if term_data.is_empty %}
+            <button type="button" class="kid-big-action-btn kid-action-locked" disabled aria-disabled="true">
+              <i class="bi bi-clock-history fs-5"></i>
+              <span>{{ term_data.name }} Coming Soon 🔒</span>
+            </button>
+            {% elif term_data.is_locked %}
+            <button type="button" class="kid-big-action-btn kid-action-locked" disabled aria-disabled="true">
+              <i class="bi bi-lock-fill fs-5"></i>
+              <span>Finish {{ term_data.lock_reason or 'earlier terms' }} to Open!</span>
+            </button>
+            {% elif term_data.is_completed %}
+            <a href="{{ term_data.next_step.url if term_data.next_step else '#' }}"
+              class="kid-big-action-btn kid-action-review" aria-label="Review {{ term_data.name }} lessons and games">
+              <i class="bi bi-arrow-repeat fs-5"></i>
+              <span>{{ term_data.next_step.text if term_data.next_step else 'Review ' ~ term_data.name ~ ' Lessons & Games ▶' }}</span>
+            </a>
+            {% else %}
+            <a href="{{ term_data.next_step.url if term_data.next_step else '#' }}"
+              class="kid-big-action-btn kid-action-continue"
+              aria-label="{{ term_data.next_step.text if term_data.next_step else 'Continue Term' }}">
+              <i class="bi bi-play-circle-fill fs-4"></i>
+              <span>{{ term_data.next_step.text if term_data.next_step else 'Continue ▶' }}</span>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Expandable Lessons & Games Drawer for Direct Tapping -->
+        <div class="mt-3">
+          <button class="kid-accordion-btn" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapse-{{ term_data.term_key }}" aria-expanded="false"
+            aria-controls="collapse-{{ term_data.term_key }}">
+            <span><i class="bi bi-list-stars me-1"></i> See All {{ term_data.name }} Tasks ({{ term_data.total_items }})</span>
+            <i class="bi bi-chevron-down"></i>
+          </button>
+
+          <div class="collapse mt-3" id="collapse-{{ term_data.term_key }}">
+            {% if term_data.total_items == 0 %}
+            <div class="p-3 text-center text-muted fw-bold">
+              <i class="bi bi-info-circle fs-4 d-block mb-1 text-secondary"></i>
+              <span>No lessons or games added yet for {{ term_data.name }}. Content will appear here when created by your teacher!</span>
+            </div>
+            {% else %}
+            <!-- Lessons List -->
+            {% if term_data.lessons %}
+            <div class="mb-3">
+              <span class="fw-black text-dark fs-6 d-block mb-2">Lessons:</span>
+              {% for lp in term_data.lessons %}
+              {% if term_data.is_locked %}
+              <div class="kid-task-item kid-task-locked" aria-disabled="true">
+                <span class="fw-bold"><i class="bi bi-lock-fill me-2"></i>{{ lp.lesson.title }}</span>
+                <span class="badge bg-secondary text-white rounded-pill">Locked</span>
+              </div>
+              {% else %}
+              <a href="{{ lp.url }}" class="kid-task-item" aria-label="Open lesson {{ lp.lesson.title }}">
+                <span class="fw-bold"><i class="bi bi-book-half text-primary me-2"></i>{{ lp.lesson.title }}</span>
+                {% if lp.completed or lp.percent >= 100 %}
+                <span class="badge bg-success text-white rounded-pill fw-bold"><i
+                    class="bi bi-check-circle-fill me-1"></i>Done</span>
+                {% else %}
+                <span class="badge bg-primary text-white rounded-pill fw-bold">Start ▶</span>
+                {% endif %}
+              </a>
+              {% endif %}
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Games List -->
+            {% if term_data.activities %}
+            <div>
+              <span class="fw-black text-dark fs-6 d-block mb-2">Games:</span>
+              {% for a in term_data.activities %}
+              {% if term_data.is_locked %}
+              <div class="kid-task-item kid-task-locked" aria-disabled="true">
+                <span class="fw-bold"><i class="bi bi-lock-fill me-2"></i>{{ a.activity.type or 'Game' }}</span>
+                <span class="badge bg-secondary text-white rounded-pill">Locked</span>
+              </div>
+              {% else %}
+              <a href="{{ a.url }}" class="kid-task-item" aria-label="Play game {{ a.activity.type or 'Game' }}">
+                <span class="fw-bold"><i class="bi bi-joystick text-success me-2"></i>{{ a.activity.type or 'Game' }}</span>
+                {% if a.completed %}
+                <span class="badge bg-success text-white rounded-pill fw-bold"><i
+                    class="bi bi-check-circle-fill me-1"></i>Done</span>
+                {% else %}
+                <span class="badge bg-warning text-dark rounded-pill fw-bold">Play ▶</span>
+                {% endif %}
+              </a>
+              {% endif %}
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% endif %}
+          </div>
+        </div>
+
+      </article>
       {% endfor %}
     </div>
   </main>
 
   <!-- Confetti Canvas for Celebration -->
-  <canvas id="celebration-canvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; display: none;"></canvas>
+  <canvas id="celebration-canvas"
+    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; display: none;"></canvas>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="{{ url_for('static', filename='js/curriculumTrail.js', v='20261015_1') }}"></script>
 </body>
+
 </html>

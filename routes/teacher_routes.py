@@ -2633,6 +2633,28 @@ def _get_game_engine_templates():
     ]
 
 
+@teacher_bp.route('/content_management')
+@require_role('teacher')
+def content_management_alias():
+    return redirect(url_for('teacher.content_management', **request.args))
+
+@teacher_bp.route('/claw_machine_builder')
+@teacher_bp.route('/claw_machine_builder/<int:activity_id>')
+@require_role('teacher')
+def claw_machine_builder_alias(activity_id=None):
+    if activity_id:
+        return redirect(url_for('teacher.claw_machine_builder', activity_id=activity_id, **request.args))
+    return redirect(url_for('teacher.claw_machine_builder', **request.args))
+
+@teacher_bp.route('/lesson_builder')
+@teacher_bp.route('/lesson_builder/<int:lesson_id>')
+@require_role('teacher')
+def lesson_builder_alias(lesson_id=None):
+    if lesson_id:
+        return redirect(url_for('teacher.lesson_builder', lesson_id=lesson_id, **request.args))
+    return redirect(url_for('teacher.lesson_builder', **request.args))
+
+
 @teacher_bp.route('/content')
 @require_role('teacher')
 def content_management():

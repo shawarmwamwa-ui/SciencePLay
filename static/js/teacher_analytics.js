@@ -512,10 +512,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (createSuppBtn) {
-        if (activityEngine === 'claw_machine' && activityId) {
-          createSuppBtn.href = `/teacher/claw_machine_builder?activity_id=${activityId}&concept=${encodeURIComponent(itemName)}`;
+        if (activityId) {
+          createSuppBtn.href = `/teacher/content/claw_machine/builder?activity_id=${activityId}&concept=${encodeURIComponent(itemName)}&mode=supplementary`;
+        } else if (lessonId) {
+          createSuppBtn.href = `/teacher/content/lesson/builder?lesson_id=${lessonId}&concept=${encodeURIComponent(itemName)}&mode=supplementary`;
         } else {
-          createSuppBtn.href = `/teacher/content_management?concept=${encodeURIComponent(itemName)}&lesson=${encodeURIComponent(lessonTitle)}`;
+          createSuppBtn.href = `/teacher/content?concept=${encodeURIComponent(itemName)}&lesson=${encodeURIComponent(lessonTitle)}`;
         }
       }
 

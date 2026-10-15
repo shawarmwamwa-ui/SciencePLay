@@ -293,3 +293,66 @@ body.student-page {
 .kid-accordion-btn:hover, .kid-accordion-btn:focus-visible {
   background: #fef08a;
 }
+
+/* Horizontal Adventure Card */
+.trail-horizontal-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trail-horizontal-card {
+  padding: 24px 28px;
+  width: 100%;
+}
+
+.trail-horizontal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0 var(--trail-border);
+}
+
+.trail-step-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 6px 0;
+}
+
+.trail-step-connector::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 5%;
+  right: 5%;
+  height: 0;
+  border-top: 3.5px dashed #94a3b8;
+  z-index: 0;
+}
+
+.trail-step-pill {
+  position: relative;
+  z-index: 1;
+  background: #ffffff;
+  border: 2.5px solid #000;
+  border-radius: 999px;
+  padding: 6px 20px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  box-shadow: 2.5px 2.5px 0 #000;
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 991.98px) {
+  .trail-horizontal-card {
+    padding: 20px 18px;
+  }
+  .trail-step-connector::before {
+    left: 2%;
+    right: 2%;
+  }
+}
+
