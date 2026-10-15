@@ -235,19 +235,21 @@ document.addEventListener('DOMContentLoaded', () => {
     filterSelect.addEventListener('change', applyFilter);
   }
 
-  // Initialize struggle breakdown tables game filter
-  function initStruggleGameFilter() {
-    const filterSelect = document.getElementById('struggleGameFilter');
-    if (!filterSelect) return;
+  // Initialize struggle breakdown tables game & severity filter
+  function initStruggleConceptFilters() {
+    const gameFilterSelect = document.getElementById('struggleGameFilter');
+    const severityFilterSelect = document.getElementById('struggleSeverityFilter');
+    if (!gameFilterSelect && !severityFilterSelect) return;
 
     const tableConfigs = [
-      { id: '#struggle-games-table', wrap: '#struggle-games-pagination-wrap', info: '#struggle-games-page-info', nav: '#struggle-games-pagination-nav' },
-      { id: '#struggle-lessons-table', wrap: '#struggle-lessons-pagination-wrap', info: '#struggle-lessons-page-info', nav: '#struggle-lessons-pagination-nav' },
-      { id: '#struggle-breakdown-table', wrap: '#struggle-breakdown-pagination-wrap', info: '#struggle-breakdown-page-info', nav: '#struggle-breakdown-pagination-nav' }
+      { id: '#struggle-games-table', wrap: '#struggle-games-pagination-wrap', info: '#struggle-games-page-info', nav: '#struggle-games-pagination-nav', badgeId: 'count-struggle-games' },
+      { id: '#struggle-lessons-table', wrap: '#struggle-lessons-pagination-wrap', info: '#struggle-lessons-page-info', nav: '#struggle-lessons-pagination-nav', badgeId: 'count-struggle-lessons' },
+      { id: '#struggle-breakdown-table', wrap: '#struggle-breakdown-pagination-wrap', info: '#struggle-breakdown-page-info', nav: '#struggle-breakdown-pagination-nav', badgeId: 'count-struggle-all' }
     ];
 
     function applyStruggleFilter() {
-      const selectedGame = filterSelect.value.trim().toLowerCase();
+      const selectedGame = gameFilterSelect ? gameFilterSelect.value.trim().toLowerCase() : 'all';
+      const selectedSeverity = severityFilterSelect ? severityFilterSelect.value.trim().toLowerCase() : 'all';
 
       tableConfigs.forEach(cfg => {
         const table = document.querySelector(cfg.id);
@@ -262,8 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
         allRows.forEach(row => {
           const rowGame = (row.getAttribute('data-game') || '').trim().toLowerCase();
           const rowLesson = (row.getAttribute('data-lesson') || '').trim().toLowerCase();
+          const rowSeverity = (row.getAttribute('data-severity') || '').trim().toLowerCase();
+          const rowRepeated = parseInt(row.getAttribute('data-repeated') || '0', 10);
 
-          const matches = (
+          const matchesGame = (
             selectedGame === 'all' ||
             rowGame === selectedGame ||
             rowGame.includes(selectedGame) ||
@@ -272,7 +276,16 @@ document.addEventListener('DOMContentLoaded', () => {
             rowLesson.includes(selectedGame)
           );
 
-          if (matches) {
+          let matchesSeverity = true;
+          if (selectedSeverity === 'high') {
+            matchesSeverity = (rowSeverity === 'high' || rowRepeated >= 2);
+          } else if (selectedSeverity === 'moderate_high') {
+            matchesSeverity = (rowSeverity === 'high' || rowSeverity === 'medium' || rowRepeated >= 1);
+          } else if (selectedSeverity === 'low') {
+            matchesSeverity = (rowSeverity === 'low' || rowRepeated === 0);
+          }
+
+          if (matchesGame && matchesSeverity) {
             row.classList.remove('filter-hidden');
             row.removeAttribute('data-filtered');
             row.style.display = '';
@@ -284,13 +297,21 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
 
+        // Dynamically update the tab header badge so count matches visible rows
+        if (cfg.badgeId) {
+          const tabBadge = document.getElementById(cfg.badgeId);
+          if (tabBadge) {
+            tabBadge.textContent = matchedCount;
+          }
+        }
+
         // Handle empty filtered state
         let noMatchRow = tbody.querySelector('.struggle-no-match-row');
         if (matchedCount === 0) {
           if (!noMatchRow) {
             noMatchRow = document.createElement('tr');
             noMatchRow.className = 'struggle-no-match-row';
-            noMatchRow.innerHTML = '<td colspan="7" class="text-center text-muted py-4"><i class="bi bi-info-circle me-1"></i>No struggling concepts found for this game or activity.</td>';
+            noMatchRow.innerHTML = '<td colspan="7" class="text-center text-muted py-4"><i class="bi bi-info-circle me-1"></i>No struggling concepts found matching the selected filter criteria.</td>';
             tbody.appendChild(noMatchRow);
           }
           noMatchRow.style.display = '';
@@ -305,7 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    filterSelect.addEventListener('change', applyStruggleFilter);
+    if (gameFilterSelect) gameFilterSelect.addEventListener('change', applyStruggleFilter);
+    if (severityFilterSelect) severityFilterSelect.addEventListener('change', applyStruggleFilter);
   }
 
   // Initialize pagination for all tables across both tabs using centralized teacher.js helper
@@ -330,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initialize Struggling Students Modal with 1-Click Batch Intervention
+  // Initialize Struggling Students Modal with Interactive Confirmation & Student Checklist
   function initStrugglingStudentsModal() {
     const modalEl = document.getElementById('strugglingStudentsModal');
     if (!modalEl) return;
@@ -341,6 +363,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const missesEl = document.getElementById('strugglingModalMisses');
     const countPillEl = document.getElementById('strugglingModalCountPill');
     const studentListEl = document.getElementById('strugglingModalStudentList');
+    const severityBadgeEl = document.getElementById('strugglingModalSeverityBadge');
+    const breakdownTextEl = document.getElementById('strugglingModalBreakdownText');
+    const breakdownBadgeEl = document.getElementById('strugglingModalBreakdownBadge');
+
+    const overviewPane = document.getElementById('strugglingModalOverviewPane');
+    const confirmPane = document.getElementById('strugglingModalConfirmPane');
+    const confirmBackBtn = document.getElementById('modalConfirmBackBtn');
+    const confirmCancelBtn = document.getElementById('modalConfirmCancelBtn');
+    const confirmSubmitBtn = document.getElementById('modalConfirmSubmitBtn');
+    const confirmSubmitText = document.getElementById('modalConfirmSubmitText');
+    const confirmTargetIcon = document.getElementById('confirmTargetIcon');
+    const confirmTargetTypeBadge = document.getElementById('confirmTargetTypeBadge');
+    const confirmTargetTitle = document.getElementById('confirmTargetTitle');
+    const confirmStudentChecklist = document.getElementById('confirmStudentChecklist');
+    const confirmCheckedCount = document.getElementById('confirmCheckedCount');
+    const confirmTotalCount = document.getElementById('confirmTotalCount');
+    const confirmToggleSelectAllBtn = document.getElementById('confirmToggleSelectAllBtn');
+    const confirmDueDateInput = document.getElementById('confirmDueDateInput');
+    const confirmFeedbackAlert = document.getElementById('modalConfirmFeedbackAlert');
 
     const assignLessonBtn = document.getElementById('modalBatchAssignLessonBtn');
     const assignGameBtn = document.getElementById('modalBatchAssignGameBtn');
@@ -354,6 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentActivityType = '';
     let currentActivityEngine = '';
     let currentItemName = '';
+    let pendingAssignType = 'activity';
 
     function showFeedback(message, type = 'success') {
       if (!feedbackAlert) return;
@@ -367,6 +409,49 @@ document.addEventListener('DOMContentLoaded', () => {
         feedbackAlert.className = 'alert mt-2 mb-0 py-2 px-3 small d-none';
         feedbackAlert.innerHTML = '';
       }
+    }
+
+    function showConfirmFeedback(message, type = 'success') {
+      if (!confirmFeedbackAlert) return;
+      confirmFeedbackAlert.className = `alert alert-${type} mt-3 mb-0 py-2 px-3 small d-block border-0`;
+      confirmFeedbackAlert.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'} me-1.5"></i>${message}`;
+      confirmFeedbackAlert.classList.remove('d-none');
+    }
+
+    function clearConfirmFeedback() {
+      if (confirmFeedbackAlert) {
+        confirmFeedbackAlert.className = 'alert mt-3 mb-0 py-2 px-3 small d-none';
+        confirmFeedbackAlert.innerHTML = '';
+      }
+    }
+
+    function switchToOverview() {
+      if (overviewPane) overviewPane.classList.remove('d-none');
+      if (confirmPane) confirmPane.classList.add('d-none');
+      clearConfirmFeedback();
+    }
+
+    function switchToConfirm(assignType) {
+      pendingAssignType = assignType;
+      clearFeedback();
+      clearConfirmFeedback();
+
+      if (overviewPane) overviewPane.classList.add('d-none');
+      if (confirmPane) confirmPane.classList.remove('d-none');
+
+      if (confirmDueDateInput) confirmDueDateInput.value = '';
+
+      if (assignType === 'activity') {
+        if (confirmTargetIcon) confirmTargetIcon.className = 'bi bi-joystick text-success fs-5';
+        if (confirmTargetTypeBadge) confirmTargetTypeBadge.textContent = 'Interactive Practice Game';
+        if (confirmTargetTitle) confirmTargetTitle.textContent = currentActivityType ? `${currentActivityType} (Focused Practice)` : `${currentItemName} Practice`;
+      } else {
+        if (confirmTargetIcon) confirmTargetIcon.className = 'bi bi-book-half text-primary fs-5';
+        if (confirmTargetTypeBadge) confirmTargetTypeBadge.textContent = 'Curriculum Review Lesson';
+        if (confirmTargetTitle) confirmTargetTitle.textContent = currentLessonTitle ? `Review Lesson: ${currentLessonTitle}` : `${currentItemName} Review Module`;
+      }
+
+      renderConfirmChecklist();
     }
 
     function renderStudents() {
@@ -385,18 +470,19 @@ document.addEventListener('DOMContentLoaded', () => {
       currentStudents.forEach(st => {
         const studentName = typeof st === 'object' && st !== null ? st.name : st;
         const studentMisses = typeof st === 'object' && st !== null && st.miss_count ? st.miss_count : 1;
+        const isRepeated = studentMisses >= 2;
 
         const col = document.createElement('div');
         col.className = 'col-12 col-md-6';
         col.innerHTML = `
           <div class="p-2.5 px-3 rounded-3 border bg-light d-flex align-items-center justify-content-between gap-3 hover-shadow-sm transition-all" style="min-height: 50px;">
             <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 0;">
-              <span class="badge bg-danger-subtle text-danger rounded-circle p-2 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px;">
+              <span class="badge ${isRepeated ? 'bg-danger-subtle text-danger' : 'bg-secondary-subtle text-secondary'} rounded-circle p-2 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px;">
                 <i class="bi bi-person-fill"></i>
               </span>
               <span class="fw-semibold text-dark" style="font-size: 0.88rem; line-height: 1.25; word-break: break-word;">${studentName}</span>
             </div>
-            <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 flex-shrink-0 fw-bold" style="font-size: 0.74rem;">
+            <span class="badge ${isRepeated ? 'bg-danger text-white' : 'bg-light text-muted border'} rounded-pill px-2.5 py-1 flex-shrink-0 fw-bold" style="font-size: 0.74rem;">
               ${studentMisses} miss${studentMisses === 1 ? '' : 'es'}
             </span>
           </div>`;
@@ -404,68 +490,158 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Modal Batch Intervention Assignment Handler
-    async function executeBatchAssign(assignType) {
-      clearFeedback();
-      const studentIds = currentStudents.map(s => (typeof s === 'object' && s.id ? s.id : s)).filter(Boolean);
-      if (!studentIds.length) {
-        showFeedback('No valid student accounts found in this struggle group.', 'warning');
+    function renderConfirmChecklist() {
+      if (!confirmStudentChecklist) return;
+      confirmStudentChecklist.innerHTML = '';
+
+      if (!currentStudents || currentStudents.length === 0) {
+        confirmStudentChecklist.innerHTML = `
+          <div class="col-12 text-center text-muted py-3">
+            No students found in this struggle group.
+          </div>`;
         return;
       }
 
-      const activeBtn = assignType === 'lesson' ? assignLessonBtn : assignGameBtn;
-      const originalHtml = activeBtn ? activeBtn.innerHTML : '';
-      if (activeBtn) {
-        activeBtn.disabled = true;
-        activeBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Assigning...`;
+      currentStudents.forEach((st, idx) => {
+        const studentId = typeof st === 'object' && st !== null && st.id ? st.id : (typeof st === 'number' ? st : null);
+        const studentName = typeof st === 'object' && st !== null ? st.name : st;
+        const studentMisses = typeof st === 'object' && st !== null && st.miss_count ? st.miss_count : 1;
+        const isRepeated = studentMisses >= 2;
+        const inputId = `chk_stud_${studentId || idx}`;
+
+        const col = document.createElement('div');
+        col.className = 'col-12 col-md-6';
+        col.innerHTML = `
+          <div class="form-check p-2 px-2.5 rounded-3 bg-white border d-flex align-items-center justify-content-between gap-2 shadow-2xs hover-shadow-sm transition-all" style="min-height: 42px;">
+            <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 0;">
+              <input class="form-check-input ms-0 me-1 confirm-student-cb" type="checkbox" value="${studentId || ''}" id="${inputId}" checked>
+              <label class="form-check-label fw-bold text-dark small text-truncate cursor-pointer mb-0" for="${inputId}">
+                ${studentName}
+              </label>
+            </div>
+            <span class="badge ${isRepeated ? 'bg-danger text-white' : 'bg-light text-muted border'} rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.72rem;">
+              ${studentMisses} miss${studentMisses === 1 ? '' : 'es'}
+            </span>
+          </div>`;
+        confirmStudentChecklist.appendChild(col);
+      });
+
+      updateConfirmCounts();
+
+      confirmStudentChecklist.querySelectorAll('.confirm-student-cb').forEach(cb => {
+        cb.addEventListener('change', updateConfirmCounts);
+      });
+    }
+
+    function updateConfirmCounts() {
+      if (!confirmStudentChecklist) return;
+      const allCbs = Array.from(confirmStudentChecklist.querySelectorAll('.confirm-student-cb'));
+      const checkedCbs = allCbs.filter(cb => cb.checked);
+      const checkedCount = checkedCbs.length;
+      const totalCount = allCbs.length;
+
+      if (confirmCheckedCount) confirmCheckedCount.textContent = checkedCount;
+      if (confirmTotalCount) confirmTotalCount.textContent = totalCount;
+      if (confirmSubmitText) confirmSubmitText.textContent = `Confirm & Assign to ${checkedCount} Student${checkedCount === 1 ? '' : 's'}`;
+      if (confirmSubmitBtn) confirmSubmitBtn.disabled = (checkedCount === 0);
+
+      if (confirmToggleSelectAllBtn) {
+        confirmToggleSelectAllBtn.textContent = checkedCount === totalCount ? 'Deselect All' : 'Select All';
       }
+    }
 
-      try {
-        const payload = {
-          assign_type: assignType,
-          student_ids: studentIds,
-          lesson_id: currentLessonId,
-          activity_id: currentActivityId,
-          is_supplementary: true
-        };
+    if (confirmToggleSelectAllBtn) {
+      confirmToggleSelectAllBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const allCbs = Array.from(confirmStudentChecklist.querySelectorAll('.confirm-student-cb'));
+        const anyUnchecked = allCbs.some(cb => !cb.checked);
+        allCbs.forEach(cb => { cb.checked = anyUnchecked; });
+        updateConfirmCounts();
+      });
+    }
 
-        const res = await fetch('/teacher/batch_assign_intervention', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          body: JSON.stringify(payload)
-        });
+    if (confirmBackBtn) {
+      confirmBackBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchToOverview();
+      });
+    }
 
-        const data = await res.json();
-        if (res.ok && data.status === 'ok') {
-          showFeedback(data.message || 'Intervention successfully assigned to cohort!', 'success');
-        } else {
-          showFeedback(data.message || 'Unable to complete batch intervention assignment.', 'danger');
+    if (confirmCancelBtn) {
+      confirmCancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchToOverview();
+      });
+    }
+
+    if (confirmSubmitBtn) {
+      confirmSubmitBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        clearConfirmFeedback();
+        const checkedCbs = Array.from(confirmStudentChecklist.querySelectorAll('.confirm-student-cb:checked'));
+        const studentIds = checkedCbs.map(cb => parseInt(cb.value, 10)).filter(Boolean);
+
+        if (!studentIds.length) {
+          showConfirmFeedback('Please select at least one student recipient.', 'warning');
+          return;
         }
-      } catch (err) {
-        console.error('Batch assign error:', err);
-        showFeedback('Server communication error during intervention assignment.', 'danger');
-      } finally {
-        if (activeBtn) {
-          activeBtn.disabled = false;
-          activeBtn.innerHTML = originalHtml;
+
+        const originalBtnHtml = confirmSubmitBtn.innerHTML;
+        confirmSubmitBtn.disabled = true;
+        confirmSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1.5" role="status" aria-hidden="true"></span>Assigning...';
+
+        try {
+          const payload = {
+            assign_type: pendingAssignType,
+            student_ids: studentIds,
+            lesson_id: currentLessonId,
+            activity_id: currentActivityId,
+            due_date: confirmDueDateInput && confirmDueDateInput.value ? confirmDueDateInput.value : null,
+            is_supplementary: true
+          };
+
+          const res = await fetch('/teacher/batch_assign_intervention', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          const data = await res.json();
+          if (res.ok && data.status === 'ok') {
+            showConfirmFeedback(data.message || 'Intervention successfully assigned to selected cohort!', 'success');
+            confirmSubmitBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Assigned!';
+            setTimeout(() => {
+              switchToOverview();
+              showFeedback(data.message || 'Intervention successfully assigned to selected cohort!', 'success');
+            }, 1600);
+          } else {
+            showConfirmFeedback(data.message || 'Unable to complete batch intervention assignment.', 'danger');
+            confirmSubmitBtn.disabled = false;
+            confirmSubmitBtn.innerHTML = originalBtnHtml;
+          }
+        } catch (err) {
+          console.error('Batch assign error:', err);
+          showConfirmFeedback('Server communication error during intervention assignment.', 'danger');
+          confirmSubmitBtn.disabled = false;
+          confirmSubmitBtn.innerHTML = originalBtnHtml;
         }
-      }
+      });
     }
 
     if (assignLessonBtn) {
       assignLessonBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        executeBatchAssign('lesson');
+        switchToConfirm('lesson');
       });
     }
 
     if (assignGameBtn) {
       assignGameBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        executeBatchAssign('activity');
+        switchToConfirm('activity');
       });
     }
 
@@ -474,10 +650,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!btn) return;
       e.preventDefault();
       clearFeedback();
+      switchToOverview();
 
       const itemName = btn.getAttribute('data-item-name') || 'Activity Item';
       const context = btn.getAttribute('data-context') || 'Exercise';
       const misses = btn.getAttribute('data-misses') || '0';
+      const severity = btn.getAttribute('data-severity') || 'medium';
+      const severityLabel = btn.getAttribute('data-severity-label') || 'Moderate';
+      const repeatedCount = parseInt(btn.getAttribute('data-repeated-count') || '0', 10);
+      const singleCount = parseInt(btn.getAttribute('data-single-count') || '0', 10);
+
       const lessonId = btn.getAttribute('data-lesson-id') || null;
       const lessonTitle = btn.getAttribute('data-lesson-title') || '';
       const activityId = btn.getAttribute('data-activity-id') || null;
@@ -504,6 +686,31 @@ document.addEventListener('DOMContentLoaded', () => {
       if (missesEl) missesEl.textContent = `${misses} miss${misses == 1 ? '' : 'es'}`;
       if (countPillEl) countPillEl.textContent = `${students.length} Student${students.length == 1 ? '' : 's'}`;
 
+      if (severityBadgeEl) {
+        if (severity === 'high') {
+          severityBadgeEl.className = 'badge bg-danger text-white border rounded-pill px-2.5 py-1 fw-bold';
+          severityBadgeEl.innerHTML = '<i class="bi bi-fire me-1"></i>Persistent Struggle';
+        } else if (severity === 'low') {
+          severityBadgeEl.className = 'badge bg-light text-muted border rounded-pill px-2.5 py-1';
+          severityBadgeEl.innerHTML = '<i class="bi bi-info-circle me-1"></i>Minor Slip';
+        } else {
+          severityBadgeEl.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold';
+          severityBadgeEl.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Moderate';
+        }
+      }
+
+      if (breakdownTextEl && breakdownBadgeEl) {
+        if (repeatedCount > 0) {
+          breakdownTextEl.textContent = `Mistake Frequency: ${repeatedCount} student(s) with repeated misses (2+), ${singleCount} minor slip(s)`;
+          breakdownBadgeEl.className = 'badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1 fw-bold';
+          breakdownBadgeEl.textContent = 'High Struggle Priority';
+        } else {
+          breakdownTextEl.textContent = `Mistake Frequency: All ${students.length} student(s) made 1-off misclicks/slips`;
+          breakdownBadgeEl.className = 'badge bg-light text-muted border rounded-pill px-2.5 py-1';
+          breakdownBadgeEl.textContent = 'Isolated First-Try Slips';
+        }
+      }
+
       if (assignLessonBtn) {
         assignLessonBtn.style.display = currentLessonId ? 'inline-flex' : 'none';
       }
@@ -513,11 +720,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (createSuppBtn) {
         if (activityId) {
-          createSuppBtn.href = `/teacher/content/claw_machine/builder?activity_id=${activityId}&concept=${encodeURIComponent(itemName)}&mode=supplementary`;
+          createSuppBtn.href = `/teacher/content/claw_machine/builder?activity_id=${activityId}&concept=${encodeURIComponent(itemName)}&mode=supplementary&is_supplementary=1`;
         } else if (lessonId) {
-          createSuppBtn.href = `/teacher/content/lesson/builder?lesson_id=${lessonId}&concept=${encodeURIComponent(itemName)}&mode=supplementary`;
+          createSuppBtn.href = `/teacher/content/lesson/builder?lesson_id=${lessonId}&concept=${encodeURIComponent(itemName)}&mode=supplementary&is_supplementary=1`;
         } else {
-          createSuppBtn.href = `/teacher/content?concept=${encodeURIComponent(itemName)}&lesson=${encodeURIComponent(lessonTitle)}`;
+          createSuppBtn.href = `/teacher/content?concept=${encodeURIComponent(itemName)}&lesson=${encodeURIComponent(lessonTitle)}&mode=supplementary&is_supplementary=1`;
         }
       }
 
@@ -586,7 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initMostMissedChart();
   initRetryGameFilter();
-  initStruggleGameFilter();
+  initStruggleConceptFilters();
   initStrugglingStudentsModal();
   initUrlHashNavigation();
 });

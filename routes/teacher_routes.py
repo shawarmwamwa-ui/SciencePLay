@@ -601,6 +601,30 @@ def get_struggling_concepts(is_lesson=True, limit=None):
 
         rec = get_recommendation_for_concept(obj_name, val['activity_type'], val['activity_engine'], val['lesson_title'])
 
+        stud_list = val['students']
+        student_total = len(stud_list)
+        total_misses = val['misses']
+        repeated_count = sum(1 for s in stud_list if s.get('miss_count', 0) >= 2)
+        single_count = sum(1 for s in stud_list if s.get('miss_count', 0) == 1)
+        avg_miss = round(total_misses / max(student_total, 1), 1)
+
+        # Severity classification:
+        # High: Multiple students with repeated misses, or heavy misses (>= 10)
+        # Medium: Moderate struggle (>= 3 students, or total misses >= 4, or repeated misses)
+        # Low: Isolated 1-time slip-ups (1 student with 1 miss, or 1-2 minor slips)
+        if repeated_count >= 2 or (repeated_count >= 1 and total_misses >= 5) or total_misses >= 12:
+            severity = 'high'
+            severity_label = 'High Struggle'
+        elif student_total >= 3 or total_misses >= 4 or repeated_count >= 1:
+            severity = 'medium'
+            severity_label = 'Moderate'
+        else:
+            severity = 'low'
+            severity_label = 'Minor Slip'
+
+        # Weighted pedagogical score prioritizes persistent struggles over single accidental slips
+        weighted_score = (repeated_count * 12) + (total_misses * 2) + student_total
+
         items.append({
             'name': obj_name,
             'object_id': obj_id,
@@ -609,12 +633,19 @@ def get_struggling_concepts(is_lesson=True, limit=None):
             'activity_engine': val['activity_engine'],
             'lesson_id': val['lesson_id'],
             'lesson_title': val['lesson_title'],
-            'misses': val['misses'],
-            'students': val['students'],
-            'recommendation': rec
+            'misses': total_misses,
+            'students': stud_list,
+            'recommendation': rec,
+            'severity': severity,
+            'severity_label': severity_label,
+            'repeated_count': repeated_count,
+            'single_count': single_count,
+            'avg_miss': avg_miss,
+            'weighted_score': weighted_score
         })
 
-    items.sort(key=lambda x: x['misses'], reverse=True)
+    # Sort primarily by weighted struggle score (persistent errors first), then by total misses
+    items.sort(key=lambda x: (x.get('weighted_score', 0), x['misses']), reverse=True)
     return items[:limit] if limit else items
 
 

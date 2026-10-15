@@ -532,15 +532,16 @@
 
                   <!-- Curriculum Classification & Academic Term -->
                   <div class="col-12 col-md-6">
+                    {% set is_supp = (activity and activity.is_supplementary) or (config and config.get('is_supplementary')) or (request.args.get('mode') == 'supplementary') or (request.args.get('is_supplementary') in ['1', 'true', 'True']) %}
                     <label class="form-label fw-bold text-dark small d-flex align-items-center justify-content-between" for="activitySupplementaryInput">
                       <span>Curriculum Classification <span class="text-danger">*</span></span>
                       <span class="badge bg-light text-muted border rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">Curriculum Role</span>
                     </label>
                     <select class="form-select rounded-3 fw-bold" name="is_supplementary" id="activitySupplementaryInput">
-                      <option value="0" {% if not (activity and activity.is_supplementary) and not (config and config.get('is_supplementary')) %}selected{% endif %}>
+                      <option value="0" {% if not is_supp %}selected{% endif %}>
                         Core Curriculum Game
                       </option>
-                      <option value="1" {% if (activity and activity.is_supplementary) or (config and config.get('is_supplementary')) %}selected{% endif %}>
+                      <option value="1" {% if is_supp %}selected{% endif %}>
                         Supplementary / Remedial Practice
                       </option>
                     </select>
