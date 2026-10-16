@@ -1,0 +1,1092 @@
+const lessonConfig = window.LESSON_BUILDER_CONFIG || {};
+const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('input[name="csrf_token"]')?.value || '';
+// Modern in-app toast
+    function showBuilderToast(message, type = 'success') {
+      const toastEl = document.getElementById('builderToast');
+      const msgEl = document.getElementById('builderToastMessage');
+      const iconEl = document.getElementById('builderToastIcon');
+      if (!toastEl || !msgEl) return;
+
+      msgEl.textContent = message;
+
+      if (type === 'success') {
+        toastEl.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+        if (iconEl) iconEl.textContent = '✨';
+      } else if (type === 'warning') {
+        toastEl.style.background = 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)';
+        if (iconEl) iconEl.textContent = '⚠️';
+      } else if (type === 'danger' || type === 'error') {
+        toastEl.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
+        if (iconEl) iconEl.textContent = '⛔';
+      } else {
+        toastEl.style.background = 'linear-gradient(135deg, #1e293b 0%, #334155 100%)';
+        if (iconEl) iconEl.textContent = 'ℹ️';
+      }
+
+      if (window.bootstrap?.Toast) {
+        const bsToast = window.bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3200 });
+        bsToast.show();
+      }
+    }
+
+    // Default starter slide deck (Living vs Non-Living 7 slides)
+    const DEFAULT_SLIDES = [
+      {
+        id: "slide-1",
+        title: "Living vs Non-Living",
+        type: "concept",
+        image: "/static/images/tree.webp",
+        explanation: "Living things grow, breathe, and need food and water! 🌱 Non-living things do not do these on their own. 🪨"
+      },
+      {
+        id: "slide-2",
+        title: "Tap to Explore",
+        type: "concept",
+        image: "/static/images/tree.webp",
+        explanation: "Observe the world around us: trees grow tall, birds fly and breathe, but bicycles and puddles cannot grow or eat!"
+      },
+      {
+        id: "slide-3",
+        title: "Quick Check: Living Thing",
+        type: "quick-check",
+        prompt: "Which one can grow and needs water to stay alive? 🌱",
+        image: "/static/images/plant.webp",
+        explanation: "Plants are living things because they absorb water and grow.",
+        options: [
+          { id: "opt-1", label: "Rock", icon: "/static/images/rock.webp", isCorrect: false },
+          { id: "opt-2", label: "Plant", icon: "/static/images/plant.webp", isCorrect: true }
+        ]
+      },
+      {
+        id: "slide-4",
+        title: "More Objects to Classify",
+        type: "concept",
+        image: "/static/images/cat.webp",
+        explanation: "Cats eat food and run around. Toys, balls, and chairs are made by people and cannot breathe!"
+      },
+      {
+        id: "slide-5",
+        title: "Quick Check: Non-Living Thing",
+        type: "quick-check",
+        prompt: "Which object cannot breathe or move by itself? 🪑",
+        image: "/static/images/chair.webp",
+        explanation: "A chair is made of wood or plastic by people and cannot breathe or grow.",
+        options: [
+          { id: "opt-1", label: "Butterfly", icon: "/static/images/butterfly.webp", isCorrect: false },
+          { id: "opt-2", label: "Chair", icon: "/static/images/chair.webp", isCorrect: true }
+        ]
+      },
+      {
+        id: "slide-6",
+        title: "Why is this Fish a Living Thing?",
+        type: "concept",
+        image: "/static/images/fish.webp",
+        explanation: "A fish is living because it breathes water through gills, moves on its own, eats food, and grows larger!"
+      },
+      {
+        id: "slide-7",
+        title: "Living vs Non-Living: Big Ideas",
+        type: "summary",
+        image: "/static/images/star.webp",
+        explanation: "🌱 Living things grow, breathe, and need food. 🪨 Non-living things do not eat, breathe, or grow on their own. Awesome job!"
+      }
+    ];
+
+    // Lesson topic presets
+    const LESSON_PRESETS = {
+      living_vs_nonliving: {
+        title: "Living vs Non-Living",
+        description: "Learn how to tell living things from non-living things!",
+        slides: DEFAULT_SLIDES
+      },
+      states_of_matter: {
+        title: "States of Matter: Solid vs Liquid",
+        description: "Explore the different forms matter can take around us.",
+        slides: [
+          {
+            id: "slide-1",
+            title: "What is Matter?",
+            type: "concept",
+            image: "/static/images/rock.webp",
+            explanation: "Everything around us is made of matter! Matter can be a solid, liquid, or gas."
+          },
+          {
+            id: "slide-2",
+            title: "Solids Keep Their Shape",
+            type: "concept",
+            image: "/static/images/chair.webp",
+            explanation: "A wooden chair is a solid. It keeps its firm shape and fixed volume."
+          },
+          {
+            id: "slide-3",
+            title: "Quick Check: Find the Solid",
+            type: "quick-check",
+            prompt: "Which object keeps its rigid shape and is a solid? 🧊",
+            image: "/static/images/rock.webp",
+            explanation: "Ice and rocks hold a definite shape as solids.",
+            options: [
+              { id: "opt-1", label: "Ice Cube", icon: "/static/images/rock.webp", isCorrect: true },
+              { id: "opt-2", label: "Water Puddle", icon: "/static/images/puddle.webp", isCorrect: false }
+            ]
+          },
+          {
+            id: "slide-4",
+            title: "Liquids Flow and Pour",
+            type: "concept",
+            image: "/static/images/puddle.webp",
+            explanation: "Water is a liquid! It flows smoothly and takes the shape of whatever container it sits in."
+          },
+          {
+            id: "slide-5",
+            title: "Matter Explorer Complete!",
+            type: "summary",
+            image: "/static/images/star.webp",
+            explanation: "You now know the basic properties of solids and liquids!"
+          }
+        ]
+      },
+      recycling: {
+        title: "Eco Recycling & Waste Sorting",
+        description: "Discover how sorting waste protects our planet Earth.",
+        slides: [
+          {
+            id: "slide-1",
+            title: "Caring for Our Planet",
+            type: "concept",
+            image: "/static/images/plant.webp",
+            explanation: "Every day we use materials that can either become compost or be recycled into new products!"
+          },
+          {
+            id: "slide-2",
+            title: "Organic Compost",
+            type: "concept",
+            image: "/static/images/tree.webp",
+            explanation: "Leaves, branches, and fruit peels decompose naturally into nutrient-rich garden soil."
+          },
+          {
+            id: "slide-3",
+            title: "Quick Check: Organic Waste",
+            type: "quick-check",
+            prompt: "Which item breaks down naturally as organic compost? 🍂",
+            image: "/static/images/plant.webp",
+            explanation: "Fallen leaves decompose naturally in garden compost.",
+            options: [
+              { id: "opt-1", label: "Fallen Leaves", icon: "/static/images/plant.webp", isCorrect: true },
+              { id: "opt-2", label: "Plastic Bottle", icon: "/static/images/puddle.webp", isCorrect: false }
+            ]
+          },
+          {
+            id: "slide-4",
+            title: "Recyclable Materials",
+            type: "concept",
+            image: "/static/images/puddle.webp",
+            explanation: "Clean plastics, glass, and metals can be melted and remanufactured to reduce pollution."
+          },
+          {
+            id: "slide-5",
+            title: "Eco Scientist Certified!",
+            type: "summary",
+            image: "/static/images/star.webp",
+            explanation: "You are ready to help protect the environment by sorting waste properly!"
+          }
+        ]
+      },
+      basic_needs: {
+        title: "Basic Needs of Living Things",
+        term: "Term 2",
+        description: "Term 2, Weeks 5-7: Learn that living things need air, food, water, and shelter, depend on one another and the environment, and must be protected.",
+        slides: [
+          {
+            id: "bn-1", title: "What Do Living Things Need?", type: "concept",
+            images: ["/static/images/tree.webp", "/static/images/dog.webp", "/static/images/butterfly.webp", "/static/images/fish.webp"],
+            captions: ["Tree", "Dog", "Butterfly", "Fish"],
+            explanation: "Plants, animals, and people are all living things. To stay alive and healthy, every one of them has basic needs!"
+          },
+          {
+            id: "bn-2", title: "Air", type: "concept",
+            images: ["/static/images/bird.webp"], captions: ["Air"],
+            explanation: "Living things need air. Animals and people breathe in air, and plants take in air through their leaves."
+          },
+          {
+            id: "bn-3", title: "Food and Water", type: "concept",
+            images: ["/static/images/plant.webp", "/static/images/puddle.webp"],
+            captions: ["Food", "Water"],
+            explanation: "Living things need food for energy and water to grow. Plants make their own food using sunlight, water, and air. Animals eat plants or other animals."
+          },
+          {
+            id: "bn-4", title: "Quick Check: Basic Needs", type: "quick-check",
+            prompt: "Which one is something living things need to survive?",
+            image: "/static/images/puddle.webp",
+            explanation: "Water is a basic need of all living things.",
+            options: [
+              { id: "opt-1", label: "Water", icon: "/static/images/puddle.webp", isCorrect: true },
+              { id: "opt-2", label: "Rock", icon: "/static/images/rock.webp", isCorrect: false },
+              { id: "opt-3", label: "Ball", icon: "/static/images/ball.webp", isCorrect: false }
+            ]
+          },
+          {
+            id: "bn-5", title: "Shelter", type: "concept",
+            images: ["/static/images/tree.webp", "/static/images/bird.webp"],
+            captions: ["Tree (home)", "Bird (lives in the tree)"],
+            explanation: "Shelter keeps living things safe from weather and enemies. Birds build nests in trees, and animals live in burrows, caves, and homes."
+          },
+          {
+            id: "bn-6", title: "We Depend on One Another", type: "concept",
+            images: ["/static/images/flower.webp", "/static/images/butterfly.webp"],
+            captions: ["Flower", "Butterfly"],
+            explanation: "Living things depend on each other and their environment. Butterflies drink nectar from flowers, and in return they help flowers make seeds."
+          },
+          {
+            id: "bn-7", title: "Quick Check: Shelter", type: "quick-check",
+            prompt: "Where does a bird find shelter?",
+            image: "/static/images/bird.webp",
+            explanation: "Birds build nests in trees for shelter.",
+            options: [
+              { id: "opt-1", label: "Tree", icon: "/static/images/tree.webp", isCorrect: true },
+              { id: "opt-2", label: "Puddle", icon: "/static/images/puddle.webp", isCorrect: false }
+            ]
+          },
+          {
+            id: "bn-8", title: "Protect Our Environment", type: "concept",
+            images: ["/static/images/plant.webp", "/static/images/tree.webp"],
+            captions: ["Plant", "Tree"],
+            explanation: "If we harm the environment, living things lose air, food, water, and shelter. We must protect and conserve nature so living things can survive."
+          },
+          {
+            id: "bn-9", title: "Basic Needs Expert!", type: "summary",
+            image: "/static/images/star.webp",
+            explanation: "Great job! Living things need air, food, water, and shelter, and we must take care of the environment that provides them."
+          }
+        ]
+      }
+    };
+
+    // State
+    let currentSlideIndex = 0;
+    let rawSlides = (lessonConfig.serverSlides && lessonConfig.serverSlides.length > 0) ? lessonConfig.serverSlides : DEFAULT_SLIDES;
+    let slides = Array.isArray(rawSlides) && rawSlides.length > 0
+      ? rawSlides
+      : [
+          {
+            id: `slide-${Date.now()}`,
+            title: "Lesson Introduction",
+            type: "concept",
+            image: "/static/images/tree.webp",
+            explanation: "Welcome to this lesson! Type your introductory science concept here for students."
+          }
+        ];
+
+    function renderSlideStrip() {
+      const container = document.getElementById('slideStripContainer');
+      container.innerHTML = '';
+
+      slides.forEach((slide, idx) => {
+        const item = document.createElement('div');
+        item.className = `slide-strip-item ${idx === currentSlideIndex ? 'active' : ''}`;
+        item.onclick = () => selectSlide(idx);
+
+        let typePill = '<span class="slide-strip-type-pill st-concept">Concept</span>';
+        if (slide.type === 'quick-check') {
+          typePill = '<span class="slide-strip-type-pill st-quiz">Quiz</span>';
+        } else if (slide.type === 'summary') {
+          typePill = '<span class="slide-strip-type-pill st-summary">Summary</span>';
+        }
+
+        item.innerHTML = `
+          <div class="d-flex align-items-center gap-2 overflow-hidden">
+            <span class="slide-strip-num">${idx + 1}</span>
+            <span class="slide-strip-title">${slide.title || 'Untitled Slide'}</span>
+          </div>
+          ${typePill}
+        `;
+        container.appendChild(item);
+      });
+
+      const badge = document.getElementById('slidesCountBadge');
+      if (badge) badge.textContent = `${slides.length} Slides`;
+    }
+
+    function selectSlide(idx) {
+      if (idx < 0 || idx >= slides.length) return;
+      currentSlideIndex = idx;
+      renderSlideStrip();
+      loadSlideIntoEditor();
+      updateCanvasPreview();
+    }
+
+    function addSlide(type = 'concept') {
+      const nextNum = slides.length + 1;
+      let newSlide = {
+        id: `slide-${Date.now()}`,
+        title: type === 'quick-check' ? `Quick Check ${nextNum}` : `Concept Slide ${nextNum}`,
+        type: type,
+        image: "/static/images/tree.webp",
+        explanation: "Enter explanatory text for this slide..."
+      };
+
+      if (type === 'quick-check') {
+        newSlide.prompt = "What is the correct answer?";
+        newSlide.options = [
+          { id: `opt-${Date.now()}-1`, label: "Option A", icon: "/static/images/tree.webp", isCorrect: true },
+          { id: `opt-${Date.now()}-2`, label: "Option B", icon: "/static/images/rock.webp", isCorrect: false }
+        ];
+      }
+
+      slides.push(newSlide);
+      selectSlide(slides.length - 1);
+      showBuilderToast("Added new slide", "success");
+    }
+
+    function moveSlide(direction) {
+      const targetIndex = currentSlideIndex + direction;
+      if (targetIndex < 0 || targetIndex >= slides.length) return;
+
+      const temp = slides[currentSlideIndex];
+      slides[currentSlideIndex] = slides[targetIndex];
+      slides[targetIndex] = temp;
+
+      selectSlide(targetIndex);
+    }
+
+    function deleteCurrentSlide() {
+      if (slides.length <= 1) {
+        showBuilderToast("A lesson must have at least 1 slide.", "warning");
+        return;
+      }
+      slides.splice(currentSlideIndex, 1);
+      currentSlideIndex = Math.max(0, currentSlideIndex - 1);
+      renderSlideStrip();
+      loadSlideIntoEditor();
+      updateCanvasPreview();
+      showBuilderToast("Slide removed", "warning");
+    }
+
+    function ensureSlideImages(slide) {
+      if (!Array.isArray(slide.images) || slide.images.length === 0) {
+        if (slide.image && typeof slide.image === 'string') {
+          slide.images = [slide.image];
+        } else {
+          slide.images = ['/static/images/tree.webp'];
+          slide.image = '/static/images/tree.webp';
+        }
+      } else {
+        slide.image = slide.images[0];
+      }
+      if (!Array.isArray(slide.captions)) slide.captions = [];
+      while (slide.captions.length < slide.images.length) slide.captions.push('');
+      slide.captions.length = slide.images.length;
+      return slide.images;
+    }
+
+    function escapeAttr(v) {
+      return String(v ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+
+    function setImageCaption(idx, val) {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      ensureSlideImages(slide);
+      slide.captions[idx] = val;
+      updateCanvasPreview();
+    }
+
+    function captionLabelHtml(slide, i, cls) {
+      const cap = (slide.captions && slide.captions[i]) || '';
+      return cap ? `<span class="${cls}">${escapeAttr(cap)}</span>` : '';
+    }
+
+    function loadSlideIntoEditor() {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+
+      document.getElementById('editSlideTitle').value = slide.title || '';
+      document.getElementById('editSlideType').value = slide.type || 'concept';
+      document.getElementById('editSlideExplanation').value = slide.explanation || '';
+
+      const badge = document.getElementById('activeAnimationBadge');
+      const isAnim = Boolean(slide.animationSrc || (typeof slide.image === 'string' && slide.image.endsWith('.json')));
+      if (isAnim) {
+        if (badge) badge.classList.remove('d-none');
+        const nameEl = document.getElementById('activeAnimationName');
+        if (nameEl) nameEl.textContent = slide.animationLabel || 'Animation Attached';
+      } else {
+        if (badge) badge.classList.add('d-none');
+      }
+
+      // Render Attached Images Thumbnail Strip
+      renderSlideMediaStrip(slide);
+
+      const quizBox = document.getElementById('quickCheckEditFields');
+      if (slide.type === 'quick-check') {
+        quizBox.classList.remove('d-none');
+        document.getElementById('editQuizPrompt').value = slide.prompt || '';
+        renderQuizOptionsEditor();
+      } else {
+        quizBox.classList.add('d-none');
+      }
+    }
+
+    function renderSlideMediaStrip(slide) {
+      const container = document.getElementById('slideImagesThumbStrip');
+      const countBadge = document.getElementById('slideMediaCountBadge');
+      const layoutHint = document.getElementById('slideMediaLayoutText');
+      const addBtn = document.getElementById('btnAddSlideImageBtn');
+      if (!container) return;
+
+      const imgs = ensureSlideImages(slide);
+      container.innerHTML = '';
+
+      if (countBadge) countBadge.textContent = `${imgs.length} Image${imgs.length === 1 ? '' : 's'}`;
+      if (layoutHint) {
+        if (imgs.length === 1) {
+          layoutHint.textContent = '1 Image: Spotlight Hero Showcase';
+        } else if (imgs.length === 2) {
+          layoutHint.textContent = '2 Images: Side-by-Side Comparison (Left vs Right)';
+        } else {
+          layoutHint.textContent = `${imgs.length} Images: Balanced Photo Gallery Grid`;
+        }
+      }
+
+      imgs.forEach((imgSrc, idx) => {
+        const item = document.createElement('div');
+        item.className = 'slide-media-thumb-item';
+        item.title = `Image #${idx + 1} (Click to change/replace)`;
+        item.innerHTML = `
+          <span class="slide-media-thumb-badge">${idx + 1}</span>
+          <img src="${imgSrc}" alt="Slide Image ${idx + 1}">
+          ${imgs.length > 1 ? `<span class="slide-media-thumb-del" title="Remove this image" onclick="event.stopPropagation(); removeSlideImage(${idx});">✕</span>` : ''}
+        `;
+        item.onclick = () => openSlidePresetPicker('replace', idx);
+        container.appendChild(item);
+      });
+
+      if (addBtn) {
+        addBtn.disabled = imgs.length >= 4;
+        addBtn.classList.toggle('disabled', imgs.length >= 4);
+      }
+
+      // Per-image caption (icon name) editor
+      let capBox = document.getElementById('slideCaptionEditor');
+      if (!capBox) {
+        capBox = document.createElement('div');
+        capBox.id = 'slideCaptionEditor';
+        capBox.className = 'd-flex flex-column gap-1 mt-2 w-100';
+        container.insertAdjacentElement('afterend', capBox);
+      }
+      capBox.innerHTML = imgs.map((_, i) => `
+        <div class="input-group input-group-sm">
+          <span class="input-group-text fw-bold">#${i + 1}</span>
+          <input type="text" class="form-control" maxlength="40" placeholder="Name this image (e.g. Water)" value="${escapeAttr(slide.captions[i])}" oninput="setImageCaption(${i}, this.value)">
+        </div>`).join('');
+    }
+
+    function removeSlideImage(imgIdx) {
+      const slide = slides[currentSlideIndex];
+      if (!slide || !Array.isArray(slide.images) || slide.images.length <= 1) {
+        showBuilderToast("Each concept slide needs at least 1 image.", "warning");
+        return;
+      }
+      slide.images.splice(imgIdx, 1);
+      if (Array.isArray(slide.captions)) slide.captions.splice(imgIdx, 1);
+      slide.image = slide.images[0];
+      loadSlideIntoEditor();
+      updateCanvasPreview();
+      showBuilderToast("Image removed from slide.", "info");
+    }
+
+    function toggleCanvasExpand() {
+      const grid = document.querySelector('.lesson-workspace-grid');
+      const btn = document.getElementById('btnToggleExpandCanvas');
+      if (!grid || !btn) return;
+      const isExpanded = grid.classList.toggle('canvas-expanded');
+      if (isExpanded) {
+        btn.innerHTML = '<i class="bi bi-arrows-angle-contract me-1"></i>Standard View';
+        btn.classList.replace('btn-outline-dark', 'btn-dark');
+        showBuilderToast("Canvas expanded to full width preview", "info");
+      } else {
+        btn.innerHTML = '<i class="bi bi-arrows-angle-expand me-1"></i>Expand Canvas';
+        btn.classList.replace('btn-dark', 'btn-outline-dark');
+      }
+    }
+
+    function renderQuizOptionsEditor() {
+      const slide = slides[currentSlideIndex];
+      if (!slide || !Array.isArray(slide.options)) return;
+      const container = document.getElementById('quizOptionsEditor');
+      container.innerHTML = '';
+
+      slide.options.forEach((opt, optIdx) => {
+        const row = document.createElement('div');
+        row.className = 'd-flex align-items-center gap-2 p-2 bg-white rounded-3 border';
+        row.innerHTML = `
+          <input type="radio" name="correct_opt_radio" ${opt.isCorrect ? 'checked' : ''} onchange="setQuizCorrectOption(${optIdx})" title="Mark as correct answer">
+          <img src="${opt.icon || '/static/images/tree.webp'}" alt="Icon" style="width: 28px; height: 28px; object-fit: contain;">
+          <input type="text" class="form-control form-control-sm rounded-2 fw-bold" value="${opt.label}" oninput="updateQuizOptionLabel(${optIdx}, this.value)" placeholder="Choice label">
+          ${slide.options.length > 2 ? `
+            <button type="button" class="btn btn-outline-danger btn-sm border-0 p-1" onclick="removeQuizOption(${optIdx})"><i class="bi bi-x-lg"></i></button>
+          ` : ''}
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function updateQuizOptionLabel(optIdx, val) {
+      if (slides[currentSlideIndex]?.options?.[optIdx]) {
+        slides[currentSlideIndex].options[optIdx].label = val;
+        updateCanvasPreview();
+      }
+    }
+
+    function setQuizCorrectOption(optIdx) {
+      if (slides[currentSlideIndex]?.options) {
+        slides[currentSlideIndex].options.forEach((opt, i) => {
+          opt.isCorrect = (i === optIdx);
+        });
+        updateCanvasPreview();
+      }
+    }
+
+    function addQuizOption() {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      if (!Array.isArray(slide.options)) slide.options = [];
+      if (slide.options.length >= 4) {
+        showBuilderToast("Maximum 4 options allowed per quick-check.", "warning");
+        return;
+      }
+      slide.options.push({
+        id: `opt-${Date.now()}-${slide.options.length + 1}`,
+        label: `Choice ${slide.options.length + 1}`,
+        icon: "/static/images/rock.webp",
+        isCorrect: false
+      });
+      renderQuizOptionsEditor();
+      updateCanvasPreview();
+    }
+
+    function removeQuizOption(optIdx) {
+      const slide = slides[currentSlideIndex];
+      if (!slide?.options || slide.options.length <= 2) {
+        showBuilderToast("A question needs at least 2 options.", "warning");
+        return;
+      }
+      slide.options.splice(optIdx, 1);
+      // Ensure at least one is correct
+      if (!slide.options.some(o => o.isCorrect)) {
+        slide.options[0].isCorrect = true;
+      }
+      renderQuizOptionsEditor();
+      updateCanvasPreview();
+    }
+
+    function updateCurrentSlideField(field, value) {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      slide[field] = value;
+      if (field === 'type') {
+        if (value === 'quick-check' && !slide.options) {
+          slide.prompt = "Answer the question.";
+          slide.options = [
+            { id: "opt-1", label: "Choice A", icon: "/static/images/tree.webp", isCorrect: true },
+            { id: "opt-2", label: "Choice B", icon: "/static/images/rock.webp", isCorrect: false }
+          ];
+        }
+        loadSlideIntoEditor();
+      }
+      renderSlideStrip();
+      updateCanvasPreview();
+    }
+
+    function updateCanvasPreview() {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+
+      document.getElementById('canvasTitleDisplay').textContent = slide.title || 'Untitled Slide';
+      document.getElementById('canvasNarrationDisplay').textContent = slide.explanation || 'No narration entered yet.';
+      document.getElementById('canvasSlideIndicator').textContent = `Slide ${currentSlideIndex + 1} / ${slides.length}`;
+
+      const heroBox = document.getElementById('canvasHeroBox');
+      const heroImg = document.getElementById('canvasHeroImg');
+      const quizBox = document.getElementById('canvasQuizBox');
+      const quizPrompt = document.getElementById('canvasQuizPromptDisplay');
+      const quizOpts = document.getElementById('canvasQuizOptionsContainer');
+
+      if (slide.type === 'quick-check') {
+        heroBox.classList.add('d-none');
+        quizBox.classList.remove('d-none');
+        quizPrompt.textContent = slide.prompt || 'Answer the question:';
+        quizOpts.innerHTML = '';
+
+        (slide.options || []).forEach(opt => {
+          const btn = document.createElement('div');
+          btn.className = 'canvas-quiz-opt-btn';
+          btn.innerHTML = `
+            <img src="${opt.icon || '/static/images/tree.webp'}" alt="Icon" class="canvas-quiz-opt-icon">
+            <span>${opt.label}</span>
+            <span class="quiz-feedback-pill badge d-none small py-0 px-1 mt-1"></span>
+          `;
+          btn.onclick = () => {
+            quizOpts.querySelectorAll('.canvas-quiz-opt-btn').forEach(b => {
+              b.classList.remove('is-correct', 'is-incorrect');
+              const pill = b.querySelector('.quiz-feedback-pill');
+              if (pill) pill.classList.add('d-none');
+            });
+            const pill = btn.querySelector('.quiz-feedback-pill');
+            if (opt.isCorrect) {
+              btn.classList.add('is-correct');
+              if (pill) {
+                pill.className = 'quiz-feedback-pill badge bg-success small py-0 px-1 mt-1';
+                pill.textContent = '✓ Correct';
+                pill.classList.remove('d-none');
+              }
+              showBuilderToast(`Correct! "${opt.label}" is the right answer.`, "success");
+            } else {
+              btn.classList.add('is-incorrect');
+              if (pill) {
+                pill.className = 'quiz-feedback-pill badge bg-danger small py-0 px-1 mt-1';
+                pill.textContent = '✗ Try again';
+                pill.classList.remove('d-none');
+              }
+              showBuilderToast(`"${opt.label}" is incorrect. Try another option!`, "warning");
+            }
+          };
+          quizOpts.appendChild(btn);
+        });
+      } else {
+        quizBox.classList.add('d-none');
+        heroBox.classList.remove('d-none');
+        const lottieBox = document.getElementById('canvasLottieContainer');
+        const mediaDisplay = document.getElementById('canvasMediaDisplayArea');
+        const animSrc = slide.animationSrc || (typeof slide.image === 'string' && slide.image.endsWith('.json') ? slide.image : null);
+
+        if (animSrc && window.lottie) {
+          if (mediaDisplay) mediaDisplay.classList.add('d-none');
+          if (lottieBox) {
+            lottieBox.classList.remove('d-none');
+            lottieBox.innerHTML = '';
+            if (window._builderLottieAnim) {
+              window._builderLottieAnim.destroy();
+              window._builderLottieAnim = null;
+            }
+            try {
+              window._builderLottieAnim = lottie.loadAnimation({
+                container: lottieBox,
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: animSrc
+              });
+            } catch (err) {
+              console.warn("Lottie preview notice:", err);
+            }
+          }
+        } else {
+          if (window._builderLottieAnim) {
+            window._builderLottieAnim.destroy();
+            window._builderLottieAnim = null;
+          }
+          if (lottieBox) lottieBox.classList.add('d-none');
+          if (mediaDisplay) {
+            mediaDisplay.classList.remove('d-none');
+            const imgs = ensureSlideImages(slide);
+
+            if (imgs.length === 1) {
+              mediaDisplay.innerHTML = `
+                <div class="canvas-single-hero">
+                  <img src="${imgs[0]}" alt="Slide Illustration" class="canvas-hero-img">
+                  ${captionLabelHtml(slide, 0, 'canvas-img-caption')}
+                </div>
+              `;
+            } else if (imgs.length === 2) {
+              mediaDisplay.innerHTML = `
+                <div class="canvas-compare-row">
+                  <div class="canvas-compare-card">
+                    <span class="badge bg-primary-subtle text-primary border small mb-2 fw-bold">Image 1</span>
+                    <img src="${imgs[0]}" alt="Comparison item 1">
+                    ${captionLabelHtml(slide, 0, 'canvas-img-caption')}
+                  </div>
+                  <div class="canvas-vs-badge">VS</div>
+                  <div class="canvas-compare-card">
+                    <span class="badge bg-warning-subtle text-dark border small mb-2 fw-bold">Image 2</span>
+                    <img src="${imgs[1]}" alt="Comparison item 2">
+                    ${captionLabelHtml(slide, 1, 'canvas-img-caption')}
+                  </div>
+                </div>
+              `;
+            } else {
+              mediaDisplay.innerHTML = `
+                <div class="canvas-gallery-grid">
+                  ${imgs.map((src, i) => `
+                    <div class="canvas-gallery-card">
+                      <span class="badge bg-light text-dark border small mb-1">#${i + 1}</span>
+                      <img src="${src}" alt="Gallery item ${i + 1}">
+                      ${captionLabelHtml(slide, i, 'canvas-img-caption')}
+                    </div>
+                  `).join('')}
+                </div>
+              `;
+            }
+          }
+        }
+      }
+
+      const backBtn = document.getElementById('canvasBackBtn');
+      if (backBtn) {
+        backBtn.disabled = currentSlideIndex === 0;
+        backBtn.classList.toggle('disabled', currentSlideIndex === 0);
+      }
+      const nextBtn = document.getElementById('canvasNextBtn');
+      if (nextBtn) {
+        nextBtn.innerHTML = (currentSlideIndex === slides.length - 1)
+          ? 'Finish <i class="bi bi-check-circle-fill ms-1"></i>'
+          : 'Next <i class="bi bi-arrow-right ms-1"></i>';
+      }
+    }
+
+    // Canvas Back/Next navigation
+    function canvasStep(dir) {
+      const target = currentSlideIndex + dir;
+      if (target < 0) return;
+      if (target >= slides.length) {
+        // Reached the final slide and clicked "Finish"
+        if (confirm("🎉 You've reached the end of the lesson! Would you like to Save & Publish this lesson now?")) {
+          submitLessonForm();
+        } else {
+          showBuilderToast('Lesson preview complete. Returning to slide 1.', 'info');
+          selectSlide(0);
+        }
+        return;
+      }
+      selectSlide(target);
+    }
+
+    // TTS Preview in Canvas
+    function previewCurrentSlideTTS() {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      const textToRead = `${slide.title}. ${slide.type === 'quick-check' ? (slide.prompt || '') : (slide.explanation || '')}`;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(textToRead);
+        utterance.rate = 0.95;
+        utterance.pitch = 1.05;
+        window.speechSynthesis.speak(utterance);
+        showBuilderToast("Speaking aloud...", "info");
+      } else {
+        showBuilderToast("Speech synthesis not supported in this browser.", "warning");
+      }
+    }
+
+    // Preset Image Picker
+    let teacherAssetsCache = { image: [], animation: [] };
+
+    async function loadTeacherAssets(type = 'image') {
+      const gridId = type === 'image' ? 'libraryImagesGrid' : 'libraryAnimationsGrid';
+      const badgeId = type === 'image' ? 'badgeImgLibraryCount' : 'badgeAnimLibraryCount';
+      const grid = document.getElementById(gridId);
+      const badge = document.getElementById(badgeId);
+
+      if (!grid) return;
+      grid.innerHTML = '<div class="text-center py-4 text-muted small w-100" style="grid-column: 1 / -1;"><span class="spinner-border spinner-border-sm me-2 text-primary"></span>Loading permanent library...</div>';
+
+      try {
+        const res = await fetch(`/teacher/api/assets?type=${type}`);
+        const data = await res.json();
+        if (data.status === 'success') {
+          teacherAssetsCache[type] = data.assets || [];
+          if (badge) badge.textContent = teacherAssetsCache[type].length;
+          renderLibraryGrid(type);
+        } else {
+          grid.innerHTML = '<div class="text-center py-3 text-danger small w-100" style="grid-column: 1 / -1;">Failed loading library</div>';
+        }
+      } catch (err) {
+        grid.innerHTML = '<div class="text-center py-3 text-danger small w-100" style="grid-column: 1 / -1;">Could not connect to library</div>';
+      }
+    }
+
+    function renderLibraryGrid(type = 'image') {
+      const gridId = type === 'image' ? 'libraryImagesGrid' : 'libraryAnimationsGrid';
+      const grid = document.getElementById(gridId);
+      if (!grid) return;
+
+      const assets = teacherAssetsCache[type] || [];
+      if (assets.length === 0) {
+        grid.innerHTML = `
+          <div class="text-center py-4 text-muted w-100" style="grid-column: 1 / -1;">
+            <i class="bi bi-inbox fs-2 d-block mb-1 text-secondary opacity-50"></i>
+            <div class="small fw-bold">No uploaded ${type}s in your library yet</div>
+            <div style="font-size: 0.75rem;">Use the upload box above to permanently save files for all future lessons!</div>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = '';
+      assets.forEach(asset => {
+        const item = document.createElement('div');
+        item.className = 'preset-picker-item position-relative';
+        item.style.cursor = 'pointer';
+
+        if (type === 'image') {
+          item.innerHTML = `
+            <img src="${asset.file_url}" alt="${asset.title}" onerror="this.src='/static/images/tree.webp'">
+            <div class="small fw-bold text-dark text-truncate" title="${asset.title}">${asset.title}</div>
+            <button type="button" class="btn btn-sm btn-light text-danger position-absolute top-0 end-0 m-1 rounded-circle p-0 shadow-sm border d-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Delete" onclick="deleteTeacherLibraryAsset(event, ${asset.id}, 'image')">
+              <i class="bi bi-trash3-fill"></i>
+            </button>
+          `;
+          item.onclick = (e) => {
+            if (e.target.closest('button')) return;
+            chooseSlidePresetImage(asset.file_url, asset.title);
+          };
+        } else {
+          item.innerHTML = `
+            <div class="fs-1 text-center py-2">✨</div>
+            <div class="small fw-bold text-dark text-truncate" title="${asset.title}">${asset.title}</div>
+            <button type="button" class="btn btn-sm btn-light text-danger position-absolute top-0 end-0 m-1 rounded-circle p-0 shadow-sm border d-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Delete" onclick="deleteTeacherLibraryAsset(event, ${asset.id}, 'animation')">
+              <i class="bi bi-trash3-fill"></i>
+            </button>
+          `;
+          item.onclick = (e) => {
+            if (e.target.closest('button')) return;
+            chooseSlidePresetAnimation(asset.file_url, asset.title);
+          };
+        }
+
+        grid.appendChild(item);
+      });
+    }
+
+    async function uploadTeacherLibraryAsset(input, type = 'image') {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('csrf_token', getCsrfToken());
+
+      showBuilderToast(`Uploading "${file.name}" to your library...`, 'info');
+
+      try {
+        const res = await fetch('/teacher/api/assets/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+          showBuilderToast(result.message, 'success');
+          input.value = '';
+          await loadTeacherAssets(type);
+          if (type === 'image') {
+            chooseSlidePresetImage(result.asset.file_url, result.asset.title);
+          } else {
+            chooseSlidePresetAnimation(result.asset.file_url, result.asset.title);
+          }
+        } else {
+          showBuilderToast(result.message || 'Upload failed', 'danger');
+          input.value = '';
+        }
+      } catch (err) {
+        showBuilderToast('Error uploading asset to server', 'danger');
+        input.value = '';
+      }
+    }
+
+    async function deleteTeacherLibraryAsset(event, assetId, type) {
+      event.stopPropagation();
+      if (!confirm('Remove this asset from your permanent library?')) return;
+
+      const formData = new FormData();
+      formData.append('csrf_token', getCsrfToken());
+
+      try {
+        const res = await fetch(`/teacher/api/assets/${assetId}/delete`, {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+          showBuilderToast('Asset removed from library', 'info');
+          await loadTeacherAssets(type);
+        } else {
+          showBuilderToast(result.message || 'Could not delete asset', 'danger');
+        }
+      } catch (err) {
+        showBuilderToast('Failed communicating with server', 'danger');
+      }
+    }
+
+    let activeImagePickerMode = { action: 'add', index: null };
+
+    function openSlidePresetPicker(mode = 'add', targetIdx = null) {
+      activeImagePickerMode = { action: mode, index: targetIdx };
+      const modalEl = document.getElementById('presetImageModal');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+      loadTeacherAssets('image');
+    }
+
+    function chooseSlidePresetImage(src, label) {
+      const slide = slides[currentSlideIndex];
+      if (slide) {
+        const imgs = ensureSlideImages(slide);
+        if (activeImagePickerMode?.action === 'add') {
+          if (imgs.length < 4) {
+            imgs.push(src);
+            slide.captions.push(label || '');
+            showBuilderToast(`Added ${label || 'illustration'} to slide!`, "success");
+          } else {
+            showBuilderToast("Maximum 4 images allowed per slide.", "warning");
+          }
+        } else if (activeImagePickerMode?.action === 'replace') {
+          const idx = activeImagePickerMode.index ?? 0;
+          imgs[idx] = src;
+          if (label) slide.captions[idx] = label;
+          showBuilderToast(`Replaced Image #${idx + 1}!`, "success");
+        } else {
+          slide.images = [src];
+        }
+        slide.image = imgs[0];
+        loadSlideIntoEditor();
+        updateCanvasPreview();
+      }
+      const modalEl = document.getElementById('presetImageModal');
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+    }
+
+    // Preset Animation Picker
+    function openAnimationPresetPicker() {
+      const modalEl = document.getElementById('presetAnimationModal');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+      loadTeacherAssets('animation');
+    }
+
+    function chooseSlidePresetAnimation(src, label) {
+      const slide = slides[currentSlideIndex];
+      if (slide) {
+        slide.animationSrc = src;
+        slide.animationLabel = label;
+        slide.image = src;
+        loadSlideIntoEditor();
+        updateCanvasPreview();
+        showBuilderToast(`Animation attached: ${label}`, "success");
+      }
+      const modalEl = document.getElementById('presetAnimationModal');
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+    }
+
+    function clearSlideAnimation() {
+      const slide = slides[currentSlideIndex];
+      if (slide) {
+        delete slide.animationSrc;
+        delete slide.animationLabel;
+        slide.image = '/static/images/tree.webp';
+        loadSlideIntoEditor();
+        updateCanvasPreview();
+        showBuilderToast("Animation removed", "info");
+      }
+    }
+
+    // File upload (images + animations)
+    function handleSlideFileUpload(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const validExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'json'];
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+
+        if (!validExtensions.includes(ext)) {
+          showBuilderToast("Supported files: .png, .jpg, .webp, .gif, or .json animation", "danger");
+          input.value = '';
+          return;
+        }
+
+        if (ext === 'json') {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            try {
+              JSON.parse(e.target.result); // validate JSON syntax
+              const slide = slides[currentSlideIndex];
+              slide.animationSrc = e.target.result;
+              slide.animationLabel = file.name;
+              slide.image = e.target.result;
+              loadSlideIntoEditor();
+              updateCanvasPreview();
+              showBuilderToast(`Custom animation attached: ${file.name}`, "success");
+            } catch (err) {
+              showBuilderToast("Invalid Lottie JSON animation file.", "danger");
+            }
+          };
+          reader.readAsDataURL(file);
+        } else {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const slide = slides[currentSlideIndex];
+            delete slide.animationSrc;
+            delete slide.animationLabel;
+            const imgs = ensureSlideImages(slide);
+            if (imgs.length < 4) {
+              imgs.push(e.target.result);
+              showBuilderToast(`Added custom image to slide (${imgs.length}/4)`, "success");
+            } else {
+              imgs[imgs.length - 1] = e.target.result;
+              showBuilderToast("Updated latest image on slide", "success");
+            }
+            slide.image = imgs[0];
+            loadSlideIntoEditor();
+            updateCanvasPreview();
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    }
+
+    // Load Starter Lesson Presets
+    function loadLessonPreset(presetKey) {
+      const p = LESSON_PRESETS[presetKey];
+      if (!p) return;
+
+      document.getElementById('lessonTitleInput').value = p.title;
+      document.getElementById('lessonDescInput').value = p.description;
+      if (p.term) {
+        const termSel = document.getElementById('lessonTermInput');
+        if (termSel) termSel.value = p.term;
+      }
+      slides = JSON.parse(JSON.stringify(p.slides));
+      currentSlideIndex = 0;
+
+      renderSlideStrip();
+      loadSlideIntoEditor();
+      updateCanvasPreview();
+      showBuilderToast(`Loaded lesson template: "${p.title}"`, "success");
+    }
+
+    // Form Submission
+    function submitLessonForm() {
+      const title = document.getElementById('lessonTitleInput').value.trim();
+      if (!title) {
+        showBuilderToast("Please enter a lesson title.", "warning");
+        document.getElementById('lessonTitleInput').focus();
+        return;
+      }
+
+      if (slides.length === 0) {
+        showBuilderToast("Please add at least 1 slide to this lesson.", "warning");
+        return;
+      }
+
+      document.getElementById('slidesDataInput').value = JSON.stringify(slides);
+      document.getElementById('lessonBuilderForm').submit();
+    }
+
+    document.getElementById('btn-save-lesson')?.addEventListener('click', submitLessonForm);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (new URLSearchParams(location.search).get('preset') === 'basic_needs' && LESSON_PRESETS.basic_needs) {
+        loadLessonPreset('basic_needs');
+        return;
+      }
+      renderSlideStrip();
+      loadSlideIntoEditor();
+      updateCanvasPreview();
+    });

@@ -364,22 +364,12 @@
   <script defer src="{{ url_for('static', filename='js/admin.js', v='20260924_4') }}"></script>
   {% if request.args.get('edit_error_user_id') %}
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const targetModal = document.getElementById('updateUser{{ request.args.get('edit_error_user_id') }}');
-      if (targetModal && window.bootstrap && window.bootstrap.Modal) {
-        const errorAlert = targetModal.querySelector('.update-user-error-alert');
-        const errorText = targetModal.querySelector('.update-user-error-text');
-        if (errorAlert && errorText) {
-          errorText.textContent = {{ request.args.get('edit_error', 'Invalid input')|tojson }};
-          errorAlert.classList.remove('d-none');
-        }
-        const pwd = targetModal.querySelector('input[name="password"]');
-        if (pwd) pwd.classList.add('is-invalid');
-        const m = bootstrap.Modal.getOrCreateInstance(targetModal);
-        m.show();
-      }
-    });
+    window.ADMIN_USER_CONFIG = {
+      editErrorUserId: {{ request.args.get('edit_error_user_id')|tojson }},
+      editError: {{ request.args.get('edit_error', 'Invalid input')|tojson }}
+    };
   </script>
+  <script defer src="{{ url_for('static', filename='js/admin_users.js') }}"></script>
   {% endif %}
 </body>
 </html>
