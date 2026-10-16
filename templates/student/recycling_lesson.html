@@ -17,7 +17,6 @@
 <body>
   <div class="bpl-page">
 
-    <!-- ── Header ─────────────────────────────────────────────────────────── -->
     <header class="bpl-header">
       {% if is_preview %}
       <a href="{{ url_for('teacher.lesson_studio') }}" class="bpl-back-btn text-white bg-success border-0" title="Exit Preview">
@@ -39,7 +38,6 @@
       </div>
     </header>
 
-    <!-- ── Slide Card ──────────────────────────────────────────────────────── -->
     <main class="bpl-card" role="main">
       <div class="bpl-card-header">
         <div class="bpl-window-dots">
@@ -60,10 +58,8 @@
           </div>
         </div>
 
-        <!-- Slide content injected here -->
         <div id="bpl-content"></div>
 
-        <!-- Navigation -->
         <nav class="bpl-nav" aria-label="Slide navigation">
           <button id="bpl-prev" class="bpl-nav-btn bpl-btn-prev" disabled>
             <i class="bi bi-arrow-left-circle-fill"></i> Back
@@ -75,7 +71,7 @@
       </div>
     </main>
 
-  </div><!-- /bpl-page -->
+  </div>
 
   <script>
     window.currentLessonId = {{ lesson.id if lesson else 'null' }};

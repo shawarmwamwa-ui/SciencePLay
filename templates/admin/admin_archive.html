@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=optional" rel="stylesheet">
-  
+
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -60,7 +60,7 @@
 
       <main class="col-12 col-lg-9 col-xl-10">
         <section class="admin-content">
-          <div class="content-center-wrap">            <!-- Page Header -->
+          <div class="content-center-wrap">
             <header class="page-header mb-4">
               <div>
                 <p class="eyebrow mb-1">Data Protection & Recovery</p>
@@ -86,21 +86,19 @@
               {% endif %}
             {% endwith %}
 
-            <!-- Tab Navigation: Underline Style with Count -->
             <nav class="archive-nav-tabs d-flex gap-4 mb-2" aria-label="Archive navigation">
-              <a class="archive-tab-link {{ 'active' if active_tab != 'users' else '' }}" 
+              <a class="archive-tab-link {{ 'active' if active_tab != 'users' else '' }}"
                  href="{{ url_for('admin.archive', tab='logs', view=selected_view, role=selected_role, search=search_query) }}">
                 <i class="bi bi-clipboard-data me-1"></i>Deleted Compliance Logs
                 <span class="archive-count-pill">{{ archived_logs_count }}</span>
               </a>
-              <a class="archive-tab-link {{ 'active' if active_tab == 'users' else '' }}" 
+              <a class="archive-tab-link {{ 'active' if active_tab == 'users' else '' }}"
                  href="{{ url_for('admin.archive', tab='users', role=selected_role, search=search_query) }}">
                 <i class="bi bi-people me-1"></i>Deleted Users
                 <span class="archive-count-pill">{{ archived_users_count }}</span>
               </a>
             </nav>
 
-            <!-- Short description line under tabs -->
             <p class="text-muted small mb-3">
               {% if active_tab != 'users' %}
                 Logs soft-deleted from the active timeline. Fully preserved for audits and reporting.
@@ -109,24 +107,22 @@
               {% endif %}
             </p>
 
-            <!-- Single Card: Filter Toolbar + Table + Empty State -->
             <section class="table-shell mb-4">
-              <!-- Integrated Filter / Search Toolbar -->
               <div class="p-3 border-bottom bg-light-subtle">
                 <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 gap-lg-3">
                   <form method="GET" action="{{ url_for('admin.archive') }}" class="d-flex flex-wrap align-items-end gap-2 gap-lg-3">
                     <input type="hidden" name="tab" value="{{ active_tab }}">
                     <input type="hidden" name="view" value="{{ selected_view }}">
-                    
+
                     {% if active_tab != 'users' %}
                     <div>
                       <label class="form-label small fw-bold text-muted mb-1 d-block">View Format:</label>
                       <div class="btn-group btn-group-sm" role="group" aria-label="View Format">
-                        <a href="{{ url_for('admin.archive', tab='logs', view='compiled', role=selected_role, search=search_query) }}" 
+                        <a href="{{ url_for('admin.archive', tab='logs', view='compiled', role=selected_role, search=search_query) }}"
                            class="btn btn-outline-secondary {{ 'active fw-bold' if selected_view == 'compiled' else '' }}">
                           <i class="bi bi-people-fill me-1"></i>Compiled
                         </a>
-                        <a href="{{ url_for('admin.archive', tab='logs', view='detailed', role=selected_role, search=search_query) }}" 
+                        <a href="{{ url_for('admin.archive', tab='logs', view='detailed', role=selected_role, search=search_query) }}"
                            class="btn btn-outline-secondary {{ 'active fw-bold' if selected_view == 'detailed' else '' }}">
                           <i class="bi bi-list-ul me-1"></i>Timeline
                         </a>
@@ -137,19 +133,19 @@
                     <div>
                       <label class="form-label small fw-bold text-muted mb-1 d-block">Filter by Role:</label>
                       <div class="btn-group btn-group-sm" role="group" aria-label="Role Filter">
-                        <a href="{{ url_for('admin.archive', role='all', tab=active_tab, view=selected_view, search=search_query) }}" 
+                        <a href="{{ url_for('admin.archive', role='all', tab=active_tab, view=selected_view, search=search_query) }}"
                            class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'all' else '' }}">
                           All Roles
                         </a>
-                        <a href="{{ url_for('admin.archive', role='admin', tab=active_tab, view=selected_view, search=search_query) }}" 
+                        <a href="{{ url_for('admin.archive', role='admin', tab=active_tab, view=selected_view, search=search_query) }}"
                            class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'admin' else '' }}">
                           <span style="color: #ef4444; font-size: 0.75rem;">●</span> Admins
                         </a>
-                        <a href="{{ url_for('admin.archive', role='teacher', tab=active_tab, view=selected_view, search=search_query) }}" 
+                        <a href="{{ url_for('admin.archive', role='teacher', tab=active_tab, view=selected_view, search=search_query) }}"
                            class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'teacher' else '' }}">
                           <span style="color: #4318ff; font-size: 0.75rem;">●</span> Teachers
                         </a>
-                        <a href="{{ url_for('admin.archive', role='student', tab=active_tab, view=selected_view, search=search_query) }}" 
+                        <a href="{{ url_for('admin.archive', role='student', tab=active_tab, view=selected_view, search=search_query) }}"
                            class="btn btn-outline-secondary {{ 'active fw-bold' if selected_role == 'student' else '' }}">
                           <span style="color: #10b981; font-size: 0.75rem;">●</span> Students
                         </a>
@@ -184,7 +180,6 @@
 
               {% if active_tab != 'users' %}
                 {% if selected_view == 'compiled' %}
-                  <!-- Pane 1A: Compiled by User Table -->
                   <div class="table-responsive">
                     <table class="table align-middle mb-0">
                       <thead>
@@ -241,7 +236,6 @@
                               </div>
                             </td>
                           </tr>
-                          <!-- Collapsible logs preview row -->
                           <tr class="collapse bg-light-subtle" id="userLogsDetail{{ u.id }}">
                             <td colspan="5" class="p-3">
                               <div class="small">
@@ -305,7 +299,6 @@
                     </table>
                   </div>
                 {% else %}
-                  <!-- Pane 1B: Detailed Timeline Table -->
                   <div class="table-responsive">
                     <table class="table align-middle mb-0">
                       <thead>
@@ -365,7 +358,6 @@
                   </div>
                 {% endif %}
               {% else %}
-                <!-- Pane 2: Deleted Users Table -->
                 <div class="table-responsive">
                   <table class="table align-middle mb-0">
                     <thead>
@@ -400,8 +392,8 @@
                           </td>
                           <td class="text-end">
                             <div class="d-inline-flex align-items-center justify-content-end gap-1">
-                              <a href="{{ url_for('admin.restore_user', user_id=u.id) }}" 
-                                 class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold text-nowrap" 
+                              <a href="{{ url_for('admin.restore_user', user_id=u.id) }}"
+                                 class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold text-nowrap"
                                  onclick="return confirm('Restore user account \'{{ u.name }}\' back to active users?');"
                                  title="Restore user account">
                                 <i class="bi bi-arrow-counterclockwise me-1"></i>Restore

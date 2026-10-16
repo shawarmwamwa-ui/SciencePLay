@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Feedback & Teacher Notes — SciencePlay</title>
   <meta name="description" content="SciencePlay Student Feedback: Read encouraging teacher notes and study tips.">
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -29,7 +29,6 @@
     {% endif %}
   {% endwith %}
 
-  <!-- Top Window Header matching Leaderboard style -->
   <header class="student-header brutal-window mb-4" style="background: #fef08a;">
     <div class="brutal-window-header">
       <div class="brutal-dots">
@@ -54,10 +53,8 @@
     </div>
   </header>
 
-  <!-- Main Content Landmark -->
   <main id="main-content">
 
-  <!-- Filter Navigation Tabs -->
   <div class="d-flex gap-2 flex-wrap mb-4" role="group" aria-label="Filter feedback entries">
     <button type="button" class="filter-pill-btn active" data-filter="all">
       <i class="bi bi-collection-fill me-1"></i> All Feedback ({{ total_feedback_count }})
@@ -70,14 +67,12 @@
     </button>
   </div>
 
-  <!-- Grouped Feedback by Activity -->
   {% if activity_groups %}
     <div id="feedbackGroups">
       {% for group in activity_groups %}
         {% set group_idx = loop.index %}
         <section class="activity-section-card activity-group-block" data-activity="{{ group.title }}">
-          
-          <!-- Activity Group Header -->
+
           <div class="activity-section-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2">
               <span class="fs-3"><i class="bi {{ group.icon }} {{ group.icon_color }}"></i></span>
@@ -91,7 +86,6 @@
             </span>
           </div>
 
-          <!-- Attempts Feed inside this Activity -->
           <div class="attempts-feed">
             {% for item in group.attempts %}
               {% set is_older = loop.index > 2 %}
@@ -102,15 +96,13 @@
               <div class="attempt-card-item outcome-{{ item.outcome_type }} feedback-entry"
                    data-has-teacher="{{ 'true' if item.has_teacher_note else 'false' }}"
                    data-has-system="{{ 'true' if item.has_system_feedback else 'false' }}">
-                
-                <!-- Top Row: Points Earned & Outcome Badge (High Priority for Grade 3) -->
+
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                   <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="brutal-badge brutal-badge-blue fs-6 fw-black">
                       Attempt #{{ item.attempt_number }}
                     </span>
 
-                    <!-- Prominent Outcome Badge -->
                     {% if item.outcome_type == 'correct' %}
                       <span class="brutal-badge brutal-badge-green fs-6 fw-black">
                         <i class="bi bi-check-circle-fill me-1"></i>{{ item.outcome_label }}
@@ -126,7 +118,6 @@
                     {% endif %}
                   </div>
 
-                  <!-- Points Display (Only for scored game activities, hidden for ungraded slide checks) -->
                   <div class="d-flex align-items-center gap-1">
                     {% if not group.is_lesson_check and not item.is_lesson_check %}
                       <span class="fs-4 fw-black text-dark">
@@ -139,7 +130,6 @@
                   </div>
                 </div>
 
-                <!-- Teacher Note Callout (if present) -->
                 {% if item.has_teacher_note %}
                   <div class="teacher-note-callout">
                     <div class="d-flex align-items-center gap-2 mb-1">
@@ -154,7 +144,6 @@
                   </div>
                 {% endif %}
 
-                <!-- System Evaluation Callout (if present) -->
                 {% if item.has_system_feedback %}
                   <div class="callout-box callout-{{ item.outcome_type }}">
                     <div class="d-flex align-items-center gap-2 mb-1">
@@ -188,7 +177,6 @@
                   </div>
                 {% endif %}
 
-                <!-- Demoted Minor Info: Timestamp -->
                 <div class="text-muted small mt-2 d-flex align-items-center gap-1">
                   <i class="bi bi-clock-history"></i>
                   <span>Completed on {{ item.formatted_date }}</span>
@@ -197,11 +185,10 @@
               </div>
 
               {% if loop.last and group.attempts|length > 2 %}
-                </div><!-- end older-attempts-container -->
+                </div>
               {% endif %}
             {% endfor %}
 
-            <!-- Toggle Older Attempts Button (if more than 2 attempts) -->
             {% if group.attempts|length > 2 %}
               <div class="text-center mt-2">
                 <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1 toggle-older-btn"
@@ -289,8 +276,8 @@
   <script type="module">
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     window.addEventListener('DOMContentLoaded', () => {
-      initBgmPlayer('dashboard-bgm', { 
-        volume: 0.22, 
+      initBgmPlayer('dashboard-bgm', {
+        volume: 0.22,
         storageKey: 'scienceplay_dashboard_bgm_muted',
         timeKey: 'scienceplay_hub_bgm_time'
       });

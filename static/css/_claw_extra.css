@@ -1,6 +1,4 @@
-/* Extra claw animations: sway, cable bounce, drop arc, bin hit */
 
-/* Ensure the cable pivots from the top */
 .claw-cable {
   transform-origin: top center;
 }
@@ -25,7 +23,6 @@
   100% { transform: rotate(0deg) translateX(0); }
 }
 
-/* Cable bounce when lowering/raising */
 #claw-machine.cable-bounce .claw-cable {
   animation: cable-bounce 700ms cubic-bezier(.22,.8,.28,1) both;
 }
@@ -36,7 +33,6 @@
   100% { transform: translateY(0) scaleY(1); }
 }
 
-/* Drop arc + small landing bounce for dropped tiles */
 .dropped-object.land {
   animation: drop-bounce 300ms ease-out forwards;
 }
@@ -46,7 +42,6 @@
   100% { transform: translateY(0) scale(1); }
 }
 
-/* Bin visual reaction */
 .collection-bin.bin-hit {
   animation: bin-hit 420ms cubic-bezier(.22,.8,.28,1) forwards;
 }

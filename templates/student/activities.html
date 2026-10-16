@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Activity Playground — SciencePlay</title>
   <meta name="description" content="SciencePlay Student Activities: Explore science mini-games, claw machines, and safari adventures.">
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -140,8 +140,8 @@
   <script type="module">
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     window.addEventListener('DOMContentLoaded', () => {
-      initBgmPlayer('dashboard-bgm', { 
-        volume: 0.22, 
+      initBgmPlayer('dashboard-bgm', {
+        volume: 0.22,
         storageKey: 'scienceplay_dashboard_bgm_muted',
         timeKey: 'scienceplay_hub_bgm_time'
       });

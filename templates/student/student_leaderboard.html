@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leaderboard — SciencePlay</title>
   <meta name="description" content="SciencePlay Leaderboard: See class rankings, top streaks, and total science points.">
-  
+
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -14,7 +14,6 @@
 </head>
 <body class="student-page container mt-3 mb-5">
 
-  <!-- Header Banner -->
   <div class="student-header brutal-window mb-4" style="background: #fef08a;">
     <div class="brutal-window-header">
       <div class="brutal-dots">
@@ -39,7 +38,6 @@
     </div>
   </div>
 
-  <!-- Tabs -->
   <ul class="nav brutal-nav-tabs mb-4 fw-bold" id="lbTabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="overall-tab" data-bs-toggle="tab" data-bs-target="#overall" type="button" role="tab">
@@ -80,7 +78,6 @@
 
   <div class="tab-content" id="lbTabContent">
 
-    <!-- ══════════════ OVERALL ══════════════ -->
     <div class="tab-pane fade show active" id="overall" role="tabpanel">
       <div class="brutal-window" style="background: #bbf7d0;">
         <div class="brutal-window-header">
@@ -153,7 +150,6 @@
       </div>
     </div>
 
-    <!-- ══════════════ CLAW MACHINE ══════════════ -->
     <div class="tab-pane fade" id="claw" role="tabpanel">
       <div class="brutal-window" style="background: #bfdbfe;">
         <div class="brutal-window-header">
@@ -196,7 +192,6 @@
       </div>
     </div>
 
-    <!-- ══════════════ FIND THE PART ══════════════ -->
     <div class="tab-pane fade" id="animal" role="tabpanel">
       <div class="brutal-window" style="background: #dcfce7;">
         <div class="brutal-window-header">
@@ -239,7 +234,6 @@
       </div>
     </div>
 
-    <!-- ══════════════ STREAK RACE ══════════════ -->
     <div class="tab-pane fade" id="plant" role="tabpanel">
       <div class="brutal-window" style="background: #fef08a;">
         <div class="brutal-window-header">
@@ -282,7 +276,6 @@
       </div>
     </div>
 
-    <!-- ══════════════ ECOSWIPE SORTER (RECYCLING) ══════════════ -->
     <div class="tab-pane fade" id="recycle" role="tabpanel">
       <div class="brutal-window" style="background: #a7f3d0;">
         <div class="brutal-window-header">
@@ -325,7 +318,6 @@
       </div>
     </div>
 
-    <!-- ══════════════ METAL CLUE DETECTIVE ══════════════ -->
     <div class="tab-pane fade" id="metal" role="tabpanel">
       <div class="brutal-window" style="background: #e0e7ff;">
         <div class="brutal-window-header">
@@ -368,7 +360,6 @@
       </div>
     </div>
 
-    <!-- ══════════════ MY PROGRESS (private) ══════════════ -->
     <div class="tab-pane fade" id="myprogress" role="tabpanel">
       <div class="brutal-window mb-4" style="background: #fce7f3;">
         <div class="brutal-window-header">
@@ -381,7 +372,6 @@
         </div>
         <div class="brutal-window-body">
 
-          <!-- Lesson Visits & Revisits -->
           <h5 class="fw-black mb-3"><i class="bi bi-book text-warning me-2"></i>Lessons — My Visits & Revisits</h5>
           {% if my_lesson_attempts %}
             <div class="table-responsive mb-5">
@@ -434,7 +424,6 @@
             <div class="alert alert-light border mb-5">No lesson visits recorded yet. Open a lesson to begin!</div>
           {% endif %}
 
-          <!-- Claw Machine Retries -->
           <h5 class="fw-black mb-3"><i class="bi bi-controller text-primary me-2"></i>Claw Machine — My Attempts</h5>
           {% if my_claw_attempts %}
             <div class="table-responsive mb-5">
@@ -473,7 +462,6 @@
             <div class="alert alert-light border mb-5">No Claw Machine attempts yet. Play the game to see your progress here!</div>
           {% endif %}
 
-          <!-- Find the Part Retries -->
           <h5 class="fw-black mb-3 mt-4"><i class="bi bi-person-arms-up text-success me-2"></i>Find the Part — My Attempts</h5>
           {% if my_animal_attempts %}
             <div class="table-responsive mb-4">
@@ -512,7 +500,6 @@
             <div class="alert alert-light border mb-4">No Find the Part attempts yet. Play the game to see your progress here!</div>
           {% endif %}
 
-          <!-- Build a Plant Retries -->
           <h5 class="fw-black mb-3"><i class="bi bi-flower1 text-warning me-2"></i>Build a Plant — My Attempts</h5>
           {% if my_plant_attempts %}
             <div class="table-responsive">
@@ -551,7 +538,6 @@
             <div class="alert alert-light border mb-4">No Build a Plant attempts yet. Play the game to see your progress here!</div>
           {% endif %}
 
-          <!-- EcoSwipe Sorter Retries -->
           <h5 class="fw-black mb-3"><i class="bi bi-recycle text-success me-2"></i>EcoSwipe Sorter — My Attempts</h5>
           {% if my_recycle_attempts %}
             <div class="table-responsive mb-4">
@@ -590,7 +576,6 @@
             <div class="alert alert-light border mb-4">No EcoSwipe Sorter attempts yet. Play the game to see your progress here!</div>
           {% endif %}
 
-          <!-- Metal Clue Detective Retries -->
           <h5 class="fw-black mb-3"><i class="bi bi-shield-shaded text-primary me-2"></i>Metal Clue Detective — My Attempts</h5>
           {% if my_metal_attempts %}
             <div class="table-responsive">
@@ -633,7 +618,7 @@
       </div>
     </div>
 
-  </div><!-- end tab-content -->
+  </div>
 
   <audio id="dashboard-bgm" loop preload="auto">
     <source src="{{ url_for('static', filename='audio/Piki - Monogatari (freetouse.com).mp3') }}" type="audio/mpeg">
@@ -644,8 +629,8 @@
   <script type="module">
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     window.addEventListener('DOMContentLoaded', () => {
-      initBgmPlayer('dashboard-bgm', { 
-        volume: 0.22, 
+      initBgmPlayer('dashboard-bgm', {
+        volume: 0.22,
         storageKey: 'scienceplay_dashboard_bgm_muted',
         timeKey: 'scienceplay_hub_bgm_time'
       });

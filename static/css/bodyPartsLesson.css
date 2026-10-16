@@ -1,5 +1,3 @@
-/* bodyPartsLesson.css
-   Shared stylesheet for Lesson 2A (Animal Body Parts) and Lesson 2B (Plant Parts). */
 
 :root {
   --bpl-dark:     #18181b;
@@ -12,7 +10,6 @@
   --bpl-shadow:   4px 4px 0px #18181b;
 }
 
-/* ── Lightweight Utility Helpers ─────────────────────────────────────────── */
 .d-flex { display: flex !important; }
 .align-items-center { align-items: center !important; }
 .justify-content-center { justify-content: center !important; }
@@ -27,7 +24,6 @@
 .text-warning { color: #ca8a04 !important; }
 .text-center { text-align: center !important; }
 
-/* Custom Leaf Icon (Bootstrap Icons does not have a native bi-leaf) */
 .bi-leaf {
   display: inline-block;
   width: 1.15em;
@@ -61,8 +57,6 @@ body {
   background-attachment: fixed;
 }
 
-/* ── Page Layout ─────────────────────────────────────────────────────────── */
-
 .bpl-page {
   width: min(100%, 1160px);
   min-height: calc(100vh - 24px);
@@ -73,8 +67,6 @@ body {
   gap: 10px;
   justify-content: flex-start;
 }
-
-/* ── Header ──────────────────────────────────────────────────────────────── */
 
 .bpl-header {
   display: grid;
@@ -165,8 +157,6 @@ body {
     margin-top: 4px;
   }
 }
-
-/* ── Slide Card ──────────────────────────────────────────────────────────── */
 
 .bpl-card {
   flex: 1 1 auto;
@@ -277,8 +267,6 @@ body {
   gap: clamp(6px, 1vh, 10px);
 }
 
-/* ── Navigation ──────────────────────────────────────────────────────────── */
-
 .bpl-nav {
   display: flex;
   justify-content: space-between;
@@ -315,8 +303,6 @@ body {
 .bpl-btn-prev { background: #f1f5f9; color: var(--bpl-dark); }
 .bpl-btn-next { background: var(--bpl-accent); color: #fff; }
 .bpl-btn-next:hover:not(:disabled) { background: #2563eb; }
-
-/* ── Lottie Animation Presentation ─────────────────────────────────────── */
 
 .bpl-lottie-grid {
   border: 2.5px solid var(--bpl-border);
@@ -386,8 +372,6 @@ body {
   display: inline-block;
 }
 
-/* ── Image & Diagram Presentation ────────────────────────────────────────── */
-
 .bpl-media-wrap {
   border: 2.5px solid var(--bpl-border);
   border-radius: 16px;
@@ -415,8 +399,6 @@ body {
   box-shadow: 2px 2px 0 #18181b;
   display: block;
 }
-
-/* ── Info / Hook / Reflect / Discuss Slides ──────────────────────────────── */
 
 .bpl-illustration {
   border: 2.5px solid var(--bpl-border);
@@ -449,8 +431,6 @@ body {
   margin-bottom: clamp(6px, 1vh, 10px);
 }
 
-/* ── Predict Slides ──────────────────────────────────────────────────────── */
-
 .bpl-part-badge {
   display: inline-flex;
   align-items: center;
@@ -479,8 +459,6 @@ body {
   margin-top: clamp(4px, 0.6vh, 8px);
 }
 
-/* ── Teach Slides ────────────────────────────────────────────────────────── */
-
 .bpl-key-fact {
   display: flex;
   align-items: flex-start;
@@ -495,8 +473,6 @@ body {
   color: #166534;
   margin-top: clamp(4px, 0.6vh, 8px);
 }
-
-/* ── Quick-Check & Assess Options ────────────────────────────────────────── */
 
 .bpl-prompt {
   font-size: 19.5px;
@@ -569,7 +545,6 @@ body {
   animation: shakeWrong 0.4s ease;
 }
 
-/* Assess letter badge */
 .bpl-assess-letter {
   display: inline-flex;
   align-items: center;
@@ -637,8 +612,6 @@ body {
   padding: 2px 7px;
 }
 
-/* ── Feedback Box ────────────────────────────────────────────────────────── */
-
 .bpl-feedback {
   border-radius: 14px;
   padding: 10px 14px;
@@ -676,8 +649,6 @@ body {
   line-height: 1.35;
 }
 
-/* ── Summary Slide ───────────────────────────────────────────────────────── */
-
 .bpl-summary-list {
   list-style: none;
   padding: 0;
@@ -709,8 +680,6 @@ body {
   margin-top: 4px;
 }
 
-/* ── Portrait Responsiveness ─────────────────────────────────────────────── */
-
 @media (orientation: portrait), (max-width: 600px) {
   body {
     height: auto;
@@ -728,9 +697,6 @@ body {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════════════ */
-/* Tablet Touch & Kiosk Lock: Disable text highlighting & callout menus  */
-/* ══════════════════════════════════════════════════════════════════════ */
 *, *::before, *::after {
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;

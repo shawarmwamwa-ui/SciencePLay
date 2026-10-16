@@ -1,8 +1,4 @@
-/* week10Lessons.css
-   Dedicated styling for Week 10 Lessons: Properties of Metals and Recycling
-   Includes interactive reveal cards, globe tap-reveal, wire conductor toggle, flashlight shine effect, and tap-to-sort game. */
 
-/* ── Generic Icon Grid Showcase ─────────────────────────────────────────── */
 .w10-icon-grid {
   display: flex;
   justify-content: center;
@@ -47,7 +43,6 @@
   transform: translateY(-4px) scale(1.03);
 }
 
-/* Unique color states for metals on click */
 .w10-icon-item.active[data-metal="iron"],
 .w10-icon-item.active-iron {
   border-color: #475569 !important;
@@ -161,7 +156,6 @@
   color: #1d4ed8;
 }
 
-/* ── Interactive Item Explanation Callout Card ── */
 .w10-item-explanation-card {
   background: #ffffff;
   border: 2.5px solid #2563eb;
@@ -261,7 +255,6 @@
   width: 100%;
 }
 
-/* ── Interactive Property Reveal Card ────────────────────────────────────── */
 .w10-reveal-card-wrap {
   perspective: 1000px;
   max-width: 440px;
@@ -330,7 +323,6 @@
   display: block;
 }
 
-/* ── Interactive Globe Tap-Reveal (Slide 3) ──────────────────────────────── */
 .w10-globe-stage {
   border: 2.5px solid #18181b;
   border-radius: 20px;
@@ -396,7 +388,6 @@
   flex-shrink: 0;
 }
 
-/* ── Interactive Wire Toggle (Copper) ────────────────────────────────────── */
 .w10-wire-stage {
   border: 2.5px solid #18181b;
   border-radius: 20px;
@@ -451,7 +442,6 @@
   margin-bottom: 8px;
 }
 
-/* ── Interactive Flashlight Shine (Gold & Silver) ────────────────────────── */
 .w10-flashlight-stage {
   border: 2.5px solid #18181b;
   border-radius: 20px;
@@ -527,7 +517,6 @@
   display: block;
 }
 
-/* ── Interactive Recycling Tap-to-Sort Game ──────────────────────────────── */
 .w10-recycle-stage {
   border: 2.5px solid #18181b;
   border-radius: 20px;
@@ -602,7 +591,6 @@
   animation: w10PopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ── Summary Big Ideas Grid & Compact Complete Card ── */
 .bpl-summary-slide {
   flex: 1 1 auto;
   display: flex;
@@ -647,7 +635,6 @@
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* ── Keyframe Animations ─────────────────────────────────────────────────── */
 @keyframes bounceSlow {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
@@ -679,7 +666,6 @@
   75% { transform: translateX(6px); }
 }
 
-/* ── Large, High-Legibility Question & Assessment UI (Week 10) ───────────── */
 .w10-question-container {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 2.5px solid #18181b;
@@ -722,7 +708,6 @@
   gap: 4px;
 }
 
-/* Prompt Heading */
 .bpl-quickcheck-slide .bpl-prompt,
 .bpl-assess-slide .bpl-prompt {
   font-size: clamp(21px, 2.8vh, 26px) !important;
@@ -733,7 +718,6 @@
   letter-spacing: -0.2px;
 }
 
-/* Options Stack */
 .bpl-quickcheck-slide .bpl-options,
 .bpl-assess-slide .bpl-options {
   display: flex !important;
@@ -742,7 +726,6 @@
   margin-bottom: clamp(14px, 2vh, 18px) !important;
 }
 
-/* Option Buttons */
 .bpl-quickcheck-slide .bpl-option,
 .bpl-assess-slide .bpl-assess-opt {
   display: flex !important;
@@ -771,7 +754,6 @@
   box-shadow: 5px 5px 0 #18181b !important;
 }
 
-/* Icon / Letter Badges inside Options */
 .w10-opt-icon-circle {
   width: clamp(38px, 5vh, 44px);
   height: clamp(38px, 5vh, 44px);
@@ -815,7 +797,6 @@
   color: #1d4ed8 !important;
 }
 
-/* Correct Answer State */
 .bpl-option.bpl-opt-correct,
 .bpl-assess-opt.bpl-opt-correct {
   background: #ecfdf5 !important;
@@ -831,7 +812,6 @@
   color: #14532d !important;
 }
 
-/* Wrong Answer State */
 .bpl-option.bpl-opt-wrong,
 .bpl-assess-opt.bpl-opt-wrong {
   background: #fef2f2 !important;
@@ -847,7 +827,6 @@
   color: #7f1d1d !important;
 }
 
-/* Feedback Box */
 .bpl-feedback {
   font-size: clamp(16px, 2vh, 18px) !important;
   font-weight: 700 !important;

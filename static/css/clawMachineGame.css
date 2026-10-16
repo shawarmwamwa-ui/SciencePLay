@@ -643,7 +643,6 @@ body.arcade-page {
   transition: transform 180ms ease;
 }
 
-/* Ghost Pickup & Drop Animation Overlays */
 .pickup-object,
 .dropped-object {
   position: fixed;
@@ -659,7 +658,6 @@ body.arcade-page {
   justify-content: center;
 }
 
-/* Held Object in Claw Pincers */
 .claw-held-object-tile {
   position: absolute;
   top: 24px;
@@ -1050,7 +1048,6 @@ body.arcade-page {
   100% { transform: scaleY(1); }
 }
 
-/* Tablet & Ultra Compact Height Adjustments */
 @media (max-height: 640px) {
   .marquee-title p,
   .cabinet-marquee p {
@@ -1073,7 +1070,6 @@ body.arcade-page {
   }
 }
 
-/* Portrait Orientation Graceful Flow */
 @media (orientation: portrait), (max-width: 680px) {
   body.arcade-page {
     height: auto;

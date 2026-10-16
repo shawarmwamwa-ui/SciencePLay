@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lesson Adventure — SciencePlay</title>
   <meta name="description" content="SciencePlay Student Lessons: Discover interactive science slide lessons with audio and visuals.">
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -24,7 +24,6 @@
 </head>
 <body class="student-page container mt-3 mb-4">
 
-  <!-- Top Banner Header -->
   <header class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 page-top-banner">
     <div>
       <h1 class="fw-black display-5 mb-1"><i class="bi bi-book-fill text-primary me-2"></i>Lesson Adventure</h1>
@@ -36,7 +35,6 @@
     </a>
   </header>
 
-  <!-- Main Content Landmark -->
   <main id="main-content" class="row g-4">
     {% if lesson_progress %}
       {% for item in lesson_progress %}
@@ -138,8 +136,8 @@
   <script type="module">
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     window.addEventListener('DOMContentLoaded', () => {
-      initBgmPlayer('dashboard-bgm', { 
-        volume: 0.22, 
+      initBgmPlayer('dashboard-bgm', {
+        volume: 0.22,
         storageKey: 'scienceplay_dashboard_bgm_muted',
         timeKey: 'scienceplay_hub_bgm_time'
       });

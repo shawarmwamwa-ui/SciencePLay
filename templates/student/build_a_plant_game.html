@@ -13,14 +13,12 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buildAPlantGame.css', v='20260925_2') }}">
 
-  <!-- Preload backgrounds for fast LCP -->
   <link rel="preload" as="image" href="{{ url_for('static', filename='images/plant_build_bg.jpg') }}">
   <link rel="preload" as="image" href="{{ url_for('static', filename='images/tree_build_bg.jpg') }}">
 </head>
 <body>
   <div class="bap-page">
 
-    <!-- Header -->
     <header class="bap-header">
       <a href="{{ url_for('student.activities') }}" class="game-leave-btn bap-back-btn" id="bap-back-link" title="Leave Game">
         <i class="bi bi-arrow-left"></i>
@@ -42,12 +40,10 @@
       </div>
     </header>
 
-    <!-- Game container (rendered by buildAPlantGame.js) -->
     <main id="bap-main" role="main"></main>
 
   </div>
- 
-  <!-- Unified Exit Confirmation Modal -->
+
   <div class="modal fade game-exit-modal" id="exitConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content text-center p-4 border-dark border-3 rounded-4 shadow-lg game-exit-modal-card">

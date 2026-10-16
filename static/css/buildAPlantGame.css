@@ -1,11 +1,6 @@
-/* buildAPlantGame.css
-   "Build a Plant" — 2-Round plant assembly game for Plant Parts (Grade 3)
-   Round 1: Garden Flower | Round 2: Mighty Apple Tree
-   ─────────────────────────────────────────────────────────────────────────────── */
 
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
-/* ── Reset / Base ────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -21,7 +16,6 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Page wrapper ────────────────────────────────────────────────────────────── */
 .bap-page {
   display: flex;
   flex-direction: column;
@@ -31,7 +25,6 @@ body {
   gap: 20px;
 }
 
-/* ── Header ──────────────────────────────────────────────────────────────────── */
 .bap-header {
   display: flex;
   align-items: center;
@@ -118,7 +111,6 @@ body {
 }
 .bap-tts-btn:hover { background: #f1f5f9; color: #1e293b; transform: translateY(-1px); }
 
-/* ── Main layout ─────────────────────────────────────────────────────────────── */
 .bap-main {
   flex: 1;
   display: flex;
@@ -137,7 +129,6 @@ body {
   align-items: stretch;
 }
 
-/* ── Plant canvas wrap ───────────────────────────────────────────────────────── */
 .bap-canvas-wrap {
   flex: 0 0 440px;
   border-radius: 24px;
@@ -167,7 +158,6 @@ body {
   background-image: url('/static/images/tree_build_bg.jpg');
 }
 
-/* ── SVG Plant Parts Layer ───────────────────────────────────────────────────── */
 .bap-plant-svg {
   position: absolute;
   top: 0; left: 0;
@@ -193,7 +183,6 @@ body {
   100% { opacity: 1; transform: scale(1); filter: brightness(1); }
 }
 
-/* ── Drop Zone ───────────────────────────────────────────────────────────────── */
 .bap-dropzone {
   position: absolute;
   width: 84px;
@@ -271,7 +260,6 @@ body {
   color: #15803d;
 }
 
-/* ── Hint bar under canvas ───────────────────────────────────────────────────── */
 .bap-hint-bar {
   padding: 0.75rem 1.25rem;
   background: #fff;
@@ -286,7 +274,6 @@ body {
   justify-content: center;
 }
 
-/* ── Right Panel ─────────────────────────────────────────────────────────────── */
 .bap-right-panel {
   flex: 1;
   display: flex;
@@ -295,7 +282,6 @@ body {
   min-width: 0;
 }
 
-/* ── Round Pill ──────────────────────────────────────────────────────────────── */
 .bap-round-pill {
   display: inline-flex;
   align-items: center;
@@ -310,7 +296,6 @@ body {
   width: fit-content;
 }
 
-/* ── Feedback toast ──────────────────────────────────────────────────────────── */
 .bap-feedback {
   display: none;
   align-items: flex-start;
@@ -331,7 +316,6 @@ body {
 .bap-feedback--wrong   { background: #fff1f2; border-color: #fca5a5; color: #7f1d1d; }
 .bap-feedback-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 0.05rem; }
 
-/* ── Instruction card ────────────────────────────────────────────────────────── */
 .bap-instruction {
   background: #fff;
   border: 2.5px solid #bbf7d0;
@@ -344,7 +328,6 @@ body {
 }
 .bap-instruction strong { color: #15803d; }
 
-/* ── Progress ────────────────────────────────────────────────────────────────── */
 .bap-progress-label {
   font-size: 0.78rem;
   font-weight: 800;
@@ -367,7 +350,6 @@ body {
   transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ── Tray Header ─────────────────────────────────────────────────────────────── */
 .bap-tray-label {
   font-size: 0.78rem;
   font-weight: 800;
@@ -376,14 +358,12 @@ body {
   letter-spacing: 0.08em;
 }
 
-/* ── Parts Tray Grid ─────────────────────────────────────────────────────────── */
 .bap-tray {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.5rem;
 }
 
-/* ── Draggable Cards ─────────────────────────────────────────────────────────── */
 .bap-card {
   display: flex;
   flex-direction: column;
@@ -424,7 +404,6 @@ body {
 .bap-card:hover .bap-card-icon { transform: scale(1.08); }
 .bap-card-label { font-size: 0.72rem; font-weight: 800; margin-top: 0.1rem; line-height: 1.15; }
 
-/* Flower Round Card Colors */
 .bap-card--roots  { background: #fef3c7; border-color: #d97706; color: #713f12; }
 .bap-card--stem   { background: #dcfce7; border-color: #16a34a; color: #14532d; }
 .bap-card--leaves { background: #ecfdf5; border-color: #10b981; color: #064e3b; }
@@ -432,7 +411,6 @@ body {
 .bap-card--fruit  { background: #fff7ed; border-color: #f97316; color: #7c2d12; }
 .bap-card--seeds  { background: #faf5ff; border-color: #8b5cf6; color: #3b0764; }
 
-/* Tree Round Card Colors */
 .bap-card--tree_roots  { background: #fef3c7; border-color: #b45309; color: #78350f; }
 .bap-card--trunk       { background: #fed7aa; border-color: #c2410c; color: #7c2d12; }
 .bap-card--branches    { background: #ffedd5; border-color: #ea580c; color: #9a3412; }
@@ -440,7 +418,6 @@ body {
 .bap-card--blossoms    { background: #fdf2f8; border-color: #ec4899; color: #831843; }
 .bap-card--apples      { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
 
-/* Decoy Card Colors */
 .bap-card--decoy { background: #f8fafc; border-color: #94a3b8; color: #475569; }
 
 .bap-card--selected {
@@ -463,7 +440,6 @@ body {
   75%       { transform: translateX(-4px); }
 }
 
-/* ── Round Complete Intermission Modal ──────────────────────────────────────── */
 .bap-intermission-overlay {
   position: fixed;
   inset: 0;
@@ -498,7 +474,6 @@ body {
 .bap-intermission-title { font-size: 1.7rem; font-weight: 900; color: #166534; margin-bottom: 0.4rem; }
 .bap-intermission-sub { font-size: 0.95rem; color: #64748b; margin-bottom: 1.5rem; line-height: 1.5; }
 
-/* ── Completion Screen ───────────────────────────────────────────────────────── */
 .bap-completion {
   display: flex;
   align-items: center;
@@ -526,13 +501,13 @@ body {
 .bap-completion-sub   { font-size: clamp(0.74rem, 1.4vh, 0.84rem); color: #64748b; margin-bottom: 0.4rem; line-height: 1.3; }
 .bap-stars { font-size: clamp(1.4rem, 2.8vh, 1.8rem); margin-bottom: 0.45rem; letter-spacing: 0.12rem; line-height: 1; }
 
-.bap-stats-row { 
-  display: grid; 
-  grid-template-columns: repeat(4, 1fr); 
-  gap: 0.4rem; 
-  justify-content: center; 
-  margin-bottom: 0.65rem; 
-  width: 100%; 
+.bap-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  justify-content: center;
+  margin-bottom: 0.65rem;
+  width: 100%;
 }
 .bap-stat {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -554,7 +529,6 @@ body {
 .bap-btn--secondary { background: #f1f5f9; border-color: #cbd5e1; color: #334155; }
 .bap-btn--secondary:hover { background: #e2e8f0; transform: translateY(-2px); }
 
-/* ── Confetti ────────────────────────────────────────────────────────────────── */
 .bap-confetti-container {
   position: fixed; top: 0; left: 0; right: 0;
   height: 0; pointer-events: none; z-index: 9999; overflow: visible;
@@ -568,7 +542,6 @@ body {
   100% { top: 100vh; opacity: 0; transform: rotate(720deg) translateX(60px); }
 }
 
-/* ── Touch Drag Ghost (Tablets / Mobile) ─────────────────────────────────────── */
 .bap-touch-ghost {
   position: fixed;
   pointer-events: none;
@@ -581,13 +554,11 @@ body {
   will-change: transform, left, top;
 }
 
-/* ── Tablet & Mobile Optimizations ──────────────────────────────────────────── */
 .bap-card, .bap-btn, .bap-tts-btn, .bap-dropzone {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
-/* ── Tablets (iPad Mini 768px, iPad 820-1024px, Surface, Galaxy Tab) ────────── */
 @media (min-width: 700px) and (max-width: 1100px) {
   body {
     padding-top: clamp(22px, 4vh, 36px);
@@ -673,7 +644,6 @@ body {
   }
 }
 
-/* ── Mobile / Small Screens (under 700px) ─────────────────────────────────────── */
 @media (max-width: 699px) {
   .bap-header {
     padding: 0.55rem 0.85rem;

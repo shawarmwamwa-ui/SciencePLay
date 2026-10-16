@@ -558,7 +558,6 @@
   <div class="teacher-layout container-fluid">
     <div class="row g-3 g-lg-4">
 
-      <!-- Sidebar Navigation -->
       <aside class="col-12 col-lg-3 col-xl-2">
         <nav class="teacher-sidebar h-100">
           <div>
@@ -613,12 +612,10 @@
         </nav>
       </aside>
 
-      <!-- Main Content -->
       <main class="col-12 col-lg-9 col-xl-10">
         <section class="teacher-content">
           <div class="teacher-center-wrap">
 
-            <!-- Breadcrumb Navigation -->
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 teacher-head-row">
               <div>
                 <a href="{{ url_for('teacher.lesson_studio') }}" class="text-decoration-none text-muted small fw-bold d-inline-flex align-items-center gap-1 mb-2">
@@ -651,7 +648,6 @@
             </div>
             {% endif %}
 
-            <!-- Form Wrapper -->
             <form id="lessonBuilderForm" method="POST" action="{{ url_for('teacher.save_lesson') }}" enctype="multipart/form-data">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               {% if is_core_lesson %}
@@ -662,7 +658,6 @@
               {% endif %}
               <input type="hidden" name="slides_data" id="slidesDataInput" value="">
 
-              <!-- STEP 1: Lesson Overview -->
               <div class="builder-step-card">
                 <div class="builder-step-header">
                   <span class="step-number-badge">1</span>
@@ -679,7 +674,6 @@
                     <input type="hidden" name="grade_level" id="gradeLevelInput" value="Grade 3">
                   </div>
                   <div class="col-12 col-md-4 d-flex flex-column justify-content-end">
-                    <!-- Preset Starter Loader -->
                     <label class="form-label fw-bold text-dark small d-none d-md-block">&nbsp;</label>
                     <div class="dropdown w-100">
                       <button class="btn btn-outline-secondary dropdown-toggle w-100 rounded-3 py-2 fw-bold" type="button" data-bs-toggle="dropdown">
@@ -694,7 +688,6 @@
                     </div>
                   </div>
 
-                  <!-- Curriculum Classification & Academic Term -->
                   <div class="col-12 col-md-6">
                     {% set is_supp = (lesson and lesson.is_supplementary) or (config and config.get('is_supplementary')) or (request.args.get('mode') == 'supplementary') or (request.args.get('is_supplementary') in ['1', 'true', 'True']) %}
                     <label class="form-label fw-bold text-dark small d-flex align-items-center justify-content-between" for="lessonSupplementaryInput">
@@ -738,7 +731,6 @@
                 </div>
               </div>
 
-              <!-- STEP 2: Interactive Slide Canvas Workspace -->
               <div class="builder-step-card">
                 <div class="builder-step-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                   <div class="d-flex align-items-center gap-2">
@@ -753,7 +745,6 @@
                   </span>
                 </div>
 
-                <!-- Teacher Quick Guide / Instructions -->
                 <div class="alert alert-info border-0 rounded-4 p-3 mb-4 shadow-sm d-flex align-items-start gap-3" style="background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);">
                   <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white" style="width: 38px; height: 38px; min-width: 38px;">
                     <i class="bi bi-lightbulb-fill fs-5"></i>
@@ -782,7 +773,6 @@
                 </div>
 
                 <div class="lesson-workspace-grid">
-                  <!-- Col 1: Slide Strip Navigator -->
                   <div class="slide-strip-col">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                       <span class="fw-bold text-muted small text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">Slide Deck</span>
@@ -793,7 +783,6 @@
                     </div>
 
                     <div class="slide-strip-list" id="slideStripContainer">
-                      <!-- Rendered via JS -->
                     </div>
 
                     <div class="dropdown mt-3">
@@ -808,7 +797,6 @@
                     </div>
                   </div>
 
-                  <!-- Col 2: Center Neubrutalist Slide Canvas Preview -->
                   <div class="canvas-col">
                     <div class="neubrutal-slide-canvas">
                       <div class="canvas-window-header">
@@ -836,7 +824,6 @@
                           </button>
                         </div>
 
-                        <!-- Hero Media Box (For Concept/Intro/Summary) Supports 1, 2, or 3-4 images or animation -->
                         <div class="canvas-hero-box" id="canvasHeroBox">
                           <div id="canvasMediaDisplayArea" class="w-100 h-100 d-flex align-items-center justify-content-center">
                             <img src="/static/images/tree.webp" alt="Slide Illustration" class="canvas-hero-img" id="canvasHeroImg">
@@ -844,20 +831,16 @@
                           <div id="canvasLottieContainer" class="d-none" style="width: 100%; height: 230px; max-height: 240px; margin: 0 auto;"></div>
                         </div>
 
-                        <!-- Spoken Narration Text -->
                         <div class="canvas-narration-box" id="canvasNarrationDisplay">
                           Living things grow, breathe, and need food and water! Non-living things do not do these on their own.
                         </div>
 
-                        <!-- Quick Check Interactive Section (If quiz slide) -->
                         <div class="canvas-quiz-card d-none" id="canvasQuizBox">
                           <div class="canvas-quiz-prompt" id="canvasQuizPromptDisplay">Which one can grow and needs water to stay alive? 🌱</div>
                           <div class="canvas-quiz-options" id="canvasQuizOptionsContainer">
-                            <!-- Rendered via JS -->
                           </div>
                         </div>
 
-                        <!-- Canvas Bottom Navigation Simulator -->
                         <div class="canvas-bottom-nav">
                           <button type="button" class="canvas-nav-btn btn-secondary" id="canvasBackBtn" onclick="canvasStep(-1)">
                             <i class="bi bi-arrow-left me-1"></i>Back
@@ -871,7 +854,6 @@
                     </div>
                   </div>
 
-                  <!-- Col 3: Slide Editor Form -->
                   <div class="slide-editor-col">
                     <div class="p-3 bg-light rounded-4 border">
                       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -898,21 +880,17 @@
                         </select>
                       </div>
 
-                      <!-- Media / Illustration / Animation Picker (Supports Multiple Images) -->
                       <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                           <label class="form-label text-muted small fw-bold mb-0">Slide Media (Images &amp; Animations)</label>
                           <span class="badge bg-white text-dark border small fw-bold" id="slideMediaCountBadge">1 Image</span>
                         </div>
 
-                        <!-- Attached Images Thumbnail Strip -->
                         <div class="p-2 bg-white rounded-3 border mb-2">
                           <div class="slide-media-strip" id="slideImagesThumbStrip">
-                            <!-- Rendered via JS -->
                           </div>
                         </div>
 
-                        <!-- Layout info hint -->
                         <div class="mb-2 small text-muted fw-bold d-flex align-items-center gap-1" id="slideMediaLayoutHint">
                           <i class="bi bi-info-circle text-primary"></i>
                           <span id="slideMediaLayoutText">1 Image: Spotlight Hero Layout</span>
@@ -936,14 +914,12 @@
                         </div>
                       </div>
 
-                      <!-- Narration Text -->
                       <div class="mb-3">
                         <label class="form-label text-muted small fw-bold mb-1">Voice Narration / Explanation</label>
                         <textarea class="form-control form-control-sm rounded-3" rows="3" id="editSlideExplanation" oninput="updateCurrentSlideField('explanation', this.value)" placeholder="Enter the text that will be read aloud to students..."></textarea>
                         <small class="text-muted" style="font-size: 0.68rem;">Synthesized aloud when student clicks "Read Aloud"</small>
                       </div>
 
-                      <!-- Quick Check Configuration Fields -->
                       <div id="quickCheckEditFields" class="d-none border-top pt-2 mt-2">
                         <div class="mb-2">
                           <label class="form-label text-muted small fw-bold mb-1">Question Prompt</label>
@@ -956,7 +932,6 @@
                             <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-bold small" onclick="addQuizOption()">+ Add Choice</button>
                           </div>
                           <div id="quizOptionsEditor" class="d-flex flex-column gap-2">
-                            <!-- Rendered via JS -->
                           </div>
                         </div>
                       </div>
@@ -966,7 +941,6 @@
                 </div>
               </div>
 
-              <!-- Submit Toolbar -->
               <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded-4 border shadow-sm">
                 <a href="{{ url_for('teacher.lesson_studio') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
                   Cancel
@@ -984,7 +958,6 @@
     </div>
   </div>
 
-  <!-- Preset Image Selector Modal with Permanent Library -->
   <div class="modal fade" id="presetImageModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -998,7 +971,6 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body p-4">
-          <!-- Navigation Tabs -->
           <ul class="nav nav-pills gap-2 mb-3" id="imageModalTabs" role="tablist">
             <li class="nav-item" role="presentation">
               <button class="nav-link active rounded-pill px-3 py-1.5 fw-bold small" id="tab-img-presets" data-bs-toggle="pill" data-bs-target="#pane-img-presets" type="button" role="tab">
@@ -1014,7 +986,6 @@
           </ul>
 
           <div class="tab-content">
-            <!-- TAB 1: Built-in Presets -->
             <div class="tab-pane fade show active" id="pane-img-presets" role="tabpanel">
               <p class="text-muted small mb-3">Click any science icon to attach it to this slide or quiz option.</p>
               <div class="preset-picker-grid">
@@ -1027,11 +998,9 @@
               </div>
             </div>
 
-            <!-- TAB 2: My Uploaded Library -->
             <div class="tab-pane fade" id="pane-img-library" role="tabpanel">
               <p class="text-muted small mb-3">Custom illustrations uploaded by you. Saved permanently in your library for all future decks.</p>
 
-              <!-- Quick Upload Dropzone -->
               <div class="upload-dropzone p-3 text-center border-2 border-dashed rounded-4 mb-3 bg-light" style="cursor: pointer; border-color: #cbd5e1; transition: all 0.2s;" onclick="document.getElementById('libraryImageUploadInput').click()" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1'">
                 <div class="d-flex align-items-center justify-content-center gap-2">
                   <i class="bi bi-cloud-arrow-up-fill text-primary fs-4"></i>
@@ -1043,9 +1012,7 @@
                 <input type="file" id="libraryImageUploadInput" class="d-none" accept=".png,.jpg,.jpeg,.webp,.svg,.gif" onchange="uploadTeacherLibraryAsset(this, 'image')">
               </div>
 
-              <!-- Uploaded Library Grid -->
               <div id="libraryImagesGrid" class="preset-picker-grid">
-                <!-- Dynamically loaded -->
               </div>
             </div>
           </div>
@@ -1054,7 +1021,6 @@
     </div>
   </div>
 
-  <!-- Preset Animation Selector Modal with Permanent Library -->
   <div class="modal fade" id="presetAnimationModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -1068,7 +1034,6 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body p-4">
-          <!-- Navigation Tabs -->
           <ul class="nav nav-pills gap-2 mb-3" id="animationModalTabs" role="tablist">
             <li class="nav-item" role="presentation">
               <button class="nav-link active rounded-pill px-3 py-1.5 fw-bold small" id="tab-anim-presets" data-bs-toggle="pill" data-bs-target="#pane-anim-presets" type="button" role="tab">
@@ -1084,7 +1049,6 @@
           </ul>
 
           <div class="tab-content">
-            <!-- TAB 1: Built-in Presets -->
             <div class="tab-pane fade show active" id="pane-anim-presets" role="tabpanel">
               <p class="text-muted small mb-3">Click any science animation preset to attach it to this slide. No coding or JSON knowledge needed!</p>
               <div class="preset-picker-grid">
@@ -1123,11 +1087,9 @@
               </div>
             </div>
 
-            <!-- TAB 2: My Uploaded Library -->
             <div class="tab-pane fade" id="pane-anim-library" role="tabpanel">
               <p class="text-muted small mb-3">Custom Lottie animations uploaded by you. Saved permanently in your library for all future decks.</p>
 
-              <!-- Quick Upload Dropzone -->
               <div class="upload-dropzone p-3 text-center border-2 border-dashed rounded-4 mb-3 bg-light" style="cursor: pointer; border-color: #cbd5e1; transition: all 0.2s;" onclick="document.getElementById('libraryAnimUploadInput').click()" onmouseover="this.style.borderColor='#06b6d4'" onmouseout="this.style.borderColor='#cbd5e1'">
                 <div class="d-flex align-items-center justify-content-center gap-2">
                   <i class="bi bi-cloud-arrow-up-fill text-info fs-4"></i>
@@ -1139,9 +1101,7 @@
                 <input type="file" id="libraryAnimUploadInput" class="d-none" accept=".json" onchange="uploadTeacherLibraryAsset(this, 'animation')">
               </div>
 
-              <!-- Uploaded Library Grid -->
               <div id="libraryAnimationsGrid" class="preset-picker-grid">
-                <!-- Dynamically loaded -->
               </div>
             </div>
           </div>
@@ -1150,7 +1110,6 @@
     </div>
   </div>
 
-  <!-- Modern In-App Notification Toast Container -->
   <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090;">
     <div id="builderToast" class="toast align-items-center text-white border-0 shadow-lg rounded-4 overflow-hidden" role="alert" aria-live="assertive" aria-atomic="true">
       <div class="d-flex p-3 align-items-center">
@@ -1429,8 +1388,8 @@
     // State
     let currentSlideIndex = 0;
     let rawSlides = {{ (config.slides if config is not none and 'slides' in config else DEFAULT_SLIDES)|tojson }};
-    let slides = Array.isArray(rawSlides) && rawSlides.length > 0 
-      ? rawSlides 
+    let slides = Array.isArray(rawSlides) && rawSlides.length > 0
+      ? rawSlides
       : [
           {
             id: `slide-${Date.now()}`,
@@ -1567,7 +1526,7 @@
       document.getElementById('editSlideTitle').value = slide.title || '';
       document.getElementById('editSlideType').value = slide.type || 'concept';
       document.getElementById('editSlideExplanation').value = slide.explanation || '';
-      
+
       const badge = document.getElementById('activeAnimationBadge');
       const isAnim = Boolean(slide.animationSrc || (typeof slide.image === 'string' && slide.image.endsWith('.json')));
       if (isAnim) {

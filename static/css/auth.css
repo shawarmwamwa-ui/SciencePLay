@@ -1,4 +1,3 @@
-/* SciencePlay Neubrutalism Authentication System */
 * {
   margin: 0;
   padding: 0;
@@ -35,7 +34,6 @@ body.login-page {
   to { transform: translateX(-50%); }
 }
 
-/* Neubrutalist Window Card */
 .brutal-login-window {
   width: 480px;
   max-width: 95%;
@@ -53,7 +51,6 @@ body.login-page {
   box-shadow: 10px 10px 0px #18181b;
 }
 
-/* Window Header Bar with Control Dots */
 .brutal-window-header {
   background: #18181b;
   color: #ffffff;
@@ -92,7 +89,6 @@ body.login-page {
   text-transform: uppercase;
 }
 
-/* Logo Title Styling */
 .login-page .logo-title {
   font-family: 'Pixelify Sans', system-ui, sans-serif;
   font-size: 56px;
@@ -150,7 +146,6 @@ body.login-page {
   line-height: 1.2;
 }
 
-/* Neubrutalist Form Inputs */
 .brutal-label {
   font-weight: 800;
   font-size: 0.9rem;
@@ -227,7 +222,6 @@ body.login-page {
   background: #cbd5e1;
 }
 
-/* Neubrutalist Submit Button */
 .brutal-btn-login {
   width: 100%;
   background: #93c5fd;
@@ -259,7 +253,6 @@ body.login-page {
   box-shadow: 2px 2px 0px #18181b;
 }
 
-/* Neubrutalist Alert Styling */
 .brutal-alert {
   border: 3px solid #18181b !important;
   border-radius: 12px !important;
@@ -281,7 +274,6 @@ body.login-page {
   }
 }
 
-/* Tablets & Mobile Devices: Shift login card up when virtual keyboard opens */
 body.touch-device.username-focused .brutal-login-window,
 @media (pointer: coarse), (max-width: 1024px) {
   body.username-focused .brutal-login-window {
@@ -300,7 +292,6 @@ body.touch-device.password-focused .brutal-login-window {
   transform: translateY(-180px) !important;
 }
 
-/* Compact screens / Landscape tablets when virtual keyboard takes screen height */
 @media (max-height: 650px) {
   body.touch-device.username-focused .brutal-login-window,
   body.touch-device.password-focused .brutal-login-window {
@@ -311,7 +302,6 @@ body.touch-device.password-focused .brutal-login-window {
   }
 }
 
-/* PC / Desktop (Mouse/Trackpad, Non-touch): Strictly default layout, never shift window up */
 body.desktop-device.username-focused .brutal-login-window,
 body.desktop-device.password-focused .brutal-login-window {
   transform: none !important;
@@ -324,7 +314,6 @@ body.desktop-device.password-focused .brutal-login-window {
   }
 }
 
-/* Critical Inlined Layout Utilities for Instant First Paint */
 .text-center { text-align: center; }
 .d-inline-block { display: inline-block; }
 .mb-1 { margin-bottom: 0.25rem !important; }

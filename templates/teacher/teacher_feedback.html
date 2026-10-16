@@ -77,7 +77,6 @@
         <section class="teacher-content">
           <div class="teacher-center-wrap">
 
-          <!-- Feedback Skeleton View -->
           <div class="dashboard-skeleton-wrap">
             <div class="mb-4">
               <span class="skeleton-shimmer skeleton-line" style="width: 140px; height: 12px; margin-bottom: 8px;"></span>
@@ -85,7 +84,6 @@
               <span class="skeleton-shimmer skeleton-line" style="width: 460px; height: 14px;"></span>
             </div>
 
-            <!-- Filter Bar Skeleton -->
             <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
               <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
                 <span class="skeleton-shimmer skeleton-box" style="width: 260px; height: 38px; border-radius: 999px;"></span>
@@ -97,7 +95,6 @@
               </div>
             </div>
 
-            <!-- Feedback Cards Skeleton -->
             <div class="d-flex flex-column gap-3 mb-4">
               <div class="feedback-submission-card p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -143,10 +140,8 @@
             </div>
           </div>
 
-          <!-- Real Content View -->
           <div class="dashboard-real-content">
-            
-            <!-- Page Header -->
+
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap teacher-head-row">
               <div>
                 <p class="teacher-eyebrow mb-2">Student Communications & Evaluation</p>
@@ -155,7 +150,6 @@
               </div>
             </div>
 
-            <!-- KPI Metric Summary -->
             <div class="teacher-summary-grid mb-4">
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">
@@ -180,10 +174,8 @@
               </div>
             </div>
 
-            <!-- Filter and Search Toolbar -->
             <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
               <div class="row g-3 align-items-center">
-                <!-- Status Tab Pills -->
                 <div class="col-12 col-md-6 col-lg-5">
                   <div class="nav nav-pills nav-fill bg-light p-1 rounded-pill" id="feedbackTabs">
                     <button id="tab-btn-all" class="nav-link active rounded-pill py-1 px-3 fw-bold small filter-tab-btn" data-filter="all" type="button">
@@ -198,7 +190,6 @@
                   </div>
                 </div>
 
-                <!-- Student Dropdown Filter -->
                 <div class="col-12 col-sm-6 col-md-3 col-lg-3">
                   <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
@@ -211,7 +202,6 @@
                   </div>
                 </div>
 
-                <!-- Search Input -->
                 <div class="col-12 col-sm-6 col-md-3 col-lg-4">
                   <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
@@ -221,7 +211,6 @@
               </div>
             </div>
 
-            <!-- Submissions Feedback Feed -->
             <div id="submissionsContainer" class="d-flex flex-column gap-3 mb-5">
               {% for item in attempts %}
                 {% set att = item.attempt %}
@@ -231,9 +220,8 @@
                      data-status="{% if item.has_feedback %}completed{% else %}pending{% endif %}"
                      data-student-id="{{ stu.id }}"
                      data-search-text="{{ stu.name|lower }} {{ stu.username|lower }} {{ act.type|lower }}">
-                  
+
                   <div class="row g-3">
-                    <!-- Left Column: Student & Attempt Metadata -->
                     <div class="col-12 col-lg-5 border-end-lg pe-lg-4">
                       <div class="d-flex justify-content-between align-items-start mb-2">
                         <a href="{{ url_for('teacher.student_performance', student_id=stu.id) }}" class="btn btn-sm btn-light border border-2 px-3 py-1 rounded-pill fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm hover-primary" title="View Full Performance Report">
@@ -257,7 +245,6 @@
                         <span><i class="bi bi-calendar3 me-1"></i>{{ att.created_at|to_ph_time('%b %d, %Y %I:%M %p') }}</span>
                       </div>
 
-                      <!-- System Feedback Hint -->
                       {% if item.system_feedback %}
                         <div class="bg-light p-2 rounded-3 border small text-dark mt-2">
                           <strong class="text-secondary d-block mb-1"><i class="bi bi-robot me-1"></i>System Assessment:</strong>
@@ -276,7 +263,6 @@
                       {% endif %}
                     </div>
 
-                    <!-- Right Column: Teacher P.S. Note Input -->
                     <div class="col-12 col-lg-7 ps-lg-3">
                       <div class="d-flex justify-content-between align-items-center mb-1">
                         <label class="form-label small fw-bold text-dark mb-0">
@@ -287,7 +273,6 @@
                         </span>
                       </div>
 
-                      <!-- Quick Presets Header & Clear Button -->
                       <div class="d-flex justify-content-between align-items-center mb-1">
                         <span class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-magic me-1"></i>Quick Suggestions:</span>
                         <button type="button" class="btn btn-link btn-sm text-muted p-0 text-decoration-none" style="font-size: 0.75rem;" onclick="clearFeedback({{ att.id }})" title="Clear Note">
@@ -295,7 +280,6 @@
                         </button>
                       </div>
 
-                      <!-- Topic-Specific Quick Presets -->
                       <div class="d-flex flex-wrap gap-1 mb-2">
                         {% if act.engine == 'find_the_part' or 'Animal' in act.type %}
                           <button type="button" class="quick-chip" onclick="applyPreset({{ att.id }}, '🦅 Great job identifying how wings help birds fly and find food!')">🦅 Wings &amp; Flight</button>
@@ -360,7 +344,6 @@
               </div>
             </div>
           </div>
-          <!-- End .dashboard-real-content -->
 
           </div>
         </section>

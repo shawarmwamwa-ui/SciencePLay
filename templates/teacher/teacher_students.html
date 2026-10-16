@@ -19,8 +19,7 @@
 
   <div class="teacher-layout container-fluid">
     <div class="row g-3 g-lg-4">
-      
-      <!-- Sidebar Navigation -->
+
       <aside class="col-12 col-lg-3 col-xl-2">
         <nav class="teacher-sidebar h-100">
           <div>
@@ -75,12 +74,10 @@
         </nav>
       </aside>
 
-      <!-- Main Content -->
       <main class="col-12 col-lg-9 col-xl-10">
         <section class="teacher-content">
           <div class="teacher-center-wrap">
 
-            <!-- Page Header -->
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap teacher-head-row">
               <div>
                 <p class="teacher-eyebrow mb-2">Classroom Roster</p>
@@ -97,7 +94,6 @@
               </div>
             </div>
 
-            <!-- KPI Row -->
             <div class="row row-cols-1 row-cols-md-3 g-3 mb-4">
               <div class="col">
                 <div class="teacher-summary-card">
@@ -128,7 +124,6 @@
               </div>
             </div>
 
-            <!-- ══════ View Toggle Tabs (Classroom Roster, Live Tracker, Archived) ══════ -->
             <ul class="nav nav-pills students-view-pills mb-4 gap-2" id="studentsViewTabs" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link {% if active_tab not in ['live-tracker', 'archived'] %}active{% endif %}" id="tab-roster" data-bs-toggle="pill" data-bs-target="#pane-roster" type="button" role="tab" aria-controls="pane-roster" aria-selected="{% if active_tab not in ['live-tracker', 'archived'] %}true{% else %}false{% endif %}">
@@ -146,10 +141,8 @@
               </li>
             </ul>
 
-            <!-- ══════ Tab Panes ══════ -->
             <div class="tab-content" id="studentsViewTabContent">
 
-              <!-- TAB 1: Classroom Roster -->
               <div class="tab-pane fade {% if active_tab not in ['live-tracker', 'archived'] %}show active{% endif %}" id="pane-roster" role="tabpanel" aria-labelledby="tab-roster">
                 <section class="table-shell teacher-table-shell mb-4">
                   <div class="table-header teacher-table-header d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -158,7 +151,6 @@
                       <span class="badge bg-light text-dark border rounded-pill">{{ students|length }} listed</span>
                     </div>
 
-                    <!-- Live Search Box -->
                     <div class="position-relative" style="min-width: 280px; max-width: 400px; flex: 1;">
                       <i class="bi bi-search search-icon-wrap"></i>
                       <input type="text" id="studentRosterSearch" class="form-control student-search-bar" placeholder="Search by student name or username..." value="{{ search_query }}" aria-label="Search students by name or username">
@@ -248,7 +240,6 @@
                 </section>
               </div>
 
-              <!-- TAB 2: Live Progress & Slide Tracker (Image 3) -->
               <div class="tab-pane fade {% if active_tab == 'live-tracker' %}show active{% endif %}" id="pane-live-tracker" role="tabpanel" aria-labelledby="tab-live-tracker">
                 <section class="table-shell teacher-table-shell mb-4" id="live-tracker-section" data-live-tracker-api-url="{{ url_for('teacher.api_live_lesson_tracker') }}">
                   <div class="table-header teacher-table-header d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -261,7 +252,6 @@
                       </span>
                     </div>
 
-                    <!-- Live Tracker Search Box -->
                     <div class="position-relative" style="min-width: 260px; max-width: 380px; flex: 1;">
                       <i class="bi bi-search search-icon-wrap"></i>
                       <input type="text" id="liveTrackerSearch" class="form-control student-search-bar" placeholder="Filter by student or lesson title..." aria-label="Filter live tracker by student or lesson title">
@@ -319,7 +309,7 @@
                 </section>
               </div>
 
-            </div><!-- end tab-content -->
+            </div>
 
           </div>
         </section>

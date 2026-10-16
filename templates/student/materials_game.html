@@ -18,7 +18,6 @@
 <body class="arcade-page arcade-page--compact">
   <div class="arcade-container arcade-container--tablet-fit">
 
-    <!-- Unified Single-Row Header -->
     <header class="arcade-header arcade-header--compact">
       <div class="d-flex align-items-center gap-2 flex-shrink-0">
         <a href="{{ url_for('student.activities') }}" class="game-leave-btn arcade-btn-back--sm" id="arcade-back-link" title="Leave Game">
@@ -30,7 +29,6 @@
         </div>
       </div>
 
-      <!-- Level Dots + Hint Button in Header -->
       <div class="d-flex align-items-center gap-2 flex-shrink-0">
         <div class="level-dots level-dots--sm">
           <div class="level-dot active" id="dot-lvl-1" title="Level 1">1</div>
@@ -43,7 +41,6 @@
         </button>
       </div>
 
-      <!-- Score & Level Badge -->
       <div class="arcade-hud gap-2 flex-shrink-0">
         <div class="arcade-chip arcade-chip--level py-1 px-3 fs-6" id="hud-level-chip">
           <i class="bi bi-puzzle-fill"></i>
@@ -56,16 +53,13 @@
       </div>
     </header>
 
-    <!-- Main Game Card -->
     <main class="logic-card logic-card--compact" id="logic-game-card">
 
-      <!-- Hint Banner -->
       <div class="logic-hint-toast logic-hint-toast--compact" id="logic-hint-toast">
         <i class="bi bi-info-circle-fill me-1"></i>
         <span id="logic-hint-message">Read the clues carefully!</span>
       </div>
 
-      <!-- Quick Compact Subtitle -->
       <div class="d-flex justify-content-between align-items-center mb-2 px-1">
         <span class="fw-black text-dark fs-6" style="font-family:'Fredoka',sans-serif;">
           <i class="bi bi-hand-index-thumb me-1 text-primary"></i> Drag a metal into each box (or tap to choose):
@@ -75,7 +69,6 @@
         </span>
       </div>
 
-      <!-- Mystery Clues Grid & Answer Boxes (Rendered Dynamically by JS) -->
       <div class="mystery-clues-grid mystery-clues-grid--compact grid-cols-4" id="mystery-clues-grid">
         <div class="mystery-column" style="min-height:clamp(160px,26vh,210px); opacity:0.15;"></div>
         <div class="mystery-column" style="min-height:clamp(160px,26vh,210px); opacity:0.15;"></div>
@@ -83,9 +76,7 @@
         <div class="mystery-column" style="min-height:clamp(160px,26vh,210px); opacity:0.15;"></div>
       </div>
 
-      <!-- Bottom Bar: Choices Shelf + Check Answer -->
       <div class="tablet-bottom-row">
-        <!-- Metal Choice Shelf -->
         <section class="metal-choice-shelf metal-choice-shelf--compact flex-grow-1" id="metal-choice-shelf">
           <div class="d-flex justify-content-between align-items-center mb-1">
             <span class="metal-choice-title mb-0 fs-6">
@@ -105,7 +96,6 @@
               <i class="bi bi-chevron-left"></i>
             </button>
             <div class="metal-choice-row metal-choice-row--compact flex-grow-1" id="metal-choice-row">
-              <!-- Rendered by JS -->
             </div>
             <button type="button" class="btn-shelf-nav btn-shelf-nav-right" id="btn-shelf-scroll-right" title="Scroll right" aria-label="Scroll choices right">
               <i class="bi bi-chevron-right"></i>
@@ -113,7 +103,6 @@
           </div>
         </section>
 
-        <!-- Action Submit Button -->
         <button type="button" class="btn btn-warning fw-black px-4 py-2 border-dark border-3 rounded-4 shadow btn-submit--tablet" id="btn-submit-deduction">
           <i class="bi bi-check2-circle me-1 fs-5"></i> Check Answers!
         </button>
@@ -123,12 +112,10 @@
 
   </div>
 
-  <!-- Background Music Audio -->
   <audio id="game-bgm" loop preload="none">
     <source src="{{ url_for('static', filename='audio/Piki - Happy Walking (freetouse.com).mp3') }}" type="audio/mpeg">
   </audio>
 
-  <!-- Interactive Modal for Tapping a Box — LANDSCAPE -->
   <div class="modal fade" id="metalPickerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-landscape-picker">
       <div class="modal-content text-center p-3 border-dark border-3 rounded-4 shadow-lg">
@@ -141,7 +128,6 @@
         <div class="modal-body pt-1 pb-3">
           <p class="text-muted fw-bold fs-6 mb-3" id="modal-picker-clue-text"></p>
           <div class="picker-options-grid" id="modal-picker-options">
-            <!-- Rendered horizontally by JS as landscape cards -->
           </div>
         </div>
         <div class="modal-footer border-0 justify-content-center pt-0 pb-1">
@@ -153,7 +139,6 @@
     </div>
   </div>
 
-  <!-- Round Review Modal (Between Rounds / Deduction Feedback) -->
   <div class="modal fade" id="roundReviewModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content text-center p-3 border-dark border-3 rounded-4 shadow-lg">
@@ -167,7 +152,6 @@
             Review your deductions before continuing!
           </p>
           <div class="round-review-list d-flex flex-column gap-2" id="round-review-list" style="max-height: 52vh; overflow-y: auto;">
-            <!-- Rendered by JS -->
           </div>
         </div>
         <div class="modal-footer border-0 justify-content-center pt-1 pb-1">
@@ -179,7 +163,6 @@
     </div>
   </div>
 
-  <!-- Level Up Modal -->
   <div class="modal fade" id="levelUpModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content text-center p-4 border-dark border-3 rounded-4 shadow-lg">
@@ -195,7 +178,6 @@
     </div>
   </div>
 
-  <!-- Victory Final Modal -->
   <div class="modal fade" id="victoryModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content text-center p-4 border-dark border-3 rounded-4 shadow-lg">
@@ -222,7 +204,6 @@
     </div>
   </div>
 
-  <!-- Unified Exit Confirmation Modal -->
   <div class="modal fade game-exit-modal" id="exitConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content text-center p-4 border-dark border-3 rounded-4 shadow-lg game-exit-modal-card">

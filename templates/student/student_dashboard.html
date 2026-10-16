@@ -11,22 +11,18 @@
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-  <!-- Preload & Synchronously Load Local Bootstrap to Guarantee 0 Layout Shift & Fast 80ms Delivery -->
   <link rel="preload" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" as="style">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
 
-  <!-- Non-Blocking Google Fonts (Saves 1,480ms Render-Blocking Request Delay) -->
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800;900&family=Nunito:wght@700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800;900&family=Nunito:wght@700;800;900&display=swap">
   </noscript>
 
-  <!-- Core Student Stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css', v='20260925_4') }}">
 </head>
 <body class="student-page container mt-3 mb-4">
 
-  <!-- Alerts -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div class="alerts-container mb-4">
@@ -43,7 +39,6 @@
     {% endif %}
   {% endwith %}
 
-  <!-- Header Banner -->
   <header class="student-header brutal-window mb-4" style="background: #fef08a;">
     <div class="brutal-window-header">
       <div class="brutal-dots">
@@ -67,10 +62,8 @@
     </div>
   </header>
 
-  <!-- Main Landmark -->
   <main id="main-content">
 
-  <!-- Teacher Review Reminders (Nudges) -->
   {% if active_notifications %}
     <div class="brutal-window mb-4" style="background: #fed7aa; border: 3px solid #000; box-shadow: 4px 4px 0 #000;">
       <div class="brutal-window-header d-flex align-items-center justify-content-between" style="background: #fb923c; border-bottom: 3px solid #000; padding: 0.5rem 1rem;">
@@ -110,9 +103,7 @@
     </div>
   {% endif %}
 
-  <!-- Stat Cards Grid: Separated Lessons & Activities -->
   <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 student-summary mb-4 g-3">
-    <!-- Card 1: Lessons Done -->
     <div class="col">
       <div class="brutal-card stat-card p-3 p-md-4 d-flex flex-column justify-content-between h-100" style="background: #bae6fd;">
         <div class="brutal-window-header mb-2" style="background: transparent; border: none; padding: 0;">
@@ -131,7 +122,6 @@
       </div>
     </div>
 
-    <!-- Card 2: Activities Done -->
     <div class="col">
       <div class="brutal-card stat-card p-3 p-md-4 d-flex flex-column justify-content-between h-100" style="background: #bbf7d0;">
         <div class="brutal-window-header mb-2" style="background: transparent; border: none; padding: 0;">
@@ -150,7 +140,6 @@
       </div>
     </div>
 
-    <!-- Card 3: Total Points -->
     <div class="col">
       <div class="brutal-card stat-card p-3 p-md-4 d-flex flex-column justify-content-between h-100" style="background: #fef08a;">
         <div class="brutal-window-header mb-2" style="background: transparent; border: none; padding: 0;">
@@ -169,7 +158,6 @@
       </div>
     </div>
 
-    <!-- Card 4: Overall Quest Progress -->
     <div class="col">
       <div class="brutal-card stat-card p-3 p-md-4 d-flex flex-column justify-content-between h-100" style="background: #e9d5ff;">
         <div class="brutal-window-header mb-2" style="background: transparent; border: none; padding: 0;">
@@ -189,10 +177,8 @@
     </div>
   </div>
 
-  <!-- Combined Layout Row (2 Large Combined Containers) -->
   <div class="row g-4 mb-4">
 
-    <!-- Combined Container 1: Learning Hub (Lessons + Activities + Terms Action Cards) -->
     <div class="col-lg-6">
       <div class="brutal-window h-100" style="background: #bae6fd;">
         <div class="brutal-window-header">
@@ -203,8 +189,7 @@
           </div>
         </div>
         <div class="brutal-window-body">
-          
-          <!-- Section A: Lessons Action Card -->
+
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
               <i class="bi bi-journal-bookmark-fill text-dark me-1"></i> Lessons
@@ -227,7 +212,6 @@
 
           <hr class="brutal-divider">
 
-          <!-- Section B: Activities Action Card -->
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
               <i class="bi bi-controller text-dark me-1"></i> Activities
@@ -250,7 +234,6 @@
 
           <hr class="brutal-divider">
 
-          <!-- Section C: Term & Module Mastery Action Card -->
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
               <i class="bi bi-mortarboard-fill text-dark me-1"></i> Terms &amp; Curriculum
@@ -275,7 +258,6 @@
       </div>
     </div>
 
-    <!-- Combined Container 2: Community & Rewards (Leaderboard, Badges, Feedback) -->
     <div class="col-lg-6">
       <div class="brutal-window h-100" style="background: #fbcfe8;">
         <div class="brutal-window-header">
@@ -287,7 +269,6 @@
         </div>
         <div class="brutal-window-body">
 
-          <!-- Section A: Dedicated Leaderboard Action Card -->
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
               <i class="bi bi-trophy-fill text-warning me-1"></i> Leaderboard
@@ -310,7 +291,6 @@
 
           <hr class="brutal-divider">
 
-          <!-- Section B: Dedicated Badges Action Card -->
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
               <i class="bi bi-patch-check-fill text-danger me-1"></i> Badges
@@ -335,7 +315,6 @@
 
           <hr class="brutal-divider">
 
-          <!-- Section C: Feedback & Ratings -->
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="fw-black text-dark fs-2 mb-0 d-flex align-items-center gap-2">
               <i class="bi bi-chat-square-quote-fill text-primary me-1"></i> Feedback
@@ -375,8 +354,8 @@
   <script type="module">
     const startDashboardBgm = () => {
       import("{{ url_for('static', filename='js/bgmPlayer.js') }}").then(({ initBgmPlayer }) => {
-        initBgmPlayer('dashboard-bgm', { 
-          volume: 0.22, 
+        initBgmPlayer('dashboard-bgm', {
+          volume: 0.22,
           storageKey: 'scienceplay_dashboard_bgm_muted',
           timeKey: 'scienceplay_hub_bgm_time'
         });

@@ -18,7 +18,6 @@
 <body class="arcade-page">
   <div class="arcade-container ecoswipe-container">
 
-    <!-- Header -->
     <header class="arcade-header">
       <div class="d-flex align-items-center gap-3">
         <a href="{{ url_for('student.activities') }}" class="game-leave-btn" id="arcade-back-link" title="Leave Game">
@@ -43,9 +42,7 @@
       </div>
     </header>
 
-    <!-- EcoSwipe Arena -->
     <main class="ecoswipe-arena" id="ecoswipe-arena">
-      <!-- Streak & Stats Bar -->
       <div class="ecoswipe-streak-bar">
         <div class="streak-counter" id="streak-counter-badge">
           <i class="bi bi-fire text-danger"></i>
@@ -56,10 +53,8 @@
         </div>
       </div>
 
-      <!-- 3-Column Landscape Battlefield: Left Bin | Center Card Stack | Right Bin -->
       <div class="ecoswipe-stage" id="ecoswipe-stage">
 
-        <!-- Left Station: 3D Compost Bin with Opening Lid -->
         <div class="ecoswipe-station ecoswipe-bin ecoswipe-bin--compost" id="btn-swipe-compost" role="button" tabindex="0" title="Swipe card left or double-tap bin for Compost">
           <div class="bin-3d-wrap">
             <div class="bin-lid-pivot">
@@ -86,28 +81,23 @@
           </div>
         </div>
 
-        <!-- Center: Card Stack Area -->
         <div class="card-stack-zone">
           <div class="card-stack" id="card-stack">
             <div class="swipe-card" id="swipe-card">
-              <!-- Stamps -->
               <div class="swipe-stamp swipe-stamp--compost" id="stamp-compost">COMPOST</div>
               <div class="swipe-stamp swipe-stamp--recycle" id="stamp-recycle">RECYCLE</div>
 
-              <!-- Swipe Direction Guidance on Middle Card -->
               <div class="swipe-direction-guide">
                 <span class="guide-left"><i class="bi bi-arrow-left"></i> Compost</span>
                 <span class="guide-right">Recycle <i class="bi bi-arrow-right"></i></span>
               </div>
 
-              <!-- Card Content -->
               <div class="swipe-card-img-container">
                 <img src="/static/images/icons/plastic_bottle.png" alt="" aria-hidden="true" class="swipe-card-img" id="card-img">
               </div>
               <h3 class="swipe-card-title" id="card-title">Plastic Bottle</h3>
               <p class="swipe-card-fact" id="card-fact">Clean plastic containers can be melted and remolded into new bottles!</p>
 
-              <!-- Drag Cue -->
               <div class="swipe-drag-cue">
                 <i class="bi bi-hand-index-thumb"></i> Swipe Card to Sort
               </div>
@@ -115,7 +105,6 @@
           </div>
         </div>
 
-        <!-- Right Station: 3D Recyclable Bin with Opening Lid -->
         <div class="ecoswipe-station ecoswipe-bin ecoswipe-bin--recycle" id="btn-swipe-recycle" role="button" tabindex="0" title="Swipe card right or double-tap bin for Recyclable">
           <div class="bin-3d-wrap">
             <div class="bin-lid-pivot">
@@ -144,7 +133,6 @@
 
       </div>
 
-      <!-- Educational Feedback Banner -->
       <div class="ecoswipe-feedback-banner" id="ecoswipe-feedback">
         <i class="bi bi-info-circle-fill me-1" id="feedback-icon"></i>
         <span id="feedback-text">Nice sort!</span>
@@ -153,12 +141,10 @@
 
   </div>
 
-  <!-- Background Music Audio -->
   <audio id="game-bgm" loop preload="none">
     <source src="{{ url_for('static', filename='audio/Piki - Happy Walking (freetouse.com).mp3') }}" type="audio/mpeg">
   </audio>
 
-  <!-- Victory Final Modal -->
   <div class="modal fade" id="victoryModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content text-center p-4 border-dark border-3 rounded-4 shadow-lg">
@@ -186,7 +172,6 @@
     </div>
   </div>
 
-  <!-- Unified Exit Confirmation Modal -->
   <div class="modal fade game-exit-modal" id="exitConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content text-center p-4 border-dark border-3 rounded-4 shadow-lg game-exit-modal-card">

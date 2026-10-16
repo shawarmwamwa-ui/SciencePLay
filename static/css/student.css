@@ -45,8 +45,7 @@ body.student-page {
   font-family: 'Nunito', 'Segoe UI', sans-serif;
   color: var(--brutal-ink);
   line-height: 1.4;
-  /* Colorful vibrant pastel gradient background matching user prompt */
-  background: 
+  background:
     radial-gradient(circle at 5% 10%, #ffb7b2 0%, transparent 40%),
     radial-gradient(circle at 95% 15%, #fef08a 0%, transparent 45%),
     radial-gradient(circle at 85% 85%, #bbf7d0 0%, transparent 40%),
@@ -61,7 +60,6 @@ body.student-page.container {
   margin-inline: auto;
 }
 
-/* Typography Utility */
 .fw-black {
   font-weight: 900 !important;
 }
@@ -79,7 +77,6 @@ body.student-page.container {
   letter-spacing: -0.01em;
 }
 
-/* Page Top Banner */
 .page-top-banner {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(8px);
@@ -89,7 +86,6 @@ body.student-page.container {
   box-shadow: var(--brutal-shadow-sm);
 }
 
-/* Brutalist Window Frame */
 .brutal-window {
   border: 4px solid var(--brutal-ink);
   border-radius: 24px;
@@ -121,7 +117,6 @@ body.student-page.container {
   padding: clamp(1.4rem, 2.2vw, 2rem);
 }
 
-/* Window Control Dots (🔴 🟡 🟢) */
 .brutal-dots {
   display: flex;
   gap: 8px;
@@ -138,7 +133,6 @@ body.student-page.container {
 .dot-yellow { background-color: #ffbd2e; }
 .dot-green { background-color: #27c93f; }
 
-/* Brutalist Cards */
 .brutal-card {
   border: 4px solid var(--brutal-ink);
   border-radius: 22px;
@@ -153,7 +147,6 @@ body.student-page.container {
   box-shadow: var(--brutal-shadow-lg);
 }
 
-/* Lesson & Activity Cards (matching user's screenshot) */
 .lesson-grid-card,
 .activity-grid-card {
   border: 3.5px solid var(--brutal-ink);
@@ -174,7 +167,6 @@ body.student-page.container {
   box-shadow: 7px 7px 0px var(--brutal-ink);
 }
 
-/* Percentage pill badge (matching screenshot) */
 .percent-pill-badge {
   font-family: 'Fredoka', sans-serif;
   font-weight: 800;
@@ -187,7 +179,6 @@ body.student-page.container {
   box-shadow: 2px 2px 0px var(--brutal-ink);
 }
 
-/* Open Action Button (matching screenshot) */
 .brutal-open-btn {
   font-family: 'Fredoka', sans-serif;
   font-weight: 800;
@@ -226,7 +217,6 @@ body.student-page.container {
 .brutal-open-btn-cyan { background: #38bdf8; color: #18181b; }
 .brutal-open-btn-cyan:hover { background: #0284c7; color: #ffffff; }
 
-/* Metric Display */
 .metric-value {
   font-family: 'Fredoka', sans-serif;
   font-size: clamp(2.8rem, 4.5vw, 3.8rem);
@@ -234,7 +224,6 @@ body.student-page.container {
   letter-spacing: -0.02em;
 }
 
-/* Section Dividers inside combined containers */
 .brutal-divider {
   height: 4px;
   background-color: var(--brutal-ink);
@@ -244,7 +233,6 @@ body.student-page.container {
   border-radius: 4px;
 }
 
-/* Brutalist List Item / Action Block (matching image 2) */
 .brutal-action-card {
   border: 3.5px solid var(--brutal-ink);
   border-radius: 18px;
@@ -260,7 +248,6 @@ body.student-page.container {
   background: #fde047;
 }
 
-/* Circle Arrow Button (matching image 2 > / →) */
 .brutal-circle-arrow {
   display: inline-flex;
   align-items: center;
@@ -283,7 +270,6 @@ body.student-page.container {
   background: #ffbd2e;
 }
 
-/* Brutalist Progress Bar */
 .brutal-progress {
   height: 14px;
   border-radius: 999px;
@@ -298,7 +284,6 @@ body.student-page.container {
   background: #2563eb;
 }
 
-/* Brutalist Badges */
 .brutal-badge {
   display: inline-flex;
   align-items: center;
@@ -318,7 +303,6 @@ body.student-page.container {
 .brutal-badge-pink   { background-color: var(--brutal-pink); }
 .brutal-badge-purple { background-color: var(--brutal-purple); }
 
-/* ── Reward Stickers & Badges Cards ────────────────────────────── */
 .reward-sticker-card {
   display: flex !important;
   flex-direction: column !important;
@@ -426,7 +410,6 @@ body.student-page.container {
   white-space: nowrap;
 }
 
-/* Brutalist Buttons */
 .brutal-btn {
   display: inline-flex;
   align-items: center;
@@ -473,7 +456,6 @@ body.student-page.container {
   color: #ffffff !important;
 }
 
-/* Alert Styling */
 .brutal-alert {
   border: 3.5px solid var(--brutal-ink);
   border-radius: 16px;
@@ -484,7 +466,6 @@ body.student-page.container {
   color: var(--brutal-ink);
 }
 
-/* Animations */
 @keyframes brutalPopIn {
   from {
     transform: translateY(8px);
@@ -494,7 +475,6 @@ body.student-page.container {
   }
 }
 
-/* Brutalist Tab Navigation */
 .brutal-nav-tabs {
   border-bottom: none !important;
   gap: 0.65rem;
@@ -581,7 +561,6 @@ body.student-page.container {
   vertical-align: -0.1em;
 }
 
-/* ── Floating BGM Toggle Button (Hidden: Music is now permanent) ────────── */
 .bgm-floating-toggle-btn {
   display: none !important;
   pointer-events: none !important;
@@ -623,7 +602,6 @@ body.student-page.container {
   font-size: 1.15rem;
 }
 
-/* Student Feedback View Styles (Modularized from student_feedback.html) */
 .activity-section-card {
   background: #ffffff;
   border: 3px solid #18181b;
@@ -719,7 +697,6 @@ body.student-page.container {
   color: #18181b;
 }
 
-/* Student Assignments View Styles (Modularized from student_assignments.html) */
 .task-card {
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(14px) saturate(1.2);
@@ -759,9 +736,6 @@ body.student-page.container {
   font-size: 0.82rem;
 }
 
-/* ══════════════════════════════════════════════════════════════════════ */
-/* Tablet Touch & Kiosk Lock: Disable text highlighting & callout menus  */
-/* ══════════════════════════════════════════════════════════════════════ */
 *, *::before, *::after {
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
@@ -784,9 +758,6 @@ img {
   user-select: none !important;
 }
 
-/* ══════════════════════════════════════════════════════════════════════ */
-/* Unified Leave Game Button & Exit Confirmation Modal (All 5 Games)     */
-/* ══════════════════════════════════════════════════════════════════════ */
 .game-leave-btn {
   display: inline-flex !important;
   align-items: center !important;
@@ -825,7 +796,6 @@ img {
   line-height: 1 !important;
 }
 
-/* Modal and Backdrop Stack */
 .modal-backdrop {
   z-index: 1050 !important;
 }
@@ -936,7 +906,6 @@ img {
   color: #ffffff !important;
 }
 
-/* Critical Layout Utilities for Instant First Paint */
 .d-flex { display: flex !important; }
 .flex-column { flex-direction: column !important; }
 .justify-content-between { justify-content: space-between !important; }
@@ -957,6 +926,4 @@ img {
 @media (min-width: 768px) {
   .p-md-4 { padding: 1.5rem !important; }
 }
-
-
 

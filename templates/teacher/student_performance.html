@@ -18,8 +18,7 @@
 
   <div class="teacher-layout container-fluid">
     <div class="row g-3 g-lg-4">
-      
-      <!-- Sidebar navigation matching Teacher Dashboard -->
+
       <aside class="col-12 col-lg-3 col-xl-2">
         <nav class="teacher-sidebar h-100">
           <div>
@@ -74,12 +73,10 @@
         </nav>
       </aside>
 
-      <!-- Main Content -->
       <main class="col-12 col-lg-9 col-xl-10">
         <section class="teacher-content">
           <div class="teacher-center-wrap">
 
-            <!-- Page Header -->
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap teacher-head-row">
               <div>
                 <p class="teacher-eyebrow mb-2">Student Performance Report</p>
@@ -105,7 +102,6 @@
               </div>
             </div>
 
-            <!-- Summary Metric Cards matching Teacher Dashboard -->
             <div class="teacher-summary-grid mb-4">
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">
@@ -137,9 +133,7 @@
               </div>
             </div>
 
-            <!-- Lesson Progress & Activity Performance Grid -->
             <div class="row g-4 mb-4">
-              <!-- Lesson Progress -->
               <div class="col-lg-6">
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                   <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
@@ -177,8 +171,7 @@
                               {% endif %}
                             </div>
                           </div>
-                          
-                          <!-- Direct Link to Dedicated Timeline History -->
+
                           <div class="mt-2 text-end">
                             <a href="{{ url_for('teacher.lesson_history', student_id=student.id, lesson_id=item.lp.lesson_id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-bold">
                               <i class="bi bi-clock-history me-1"></i>View Visit Timeline ({{ item.total_visits }}x) →
@@ -194,7 +187,6 @@
                 </div>
               </div>
 
-              <!-- Activity Performance -->
               <div class="col-lg-6">
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                   <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
@@ -248,7 +240,7 @@
                   </div>
                 </div>
               </div>
-            </div>            <!-- Feedback & Notes History (Clean, Read-Only with link to Feedback Hub) -->
+            </div>
             <div class="card border-0 shadow-sm rounded-4 mb-4">
               <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
@@ -308,7 +300,6 @@
               </div>
             </div>
 
-            <!-- Badges & Achievements -->
             <div class="card border-0 shadow-sm rounded-4 mb-4">
               <div class="card-header bg-white py-3 border-0">
                 <h2 class="h5 mb-0 fw-bold text-dark"><i class="bi bi-award me-2 text-primary"></i>Badges & Achievements</h2>

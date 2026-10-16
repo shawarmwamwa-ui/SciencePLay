@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=optional" rel="stylesheet">
-  
+
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -62,7 +62,6 @@
         <section class="admin-content">
           <div class="content-center-wrap">
 
-          <!-- Compliance Skeleton View -->
           <div class="dashboard-skeleton-wrap">
             <header class="page-header mb-4">
               <div>
@@ -73,7 +72,6 @@
               <span class="skeleton-shimmer skeleton-pill" style="width: 120px; height: 38px;"></span>
             </header>
 
-            <!-- Filter Controls Bar Skeleton -->
             <div class="compliance-filter-bar mb-4">
               <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
                 <div class="d-flex gap-2">
@@ -91,7 +89,6 @@
               </div>
             </div>
 
-            <!-- Compiled User Cards Skeleton -->
             <div class="d-flex flex-column gap-3 mb-4">
               <div class="compiled-user-card p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -145,7 +142,6 @@
             </div>
           </div>
 
-          <!-- Real Content View -->
           <div class="dashboard-real-content">
             <header class="page-header mb-4">
               <div>
@@ -172,10 +168,9 @@
                   {% endfor %}
                 </div>
               {% endif %}
-            {% endwith %}            <!-- Filter Controls Bar -->
+            {% endwith %}
             <div class="compliance-filter-bar">
               <form method="GET" action="{{ url_for('admin.compliance') }}">
-                <!-- Top Row: Role Filter Pills & View Format Switcher -->
                 <div class="row g-3 align-items-center mb-3">
                   <div class="col-12 col-md-7 col-lg-8">
                     <label class="form-label small fw-bold text-muted mb-1 d-block"><i class="bi bi-person-gear me-1"></i>Filter by Role:</label>
@@ -210,7 +205,6 @@
 
                 <hr class="my-3 text-muted opacity-25">
 
-                <!-- Bottom Row: Date Range & Search Input -->
                 <div class="row g-3 align-items-center">
                   <div class="col-12 col-md-7 col-lg-6">
                     <label class="form-label small fw-bold text-muted mb-1 d-block"><i class="bi bi-calendar3 me-1"></i>Date Range:</label>
@@ -238,7 +232,6 @@
               </form>
             </div>
 
-            <!-- VIEW MODE 1: COMPILED USER ACTIVITY (Grouped per User) -->
             {% if selected_view == 'compiled' %}
               {% if compiled_users %}
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -292,7 +285,6 @@
                                   </div>
                                 </div>
 
-                                <!-- Right Stats & Actions -->
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
                                   <div class="text-end me-2">
                                     <span class="badge bg-primary fs-6 px-3 py-2 fw-bold d-block mb-1">
@@ -307,35 +299,34 @@
                                     <i class="bi bi-journal-text me-1"></i>Action History
                                   </button>
 
-                                  <button class="btn btn-sm btn-outline-danger fw-bold px-2 py-2 clear-user-logs-btn" 
-                                          type="button" 
-                                          data-bs-toggle="modal" 
-                                          data-bs-target="#clearUserLogsModal" 
-                                          data-user-id="{{ u.id }}" 
-                                          data-user-name="{{ u.name }}" 
-                                          data-username="{{ u.username }}" 
-                                          data-action-count="{{ item.total_actions }}" 
+                                  <button class="btn btn-sm btn-outline-danger fw-bold px-2 py-2 clear-user-logs-btn"
+                                          type="button"
+                                          data-bs-toggle="modal"
+                                          data-bs-target="#clearUserLogsModal"
+                                          data-user-id="{{ u.id }}"
+                                          data-user-name="{{ u.name }}"
+                                          data-username="{{ u.username }}"
+                                          data-action-count="{{ item.total_actions }}"
                                           title="Clear logs for {{ u.name }}">
                                     <i class="bi bi-trash3"></i>
                                   </button>
                                 </div>
                               </div>
 
-                              <!-- Action Breakdown Pills (Interactive Filters) -->
                               <div class="mt-3 pt-3 border-top d-flex align-items-center gap-2 flex-wrap">
                                 <span class="small fw-bold text-muted me-1"><i class="bi bi-funnel me-1"></i>Action Summary:</span>
-                                <button type="button" 
-                                        class="event-type-filter-pill active" 
-                                        data-user-id="{{ u.id }}" 
+                                <button type="button"
+                                        class="event-type-filter-pill active"
+                                        data-user-id="{{ u.id }}"
                                         data-event-type="all"
                                         aria-pressed="true"
                                         title="Show all actions for {{ u.name }}">
                                   All: <strong>{{ item.total_actions }}</strong>
                                 </button>
                                 {% for event_type, count in item.action_counts.items() %}
-                                  <button type="button" 
-                                          class="event-type-filter-pill" 
-                                          data-user-id="{{ u.id }}" 
+                                  <button type="button"
+                                          class="event-type-filter-pill"
+                                          data-user-id="{{ u.id }}"
                                           data-event-type="{{ event_type }}"
                                           aria-pressed="false"
                                           title="Filter {{ u.name }} logs by {{ event_type }}">
@@ -344,7 +335,6 @@
                                 {% endfor %}
                               </div>
 
-                              <!-- Expandable Action History Trail -->
                               <div class="collapse mt-3" id="userLogs{{ u.id }}" data-bs-parent="#compiledUsersAccordion">
                                 <div class="p-3 bg-light rounded-3 border">
                                   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -388,7 +378,6 @@
                 </div>
               {% endif %}
 
-            <!-- VIEW MODE 2: DETAILED TIMELINE (Log by log) -->
             {% else %}
               {% if access_logs %}
                 <section class="table-shell">
@@ -481,7 +470,6 @@
               {% endif %}
             {% endif %}
           </div>
-          <!-- End .dashboard-real-content -->
 
           </div>
         </section>
@@ -489,7 +477,6 @@
     </div>
   </div>
 
-  <!-- Global Modal for Clearing Logs -->
   <div class="modal fade" id="clearLogsModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -523,7 +510,6 @@
     </div>
   </div>
 
-  <!-- Modal for clearing individual user logs (Top Level) -->
   <div class="modal fade" id="clearUserLogsModal" tabindex="-1" aria-labelledby="clearUserLogsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">

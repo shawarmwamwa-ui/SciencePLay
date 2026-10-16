@@ -80,7 +80,6 @@
         <section class="teacher-content">
           <div class="teacher-center-wrap">
 
-            <!-- Teacher Skeleton Loader View (Accurate 1-to-1 Container Mapping) -->
             <div id="teacher-skeleton-view" class="dashboard-skeleton-wrap">
               <div class="mb-4">
                 <span class="skeleton-shimmer skeleton-line" style="width: 140px; height: 12px; margin-bottom: 8px;"></span>
@@ -88,7 +87,6 @@
                 <span class="skeleton-shimmer skeleton-line" style="width: 380px; height: 14px;"></span>
               </div>
 
-              <!-- Stat Cards Skeleton: 4 Actionable KPI Doors -->
               <div class="row g-3 g-xl-4 mb-4">
                 <div class="col-6 col-lg-3">
                   <div class="teacher-summary-card skeleton-summary-card h-100">
@@ -132,7 +130,6 @@
                 </div>
               </div>
 
-              <!-- Section 1: Visual Charts Skeleton -->
               <div class="mb-4">
                 <span class="skeleton-shimmer skeleton-line" style="width: 140px; height: 12px; margin-bottom: 8px;"></span>
                 <div class="row g-3">
@@ -157,7 +154,6 @@
                 </div>
               </div>
 
-              <!-- Section 2: Student Attempt Curve Skeleton -->
               <div class="mb-4">
                 <span class="skeleton-shimmer skeleton-line" style="width: 90px; height: 12px; margin-bottom: 8px;"></span>
                 <div class="dashboard-section teacher-panel p-4">
@@ -175,11 +171,9 @@
                 </div>
               </div>
 
-              <!-- Section 3: Insights Skeleton -->
               <div class="mb-4">
                 <span class="skeleton-shimmer skeleton-line" style="width: 70px; height: 12px; margin-bottom: 8px;"></span>
                 <div class="row g-3">
-                  <!-- Struggling Concepts Skeleton -->
                   <div class="col-lg-6">
                     <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between p-4">
                       <div>
@@ -213,7 +207,6 @@
                     </div>
                   </div>
 
-                  <!-- Activity & Leaderboard Skeleton -->
                   <div class="col-lg-6">
                     <div class="dashboard-section teacher-panel h-100 d-flex flex-column justify-content-between p-4">
                       <div>
@@ -259,10 +252,8 @@
               </div>
             </div>
 
-            <!-- Real Content Container -->
             <div id="teacher-real-content" class="dashboard-real-content">
 
-            <!-- Alerts -->
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             <div class="alerts-container mb-4">
@@ -284,9 +275,7 @@
               </div>
             </div>
 
-            <!-- Stat Cards: 4 Actionable KPI Doors -->
             <div class="row g-3 g-xl-4 mb-4">
-              <!-- Card 1: Students -->
               <div class="col-6 col-lg-3">
                 <a href="{{ url_for('teacher.students') }}" class="teacher-summary-card kpi-clickable-card h-100">
                   <div class="teacher-summary-text">
@@ -301,7 +290,6 @@
                 </a>
               </div>
 
-              <!-- Card 2: Curriculum Progress -->
               <div class="col-6 col-lg-3">
                 <a href="{{ url_for('teacher.lessons') }}" class="teacher-summary-card kpi-clickable-card h-100">
                   <div class="teacher-summary-text">
@@ -316,7 +304,6 @@
                 </a>
               </div>
 
-              <!-- Card 3: Pending Feedback -->
               <div class="col-6 col-lg-3">
                 <a href="{{ url_for('teacher.feedback') }}" class="teacher-summary-card kpi-clickable-card h-100">
                   <div class="teacher-summary-text">
@@ -339,7 +326,6 @@
                 </a>
               </div>
 
-              <!-- Card 4: Class Analytics -->
               <div class="col-6 col-lg-3">
                 <a href="{{ url_for('teacher.analytics') }}" class="teacher-summary-card kpi-clickable-card h-100">
                   <div class="teacher-summary-text">
@@ -357,7 +343,6 @@
               </div>
             </div>
 
-            <!-- Section 1: Visual Classroom Mastery & Engagement Charts -->
             <div class="mb-4" id="dashboard-visual-charts-section">
               <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                 <p class="teacher-eyebrow mb-0">Visual Classroom Analytics</p>
@@ -366,7 +351,6 @@
                 </span>
               </div>
               <div class="row g-3">
-                <!-- Chart 1: Lesson Completion & Average Scores -->
                 <div class="col-lg-6">
                   <div class="dashboard-section teacher-panel h-100 p-4 d-flex flex-column justify-content-between">
                     <div>
@@ -386,7 +370,6 @@
                   </div>
                 </div>
 
-                <!-- Chart 2: Activity Engagement & Plays -->
                 <div class="col-lg-6">
                   <div class="dashboard-section teacher-panel h-100 p-4 d-flex flex-column justify-content-between">
                     <div>
@@ -408,7 +391,6 @@
               </div>
             </div>
 
-            <!-- Section 2: Student Attempt & Retry Improvement Analytics -->
             <div class="mb-4" id="attempt-analytics-section">
               <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                 <p class="teacher-eyebrow mb-0">Analytics</p>
@@ -427,7 +409,6 @@
                   </div>
                   {% if retry_progression %}
                   <div class="d-flex align-items-center gap-2 flex-wrap flex-md-nowrap w-100 w-md-auto">
-                    <!-- Game Filter Dropdown -->
                     <div class="d-flex align-items-center gap-1.5">
                       <label for="retryGameSelect" class="form-label small text-muted mb-0 fw-semibold text-nowrap">
                         <i class="bi bi-funnel me-1"></i>Game:
@@ -444,7 +425,6 @@
                       </select>
                     </div>
 
-                    <!-- Student Select Dropdown -->
                     <div class="d-flex align-items-center gap-1.5">
                       <label for="retryProgressionSelect" class="form-label small text-muted mb-0 fw-semibold text-nowrap d-none d-sm-inline">
                         Student:
@@ -460,7 +440,6 @@
                 </div>
 
                 {% if retry_progression %}
-                  <!-- Dynamic metric chips for selected student -->
                   <div class="row g-2 mb-3 align-items-stretch" id="retrySummaryChips">
                     <div class="col-6 col-md-3">
                       <div class="p-2 px-3 rounded-3 bg-light border text-center h-100">
@@ -488,15 +467,12 @@
                     </div>
                   </div>
 
-                  <!-- Chart Canvas Container -->
                   <div class="chart-wrapper position-relative rounded-4 p-3 bg-light-subtle border" style="height: 280px; width: 100%;">
                     <canvas id="retryImprovementChart"></canvas>
                   </div>
 
-                  <!-- Attempt Badges List & Link to Analytics -->
                   <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-1 flex-wrap" id="retryAttemptBadges">
-                      <!-- Populated dynamically by JS -->
                     </div>
                     <div>
                       <a href="{{ url_for('teacher.analytics') }}#retry-improvement-section" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold">
@@ -521,11 +497,9 @@
               </div>
             </div>
 
-            <!-- Section 3: Actionable Insights & Recent Activity -->
             <div class="mb-4">
               <p class="teacher-eyebrow mb-2">Classroom Action Items</p>
               <div class="row g-3 classroom-action-row">
-                <!-- Card 1: Challenging / Most Missed Concepts Visual Chart -->
                 <div class="col-lg-6 d-flex flex-column">
                   <div class="dashboard-section teacher-panel flex-fill d-flex flex-column justify-content-between h-100">
                     <div class="flex-grow-1 d-flex flex-column">
@@ -568,7 +542,6 @@
                   </div>
                 </div>
 
-                <!-- Card 2: Classroom Activity & Leaderboards (Tabbed) -->
                 <div class="col-lg-6 d-flex flex-column">
                   <div class="dashboard-section teacher-panel flex-fill d-flex flex-column justify-content-between h-100">
                     <div class="flex-grow-1 d-flex flex-column">
@@ -592,7 +565,6 @@
                       </ul>
 
                       <div class="tab-content flex-grow-1" id="dashActivityTabContent">
-                        <!-- Tab 1: Recent Activity -->
                         <div class="tab-pane fade show active" id="dt-recent-activity" role="tabpanel">
                           <ul class="activity-status-list">
                             {% if recent_activity %}
@@ -622,7 +594,6 @@
                           </ul>
                         </div>
 
-                        <!-- Tab 2: Leaderboards -->
                         <div class="tab-pane fade" id="dt-leaderboards" role="tabpanel">
                           <ul class="nav nav-pills nav-fill mb-2 p-1 bg-light rounded-3 flex-wrap gap-1" id="dashLbPills" role="tablist" style="font-size:0.76rem;">
                             <li class="nav-item" role="presentation">
@@ -646,7 +617,6 @@
                           </ul>
 
                           <div class="tab-content" id="dashLbPillsContent">
-                            <!-- Overall Top Students -->
                             <div class="tab-pane fade show active" id="dt-pills-overall" role="tabpanel">
                               <div class="list-group leaderboard-list">
                                 {% if top_students %}
@@ -665,7 +635,6 @@
                               </div>
                             </div>
 
-                            <!-- Claw Machine (Game 1) -->
                             <div class="tab-pane fade" id="dt-pills-claw" role="tabpanel">
                               <div class="list-group leaderboard-list">
                                 {% if claw_leaderboard %}
@@ -687,7 +656,6 @@
                               </div>
                             </div>
 
-                            <!-- Find the Part (Game 2) -->
                             <div class="tab-pane fade" id="dt-pills-animal" role="tabpanel">
                               <div class="list-group leaderboard-list">
                                 {% if animal_leaderboard %}
@@ -709,7 +677,6 @@
                               </div>
                             </div>
 
-                            <!-- Build a Plant (Game 3) -->
                             <div class="tab-pane fade" id="dt-pills-plant" role="tabpanel">
                               <div class="list-group leaderboard-list">
                                 {% if plant_leaderboard %}
@@ -731,7 +698,6 @@
                               </div>
                             </div>
 
-                            <!-- Metal Clue Detective (Game 4) -->
                             <div class="tab-pane fade" id="dt-pills-metal" role="tabpanel">
                               <div class="list-group leaderboard-list">
                                 {% if metal_leaderboard %}
@@ -753,7 +719,6 @@
                               </div>
                             </div>
 
-                            <!-- EcoSwipe Sorter (Game 5) -->
                             <div class="tab-pane fade" id="dt-pills-eco" role="tabpanel">
                               <div class="list-group leaderboard-list">
                                 {% if recycling_leaderboard %}
@@ -789,7 +754,6 @@
               </div>
             </div>
           </div>
-          <!-- End #teacher-real-content -->
 
           </div>
     </div>
@@ -798,9 +762,6 @@
   </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════ -->
-  <!-- Modal: Struggling Students Details Modal                               -->
-  <!-- ══════════════════════════════════════════════════════════════════════ -->
   <div class="modal fade" id="strugglingStudentsModal" tabindex="-1" aria-labelledby="strugglingStudentsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg" style="max-width: 760px;">
       <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
@@ -824,7 +785,6 @@
           </div>
 
           <div class="row g-2" id="strugglingModalStudentList" style="max-height: 380px; overflow-y: auto;">
-            <!-- Dynamically populated via JavaScript -->
           </div>
 
           <div class="alert alert-info py-2 px-3 small mt-3 mb-0 rounded-3 border-0 bg-info-subtle text-dark">

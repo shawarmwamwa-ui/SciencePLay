@@ -219,7 +219,6 @@ body.admin-page {
   box-shadow: none;
 }
 
-/* Sliding Active Indicator */
 .menu-indicator {
   display: none;
 }
@@ -237,7 +236,6 @@ body.admin-page {
     border-radius: 24px 0 0 24px;
   }
 
-  /* Static fallback: Top Inverted Concave Curve */
   .menu-link.active::before {
     content: "";
     position: absolute;
@@ -252,7 +250,6 @@ body.admin-page {
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Static fallback: Bottom Inverted Concave Curve */
   .menu-link.active::after {
     content: "";
     position: absolute;
@@ -267,7 +264,6 @@ body.admin-page {
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* ── Smooth Fluid Sliding Indicator ── */
   .menu-group.has-indicator .menu-indicator {
     display: block;
     position: absolute;
@@ -282,7 +278,6 @@ body.admin-page {
     will-change: transform, height;
   }
 
-  /* Top Inverted Concave Curve on Sliding Indicator */
   .menu-group.has-indicator .menu-indicator::before {
     content: "";
     position: absolute;
@@ -296,7 +291,6 @@ body.admin-page {
     pointer-events: none;
   }
 
-  /* Bottom Inverted Concave Curve on Sliding Indicator */
   .menu-group.has-indicator .menu-indicator::after {
     content: "";
     position: absolute;
@@ -310,7 +304,6 @@ body.admin-page {
     pointer-events: none;
   }
 
-  /* Hide individual link backgrounds and static pseudo-elements when indicator is active */
   .menu-group.has-indicator .menu-link {
     position: relative;
     z-index: 2;
@@ -827,7 +820,6 @@ input[type="password"]::-webkit-search-results-decoration {
   }
 }
 
-/* Compliance Logs Styles (Modularized from admin_compliance.html) */
 .compliance-filter-bar {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -912,9 +904,6 @@ input[type="password"]::-webkit-search-results-decoration {
   letter-spacing: 0.02em;
 }
 
-/* ══════════════════════════════════════════════════════════════════════ */
-/* Tablet Touch & Kiosk Lock: Disable text highlighting & callout menus  */
-/* ══════════════════════════════════════════════════════════════════════ */
 *, *::before, *::after {
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
@@ -937,7 +926,6 @@ img {
   user-select: none !important;
 }
 
-/* Shake Animation for Validation Feedback */
 .shake-card {
   animation: adminShakeAnim 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
@@ -955,7 +943,6 @@ img {
   box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
 }
 
-/* System Archive Underline Tabs & Controls */
 .archive-nav-tabs {
   border-bottom: 2px solid #e2e8f0;
 }

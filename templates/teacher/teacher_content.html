@@ -91,7 +91,6 @@
   <div class="teacher-layout container-fluid">
     <div class="row g-3 g-lg-4">
 
-      <!-- Sidebar Navigation -->
       <aside class="col-12 col-lg-3 col-xl-2">
         <nav class="teacher-sidebar h-100">
           <div>
@@ -146,12 +145,10 @@
         </nav>
       </aside>
 
-      <!-- Main Content -->
       <main class="col-12 col-lg-9 col-xl-10">
         <section class="teacher-content">
           <div class="teacher-center-wrap">
 
-            <!-- Flash Notifications -->
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             <div class="mb-4">
@@ -165,7 +162,6 @@
             {% endif %}
             {% endwith %}
 
-            <!-- Header Row: Clean, uncluttered, no redundant buttons -->
             <div class="mb-4 teacher-head-row">
               <p class="teacher-eyebrow mb-1 text-primary fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.8rem;">
                 <i class="bi bi-palette-fill me-1"></i>Content Studio Gateway
@@ -174,9 +170,7 @@
               <p class="page-subtitle text-muted mb-0">Select a dedicated workspace to explore reusable game engines or craft interactive slide lessons with live canvas previews.</p>
             </div>
 
-            <!-- Studio Choice Gateway: Dedicated Doors for Game Studio & Lesson Studio -->
             <div class="row g-4 mb-4">
-              <!-- Arcade Game Studio Card -->
               <div class="col-12 col-md-6">
                 <div class="studio-engine-card shadow-sm border-primary border-opacity-25" style="background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);">
                   <div>
@@ -221,7 +215,6 @@
                 </div>
               </div>
 
-              <!-- Slide Lesson Studio Card -->
               <div class="col-12 col-md-6">
                 <div class="studio-engine-card shadow-sm border-success border-opacity-25" style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);">
                   <div>
@@ -267,7 +260,6 @@
               </div>
             </div>
 
-            <!-- KPI Summary Cards -->
             <div class="teacher-summary-grid mb-4">
               <div class="teacher-summary-card">
                 <div class="teacher-summary-text">

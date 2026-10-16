@@ -1,5 +1,3 @@
-/* Living vs Non-Living Lesson — SciencePlay Neubrutalism Design System
-   Static 100vh Single-Screen Responsive Slide Presentation */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap');
 
 :root {
@@ -60,7 +58,6 @@ body {
   justify-content: space-between;
 }
 
-/* Header Section */
 .lesson-header {
   width: 100%;
   display: grid;
@@ -147,7 +144,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Explanation Box */
 .slide-explanation {
   width: 100%;
   padding: clamp(6px, 1vh, 10px) 16px;
@@ -170,7 +166,6 @@ body {
   font-weight: 700;
 }
 
-/* Neubrutalist Slide Window Card */
 .slide-card {
   width: 100%;
   background: var(--brutal-panel);
@@ -185,7 +180,6 @@ body {
   overflow: hidden;
 }
 
-/* Window Header Bar */
 .brutal-window-header {
   background: #18181b;
   color: #ffffff;
@@ -277,7 +271,6 @@ body {
   box-shadow: 3px 3px 0px #18181b;
 }
 
-/* Hotspots */
 .hotspot {
   position: absolute;
   display: flex;
@@ -341,7 +334,6 @@ body {
   margin-bottom: 2px;
 }
 
-/* Options & Traits Grid */
 .quick-options {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
@@ -557,7 +549,6 @@ body {
 .feedback-correct { color: #15803d; }
 .feedback-incorrect { color: #b91c1c; }
 
-/* Enforce clear, legible text standard on all slide text */
 .slide-card p,
 .slide-card li,
 .characteristics-object p,
@@ -584,7 +575,6 @@ body {
   font-size: 15.5px !important;
 }
 
-/* ── Modern Summary Screen & 2x2 Big Ideas Grid ── */
 .ln-summary-container {
   flex: 1 1 auto;
   display: flex;
@@ -693,7 +683,6 @@ body {
   line-height: 1.45;
 }
 
-/* Characteristics Object & Image Display */
 .characteristics-slide {
   flex: 1 1 auto;
   min-height: 0;
@@ -765,7 +754,6 @@ body {
   color: #374151;
 }
 
-/* Navigation Buttons */
 .lesson-navigation {
   display: flex;
   justify-content: space-between;
@@ -832,9 +820,6 @@ body {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════════════ */
-/* Tablet Touch & Kiosk Lock: Disable text highlighting & callout menus  */
-/* ══════════════════════════════════════════════════════════════════════ */
 *, *::before, *::after {
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
@@ -857,9 +842,6 @@ img {
   user-select: none !important;
 }
 
-/* ══════════════════════════════════════════════════════════════════════ */
-/* Multi-Image Support for Student Lesson Presentation                   */
-/* ══════════════════════════════════════════════════════════════════════ */
 .lesson-intro {
   display: flex;
   flex-direction: column;

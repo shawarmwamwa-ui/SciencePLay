@@ -106,7 +106,6 @@
   <div class="teacher-layout container-fluid">
     <div class="row g-3 g-lg-4">
 
-      <!-- Sidebar Navigation -->
       <aside class="col-12 col-lg-3 col-xl-2">
         <nav class="teacher-sidebar h-100">
           <div>
@@ -158,12 +157,10 @@
         </nav>
       </aside>
 
-      <!-- Main Content -->
       <main class="col-12 col-lg-9 col-xl-10">
         <section class="teacher-content">
           <div class="teacher-center-wrap">
 
-            <!-- Flash Notifications -->
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             <div class="mb-4">
@@ -177,7 +174,6 @@
             {% endif %}
             {% endwith %}
 
-            <!-- Header Row with Back link -->
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 teacher-head-row">
               <div>
                 <a href="{{ url_for('teacher.content_management') }}" class="text-decoration-none text-muted small fw-bold d-inline-flex align-items-center gap-1 mb-2">
@@ -197,7 +193,6 @@
               </div>
             </div>
 
-            <!-- Slide Deck Workshop Banner -->
             <div class="lesson-hero-banner shadow-sm">
               <div class="row align-items-center g-4">
                 <div class="col-12 col-lg-8">
@@ -220,7 +215,6 @@
               </div>
             </div>
 
-            <!-- ══════ View Toggle Tabs (Active Lessons vs Archived Lessons) ══════ -->
             <ul class="nav nav-pills teacher-view-pills mb-4 gap-2" id="lessonsStudioTabs" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tab-active-lessons" data-bs-toggle="pill" data-bs-target="#pane-active-lessons" type="button" role="tab" aria-controls="pane-active-lessons" aria-selected="true">
@@ -237,7 +231,6 @@
             </ul>
 
             <div class="tab-content" id="lessonsStudioTabContent">
-              <!-- PANE 1: Active Lessons -->
               <div class="tab-pane fade show active" id="pane-active-lessons" role="tabpanel" aria-labelledby="tab-active-lessons">
                 <div class="dashboard-section teacher-panel p-4 mb-5">
                   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
@@ -288,7 +281,6 @@
                           </p>
                         </div>
 
-                        <!-- Meta stats -->
                         <div class="activity-col-stats text-center">
                           <div style="min-width: 50px;">
                             <div class="fw-bold text-dark fs-5 lh-1">{{ card.slides_count }}</div>
@@ -300,7 +292,6 @@
                           </div>
                         </div>
 
-                        <!-- Actions -->
                         <div class="activity-col-actions">
                           <a href="{{ url_for('teacher.preview_lesson', lesson_id=card.lesson.id) }}" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Preview Lesson as Student">
                             <i class="bi bi-play-circle-fill"></i>
@@ -351,7 +342,6 @@
                 </div>
               </div>
 
-              <!-- PANE 2: Archived Lessons -->
               <div class="tab-pane fade" id="pane-archived-lessons" role="tabpanel" aria-labelledby="tab-archived-lessons">
                 <div class="dashboard-section teacher-panel p-4 mb-5">
                   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
@@ -383,7 +373,6 @@
                           </p>
                         </div>
 
-                        <!-- Meta stats -->
                         <div class="activity-col-stats text-center opacity-75">
                           <div style="min-width: 50px;">
                             <div class="fw-bold text-dark fs-5 lh-1">{{ card.slides_count }}</div>
@@ -391,7 +380,6 @@
                           </div>
                         </div>
 
-                        <!-- Restore & Permanent Delete action -->
                         <div class="activity-col-actions">
                           <form method="POST" action="{{ url_for('teacher.restore_lesson', lesson_id=card.lesson.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -434,7 +422,6 @@
     </div>
   </div>
 
-  <!-- Quick Assign Lesson Modal -->
   <div class="modal fade" id="assignLessonModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -490,7 +477,6 @@
     </div>
   </div>
 
-  <!-- Permanent Deletion Verification Modal -->
   <div class="modal fade" id="permanentDeleteLessonModal" tabindex="-1" aria-labelledby="permDeleteLessonLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -531,7 +517,6 @@
     </div>
   </div>
 
-  <!-- Modal: Choice for Starting New Lesson (Blank Canvas vs Pre-built Template) -->
   <div class="modal fade" id="newLessonChoiceModal" tabindex="-1" aria-labelledby="newLessonChoiceLabel" aria-hidden="true" style="z-index: 1065;">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -545,7 +530,6 @@
         <div class="modal-body p-4">
           <p class="text-muted fw-bold mb-4">Choose how you would like to begin your lesson deck:</p>
           <div class="row g-4">
-            <!-- Option 1: Start from Scratch (Blank) -->
             <div class="col-12 col-md-6">
               <div class="card h-100 border-2 rounded-4 p-4 shadow-sm text-center d-flex flex-column justify-content-between hover-card" style="border-color: #22c55e; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);">
                 <div>
@@ -565,7 +549,6 @@
               </div>
             </div>
 
-            <!-- Option 2: Start from Template -->
             <div class="col-12 col-md-6">
               <div class="card h-100 border-2 rounded-4 p-4 shadow-sm d-flex flex-column justify-content-between hover-card" style="border-color: #cbd5e1; background: #ffffff;">
                 <div>
@@ -579,7 +562,7 @@
                       Start with ready-made slides, illustrations, and multiple-choice checks that you can edit and adapt for your class.
                     </p>
                   </div>
-                  
+
                   <div class="d-grid gap-2 mb-2">
                     <a href="{{ url_for('teacher.lesson_builder', preset='living_vs_nonliving') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
                       <span><i class="bi bi-flower1 text-success me-2"></i>Living vs Non-Living</span>

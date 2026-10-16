@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Learning Tasks — Student Portal</title>
   <meta name="description" content="SciencePlay Student Assignments: View active assigned lessons, playable activities, and completed tasks.">
-  
+
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -27,7 +27,6 @@
     {% endif %}
   {% endwith %}
 
-  <!-- Frosted glass top header banner matching Lessons & Activities -->
   <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 page-top-banner">
     <div>
       <h1 class="mb-1">My Learning Tasks</h1>
@@ -40,7 +39,6 @@
   </div>
 
   <div class="row g-4">
-    <!-- Lesson Assignments Card -->
     <div class="col-lg-6">
       <div class="task-card h-100">
         <div class="d-flex align-items-center gap-2 mb-3">
@@ -111,7 +109,6 @@
       </div>
     </div>
 
-    <!-- Activity Assignments Card -->
     <div class="col-lg-6">
       <div class="task-card h-100">
         <div class="d-flex align-items-center gap-2 mb-3">
@@ -218,8 +215,8 @@
   <script type="module">
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     window.addEventListener('DOMContentLoaded', () => {
-      initBgmPlayer('dashboard-bgm', { 
-        volume: 0.22, 
+      initBgmPlayer('dashboard-bgm', {
+        volume: 0.22,
         storageKey: 'scienceplay_dashboard_bgm_muted',
         timeKey: 'scienceplay_hub_bgm_time'
       });
