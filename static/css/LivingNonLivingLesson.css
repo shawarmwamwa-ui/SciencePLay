@@ -902,14 +902,7 @@ img {
 }
 
 .lesson-compare-vs {
-  background: var(--brutal-yellow);
-  border: 2.5px solid var(--brutal-border);
-  border-radius: 9999px;
-  box-shadow: 3px 3px 0px var(--brutal-border);
-  font-weight: 900;
-  font-size: clamp(13px, 1.1vw, 17px);
-  padding: 6px 14px;
-  flex-shrink: 0;
+  display: none !important;
 }
 
 .lesson-gallery-grid {

@@ -322,12 +322,15 @@
 
                   <div class="slide-editor-col">
                     <div class="p-3 bg-light rounded-4 border">
-                      <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-1">
-                          <i class="bi bi-sliders text-primary"></i>
-                          <span>Slide Settings</span>
-                        </h4>
-                        <button type="button" class="btn btn-outline-danger btn-sm border-0 p-1" onclick="deleteCurrentSlide()" title="Delete slide">
+                      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <div>
+                          <div class="d-flex align-items-center gap-1 mb-1">
+                            <span class="badge bg-primary text-white fw-bold px-2 py-0.5 rounded-pill" id="currentSlideNumberBadge">Slide 1</span>
+                            <span class="badge bg-white text-dark border small fw-semibold" id="currentSlideTypeBadge">📝 Concept Story</span>
+                          </div>
+                          <div class="small fw-bold text-dark text-truncate" id="currentSlideFocusTitle" style="max-width: 230px;">Lesson Introduction</div>
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm border-0 p-1.5 rounded-2" onclick="deleteCurrentSlide()" title="Delete this slide">
                           <i class="bi bi-trash3-fill"></i>
                         </button>
                       </div>
@@ -346,7 +349,7 @@
                         </select>
                       </div>
 
-                      <div class="mb-3">
+                      <div class="mb-3" id="slideMediaConfigSection">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                           <label class="form-label text-muted small fw-bold mb-0">Slide Media (Images &amp; Animations)</label>
                           <span class="badge bg-white text-dark border small fw-bold" id="slideMediaCountBadge">1 Image</span>

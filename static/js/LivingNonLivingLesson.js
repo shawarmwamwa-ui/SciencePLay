@@ -358,7 +358,6 @@ function renderIntroSlide(slide, container) {
           <img src="${images[0]}" alt="Comparison item 1" class="lesson-compare-img">
           ${capHtml(0)}
         </div>
-        <div class="lesson-compare-vs">VS</div>
         <div class="lesson-compare-card">
           <img src="${images[1]}" alt="Comparison item 2" class="lesson-compare-img">
           ${capHtml(1)}

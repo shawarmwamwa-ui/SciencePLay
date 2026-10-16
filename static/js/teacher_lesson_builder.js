@@ -399,6 +399,24 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
       const slide = slides[currentSlideIndex];
       if (!slide) return;
 
+      const numBadge = document.getElementById('currentSlideNumberBadge');
+      if (numBadge) numBadge.textContent = `Slide ${currentSlideIndex + 1} of ${slides.length}`;
+      const typeBadge = document.getElementById('currentSlideTypeBadge');
+      if (typeBadge) {
+        if (slide.type === 'quick-check') {
+          typeBadge.textContent = '❓ Quick Check';
+          typeBadge.className = 'badge bg-warning-subtle text-dark border small fw-bold';
+        } else if (slide.type === 'summary') {
+          typeBadge.textContent = '🏆 Milestone';
+          typeBadge.className = 'badge bg-success-subtle text-success border small fw-bold';
+        } else {
+          typeBadge.textContent = '📝 Concept Story';
+          typeBadge.className = 'badge bg-primary-subtle text-primary border small fw-bold';
+        }
+      }
+      const titleBadge = document.getElementById('currentSlideFocusTitle');
+      if (titleBadge) titleBadge.textContent = slide.title || 'Untitled Slide';
+
       document.getElementById('editSlideTitle').value = slide.title || '';
       document.getElementById('editSlideType').value = slide.type || 'concept';
       document.getElementById('editSlideExplanation').value = slide.explanation || '';
@@ -413,16 +431,20 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
         if (badge) badge.classList.add('d-none');
       }
 
-      // Render Attached Images Thumbnail Strip
-      renderSlideMediaStrip(slide);
-
+      const mediaSection = document.getElementById('slideMediaConfigSection');
       const quizBox = document.getElementById('quickCheckEditFields');
+
       if (slide.type === 'quick-check') {
-        quizBox.classList.remove('d-none');
-        document.getElementById('editQuizPrompt').value = slide.prompt || '';
-        renderQuizOptionsEditor();
+        if (mediaSection) mediaSection.classList.add('d-none');
+        if (quizBox) {
+          quizBox.classList.remove('d-none');
+          document.getElementById('editQuizPrompt').value = slide.prompt || '';
+          renderQuizOptionsEditor();
+        }
       } else {
-        quizBox.classList.add('d-none');
+        if (mediaSection) mediaSection.classList.remove('d-none');
+        if (quizBox) quizBox.classList.add('d-none');
+        renderSlideMediaStrip(slide);
       }
     }
 
@@ -517,17 +539,35 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
 
       slide.options.forEach((opt, optIdx) => {
         const row = document.createElement('div');
-        row.className = 'd-flex align-items-center gap-2 p-2 bg-white rounded-3 border';
+        row.className = 'd-flex align-items-center gap-2 p-2 bg-white rounded-3 border shadow-sm';
         row.innerHTML = `
-          <input type="radio" name="correct_opt_radio" ${opt.isCorrect ? 'checked' : ''} onchange="setQuizCorrectOption(${optIdx})" title="Mark as correct answer">
-          <img src="${opt.icon || '/static/images/tree.webp'}" alt="Icon" style="width: 28px; height: 28px; object-fit: contain;">
-          <input type="text" class="form-control form-control-sm rounded-2 fw-bold" value="${opt.label}" oninput="updateQuizOptionLabel(${optIdx}, this.value)" placeholder="Choice label">
+          <div class="form-check m-0" title="Mark as correct answer">
+            <input class="form-check-input" type="radio" name="correct_opt_radio" id="correct_opt_${optIdx}" ${opt.isCorrect ? 'checked' : ''} onchange="setQuizCorrectOption(${optIdx})" style="cursor: pointer;">
+          </div>
+          <button type="button" class="btn btn-sm btn-light border p-1 rounded-2 choice-icon-btn d-flex align-items-center justify-content-center" onclick="openChoicePresetPicker(${optIdx})" title="Click to change image/icon for Choice #${optIdx + 1}" style="width: 44px; height: 44px; min-width: 44px; background: #f8fafc;">
+            <img src="${opt.icon || '/static/images/rock.webp'}" alt="Choice Icon" style="width: 32px; height: 32px; object-fit: contain;">
+            <span class="choice-icon-edit-tag"><i class="bi bi-pencil-fill"></i></span>
+          </button>
+          <div class="flex-grow-1">
+            <input type="text" class="form-control form-control-sm rounded-2 fw-bold" value="${escapeAttr(opt.label)}" oninput="updateQuizOptionLabel(${optIdx}, this.value)" placeholder="Choice label (e.g. Dog, Plant)">
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-primary border-0 p-1.5 fw-bold small text-nowrap" onclick="openChoicePresetPicker(${optIdx})" title="Change Choice Image">
+            <i class="bi bi-image"></i>
+          </button>
           ${slide.options.length > 2 ? `
-            <button type="button" class="btn btn-outline-danger btn-sm border-0 p-1" onclick="removeQuizOption(${optIdx})"><i class="bi bi-x-lg"></i></button>
+            <button type="button" class="btn btn-outline-danger btn-sm border-0 p-1.5" onclick="removeQuizOption(${optIdx})" title="Delete Choice"><i class="bi bi-x-lg"></i></button>
           ` : ''}
         `;
         container.appendChild(row);
       });
+    }
+
+    function openChoicePresetPicker(optIdx) {
+      activeImagePickerMode = { action: 'choice_icon', index: optIdx };
+      const modalEl = document.getElementById('presetImageModal');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+      loadTeacherAssets('image');
     }
 
     function updateQuizOptionLabel(optIdx, val) {
@@ -705,7 +745,6 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
                     <img src="${imgs[0]}" alt="Comparison item 1">
                     ${captionLabelHtml(slide, 0, 'canvas-img-caption')}
                   </div>
-                  <div class="canvas-vs-badge">VS</div>
                   <div class="canvas-compare-card">
                     <span class="badge bg-warning-subtle text-dark border small mb-2 fw-bold">Image 2</span>
                     <img src="${imgs[1]}" alt="Comparison item 2">
@@ -929,6 +968,22 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
     function chooseSlidePresetImage(src, label) {
       const slide = slides[currentSlideIndex];
       if (slide) {
+        if (activeImagePickerMode?.action === 'choice_icon') {
+          const optIdx = activeImagePickerMode.index;
+          if (slide.options && slide.options[optIdx]) {
+            slide.options[optIdx].icon = src;
+            if (label && (!slide.options[optIdx].label || slide.options[optIdx].label.startsWith('Choice '))) {
+              slide.options[optIdx].label = label;
+            }
+            renderQuizOptionsEditor();
+            updateCanvasPreview();
+            showBuilderToast(`Updated Choice #${optIdx + 1} image to "${label || 'illustration'}"!`, "success");
+          }
+          const modalEl = document.getElementById('presetImageModal');
+          bootstrap.Modal.getInstance(modalEl)?.hide();
+          return;
+        }
+
         const imgs = ensureSlideImages(slide);
         if (activeImagePickerMode?.action === 'add') {
           if (imgs.length < 4) {
@@ -989,55 +1044,107 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
     }
 
     // File upload (images + animations)
-    function handleSlideFileUpload(input) {
-      if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const validExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'json'];
-        const ext = (file.name.split('.').pop() || '').toLowerCase();
+    async function handleSlideFileUpload(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const validExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'json'];
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
 
-        if (!validExtensions.includes(ext)) {
-          showBuilderToast("Supported files: .png, .jpg, .webp, .gif, or .json animation", "danger");
-          input.value = '';
-          return;
-        }
+      if (!validExtensions.includes(ext)) {
+        showBuilderToast("Supported files: .png, .jpg, .webp, .gif, or .json animation", "danger");
+        input.value = '';
+        return;
+      }
 
-        if (ext === 'json') {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            try {
-              JSON.parse(e.target.result); // validate JSON syntax
-              const slide = slides[currentSlideIndex];
-              slide.animationSrc = e.target.result;
-              slide.animationLabel = file.name;
-              slide.image = e.target.result;
-              loadSlideIntoEditor();
-              updateCanvasPreview();
-              showBuilderToast(`Custom animation attached: ${file.name}`, "success");
-            } catch (err) {
-              showBuilderToast("Invalid Lottie JSON animation file.", "danger");
-            }
-          };
-          reader.readAsDataURL(file);
-        } else {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const slide = slides[currentSlideIndex];
-            delete slide.animationSrc;
-            delete slide.animationLabel;
-            const imgs = ensureSlideImages(slide);
-            if (imgs.length < 4) {
-              imgs.push(e.target.result);
-              showBuilderToast(`Added custom image to slide (${imgs.length}/4)`, "success");
-            } else {
-              imgs[imgs.length - 1] = e.target.result;
-              showBuilderToast("Updated latest image on slide", "success");
-            }
-            slide.image = imgs[0];
-            loadSlideIntoEditor();
-            updateCanvasPreview();
-          };
-          reader.readAsDataURL(file);
+      showBuilderToast(`Processing "${file.name}"...`, 'info');
+
+      const uploadToServer = async (fileToUpload) => {
+        const formData = new FormData();
+        formData.append('file', fileToUpload);
+        formData.append('csrf_token', getCsrfToken());
+
+        const res = await fetch('/teacher/api/assets/upload', {
+          method: 'POST',
+          body: formData
+        });
+        return await res.json();
+      };
+
+      if (ext === 'json') {
+        try {
+          const text = await file.text();
+          JSON.parse(text);
+          const uploadResult = await uploadToServer(file);
+          const slide = slides[currentSlideIndex];
+          if (uploadResult.status === 'success' && uploadResult.asset?.file_url) {
+            slide.animationSrc = uploadResult.asset.file_url;
+            slide.animationLabel = uploadResult.asset.title || file.name;
+            slide.image = uploadResult.asset.file_url;
+          } else {
+            slide.animationSrc = text;
+            slide.animationLabel = file.name;
+            slide.image = text;
+          }
+          loadSlideIntoEditor();
+          updateCanvasPreview();
+          showBuilderToast(`Animation attached: ${file.name}`, "success");
+        } catch (err) {
+          showBuilderToast("Invalid Lottie JSON animation file.", "danger");
         }
+        input.value = '';
+      } else {
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          img.onload = async function() {
+            const maxDim = 1200;
+            let width = img.width;
+            let height = img.height;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob(async (blob) => {
+              const readyFile = blob ? new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), { type: 'image/webp' }) : file;
+              try {
+                const uploadResult = await uploadToServer(readyFile);
+                const slide = slides[currentSlideIndex];
+                delete slide.animationSrc;
+                delete slide.animationLabel;
+                const imgs = ensureSlideImages(slide);
+                const finalUrl = (uploadResult.status === 'success' && uploadResult.asset?.file_url) ? uploadResult.asset.file_url : e.target.result;
+
+                if (imgs.length < 4) {
+                  imgs.push(finalUrl);
+                  slide.captions.push(file.name.replace(/\.[^.]+$/, ''));
+                  showBuilderToast(`Uploaded and added image to slide (${imgs.length}/4)!`, "success");
+                } else {
+                  imgs[imgs.length - 1] = finalUrl;
+                  showBuilderToast("Updated latest image on slide!", "success");
+                }
+                slide.image = imgs[0];
+                loadSlideIntoEditor();
+                updateCanvasPreview();
+              } catch (err) {
+                showBuilderToast("Image attached to slide", "success");
+              }
+              input.value = '';
+            }, 'image/webp', 0.85);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
       }
     }
 
@@ -1090,3 +1197,7 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
       loadSlideIntoEditor();
       updateCanvasPreview();
     });
+
+    window.openChoicePresetPicker = openChoicePresetPicker;
+    window.openSlidePresetPicker = openSlidePresetPicker;
+    window.chooseSlidePresetImage = chooseSlidePresetImage;

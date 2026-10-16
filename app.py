@@ -47,6 +47,7 @@ if 'aivencloud.com' in raw_db_uri or 'tidbcloud.com' in raw_db_uri or 'ssl-mode'
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
 
 db.init_app(app)
 
@@ -434,6 +435,13 @@ def healthz():
 def loaderio_verify():
     from flask import Response
     return Response("loaderio-f564c7a48db7d8614ab5b73cb7e3d37a", mimetype="text/plain")
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    if request.is_json or request.path.startswith('/api/') or request.path.startswith('/teacher/api/'):
+        return jsonify({'status': 'error', 'message': 'Uploaded file exceeds the maximum allowed limit (32MB).'}), 413
+    flash('The uploaded file was too large. Please select an image under 10MB.', 'danger')
+    return redirect(request.referrer or url_for('teacher.lesson_studio'))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

@@ -3987,6 +3987,31 @@ def save_lesson():
 
     ALLOWED_IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp'}
 
+    def persist_base64_data_url(val):
+        if not isinstance(val, str) or not val.startswith('data:'):
+            return val
+        try:
+            import base64 as b64module
+            header, encoded = val.split(',', 1)
+            ext = '.png'
+            if 'image/jpeg' in header or 'image/jpg' in header:
+                ext = '.jpg'
+            elif 'image/webp' in header:
+                ext = '.webp'
+            elif 'image/gif' in header:
+                ext = '.gif'
+            elif 'application/json' in header:
+                ext = '.json'
+            raw_bytes = b64module.b64decode(encoded)
+            uname = f"{uuid.uuid4().hex[:12]}{ext}"
+            target_path = os.path.join(upload_dir, uname)
+            with open(target_path, 'wb') as pf:
+                pf.write(raw_bytes)
+            return f"/static/uploads/lessons/{uname}"
+        except Exception as err:
+            current_app.logger.warning(f"Could not decode base64 slide asset: {err}")
+            return val
+
     for idx, slide in enumerate(slides):
         file_key = f"slide_file_{idx}"
         if file_key in request.files:
@@ -3999,6 +4024,17 @@ def save_lesson():
                     filepath = os.path.join(upload_dir, unique_name)
                     file.save(filepath)
                     slide['image'] = f"/static/uploads/lessons/{unique_name}"
+        if isinstance(slide, dict):
+            if 'image' in slide:
+                slide['image'] = persist_base64_data_url(slide['image'])
+            if 'images' in slide and isinstance(slide['images'], list):
+                slide['images'] = [persist_base64_data_url(im) for im in slide['images']]
+            if 'animationSrc' in slide:
+                slide['animationSrc'] = persist_base64_data_url(slide['animationSrc'])
+            if 'options' in slide and isinstance(slide['options'], list):
+                for opt in slide['options']:
+                    if isinstance(opt, dict) and 'icon' in opt:
+                        opt['icon'] = persist_base64_data_url(opt['icon'])
 
     config_payload = {
         "title": title,
