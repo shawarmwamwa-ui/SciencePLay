@@ -496,28 +496,39 @@ def is_activity_unlocked(user_id, activity):
         matching_lessons = Lesson.query.filter(Lesson.title.ilike(ENGINE_LESSON_TITLES[activity.engine])).all()
         return any(has_student_completed_lesson(user_id, l.id) for l in matching_lessons)
 
-    # Standalone activity with no lesson requirement
-    return True
-
-
 def is_lesson_unlocked_for_student(user_id, lesson):
     """
     Pedagogical unlocking rule for lessons aligned with DepEd Philippines Grade 3 Science:
-    - Term 1: Matter & Materials
+    - If the student has already completed this lesson, it is ALWAYS unlocked.
+    - If the lesson has been assigned to this student by their teacher, it is ALWAYS unlocked.
+    - Core progression:
         * "Properties of Metals": Always unlocked (Curriculum Start)
         * "Recycling": Unlocked if "Properties of Metals" is completed
-    - Term 2: Living Things & Their Environment
-        * "Living vs Non-Living": Unlocked if Term 1 ("Properties of Metals" and "Recycling") is completed
+        * "Living vs Non-Living": Unlocked if "Properties of Metals" or "Recycling" is completed
         * "Animal Body Parts": Unlocked if "Living vs Non-Living" is completed
-        * "Plant Parts": Unlocked if both "Living vs Non-Living" and "Animal Body Parts" are completed
-    - Term 3+ or Custom lessons:
-        * Supplementary lessons are always unlocked.
-        * Unlocked if preceding term lessons are done (or if assigned)
+        * "Plant Parts": Unlocked if "Living vs Non-Living" or "Animal Body Parts" is completed
+        * "Basic Needs of Living Things": Unlocked if "Living vs Non-Living" is completed
+    - Custom or supplementary lessons are always unlocked for students who have them.
     """
     if not user_id or not lesson:
         return True
 
+    # Completed lessons can NEVER be locked
+    if has_student_completed_lesson(user_id, lesson.id):
+        return True
+
+    # Explicitly assigned lessons are always accessible
+    assigned = LessonAssignment.query.filter_by(student_id=user_id, lesson_id=lesson.id).filter(
+        (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)
+    ).first()
+    if assigned:
+        return True
+
     if getattr(lesson, 'is_supplementary', False):
+        return True
+
+    # Custom lessons created in Content Studio are unlocked for enrolled students
+    if getattr(lesson, 'config', None) or lesson.id > 5:
         return True
 
     title = (lesson.title or '').strip()
@@ -526,15 +537,6 @@ def is_lesson_unlocked_for_student(user_id, lesson):
         matching = Lesson.query.filter(Lesson.title.ilike(t_name)).all()
         return any(has_student_completed_lesson(user_id, m.id) for m in matching)
 
-    def is_engine_mastered(eng, min_score=80):
-        logs = ProgressLog.query.filter_by(student_id=user_id).all()
-        scores = [
-            p.score for p in logs 
-            if p.activity and (p.activity.engine == eng or eng in (p.activity.type or ''))
-            and p.score is not None
-        ]
-        return max(scores, default=0) >= min_score
-
     # Term 1: Matter & Materials
     if title.lower() == 'properties of metals':
         return True
@@ -542,42 +544,28 @@ def is_lesson_unlocked_for_student(user_id, lesson):
     if title.lower() == 'recycling':
         return is_title_completed('Properties of Metals')
 
-    # Term 2: Living Things & Their Environment (Requires Term 1 lessons + games mastered with 80%+)
+    # Term 2: Living Things & Their Environment
     if title.lower() == 'living vs non-living':
-        return (
-            is_title_completed('Properties of Metals') and 
-            is_title_completed('Recycling') and
-            is_engine_mastered('metal_logic') and
-            is_engine_mastered('recycle_sorter')
-        )
+        return is_title_completed('Properties of Metals') or is_title_completed('Recycling')
 
     if title.lower() == 'animal body parts':
-        return is_title_completed('Living vs Non-Living') and is_engine_mastered('claw_machine')
+        return is_title_completed('Living vs Non-Living')
 
     if title.lower() == 'plant parts':
-        return (
-            is_title_completed('Living vs Non-Living') and 
-            is_title_completed('Animal Body Parts') and
-            is_engine_mastered('find_the_part')
-        )
+        return is_title_completed('Living vs Non-Living') or is_title_completed('Animal Body Parts')
+
+    if title.lower() == 'basic needs of living things':
+        return is_title_completed('Living vs Non-Living')
 
     term = getattr(lesson, 'term', None)
     if not term or term == 'Term 1':
         return True
 
     if term == 'Term 2':
-        return (
-            is_title_completed('Properties of Metals') and 
-            is_title_completed('Recycling') and
-            is_engine_mastered('metal_logic') and
-            is_engine_mastered('recycle_sorter')
-        )
+        return is_title_completed('Properties of Metals') or is_title_completed('Recycling')
 
     if term == 'Term 3':
-        return (
-            is_title_completed('Plant Parts') and
-            is_engine_mastered('build_a_plant')
-        )
+        return is_title_completed('Plant Parts') or is_title_completed('Living vs Non-Living')
 
     return True
 
@@ -620,8 +608,10 @@ def get_student_curriculum_terms_data(user_id):
         if teacher_user:
             teacher_id = teacher_user.id
 
-    # 1. Fetch all active curriculum lessons that belong to an academic term (Term 1, Term 2, etc.)
+    # 1. Fetch only default starter core curriculum lessons (IDs 1-5 without custom config)
     all_term_lessons_query = Lesson.query.filter(
+        Lesson.id.in_([1, 2, 3, 4, 5]),
+        Lesson.config.is_(None),
         Lesson.term.isnot(None),
         Lesson.term.like('Term %'),
         (Lesson.is_archived == False) | (Lesson.is_archived == None),
@@ -644,17 +634,17 @@ def get_student_curriculum_terms_data(user_id):
             lessons_dict[l.id] = l
     lessons = list(lessons_dict.values())
 
-    # 2. Fetch all active curriculum activities that belong to an academic term (Term 1, Term 2, etc.)
+    # 2. Fetch only default starter core curriculum activities (IDs 1-5 without custom config)
     # Strictly filter for real playable games — SLIDE QUESTIONS / QUICK CHECKS ARE NEVER GAMES!
     playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
     all_term_activities_query = Activity.query.filter(
+        Activity.id.in_([1, 2, 3, 4, 5]),
+        Activity.config.is_(None),
         Activity.term.isnot(None),
         Activity.term.like('Term %'),
         (Activity.is_archived == False) | (Activity.is_archived == None),
         (Activity.is_supplementary == False) | (Activity.is_supplementary == None),
-        ~Activity.engine.in_(['quick_check', 'lesson', 'slide_questions']),
-        ~Activity.type.ilike('%Quick Check%'),
-        ~Activity.type.ilike('%Slide Questions%')
+        Activity.engine.in_(playable_engines)
     ).all()
 
     # Also include any activity explicitly assigned to this student with an academic term
@@ -679,11 +669,11 @@ def get_student_curriculum_terms_data(user_id):
                 activities_dict[a.id] = a
     activities = list(activities_dict.values())
 
-    # Auto-sync assignments for student so progress logging works smoothly
+    # Auto-sync assignments ONLY for starter default items — never auto-assign custom content
     needed_commit = False
     existing_la_ids = {la.lesson_id for la in existing_la_list}
     for l in lessons:
-        if l.id not in existing_la_ids:
+        if (l.id in [1, 2, 3, 4, 5] and not getattr(l, 'config', None)) and l.id not in existing_la_ids:
             db.session.add(LessonAssignment(
                 lesson_id=l.id,
                 student_id=user_id,
@@ -695,7 +685,7 @@ def get_student_curriculum_terms_data(user_id):
 
     existing_act_ids = {aa.activity_id for aa in existing_aa_list}
     for a in activities:
-        if a.id not in existing_act_ids:
+        if (a.id in [1, 2, 3, 4, 5] and not getattr(a, 'config', None)) and a.id not in existing_act_ids:
             db.session.add(ActivityAssignment(
                 activity_id=a.id,
                 student_id=user_id,
@@ -1152,7 +1142,11 @@ def dashboard():
 
     # Auto-sync core curriculum activities for enrolled student (Terms 1 & 2)
     playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
-    core_activities = Activity.query.filter(Activity.engine.in_(playable_engines)).all()
+    core_activities = Activity.query.filter(
+        Activity.engine.in_(playable_engines),
+        Activity.id.in_([1, 2, 3, 4, 5]),
+        Activity.config.is_(None)
+    ).all()
     engine_to_act = {}
     for a in core_activities:
         if a.engine not in engine_to_act:
@@ -1590,8 +1584,8 @@ def lessons():
     lesson_progress = []
     for lesson in lessons:
         lesson_activities = [activity for activity in activities if activity.lesson_id == lesson.id]
-        is_locked = not is_lesson_unlocked_for_student(user_id, lesson)
         is_done = has_student_completed_lesson(user_id, lesson.id)
+        is_locked = (not is_done) and (not is_lesson_unlocked_for_student(user_id, lesson))
         matching_lesson_ids = [l.id for l in Lesson.query.filter(Lesson.title.ilike(lesson.title.strip())).all()]
         log = LessonProgress.query.filter(
             LessonProgress.student_id == user_id,

@@ -1,8 +1,10 @@
 function openAssignLessonModal(lessonId, title) {
   const input = document.getElementById('modalLessonId');
   const display = document.getElementById('modalLessonTitleDisplay');
+  const studentSelect = document.getElementById('modalLessonStudentSelect');
   if (input) input.value = lessonId;
   if (display) display.textContent = title;
+  if (studentSelect) studentSelect.value = '';
   const modalEl = document.getElementById('assignLessonModal');
   if (modalEl && window.bootstrap && window.bootstrap.Modal) {
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);

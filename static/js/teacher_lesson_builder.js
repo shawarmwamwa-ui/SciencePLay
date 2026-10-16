@@ -334,7 +334,9 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
         const curTitle = document.getElementById('lessonTitleInput')?.value?.trim() || 'Lesson';
         newSlide.title = `${curTitle}: Big Ideas`;
         newSlide.explanation = `Great job! You have explored and completed all key ideas of ${curTitle}.`;
-        newSlide.image = "/static/images/star.webp";
+        newSlide.bullets = [];
+        newSlide.image = "";
+        newSlide.images = [];
       }
 
       slides.push(newSlide);
@@ -367,15 +369,15 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
     }
 
     function ensureSlideImages(slide) {
-      if (!Array.isArray(slide.images) || slide.images.length === 0) {
-        if (slide.image && typeof slide.image === 'string') {
+      if (!Array.isArray(slide.images)) {
+        if (slide.image && typeof slide.image === 'string' && slide.image.trim()) {
           slide.images = [slide.image];
         } else {
-          slide.images = ['/static/images/tree.webp'];
-          slide.image = '/static/images/tree.webp';
+          slide.images = [];
+          slide.image = '';
         }
       } else {
-        slide.image = slide.images[0];
+        slide.image = slide.images.length > 0 ? slide.images[0] : '';
       }
       if (!Array.isArray(slide.captions)) slide.captions = [];
       while (slide.captions.length < slide.images.length) slide.captions.push('');
@@ -438,17 +440,28 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
 
       const mediaSection = document.getElementById('slideMediaConfigSection');
       const quizBox = document.getElementById('quickCheckEditFields');
+      const summaryBulletsBox = document.getElementById('summaryBulletsEditFields');
 
       if (slide.type === 'quick-check') {
         if (mediaSection) mediaSection.classList.add('d-none');
+        if (summaryBulletsBox) summaryBulletsBox.classList.add('d-none');
         if (quizBox) {
           quizBox.classList.remove('d-none');
           document.getElementById('editQuizPrompt').value = slide.prompt || '';
           renderQuizOptionsEditor();
         }
+      } else if (slide.type === 'summary') {
+        if (mediaSection) mediaSection.classList.remove('d-none');
+        if (quizBox) quizBox.classList.add('d-none');
+        if (summaryBulletsBox) {
+          summaryBulletsBox.classList.remove('d-none');
+          renderSummaryBulletsEditor();
+        }
+        renderSlideMediaStrip(slide);
       } else {
         if (mediaSection) mediaSection.classList.remove('d-none');
         if (quizBox) quizBox.classList.add('d-none');
+        if (summaryBulletsBox) summaryBulletsBox.classList.add('d-none');
         renderSlideMediaStrip(slide);
       }
     }
@@ -465,7 +478,9 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
 
       if (countBadge) countBadge.textContent = `${imgs.length} Image${imgs.length === 1 ? '' : 's'}`;
       if (layoutHint) {
-        if (imgs.length === 1) {
+        if (imgs.length === 0) {
+          layoutHint.textContent = 'No Images: Clean Text & Narration Layout';
+        } else if (imgs.length === 1) {
           layoutHint.textContent = '1 Image: Spotlight Hero Showcase';
         } else if (imgs.length === 2) {
           layoutHint.textContent = '2 Images: Side-by-Side Comparison (Left vs Right)';
@@ -474,18 +489,25 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
         }
       }
 
-      imgs.forEach((imgSrc, idx) => {
-        const item = document.createElement('div');
-        item.className = 'slide-media-thumb-item';
-        item.title = `Image #${idx + 1} (Click to change/replace)`;
-        item.innerHTML = `
-          <span class="slide-media-thumb-badge">${idx + 1}</span>
-          <img src="${imgSrc}" alt="Slide Image ${idx + 1}">
-          ${imgs.length > 1 ? `<span class="slide-media-thumb-del" title="Remove this image" onclick="event.stopPropagation(); removeSlideImage(${idx});">✕</span>` : ''}
-        `;
-        item.onclick = () => openSlidePresetPicker('replace', idx);
-        container.appendChild(item);
-      });
+      if (imgs.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'w-100 py-3 text-center text-muted small fw-semibold';
+        emptyState.innerHTML = '<i class="bi bi-image text-secondary me-1"></i>No images attached. Click "Add Image" or "Upload File" to add one.';
+        container.appendChild(emptyState);
+      } else {
+        imgs.forEach((imgSrc, idx) => {
+          const item = document.createElement('div');
+          item.className = 'slide-media-thumb-item';
+          item.title = `Image #${idx + 1} (Click to change/replace)`;
+          item.innerHTML = `
+            <span class="slide-media-thumb-badge">${idx + 1}</span>
+            <img src="${imgSrc}" alt="Slide Image ${idx + 1}">
+            <span class="slide-media-thumb-del" title="Remove this image" onclick="event.stopPropagation(); removeSlideImage(${idx});">✕</span>
+          `;
+          item.onclick = () => openSlidePresetPicker('replace', idx);
+          container.appendChild(item);
+        });
+      }
 
       if (addBtn) {
         addBtn.disabled = imgs.length >= 4;
@@ -500,25 +522,92 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
         capBox.className = 'd-flex flex-column gap-1 mt-2 w-100';
         container.insertAdjacentElement('afterend', capBox);
       }
-      capBox.innerHTML = imgs.map((_, i) => `
-        <div class="input-group input-group-sm">
-          <span class="input-group-text fw-bold">#${i + 1}</span>
-          <input type="text" class="form-control" maxlength="40" placeholder="Name this image (e.g. Water)" value="${escapeAttr(slide.captions[i])}" oninput="setImageCaption(${i}, this.value)">
-        </div>`).join('');
+      if (imgs.length === 0) {
+        capBox.innerHTML = '';
+      } else {
+        capBox.innerHTML = imgs.map((_, i) => `
+          <div class="input-group input-group-sm">
+            <span class="input-group-text fw-bold">#${i + 1}</span>
+            <input type="text" class="form-control" maxlength="40" placeholder="Name this image (e.g. Water)" value="${escapeAttr(slide.captions[i])}" oninput="setImageCaption(${i}, this.value)">
+          </div>`).join('');
+      }
     }
 
     function removeSlideImage(imgIdx) {
       const slide = slides[currentSlideIndex];
-      if (!slide || !Array.isArray(slide.images) || slide.images.length <= 1) {
-        showBuilderToast("Each concept slide needs at least 1 image.", "warning");
+      if (!slide || !Array.isArray(slide.images) || slide.images.length === 0) {
         return;
       }
       slide.images.splice(imgIdx, 1);
       if (Array.isArray(slide.captions)) slide.captions.splice(imgIdx, 1);
-      slide.image = slide.images[0];
+      slide.image = slide.images.length > 0 ? slide.images[0] : '';
       loadSlideIntoEditor();
       updateCanvasPreview();
       showBuilderToast("Image removed from slide.", "info");
+    }
+
+    function renderSummaryBulletsEditor() {
+      const slide = slides[currentSlideIndex];
+      const container = document.getElementById('summaryBulletsEditor');
+      if (!slide || !container) return;
+
+      if (!Array.isArray(slide.bullets)) {
+        slide.bullets = [];
+      }
+
+      container.innerHTML = '';
+      if (slide.bullets.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-2 text-muted small bg-white rounded-3 border">
+            No bullet points yet. Click <strong class="text-success">+ Add Bullet</strong> to create key takeaways!
+          </div>
+        `;
+        return;
+      }
+
+      slide.bullets.forEach((bulletText, idx) => {
+        const row = document.createElement('div');
+        row.className = 'input-group input-group-sm';
+        row.innerHTML = `
+          <span class="input-group-text fw-bold bg-white text-success">⭐ #${idx + 1}</span>
+          <input type="text" class="form-control fw-semibold" placeholder="Key takeaway (e.g. Living things grow and breathe)" value="${escapeAttr(bulletText)}" oninput="updateSummaryBullet(${idx}, this.value)">
+          <button type="button" class="btn btn-outline-danger" title="Remove bullet point" onclick="removeSummaryBullet(${idx})">✕</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function addSummaryBullet() {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      if (!Array.isArray(slide.bullets)) slide.bullets = [];
+      if (slide.bullets.length >= 6) {
+        showBuilderToast("Maximum 6 bullet points recommended for summary slide.", "warning");
+        return;
+      }
+      slide.bullets.push('');
+      renderSummaryBulletsEditor();
+      updateCanvasPreview();
+      setTimeout(() => {
+        const inputs = document.querySelectorAll('#summaryBulletsEditor input');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+      }, 50);
+    }
+
+    function updateSummaryBullet(idx, val) {
+      const slide = slides[currentSlideIndex];
+      if (!slide || !Array.isArray(slide.bullets)) return;
+      slide.bullets[idx] = val;
+      updateCanvasPreview();
+    }
+
+    function removeSummaryBullet(idx) {
+      const slide = slides[currentSlideIndex];
+      if (!slide || !Array.isArray(slide.bullets)) return;
+      slide.bullets.splice(idx, 1);
+      renderSummaryBulletsEditor();
+      updateCanvasPreview();
+      showBuilderToast("Bullet point removed", "info");
     }
 
     function toggleCanvasExpand() {
@@ -643,7 +732,9 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
           if (!slide.explanation || slide.explanation.includes('Living things grow, breathe')) {
             slide.explanation = `Great job! You have explored and completed all key ideas of ${curTitle}.`;
           }
-          slide.image = slide.image || "/static/images/star.webp";
+          if (!Array.isArray(slide.bullets)) {
+            slide.bullets = [];
+          }
         }
         loadSlideIntoEditor();
       }
@@ -744,7 +835,63 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
             mediaDisplay.classList.remove('d-none');
             const imgs = ensureSlideImages(slide);
 
-            if (imgs.length === 1) {
+            if (slide.type === 'summary') {
+              const bullets = Array.isArray(slide.bullets) ? slide.bullets.filter(b => b && b.trim()) : [];
+              if (bullets.length > 0) {
+                mediaDisplay.innerHTML = `
+                  <div class="canvas-summary-preview w-100 p-2">
+                    ${imgs.length > 0 ? `
+                      <div class="text-center mb-3">
+                        <img src="${imgs[0]}" alt="Summary Hero" style="max-height: 120px; max-width: 180px; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));">
+                      </div>
+                    ` : ''}
+                    <div class="d-flex flex-column gap-2">
+                      ${bullets.map((b, i) => `
+                        <div class="p-2.5 rounded-3 border d-flex align-items-center gap-2 shadow-sm" style="background: #ffffff; border-color: #cbd5e1 !important;">
+                          <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold px-2 py-1">⭐ #${i + 1}</span>
+                          <span class="fw-semibold text-dark small text-start">${escapeAttr(b)}</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                `;
+              } else if (imgs.length === 0) {
+                mediaDisplay.innerHTML = `
+                  <div class="canvas-summary-empty p-4 text-center text-muted">
+                    <span class="fs-1 d-block mb-2">🏆</span>
+                    <div class="fw-bold fs-6 text-dark mb-1">Milestone Summary</div>
+                    <div class="small text-muted">Add summary bullet takeaways or media to celebrate lesson completion!</div>
+                  </div>
+                `;
+              } else if (imgs.length === 1) {
+                mediaDisplay.innerHTML = `
+                  <div class="canvas-single-hero">
+                    <img src="${imgs[0]}" alt="Slide Illustration" class="canvas-hero-img">
+                    ${captionLabelHtml(slide, 0, 'canvas-img-caption')}
+                  </div>
+                `;
+              } else {
+                mediaDisplay.innerHTML = `
+                  <div class="canvas-gallery-grid">
+                    ${imgs.map((src, i) => `
+                      <div class="canvas-gallery-card">
+                        <span class="badge bg-light text-dark border small mb-1">#${i + 1}</span>
+                        <img src="${src}" alt="Gallery item ${i + 1}">
+                        ${captionLabelHtml(slide, i, 'canvas-img-caption')}
+                      </div>
+                    `).join('')}
+                  </div>
+                `;
+              }
+            } else if (imgs.length === 0) {
+              mediaDisplay.innerHTML = `
+                <div class="canvas-text-only-placeholder p-4 text-center text-muted">
+                  <i class="bi bi-fonts fs-1 text-secondary opacity-50 mb-2 d-block"></i>
+                  <span class="fw-bold fs-6 text-dark d-block">Text &amp; Narration Slide</span>
+                  <div class="small text-muted mt-1">No images attached. Slide will focus on the explanation and audio narration.</div>
+                </div>
+              `;
+            } else if (imgs.length === 1) {
               mediaDisplay.innerHTML = `
                 <div class="canvas-single-hero">
                   <img src="${imgs[0]}" alt="Slide Illustration" class="canvas-hero-img">
@@ -817,7 +964,13 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
     function previewCurrentSlideTTS() {
       const slide = slides[currentSlideIndex];
       if (!slide) return;
-      const textToRead = `${slide.title}. ${slide.type === 'quick-check' ? (slide.prompt || '') : (slide.explanation || '')}`;
+      let textToRead = `${slide.title}. ${slide.type === 'quick-check' ? (slide.prompt || '') : (slide.explanation || '')}`;
+      if (slide.type === 'summary' && Array.isArray(slide.bullets) && slide.bullets.length > 0) {
+        const bulletText = slide.bullets.filter(Boolean).join('. ');
+        if (bulletText) {
+          textToRead += `. Key ideas: ${bulletText}`;
+        }
+      }
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(textToRead);
@@ -1237,3 +1390,7 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
     window.openChoicePresetPicker = openChoicePresetPicker;
     window.openSlidePresetPicker = openSlidePresetPicker;
     window.chooseSlidePresetImage = chooseSlidePresetImage;
+    window.addSummaryBullet = addSummaryBullet;
+    window.updateSummaryBullet = updateSummaryBullet;
+    window.removeSummaryBullet = removeSummaryBullet;
+    window.removeSlideImage = removeSlideImage;

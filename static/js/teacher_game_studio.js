@@ -1,8 +1,10 @@
 function openAssignGameModal(activityId, title) {
   const input = document.getElementById('modalGameActivityId');
   const display = document.getElementById('modalGameTitleDisplay');
+  const studentSelect = document.getElementById('modalGameStudentSelect');
   if (input) input.value = activityId;
   if (display) display.textContent = title;
+  if (studentSelect) studentSelect.value = '';
   const modalEl = document.getElementById('assignGameModal');
   if (modalEl && window.bootstrap && window.bootstrap.Modal) {
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);

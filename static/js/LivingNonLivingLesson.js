@@ -249,12 +249,15 @@ function bindTTS() {
         ? `${slide.title}. ${q}`
         : (q || slide.title || '');
     } else if (slide.type === 'summary') {
-      const summaryText = slide.explanation || slide.description || (Array.isArray(slide.bullets) ? slide.bullets.join('. ') : '');
+      const bulletText = (Array.isArray(slide.bullets) && slide.bullets.length > 0)
+        ? slide.bullets.filter(Boolean).join('. ')
+        : '';
+      const summaryText = slide.explanation || slide.description || '';
       let sTitle = slide.title || '';
       if (isCustomDeck && (!sTitle || sTitle === 'Living vs Non-Living: Big Ideas' || sTitle === 'Great Job! Big Ideas')) {
         sTitle = lessonTitle ? `${lessonTitle}: Big Ideas` : 'Lesson Summary';
       }
-      textToRead = `${sTitle}. Lesson Complete! ${summaryText}`.trim();
+      textToRead = `${sTitle}. Lesson Complete! ${summaryText} ${bulletText ? 'Key takeaways: ' + bulletText : ''}`.trim();
     } else {
       const desc = slide.description || slide.explanation || '';
       textToRead = (slide.title && desc && !desc.toLowerCase().includes(slide.title.toLowerCase()))
@@ -855,13 +858,15 @@ function renderSummarySlide(slide, container) {
   }
 
   // --- Dynamic Custom Summary Slide ---
-  const heroImg = (slide.images && slide.images.length > 0) ? slide.images[0] : (slide.image || '/static/images/star.webp');
+  const heroImg = (Array.isArray(slide.images) && slide.images.length > 0)
+    ? slide.images[0]
+    : ((slide.image && typeof slide.image === 'string' && slide.image.trim()) ? slide.image : '');
   const summaryExplanation = slide.explanation || slide.description || '';
 
   // Extract bullet ideas if available, or if explanation has emoji/lines
   let customCards = [];
   if (Array.isArray(slide.bullets) && slide.bullets.length > 0) {
-    customCards = slide.bullets.map((b, i) => ({
+    customCards = slide.bullets.filter(b => b && b.trim()).map((b, i) => ({
       icon: '⭐',
       title: `Key Idea #${i + 1}`,
       text: b,
@@ -905,6 +910,11 @@ function renderSummarySlide(slide, container) {
       </div>
 
       ${customCards.length > 0 ? `
+        ${heroImg ? `
+          <div class="text-center my-3">
+            <img src="${escapeHtml(heroImg)}" alt="Summary Hero" style="max-height: 140px; max-width: 220px; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));">
+          </div>
+        ` : ''}
         <div class="ln-summary-grid">
           ${customCards.map(idea => `
             <div class="ln-summary-card" style="background:${idea.bg};border:2px solid ${idea.border};">

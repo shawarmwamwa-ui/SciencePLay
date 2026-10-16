@@ -434,6 +434,7 @@
             <div class="mb-3">
               <label class="form-label fw-bold small text-muted" for="modalGameStudentSelect">Assign To</label>
               <select name="student_id" id="modalGameStudentSelect" class="form-select rounded-3 fw-semibold" required>
+                <option value="" disabled selected>-- Select a Student or Entire Class --</option>
                 <option value="all" class="fw-bold text-primary" style="background-color: #eff6ff;">All Students (Entire Class)</option>
                 {% for st in students %}
                   <option value="{{ st.id }}">{{ st.name }} (@{{ st.username }})</option>

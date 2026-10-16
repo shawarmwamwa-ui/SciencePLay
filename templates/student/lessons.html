@@ -39,7 +39,7 @@
     {% if lesson_progress %}
       {% for item in lesson_progress %}
         <div class="col-md-6">
-          {% if item.is_locked %}
+          {% if item.is_locked and not item.completed %}
           <div class="lesson-grid-card h-100" style="background: #f1f5f9; opacity: 0.95;">
             <div>
               <div class="d-flex justify-content-between align-items-start mb-2">
