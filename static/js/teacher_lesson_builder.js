@@ -330,6 +330,11 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
           { id: `opt-${Date.now()}-1`, label: "Option A", icon: "/static/images/tree.webp", isCorrect: true },
           { id: `opt-${Date.now()}-2`, label: "Option B", icon: "/static/images/rock.webp", isCorrect: false }
         ];
+      } else if (type === 'summary') {
+        const curTitle = document.getElementById('lessonTitleInput')?.value?.trim() || 'Lesson';
+        newSlide.title = `${curTitle}: Big Ideas`;
+        newSlide.explanation = `Great job! You have explored and completed all key ideas of ${curTitle}.`;
+        newSlide.image = "/static/images/star.webp";
       }
 
       slides.push(newSlide);
@@ -630,6 +635,15 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
             { id: "opt-1", label: "Choice A", icon: "/static/images/tree.webp", isCorrect: true },
             { id: "opt-2", label: "Choice B", icon: "/static/images/rock.webp", isCorrect: false }
           ];
+        } else if (value === 'summary') {
+          const curTitle = document.getElementById('lessonTitleInput')?.value?.trim() || 'Lesson';
+          if (!slide.title || slide.title.startsWith('Concept') || slide.title.startsWith('Quick Check') || slide.title === 'Living vs Non-Living: Big Ideas') {
+            slide.title = `${curTitle}: Big Ideas`;
+          }
+          if (!slide.explanation || slide.explanation.includes('Living things grow, breathe')) {
+            slide.explanation = `Great job! You have explored and completed all key ideas of ${curTitle}.`;
+          }
+          slide.image = slide.image || "/static/images/star.webp";
         }
         loadSlideIntoEditor();
       }
@@ -1193,6 +1207,28 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
         loadLessonPreset('basic_needs');
         return;
       }
+
+      const titleInput = document.getElementById('lessonTitleInput');
+      if (titleInput) {
+        titleInput.addEventListener('input', (e) => {
+          const val = e.target.value.trim();
+          if (!val) return;
+          slides.forEach(s => {
+            if (s.type === 'summary') {
+              if (!s.title || s.title === 'Living vs Non-Living: Big Ideas' || s.title.endsWith(': Big Ideas') || s.title.startsWith('Living vs Non-Living')) {
+                s.title = `${val}: Big Ideas`;
+              }
+              if (!s.explanation || s.explanation.includes('Living things grow, breathe, and need food')) {
+                s.explanation = `Great job! You have explored and completed the core concepts of ${val}.`;
+              }
+            }
+          });
+          renderSlideStrip();
+          loadSlideIntoEditor();
+          updateCanvasPreview();
+        });
+      }
+
       renderSlideStrip();
       loadSlideIntoEditor();
       updateCanvasPreview();

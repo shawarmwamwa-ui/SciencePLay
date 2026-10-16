@@ -1162,7 +1162,8 @@ async function initGame() {
       }
     } else {
       setMessage(resumed ? 'Resumed from where you left off! Move the claw to continue.' : 'Move the claw, grab an object, then drop it into the matching bin.', 'primary');
-      speakText('Move the claw, grab an item, and drop it into the matching chute!');
+      const introVoice = state.instructions || 'Move the claw, grab an item, and drop it into the matching chute!';
+      speakText(introVoice);
     }
     bindExitHandlers();
   } catch (error) {

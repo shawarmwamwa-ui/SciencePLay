@@ -116,6 +116,10 @@ class LessonAssignment(BaseModel, ArchivableMixin):
     student = db.relationship('User', foreign_keys=[student_id], backref='lesson_assignments')
     assigned_by_user = db.relationship('User', foreign_keys=[assigned_by])
 
+    @property
+    def term(self):
+        return self.lesson.term if self.lesson and getattr(self.lesson, 'term', None) else 'Term 1'
+
 
 class ActivityAssignment(BaseModel, ArchivableMixin):
     __tablename__ = 'activity_assignment'
@@ -130,6 +134,10 @@ class ActivityAssignment(BaseModel, ArchivableMixin):
     activity = db.relationship('Activity', backref='assignments')
     student = db.relationship('User', foreign_keys=[student_id], backref='activity_assignments')
     assigned_by_user = db.relationship('User', foreign_keys=[assigned_by])
+
+    @property
+    def term(self):
+        return self.activity.term if self.activity and getattr(self.activity, 'term', None) else 'Term 1'
 
 
 class Badge(BaseModel):

@@ -47,6 +47,7 @@ function playTapSound() {
 
 function getActiveLessonSlides() {
   if (window.publishedLessonPayload && Array.isArray(window.publishedLessonPayload.slides) && window.publishedLessonPayload.slides.length) {
+    const isLivingTopic = (window.publishedLessonPayload.title || '').toLowerCase().includes('living');
     return window.publishedLessonPayload.slides.map((slide, index) => {
       const rawType = slide.type || (slide.templateType === 'summary' ? 'summary' : 'quick-check');
       const normalizedType = (rawType === 'concept' ? 'intro' : rawType);
@@ -59,7 +60,8 @@ function getActiveLessonSlides() {
         images: Array.isArray(slide.images) && slide.images.length > 0 ? slide.images : (slide.image ? [slide.image] : []),
         captions: Array.isArray(slide.captions) ? slide.captions : [],
         description: slide.description || slide.explanation || slide.metadata?.hintText || '',
-        prompt: slide.prompt || slide.contentData?.prompt || 'Answer the question.',
+        explanation: slide.explanation || slide.description || '',
+        prompt: slide.prompt || slide.contentData?.prompt || (normalizedType === 'quick-check' ? 'Answer the question.' : ''),
         options: rawOptions.map((item, itemIndex) => ({
           id: item.id || `${slide.id || index + 1}-option-${itemIndex + 1}`,
           label: item.label || `Option ${itemIndex + 1}`,
@@ -71,12 +73,13 @@ function getActiveLessonSlides() {
         targetIsLiving: (slide.contentData?.targets || []).some(target => target.accepts && target.accepts.includes('living')),
         successMessage: slide.successMessage || slide.metadata?.correctFeedback || 'Correct! Well done!',
         retryMessage: slide.retryMessage || slide.metadata?.incorrectFeedback || 'Try again!',
-        retryHint: slide.retryHint || slide.metadata?.hintText || 'Think carefully about the concept.',
+        retryHint: slide.retryHint || slide.metadata?.hintText || (isLivingTopic ? 'Think carefully about what living things do.' : 'Think carefully about the clues and try again.'),
         bullets: Array.isArray(slide.contentData?.bullets) ? slide.contentData.bullets : [],
         hotspots: Array.isArray(slide.contentData?.hotspots) ? slide.contentData.hotspots : [],
         traits: Array.isArray(slide.contentData?.traits) ? slide.contentData.traits : [],
         object: slide.contentData?.object || {},
-        correctTraits: Array.isArray(slide.contentData?.correctTraits) ? slide.contentData.correctTraits : []
+        correctTraits: Array.isArray(slide.contentData?.correctTraits) ? slide.contentData.correctTraits : [],
+        isCustom: true
       };
     });
   }
@@ -227,10 +230,53 @@ function bindTTS() {
   
   btn.addEventListener('click', () => {
     const slide = getCurrentSlide();
-    // Strictly one read aloud per page: only the instruction or question
-    const textToRead = slide.question || slide.prompt || slide.description || slide.title;
-    const voiceKey = LIVING_VOICE_KEYS[lessonState.currentIndex] || '';
-    playVoicePrompt(voiceKey, textToRead);
+    if (!slide) return;
+
+    // Check if this is a custom, published, or preview deck
+    const isCustomDeck = Boolean(
+      (window.publishedLessonPayload && Array.isArray(window.publishedLessonPayload.slides) && window.publishedLessonPayload.slides.length) ||
+      (window.currentLessonId && window.currentLessonId !== 1) ||
+      slide.isCustom
+    );
+
+    const lessonTitle = window.publishedLessonPayload?.title || document.querySelector('.lesson-title-center h1')?.textContent?.replace(/Exit Preview/i, '')?.trim() || '';
+
+    // Determine text to read: instruction/prompt for quick-check, or title & description/explanation for story slides
+    let textToRead = '';
+    if (slide.type === 'quick-check') {
+      const q = slide.prompt || slide.question || '';
+      textToRead = (slide.title && q && !q.toLowerCase().includes(slide.title.toLowerCase()))
+        ? `${slide.title}. ${q}`
+        : (q || slide.title || '');
+    } else if (slide.type === 'summary') {
+      const summaryText = slide.explanation || slide.description || (Array.isArray(slide.bullets) ? slide.bullets.join('. ') : '');
+      let sTitle = slide.title || '';
+      if (isCustomDeck && (!sTitle || sTitle === 'Living vs Non-Living: Big Ideas' || sTitle === 'Great Job! Big Ideas')) {
+        sTitle = lessonTitle ? `${lessonTitle}: Big Ideas` : 'Lesson Summary';
+      }
+      textToRead = `${sTitle}. Lesson Complete! ${summaryText}`.trim();
+    } else {
+      const desc = slide.description || slide.explanation || '';
+      textToRead = (slide.title && desc && !desc.toLowerCase().includes(slide.title.toLowerCase()))
+        ? `${slide.title}. ${desc}`
+        : (desc || slide.title || '');
+    }
+
+    let voiceKey = '';
+    // Only use pre-recorded Living studio audio files if this is the original default lesson #1!
+    if (!isCustomDeck && LIVING_VOICE_KEYS[lessonState.currentIndex]) {
+      voiceKey = LIVING_VOICE_KEYS[lessonState.currentIndex];
+    } else if (slide.voiceKey) {
+      voiceKey = slide.voiceKey;
+    }
+
+    if (voiceKey) {
+      playVoicePrompt(voiceKey, textToRead);
+    } else {
+      // Dynamic Speech Synthesis for custom/newly built lessons
+      stopVoicePrompt();
+      speakText(textToRead);
+    }
   });
 }
 
@@ -266,7 +312,22 @@ function renderLesson() {
   const slide = getCurrentSlide();
   console.log('Rendering slide:', slide.id, 'type:', slide.type);
   const slides = getActiveLessonSlides();
-  document.querySelector('#lesson-title').textContent = slide.title;
+
+  const isCustomDeck = Boolean(
+    (window.publishedLessonPayload && Array.isArray(window.publishedLessonPayload.slides) && window.publishedLessonPayload.slides.length) ||
+    (window.currentLessonId && window.currentLessonId !== 1) ||
+    slide.isCustom
+  );
+  const lessonTitle = window.publishedLessonPayload?.title || document.querySelector('.lesson-title-center h1')?.textContent?.replace(/Exit Preview/i, '')?.trim() || '';
+
+  let displayTitle = slide.title || '';
+  if (slide.type === 'summary' && isCustomDeck) {
+    if (!displayTitle || displayTitle === 'Living vs Non-Living: Big Ideas' || displayTitle === 'Great Job! Big Ideas') {
+      displayTitle = lessonTitle ? `${lessonTitle}: Big Ideas` : 'Lesson Summary: Big Ideas';
+    }
+  }
+
+  document.querySelector('#lesson-title').textContent = displayTitle;
   document.querySelector('#lesson-progress').style.width = `${((lessonState.currentIndex + 1) / slides.length) * 100}%`;
   document.querySelector('#lesson-progress-text').textContent = `${lessonState.currentIndex + 1} / ${slides.length}`;
   document.querySelector('#prev-slide').disabled = lessonState.currentIndex === 0;
@@ -304,7 +365,7 @@ function getQuickFeedbackMessage(slide, isCorrect) {
   }
 
   const lead = slide.retryMessage || 'Try again.';
-  const hint = slide.retryHint || 'Think about what only living or non-living things can do on their own.';
+  const hint = slide.retryHint || (slide.isCustom ? 'Think carefully about the clues and try again.' : 'Think about what only living or non-living things can do on their own.');
   return `${lead} ${hint}`.trim();
 }
 
@@ -576,7 +637,7 @@ function logQuickCheckAttempt(slide, option, isCorrect) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      lesson_id: 1,
+      lesson_id: window.currentLessonId || 1,
       question: questionTitle,
       was_correct: isCorrect
     })
@@ -717,64 +778,160 @@ function handleTraitTap(slide, trait, button) {
   updateNavigationState();
 }
 
+function escapeHtml(str) {
+  return String(str ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function renderSummarySlide(slide, container) {
-  const defaultIdeas = [
-    {
-      icon: '🌱',
-      title: 'Living Needs & Growth',
-      text: 'Living things grow, breathe, reproduce, and need food and water to survive.',
-      bg: '#f0fdf4',
-      border: '#86efac',
-      color: '#16a34a'
-    },
-    {
-      icon: '🪨',
-      title: 'Non-Living Characteristics',
-      text: 'Non-living things do not eat, breathe, grow, or move on their own.',
+  const isCustomDeck = Boolean(
+    (window.publishedLessonPayload && Array.isArray(window.publishedLessonPayload.slides) && window.publishedLessonPayload.slides.length) ||
+    (window.currentLessonId && window.currentLessonId !== 1) ||
+    slide.isCustom
+  );
+
+  const lessonTitle = window.publishedLessonPayload?.title || document.querySelector('.lesson-title-center h1')?.textContent?.replace(/Exit Preview/i, '')?.trim() || 'this lesson';
+
+  if (!isCustomDeck) {
+    const defaultIdeas = [
+      {
+        icon: '🌱',
+        title: 'Living Needs & Growth',
+        text: 'Living things grow, breathe, reproduce, and need food and water to survive.',
+        bg: '#f0fdf4',
+        border: '#86efac',
+        color: '#16a34a'
+      },
+      {
+        icon: '🪨',
+        title: 'Non-Living Characteristics',
+        text: 'Non-living things do not eat, breathe, grow, or move on their own.',
+        bg: '#f8fafc',
+        border: '#cbd5e1',
+        color: '#475569'
+      },
+      {
+        icon: '🐾',
+        title: 'Plants & Animals Are Living',
+        text: 'Puppies, birds, fish, trees, and flowers are all living organisms!',
+        bg: '#ecfdf5',
+        border: '#a7f3d0',
+        color: '#059669'
+      },
+      {
+        icon: '🚲',
+        title: 'Everyday Objects Are Non-Living',
+        text: 'Toys, bicycles, chairs, rocks, and pencils are non-living items.',
+        bg: '#eff6ff',
+        border: '#bfdbfe',
+        color: '#2563eb'
+      }
+    ];
+
+    container.innerHTML = `
+      <div class="summary-slide ln-summary-container">
+        <div class="ln-summary-badge">
+          <div class="ln-summary-badge-icon">
+            <i class="bi bi-award-fill"></i>
+          </div>
+          <div class="ln-summary-badge-text">
+            <h3>Lesson Complete!</h3>
+            <p>You've mastered the core concepts of Living and Non-Living things!</p>
+          </div>
+        </div>
+        <div class="ln-summary-grid">
+          ${defaultIdeas.map(idea => `
+            <div class="ln-summary-card" style="background:${idea.bg};border:2px solid ${idea.border};">
+              <div class="ln-summary-card-header">
+                <span class="ln-summary-emoji">${idea.icon}</span>
+                <h4 style="color:${idea.color};">${idea.title}</h4>
+              </div>
+              <p class="ln-summary-desc">${idea.text}</p>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Dynamic Custom Summary Slide ---
+  const heroImg = (slide.images && slide.images.length > 0) ? slide.images[0] : (slide.image || '/static/images/star.webp');
+  const summaryExplanation = slide.explanation || slide.description || '';
+
+  // Extract bullet ideas if available, or if explanation has emoji/lines
+  let customCards = [];
+  if (Array.isArray(slide.bullets) && slide.bullets.length > 0) {
+    customCards = slide.bullets.map((b, i) => ({
+      icon: '⭐',
+      title: `Key Idea #${i + 1}`,
+      text: b,
       bg: '#f8fafc',
       border: '#cbd5e1',
-      color: '#475569'
-    },
-    {
-      icon: '🐾',
-      title: 'Plants & Animals Are Living',
-      text: 'Puppies, birds, fish, trees, and flowers are all living organisms!',
-      bg: '#ecfdf5',
-      border: '#a7f3d0',
-      color: '#059669'
-    },
-    {
-      icon: '🚲',
-      title: 'Everyday Objects Are Non-Living',
-      text: 'Toys, bicycles, chairs, rocks, and pencils are non-living items.',
-      bg: '#eff6ff',
-      border: '#bfdbfe',
-      color: '#2563eb'
+      color: '#1e293b'
+    }));
+  } else if (summaryExplanation.includes('\n')) {
+    const rawLines = summaryExplanation.split(/\n+/).map(l => l.trim()).filter(Boolean);
+    if (rawLines.length > 1) {
+      const colors = [
+        { bg: '#f0fdf4', border: '#86efac', color: '#16a34a', icon: '🌟' },
+        { bg: '#eff6ff', border: '#bfdbfe', color: '#2563eb', icon: '💡' },
+        { bg: '#faf5ff', border: '#d8b4fe', color: '#7c3aed', icon: '🚀' },
+        { bg: '#fffbeb', border: '#fde68a', color: '#d97706', icon: '🏆' }
+      ];
+      customCards = rawLines.map((line, idx) => {
+        const style = colors[idx % colors.length];
+        return {
+          icon: style.icon,
+          title: `Takeaway #${idx + 1}`,
+          text: line,
+          bg: style.bg,
+          border: style.border,
+          color: style.color
+        };
+      });
     }
-  ];
+  }
 
   container.innerHTML = `
     <div class="summary-slide ln-summary-container">
-      <div class="ln-summary-badge">
-        <div class="ln-summary-badge-icon">
+      <div class="ln-summary-badge" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 2px solid #6ee7b7; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);">
+        <div class="ln-summary-badge-icon" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #ffffff;">
           <i class="bi bi-award-fill"></i>
         </div>
         <div class="ln-summary-badge-text">
-          <h3>Lesson Complete!</h3>
-          <p>You've mastered the core concepts of Living and Non-Living things!</p>
+          <h3 style="color: #065f46; font-weight: 800; font-size: 1.35rem; margin-bottom: 2px;">Lesson Complete! 🎉</h3>
+          <p style="color: #047857; font-weight: 600; margin-bottom: 0;">You've mastered the core concepts of <strong>${escapeHtml(lessonTitle)}</strong>!</p>
         </div>
       </div>
-      <div class="ln-summary-grid">
-        ${defaultIdeas.map(idea => `
-          <div class="ln-summary-card" style="background:${idea.bg};border:2px solid ${idea.border};">
-            <div class="ln-summary-card-header">
-              <span class="ln-summary-emoji">${idea.icon}</span>
-              <h4 style="color:${idea.color};">${idea.title}</h4>
+
+      ${customCards.length > 0 ? `
+        <div class="ln-summary-grid">
+          ${customCards.map(idea => `
+            <div class="ln-summary-card" style="background:${idea.bg};border:2px solid ${idea.border};">
+              <div class="ln-summary-card-header">
+                <span class="ln-summary-emoji">${idea.icon}</span>
+                <h4 style="color:${idea.color}; font-weight: 700;">${escapeHtml(idea.title)}</h4>
+              </div>
+              <p class="ln-summary-desc" style="color: #334155; font-size: 0.95rem; line-height: 1.5;">${escapeHtml(idea.text)}</p>
             </div>
-            <p class="ln-summary-desc">${idea.text}</p>
+          `).join('')}
+        </div>
+      ` : `
+        <div class="p-4 bg-white rounded-4 border shadow-sm text-center my-3" style="border: 2px solid #e2e8f0;">
+          ${heroImg ? `
+            <div class="mb-3">
+              <img src="${escapeHtml(heroImg)}" alt="Summary Hero" style="max-height: 180px; max-width: 260px; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+            </div>
+          ` : ''}
+          <div class="d-inline-flex align-items-center gap-2 mb-2 px-3 py-1 rounded-pill bg-light border">
+            <span style="font-size: 1.2rem;">💡</span>
+            <span class="fw-bold text-dark">${escapeHtml(slide.title || 'Key Takeaways')}</span>
           </div>
-        `).join('')}
-      </div>
+          <p class="fs-5 fw-medium text-dark mb-0 mx-auto" style="max-width: 650px; line-height: 1.6;">
+            ${escapeHtml(summaryExplanation || 'Great job! You have explored and completed all activities in this lesson. Click Finish below to complete!')}
+          </p>
+        </div>
+      `}
     </div>
   `;
 }

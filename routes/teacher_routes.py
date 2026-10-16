@@ -1220,7 +1220,6 @@ def assign_lesson():
                     student_id=st.id,
                     assigned_by=current_user.id,
                     due_date=due_date,
-                    term=lesson_term,
                     is_supplementary=lesson_supp
                 ))
                 assigned_count += 1
@@ -1232,14 +1231,12 @@ def assign_lesson():
                         student_id=st.id,
                         assigned_by=current_user.id,
                         due_date=due_date,
-                        term=act_term,
                         is_supplementary=act_supp
                     ))
                 elif existing_aa.status in ('completed', 'attempts_exhausted'):
                     existing_aa.status = 'assigned'
                     existing_aa.assigned_at = datetime.utcnow()
                     existing_aa.due_date = due_date
-                    existing_aa.term = act_term
                     existing_aa.is_supplementary = act_supp
 
         db.session.commit()
@@ -1256,10 +1253,8 @@ def assign_lesson():
         return redirect(request.referrer or url_for('teacher.lessons'))
 
     lesson_supp = getattr(lesson, 'is_supplementary', False)
-    lesson_term = getattr(lesson, 'term', None) or 'Term 1'
     paired_act_obj = Activity.query.get(act_id) if act_id else None
     act_supp = getattr(paired_act_obj, 'is_supplementary', False) or lesson_supp
-    act_term = getattr(paired_act_obj, 'term', None) or lesson_term
 
     existing_lesson_assign = LessonAssignment.query.filter_by(student_id=student_id, lesson_id=lesson_id).first()
     student = User.query.get(student_id)
@@ -1281,7 +1276,6 @@ def assign_lesson():
             existing_act_assign.status = 'assigned'
             existing_act_assign.assigned_at = datetime.utcnow()
             existing_act_assign.due_date = due_date
-            existing_act_assign.term = act_term
             existing_act_assign.is_supplementary = act_supp
             db.session.commit()
             log_access(current_user, 'reassign_activity', f'activity_id={act_id} student_id={student_id}')
@@ -1293,7 +1287,6 @@ def assign_lesson():
                 student_id=student_id,
                 assigned_by=current_user.id,
                 due_date=due_date,
-                term=act_term,
                 is_supplementary=act_supp
             )
             db.session.add(act_assign)
@@ -1308,7 +1301,6 @@ def assign_lesson():
         student_id=student_id,
         assigned_by=current_user.id,
         due_date=due_date,
-        term=lesson_term,
         is_supplementary=lesson_supp
     )
     db.session.add(assignment)
@@ -1319,7 +1311,6 @@ def assign_lesson():
             existing_act_assign.status = 'assigned'
             existing_act_assign.assigned_at = datetime.utcnow()
             existing_act_assign.due_date = due_date
-            existing_act_assign.term = act_term
             existing_act_assign.is_supplementary = act_supp
             activity_msg = f' and paired activity "{act_name}" reassigned'
         else:
@@ -1328,7 +1319,6 @@ def assign_lesson():
                 student_id=student_id,
                 assigned_by=current_user.id,
                 due_date=due_date,
-                term=act_term,
                 is_supplementary=act_supp
             )
             db.session.add(act_assign)
@@ -1359,9 +1349,12 @@ def assign_activity():
         return redirect(request.referrer or url_for('teacher.lessons'))
 
     activity = Activity.query.get(activity_id)
-    act_name = activity.type if activity else f"Activity #{activity_id}"
+    if not activity:
+        flash('Activity not found.', 'danger')
+        return redirect(request.referrer or url_for('teacher.lessons'))
+
+    act_name = activity.type or f"Activity #{activity_id}"
     activity_supp = getattr(activity, 'is_supplementary', False)
-    activity_term = getattr(activity, 'term', None) or 'Term 1'
 
     due_date = None
     if due_date_raw:
@@ -1385,14 +1378,12 @@ def assign_activity():
                     student_id=st.id,
                     assigned_by=current_user.id,
                     due_date=due_date,
-                    term=activity_term,
                     is_supplementary=activity_supp
                 ))
             elif existing.status in ('attempts_exhausted', 'completed'):
                 existing.status = 'assigned'
                 existing.assigned_at = datetime.utcnow()
                 existing.due_date = due_date
-                existing.term = activity_term
                 existing.is_supplementary = activity_supp
 
         db.session.commit()
@@ -1416,7 +1407,6 @@ def assign_activity():
             existing.status = 'assigned'
             existing.assigned_at = datetime.utcnow()
             existing.due_date = due_date
-            existing.term = activity_term
             existing.is_supplementary = activity_supp
             db.session.commit()
             log_access(current_user, 'reassign_activity', f'activity_id={activity_id} student_id={student_id}')
@@ -1431,7 +1421,6 @@ def assign_activity():
         student_id=student_id,
         assigned_by=current_user.id,
         due_date=due_date,
-        term=activity_term,
         is_supplementary=activity_supp
     )
     db.session.add(assignment)
@@ -3082,7 +3071,7 @@ def preview_activity(activity_id):
     """Test play a custom activity as teacher without grade tracking"""
     activity = Activity.query.get_or_404(activity_id)
     if activity.engine == 'claw_machine':
-        return render_template('student/claw_machine_game.html', activity_id=activity.id, attempts_today=0, is_preview=True)
+        return render_template('student/claw_machine_game.html', activity=activity, activity_id=activity.id, attempts_today=0, is_preview=True)
     flash("Live preview is only available for Claw Machine activities currently.", "info")
     return redirect(url_for('teacher.game_studio'))
 

@@ -295,7 +295,12 @@ let rawBins = clawConfig.rawBins || [];
 
           <div>
             <label class="form-label text-muted small fw-bold d-lg-none mb-1">Explanation (Spoken aloud by TTS)</label>
-            <input type="text" class="form-control rounded-3" value="${obj.explanation || ''}" oninput="updateObjectField(${idx}, 'explanation', this.value)" placeholder="e.g. Ice has a fixed shape and volume as a solid.">
+            <div class="d-flex align-items-center gap-1">
+              <input type="text" class="form-control rounded-3" value="${obj.explanation || ''}" oninput="updateObjectField(${idx}, 'explanation', this.value)" placeholder="e.g. Ice has a fixed shape and volume as a solid.">
+              <button type="button" class="btn btn-outline-primary btn-sm rounded-3 px-2 py-1 flex-shrink-0" onclick="previewObjectTTS(${idx})" title="Listen to voice explanation">
+                <i class="bi bi-volume-up-fill"></i>
+              </button>
+            </div>
           </div>
 
           <div class="text-end">
@@ -338,6 +343,27 @@ let rawBins = clawConfig.rawBins || [];
       if (val.includes('hard')) return 16;
       return 16;
     }
+
+    window.previewObjectTTS = function(idx) {
+      const obj = objects[idx];
+      if (!obj) return;
+      const targetChute = chutes.find(c => c.id === obj.categoryId);
+      const chuteLabel = targetChute ? targetChute.label : 'target chute';
+      const textToRead = obj.explanation
+        ? `${obj.label || 'Item'}: ${obj.explanation}`
+        : `Correct! ${obj.label || 'This item'} belongs in ${chuteLabel}.`;
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(textToRead);
+        utterance.rate = 0.95;
+        utterance.pitch = 1.05;
+        window.speechSynthesis.speak(utterance);
+        showBuilderToast("Speaking explanation aloud...", "info");
+      } else {
+        showBuilderToast("Speech synthesis not supported in this browser.", "warning");
+      }
+    };
 
     function addObject() {
       const maxAllowed = getMaxAllowedObjects();
@@ -653,13 +679,22 @@ let rawBins = clawConfig.rawBins || [];
         }
       }
 
-      // Assign chute sequential clean IDs
-      chutes[0].id = chutes[0].label.toLowerCase().replace(/[^a-z0-9]/g, '_') || "category_1";
-      chutes[1].id = chutes[1].label.toLowerCase().replace(/[^a-z0-9]/g, '_') || "category_2";
+      // Assign chute sequential clean IDs and map objects to them
+      const oldId0 = chutes[0].id;
+      const oldId1 = chutes[1].id;
+      const newId0 = chutes[0].label.toLowerCase().replace(/[^a-z0-9]/g, '_') || "category_1";
+      const newId1 = chutes[1].label.toLowerCase().replace(/[^a-z0-9]/g, '_') || "category_2";
+      chutes[0].id = newId0;
+      chutes[1].id = newId1;
 
-      // Assign object sequential IDs
+      // Assign object sequential IDs and preserve chute target mapping
       objects.forEach((obj, idx) => {
         obj.id = idx + 1;
+        if (obj.categoryId === oldId0) {
+          obj.categoryId = newId0;
+        } else if (obj.categoryId === oldId1) {
+          obj.categoryId = newId1;
+        }
       });
 
       document.getElementById('binsDataInput').value = JSON.stringify(chutes);

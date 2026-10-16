@@ -14,3 +14,4 @@ instance/
 *.log
 brain/
 scratch/
+reports/

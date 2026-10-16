@@ -38,8 +38,8 @@ function shuffleArray(items) {
   return shuffled;
 }
 
-function normalizeObject(object, index) {
-  const sharedObject = getObjectByLabel(object.label || object.name || '');
+function normalizeObject(object, index, isLivingActivity = true) {
+  const sharedObject = isLivingActivity ? getObjectByLabel(object.label || object.name || '') : null;
   const categoryId = object.categoryId || (sharedObject ? (sharedObject.isLiving ? 'living' : 'non-living') : undefined);
   const fallbackImg = object.label ? `/static/images/${object.label.toLowerCase()}.webp` : '';
 
@@ -138,9 +138,14 @@ async function getSortingActivityConfig(activityId) {
       return getDefaultFallbackConfig();
     }
 
+    const isLivingActivity = bins.some(b => 
+      (b.id || '').toLowerCase().includes('living') || 
+      (b.label || '').toLowerCase().includes('living')
+    );
+
     const normalizedObjects = payload.objects
       .filter(isValidObjectEntry)
-      .map((object, index) => normalizeObject(object, index));
+      .map((object, index) => normalizeObject(object, index, isLivingActivity));
 
     if (normalizedObjects.length === 0) {
       return getDefaultFallbackConfig();

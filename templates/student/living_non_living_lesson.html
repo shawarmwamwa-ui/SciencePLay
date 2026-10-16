@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Living vs Non-Living — Interactive Lesson | SciencePlay</title>
-  <meta name="description" content="SciencePlay Living vs Non-Living Lesson: Interactive slides on classification of living things.">
+  <title>{{ lesson.title if lesson and lesson.title else 'Interactive Lesson' }} | SciencePlay</title>
+  <meta name="description" content="SciencePlay: Interactive science lesson slideshow.">
 
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
@@ -28,8 +28,16 @@
       </a>
       {% endif %}
       <div class="lesson-title-center text-center">
-        <h1 class="mb-0"><i class="bi bi-journal-bookmark-fill me-2 text-primary"></i>{{ lesson.title if lesson else 'Living vs Non-Living' }}</h1>
-        <p class="mb-0 text-dark fw-bold small">{{ lesson.description if lesson and lesson.description else 'Learn how to tell living things from non-living things!' }}</p>
+        <h1 class="mb-0"><i class="bi bi-journal-bookmark-fill me-2 text-primary"></i>{{ lesson.title if lesson and lesson.title else 'Interactive Lesson' }}</h1>
+        <p class="mb-0 text-dark fw-bold small">
+          {% if lesson and lesson.description %}
+            {{ lesson.description }}
+          {% elif lesson and 'living' in (lesson.title|lower) %}
+            Learn how to tell living things from non-living things!
+          {% else %}
+            Explore and learn interactive science concepts!
+          {% endif %}
+        </p>
       </div>
       <div class="lesson-progress-wrap d-flex align-items-center">
         <div class="lesson-progress-bar" role="progressbar" aria-label="Lesson Progress" aria-valuemin="0" aria-valuemax="100">

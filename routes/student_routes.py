@@ -1963,7 +1963,7 @@ def claw_machine():
         flash("You have already used all 3 attempts for today on this activity. Please check back tomorrow!", "warning")
         return redirect(url_for('student.activities'))
 
-    return render_template('student/claw_machine_game.html', activity_id=activity.id, attempts_today=used_today)
+    return render_template('student/claw_machine_game.html', activity=activity, activity_id=activity.id, attempts_today=used_today)
 
 @student_bp.route('/characters_game')
 @student_bp.route('/part_dash')
