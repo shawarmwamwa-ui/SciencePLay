@@ -185,7 +185,9 @@ function initGameCreationModals() {
       const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
       const fileExt = '.' + file.name.split('.').pop().toLowerCase();
       if (!validTypes.includes(file.type) && !['.png', '.jpg', '.jpeg', '.webp'].includes(fileExt)) {
-        alert('Please select a supported image file (.png, .jpg, .webp).');
+        if (window.showScienceplayToast) {
+          window.showScienceplayToast('Please select a supported image file (.png, .jpg, .webp).', 'warning');
+        }
         return;
       }
 
@@ -268,4 +270,22 @@ function initGameCreationModals() {
 
 window.openAssignGameModal = openAssignGameModal;
 window.openPermanentDeleteActivityModal = openPermanentDeleteActivityModal;
+
+function archiveGameWithConfirm(formId, title) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  if (window.scienceplayConfirm) {
+    window.scienceplayConfirm({
+      title: 'Archive Game?',
+      message: `Move activity "${title}" to archive? You can restore it anytime from the Archived tab.`,
+      confirmText: 'Archive',
+      confirmClass: 'btn-danger',
+      iconClass: 'bi-archive-fill text-warning',
+      onConfirm: () => form.submit()
+    });
+  } else {
+    form.submit();
+  }
+}
+window.archiveGameWithConfirm = archiveGameWithConfirm;
 

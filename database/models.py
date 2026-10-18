@@ -48,6 +48,12 @@ class Lesson(BaseModel, ArchivableMixin):
     term = db.Column(db.String(50), default='Term 1')
     is_supplementary = db.Column(db.Boolean, default=False)
 
+    @property
+    def is_draft(self):
+        if self.config and isinstance(self.config, dict):
+            return bool(self.config.get('is_draft', False))
+        return False
+
 class Activity(BaseModel, ArchivableMixin):
     __tablename__ = 'activity'
     id = db.Column(db.Integer, primary_key=True)
@@ -59,6 +65,13 @@ class Activity(BaseModel, ArchivableMixin):
     term = db.Column(db.String(50), default='Term 1')
     is_supplementary = db.Column(db.Boolean, default=False)
     lesson = db.relationship('Lesson', backref='activities')
+
+    @property
+    def is_draft(self):
+        if self.config and isinstance(self.config, dict):
+            return bool(self.config.get('is_draft', False))
+        return False
+
 
 
 class ProgressLog(BaseModel):

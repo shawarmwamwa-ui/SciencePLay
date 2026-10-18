@@ -181,7 +181,11 @@
                                 <i class="bi bi-journal-check me-1"></i>Core Curriculum
                               </span>
                             {% endif %}
-                            {% if card.has_custom_slides %}
+                            {% if card.lesson.is_draft %}
+                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-pencil-fill me-1"></i>Draft
+                              </span>
+                            {% elif card.has_custom_slides %}
                               <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
                                 <i class="bi bi-check-circle-fill me-1"></i>Published
                               </span>
@@ -214,10 +218,17 @@
                             <i class="bi bi-play-circle-fill"></i>
                             <span>Test Play</span>
                           </a>
+                          {% if card.lesson.is_draft %}
+                          <a href="{{ url_for('teacher.lesson_builder', lesson_id=card.lesson.id) }}" class="btn btn-warning text-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
+                            <i class="bi bi-pencil-square"></i>
+                            <span>Continue Editing</span>
+                          </a>
+                          {% else %}
                           <a href="{{ url_for('teacher.lesson_builder', lesson_id=card.lesson.id) }}" class="btn btn-success text-white btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
                             <i class="bi bi-pencil-square"></i>
                             <span>Edit Slides</span>
                           </a>
+                          {% endif %}
                           <form method="POST" action="{{ url_for('teacher.toggle_supplementary', item_type='lesson', item_id=card.lesson.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm {% if card.is_supplementary %}btn-warning text-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-2.5 fw-bold shadow-sm d-flex align-items-center gap-1" title="Toggle between Core Curriculum and Supplementary / Remedial">
@@ -225,15 +236,17 @@
                               <span>{% if card.is_supplementary %}Supplementary{% else %}Core{% endif %}</span>
                             </button>
                           </form>
+                          {% if not card.lesson.is_draft %}
                           <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm"
                             onclick="openAssignLessonModal('{{ card.lesson.id }}', '{{ card.title|escape }}')" title="Assign this lesson directly to students">
                             <i class="bi bi-journal-plus"></i>
                             <span>Assign</span>
                           </button>
+                          {% endif %}
                           {% if card.has_custom_slides and card.lesson.id not in [1, 2, 3, 4, 5] %}
-                          <form method="POST" action="{{ url_for('teacher.delete_lesson', lesson_id=card.lesson.id) }}" onsubmit="return confirm('Archive lesson \'{{ card.title }}\'?');" class="d-inline">
+                          <form method="POST" action="{{ url_for('teacher.delete_lesson', lesson_id=card.lesson.id) }}" class="d-inline" id="archiveLessonForm_{{ card.lesson.id }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Lesson">
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Lesson" onclick="archiveLessonWithConfirm('archiveLessonForm_{{ card.lesson.id }}', '{{ card.title|escape }}')">
                               <i class="bi bi-trash3"></i>
                             </button>
                           </form>

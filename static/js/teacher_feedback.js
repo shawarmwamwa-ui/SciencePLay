@@ -138,7 +138,9 @@ window.saveTeacherFeedback = async function (attemptId) {
     console.error(err);
     saveBtn.disabled = false;
     saveBtn.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Retry';
-    alert('Could not save note. Please try again.');
+    if (window.showScienceplayToast) {
+      window.showScienceplayToast('Could not save note. Please try again.', 'danger');
+    }
   }
 };
 

@@ -346,8 +346,8 @@ body.arcade-page {
   --bin-main: var(--bin-color, var(--living-a));
   --bin-dark: var(--bin-border-color, var(--living-b));
   flex: 1 1 0;
-  min-width: clamp(65px, 7vw, 95px);
-  max-width: clamp(90px, 11vw, 130px);
+  min-width: clamp(48px, 5.5vw, 95px);
+  max-width: clamp(70px, 9vw, 130px);
   min-height: 0;
   padding: 6px 4px;
   display: flex;

@@ -4,7 +4,7 @@ const getCsrfToken = () => clawConfig.csrfToken || document.querySelector('input
 let rawBins = clawConfig.rawBins || [];
 
 let chutes = Array.isArray(rawBins) && rawBins.length >= 2
-  ? rawBins.slice(0, 4)
+  ? rawBins.slice(0, 6)
   : [
       {"id": "category_1", "label": "", "icon": "📦", "color": "#3b82f6"},
       {"id": "category_2", "label": "", "icon": "⭐", "color": "#10b981"}
@@ -132,12 +132,12 @@ const TOPIC_PRESETS = {
     }
 
     window.addChute = function() {
-      if (chutes.length >= 4) {
-        showBuilderToast("Maximum 4 category chutes supported for the arcade cabinet.", "warning");
+      if (chutes.length >= 6) {
+        showBuilderToast("Maximum 6 category chutes supported for the arcade cabinet.", "warning");
         return;
       }
-      const defaultColors = ['#4ade80', '#fb923c', '#60a5fa', '#a855f7'];
-      const defaultIcons = ['🌱', '🪨', '💧', '💨'];
+      const defaultColors = ['#4ade80', '#fb923c', '#60a5fa', '#a855f7', '#f43f5e', '#06b6d4'];
+      const defaultIcons = ['🌱', '🪨', '💧', '💨', '⚡', '📦'];
       const nextIdx = chutes.length;
       chutes.push({
         id: `category_${nextIdx + 1}`,
@@ -168,7 +168,7 @@ const TOPIC_PRESETS = {
       showBuilderToast("Chute removed. Objects re-mapped to the first chute.", "info");
     };
 
-    // RENDER CHUTES (2 TO 4 CHUTES)
+    // RENDER CHUTES (2 TO 6 CHUTES)
     function renderChutes() {
       const container = document.getElementById('chutesContainer');
       if (!container) return;
@@ -179,8 +179,8 @@ const TOPIC_PRESETS = {
           { id: "category_1", label: "Left Category", icon: "🌱", color: "#4ade80" },
           { id: "category_2", label: "Right Category", icon: "🪨", color: "#fb923c" }
         ];
-      } else if (chutes.length > 4) {
-        chutes = chutes.slice(0, 4);
+      } else if (chutes.length > 6) {
+        chutes = chutes.slice(0, 6);
       }
 
       const countBadge = document.getElementById('chutesCountBadge');
@@ -189,10 +189,10 @@ const TOPIC_PRESETS = {
       }
       const addBtn = document.getElementById('btnAddChute');
       if (addBtn) {
-        addBtn.style.display = chutes.length >= 4 ? 'none' : 'inline-flex';
+        addBtn.style.display = chutes.length >= 6 ? 'none' : 'inline-flex';
       }
 
-      const colClass = chutes.length === 2 ? 'col-12 col-md-6' : (chutes.length === 3 ? 'col-12 col-md-4' : 'col-12 col-md-6 col-lg-3');
+      const colClass = chutes.length === 2 ? 'col-12 col-md-6' : (chutes.length === 3 ? 'col-12 col-md-4' : (chutes.length === 4 ? 'col-12 col-md-6 col-lg-3' : 'col-12 col-sm-6 col-lg-4'));
 
       chutes.forEach((chute, idx) => {
         const col = document.createElement('div');
@@ -568,25 +568,38 @@ const TOPIC_PRESETS = {
 
     async function deleteClawLibraryAsset(event, assetId) {
       event.stopPropagation();
-      if (!confirm('Remove this illustration from your permanent library?')) return;
+      const doDelete = async () => {
+        const formData = new FormData();
+        formData.append('csrf_token', getCsrfToken());
 
-      const formData = new FormData();
-      formData.append('csrf_token', getCsrfToken());
-
-      try {
-        const res = await fetch(`/teacher/api/assets/${assetId}/delete`, {
-          method: 'POST',
-          body: formData
-        });
-        const result = await res.json();
-        if (result.status === 'success') {
-          showBuilderToast('Asset removed from library', 'info');
-          await loadClawTeacherAssets();
-        } else {
-          showBuilderToast(result.message || 'Could not delete asset', 'danger');
+        try {
+          const res = await fetch(`/teacher/api/assets/${assetId}/delete`, {
+            method: 'POST',
+            body: formData
+          });
+          const result = await res.json();
+          if (result.status === 'success') {
+            showBuilderToast('Asset removed from library', 'info');
+            await loadClawTeacherAssets();
+          } else {
+            showBuilderToast(result.message || 'Could not delete asset', 'danger');
+          }
+        } catch (err) {
+          showBuilderToast('Failed communicating with server', 'danger');
         }
-      } catch (err) {
-        showBuilderToast('Failed communicating with server', 'danger');
+      };
+
+      if (window.scienceplayConfirm) {
+        window.scienceplayConfirm({
+          title: 'Delete Asset?',
+          message: 'Remove this illustration from your permanent library?',
+          confirmText: 'Delete',
+          confirmClass: 'btn-danger',
+          iconClass: 'bi-trash3-fill text-danger',
+          onConfirm: doDelete
+        });
+      } else {
+        doDelete();
       }
     }
 
@@ -691,62 +704,85 @@ const TOPIC_PRESETS = {
     }
 
     // FORM SUBMISSION & VALIDATION
-    function submitBuilderForm() {
-      const title = document.getElementById('activityTitleInput').value.trim();
+    function submitBuilderForm(isDraft = false) {
+      const isDraftInput = document.getElementById('isDraftInput');
+      if (isDraftInput) {
+        isDraftInput.value = isDraft ? '1' : '0';
+      }
+
+      const titleInput = document.getElementById('activityTitleInput');
+      let title = titleInput.value.trim();
       if (!title) {
-        showBuilderToast("Please enter an activity title.", "warning");
-        document.getElementById('activityTitleInput').focus();
-        return;
+        if (isDraft) {
+          title = 'Untitled Sorting Game Draft';
+          titleInput.value = title;
+        } else {
+          showBuilderToast("Please enter an activity title.", "warning");
+          titleInput.focus();
+          return;
+        }
       }
 
-      if (chutes.length !== 2) {
-        showBuilderToast("The claw machine sorting game requires exactly 2 chutes (Left and Right).", "danger");
-        return;
-      }
-
-      // Ensure at least 2 chutes and at most 4 chutes have non-empty labels
+      // Check chutes count (2 to 6 chutes)
       if (chutes.length < 2) {
-        showBuilderToast("Please configure at least 2 sorting chutes.", "warning");
+        if (isDraft) {
+          chutes.push({
+            id: `category_${chutes.length + 1}`,
+            label: `Chute ${chutes.length + 1}`,
+            icon: '📦',
+            color: '#3b82f6'
+          });
+        } else {
+          showBuilderToast("Please configure at least 2 sorting chutes.", "warning");
+          return;
+        }
+      }
+
+      if (chutes.length > 6) {
+        showBuilderToast("A maximum of 6 chutes is supported.", "warning");
         return;
       }
-      if (chutes.length > 4) {
-        showBuilderToast("A maximum of 4 chutes is supported.", "warning");
-        return;
-      }
+
       for (let i = 0; i < chutes.length; i++) {
         if (!chutes[i].label || !chutes[i].label.trim()) {
-          showBuilderToast(`Please provide a label for Chute ${i + 1}.`, "warning");
-          return;
+          if (isDraft) {
+            chutes[i].label = `Chute ${i + 1}`;
+          } else {
+            showBuilderToast(`Please provide a label for Chute ${i + 1}.`, "warning");
+            return;
+          }
         }
       }
 
-      if (objects.length < 2) {
-        showBuilderToast("Please add at least 2 objects to sort.", "warning");
-        return;
-      }
-
-      // Check object labels
-      for (let i = 0; i < objects.length; i++) {
-        if (!objects[i].label || !objects[i].label.trim()) {
-          showBuilderToast(`Object #${i + 1} is missing a label.`, "warning");
+      if (!isDraft) {
+        if (objects.length < 2) {
+          showBuilderToast("Please add at least 2 objects to sort.", "warning");
           return;
         }
-      }
 
-      // Check difficulty limits
-      const maxAllowed = getMaxAllowedObjects();
-      if (objects.length > maxAllowed) {
-        const diffName = document.getElementById('difficultyLevelInput').value;
-        showBuilderToast(`You have ${objects.length} items, which exceeds the limit of ${maxAllowed} items for ${diffName}. Please delete ${objects.length - maxAllowed} item(s) or select a higher difficulty tier.`, "danger");
-        return;
-      }
+        // Check object labels
+        for (let i = 0; i < objects.length; i++) {
+          if (!objects[i].label || !objects[i].label.trim()) {
+            showBuilderToast(`Object #${i + 1} is missing a label.`, "warning");
+            return;
+          }
+        }
 
-      // Check that every object maps to a valid chute
-      const validCategoryIds = new Set(chutes.map(c => c.id));
-      for (let i = 0; i < objects.length; i++) {
-        if (!validCategoryIds.has(objects[i].categoryId)) {
-          showBuilderToast(`Object "${objects[i].label}" is not assigned to a valid chute. Every item must have a valid destination chute.`, "danger");
+        // Check difficulty limits
+        const maxAllowed = getMaxAllowedObjects();
+        if (objects.length > maxAllowed) {
+          const diffName = document.getElementById('difficultyLevelInput').value;
+          showBuilderToast(`You have ${objects.length} items, which exceeds the limit of ${maxAllowed} items for ${diffName}. Please delete ${objects.length - maxAllowed} item(s) or select a higher difficulty tier.`, "danger");
           return;
+        }
+
+        // Check that every object maps to a valid chute
+        const validCategoryIds = new Set(chutes.map(c => c.id));
+        for (let i = 0; i < objects.length; i++) {
+          if (!validCategoryIds.has(objects[i].categoryId)) {
+            showBuilderToast(`Object "${objects[i].label}" is not assigned to a valid chute. Every item must have a valid destination chute.`, "danger");
+            return;
+          }
         }
       }
 
@@ -766,6 +802,9 @@ const TOPIC_PRESETS = {
       // Assign object sequential IDs and preserve chute target mapping
       objects.forEach((obj, idx) => {
         obj.id = idx + 1;
+        if (!obj.label || !obj.label.trim()) {
+          obj.label = `Object ${idx + 1}`;
+        }
         if (idMap[obj.categoryId]) {
           obj.categoryId = idMap[obj.categoryId];
         } else if (chutes[0]) {
@@ -779,7 +818,8 @@ const TOPIC_PRESETS = {
       document.getElementById('activityBuilderForm').submit();
     }
 
-    document.getElementById('btn-save-activity-bottom')?.addEventListener('click', submitBuilderForm);
+    document.getElementById('btn-save-activity-bottom')?.addEventListener('click', () => submitBuilderForm(false));
+    document.getElementById('btn-save-draft')?.addEventListener('click', () => submitBuilderForm(true));
 
     // Initial render & listeners
     document.addEventListener('DOMContentLoaded', () => {

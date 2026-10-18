@@ -225,7 +225,11 @@
                                 <i class="bi bi-controller me-1"></i>Core Curriculum
                               </span>
                             {% endif %}
-                            {% if card.is_default %}
+                            {% if card.activity.is_draft %}
+                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-pencil-fill me-1"></i>Draft
+                              </span>
+                            {% elif card.is_default %}
                               <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">Default Game</span>
                             {% else %}
                               <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
@@ -311,16 +315,24 @@
                             <i class="bi bi-play-circle-fill"></i>
                             <span>Test Play</span>
                           </a>
-                          {% if card.engine == 'find_the_part' %}
-                          <a href="{{ url_for('teacher.find_the_part_builder', activity_id=card.activity.id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
-                            <i class="bi bi-pencil-square"></i>
-                            <span>Edit</span>
-                          </a>
+                          {% if card.activity.is_draft %}
+                            {% set edit_url = url_for('teacher.find_the_part_builder', activity_id=card.activity.id) if card.engine == 'find_the_part' else url_for('teacher.claw_machine_builder', activity_id=card.activity.id) %}
+                            <a href="{{ edit_url }}" class="btn btn-warning text-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
+                              <i class="bi bi-pencil-square"></i>
+                              <span>Continue Editing</span>
+                            </a>
                           {% else %}
-                          <a href="{{ url_for('teacher.claw_machine_builder', activity_id=card.activity.id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
-                            <i class="bi bi-pencil-square"></i>
-                            <span>Edit</span>
-                          </a>
+                            {% if card.engine == 'find_the_part' %}
+                            <a href="{{ url_for('teacher.find_the_part_builder', activity_id=card.activity.id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
+                              <i class="bi bi-pencil-square"></i>
+                              <span>Edit</span>
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('teacher.claw_machine_builder', activity_id=card.activity.id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
+                              <i class="bi bi-pencil-square"></i>
+                              <span>Edit</span>
+                            </a>
+                            {% endif %}
                           {% endif %}
                           <form method="POST" action="{{ url_for('teacher.toggle_supplementary', item_type='game', item_id=card.activity.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -329,15 +341,17 @@
                               <span>{% if card.is_supplementary %}Supplementary{% else %}Core{% endif %}</span>
                             </button>
                           </form>
+                          {% if not card.activity.is_draft %}
                           <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm"
                             onclick="openAssignGameModal('{{ card.activity.id }}', '{{ card.title|escape }}')" title="Assign this game directly to students">
                             <i class="bi bi-journal-plus"></i>
                             <span>Assign</span>
                           </button>
+                          {% endif %}
                           {% if not card.is_default %}
-                          <form method="POST" action="{{ url_for('teacher.delete_activity', activity_id=card.activity.id) }}" onsubmit="return confirm('Move activity \'{{ card.title }}\' to archive?');" class="d-inline">
+                          <form method="POST" action="{{ url_for('teacher.delete_activity', activity_id=card.activity.id) }}" class="d-inline" id="archiveGameForm_{{ card.activity.id }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Activity">
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Activity" onclick="archiveGameWithConfirm('archiveGameForm_{{ card.activity.id }}', '{{ card.title|escape }}')">
                               <i class="bi bi-trash3"></i>
                             </button>
                           </form>

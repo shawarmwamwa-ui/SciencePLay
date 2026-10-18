@@ -3058,15 +3058,15 @@ def save_claw_machine():
         flash(f"Invalid activity configuration: {e}", "danger")
         return redirect(url_for('teacher.content_management'))
 
-    # Support 2 to 4 chutes for flexible multi-category sorting (e.g. Solid, Liquid, Gas)
+    # Support 2 to 6 chutes for flexible multi-category sorting (e.g. Solid, Liquid, Gas, Landforms)
     if len(bins) < 2:
         bins = [
             {"id": "category_1", "label": "Chute 1", "icon": "📦", "color": "#60a5fa"},
             {"id": "category_2", "label": "Chute 2", "icon": "📦", "color": "#f59e0b"}
         ]
-    elif len(bins) > 4:
-        bins = bins[:4]
-        flash("The Claw Machine sorting game supports up to 4 category chutes.", "info")
+    elif len(bins) > 6:
+        bins = bins[:6]
+        flash("The Claw Machine sorting game supports up to 6 category chutes.", "info")
 
     # Enforce item limits based on difficulty level: Easy (max 8), Medium (max 12), Hard (max 16)
     diff_lower = difficulty.lower()
@@ -3110,12 +3110,15 @@ def save_claw_machine():
     if rejected_files:
         flash(f"Note: Some files could not be uploaded: {', '.join(rejected_files)}", "warning")
 
+    is_draft = (request.form.get('is_draft') in ['1', 'true', 'on'])
+
     config_payload = {
         "title": title,
         "instructions": instructions,
         "difficulty": difficulty,
         "round_size": round_size,
         "is_supplementary": is_supplementary,
+        "is_draft": is_draft,
         "term": term,
         "bins": bins,
         "objects": objects
@@ -3133,7 +3136,10 @@ def save_claw_machine():
         activity.lesson_id = lesson_id
         activity.config = config_payload
         role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
-        flash(f"{role_label} game '{title}' updated successfully!", "success")
+        if is_draft:
+            flash(f"Sorting Claw game '{title}' saved as draft. You can continue editing anytime.", "info")
+        else:
+            flash(f"{role_label} game '{title}' updated successfully!", "success")
     else:
         activity = Activity(
             lesson_id=lesson_id,
@@ -3146,10 +3152,13 @@ def save_claw_machine():
         )
         db.session.add(activity)
         role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
-        flash(f"New {role_label} custom game '{title}' created successfully!", "success")
+        if is_draft:
+            flash(f"New Sorting Claw game '{title}' saved as draft. You can continue editing anytime.", "info")
+        else:
+            flash(f"New {role_label} custom game '{title}' created successfully!", "success")
 
     db.session.commit()
-    log_access(current_user, 'save_custom_activity', f'activity_id={activity.id} title={title}')
+    log_access(current_user, 'save_custom_activity', f'activity_id={activity.id} title={title} is_draft={is_draft}')
     return redirect(url_for('teacher.game_studio'))
 
 
@@ -3179,8 +3188,8 @@ def find_the_part_builder(activity_id=None):
                         "id": "round_1",
                         "title": "Round 1 — Custom Diagram",
                         "subtitle": "Match each label to the correct pointer pin.",
-                        "illustrationSrc": "/static/images/ftp_earth_layers.jpg",
-                        "illustrationAlt": "Custom Diagram",
+                        "illustrationSrc": "",
+                        "illustrationAlt": "",
                         "illustrationBg": "#ffffff",
                         "zones": [],
                         "wordBank": [],
@@ -3282,8 +3291,8 @@ def find_the_part_builder(activity_id=None):
                         "id": "round_1",
                         "title": "Round 1 — Custom Diagram",
                         "subtitle": "Match each label to the correct pointer pin.",
-                        "illustrationSrc": "/static/images/ftp_earth_layers.jpg",
-                        "illustrationAlt": "Custom Diagram",
+                        "illustrationSrc": "",
+                        "illustrationAlt": "",
                         "illustrationBg": "#ffffff",
                         "zones": [],
                         "wordBank": [],
@@ -3331,12 +3340,15 @@ def save_find_the_part():
     lesson_id = int(lesson_id_raw) if lesson_id_raw and str(lesson_id_raw).strip().isdigit() else None
 
     is_supplementary = (str(request.form.get('is_supplementary', '')).strip().lower() in ['1', 'true', 'on'])
+    is_draft = (str(request.form.get('is_draft', '')).strip().lower() in ['1', 'true', 'on'])
     term = request.form.get('term', 'Term 2').strip() or 'Term 2'
 
     rounds_json = request.form.get('rounds_data', '[]')
     try:
         rounds = json.loads(rounds_json)
-        if not isinstance(rounds, list) or len(rounds) == 0:
+        if not isinstance(rounds, list):
+            rounds = []
+        if not is_draft and len(rounds) == 0:
             raise ValueError("At least one round with a diagram is required.")
     except Exception as e:
         flash(f"Invalid activity configuration: {e}", "danger")
@@ -3381,6 +3393,7 @@ def save_find_the_part():
         "instructions": instructions,
         "difficulty": difficulty,
         "points": points,
+        "is_draft": is_draft,
         "rounds": rounds
     }
 
@@ -3393,7 +3406,10 @@ def save_find_the_part():
         activity.is_supplementary = is_supplementary
         activity.lesson_id = lesson_id
         activity.config = config_payload
-        flash(f"Diagram Match activity '{title}' updated successfully!", "success")
+        if is_draft:
+            flash(f"Diagram Match activity '{title}' saved as draft. You can continue editing anytime.", "info")
+        else:
+            flash(f"Diagram Match activity '{title}' updated successfully!", "success")
     else:
         activity = Activity(
             lesson_id=lesson_id,
@@ -3406,10 +3422,13 @@ def save_find_the_part():
         )
         db.session.add(activity)
         role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
-        flash(f"New {role_label} Diagram Match game '{title}' created successfully!", "success")
+        if is_draft:
+            flash(f"New Diagram Match game '{title}' saved as draft. You can continue editing anytime.", "info")
+        else:
+            flash(f"New {role_label} Diagram Match game '{title}' created successfully!", "success")
 
     db.session.commit()
-    log_access(current_user, 'save_custom_activity', f'activity_id={activity.id} title={title}')
+    log_access(current_user, 'save_custom_activity', f'activity_id={activity.id} title={title} is_draft={is_draft}')
     return redirect(url_for('teacher.game_studio'))
 
 
@@ -4377,11 +4396,14 @@ def save_lesson():
                     if isinstance(opt, dict) and 'icon' in opt:
                         opt['icon'] = persist_base64_data_url(opt['icon'])
 
+    is_draft = (str(request.form.get('is_draft', '')).strip().lower() in ['1', 'true', 'on'])
+
     config_payload = {
         "title": title,
         "description": description,
         "grade_level": grade_level,
         "is_supplementary": is_supplementary,
+        "is_draft": is_draft,
         "term": term,
         "slides": slides
     }
@@ -4399,8 +4421,11 @@ def save_lesson():
         db.session.add(new_lesson)
         db.session.commit()
         role_label = "Supplementary / Remedial" if is_supplementary else "Core Curriculum"
-        flash(f"New {role_label} lesson '{title}' created successfully! It is now available to assign.", "success")
-        log_access(current_user, 'create_configured_lesson', f'lesson_id={new_lesson.id} title={title} is_supplementary={is_supplementary}')
+        if is_draft:
+            flash(f"Lesson '{title}' saved as draft. You can continue editing anytime from Lessons & Assignments.", "info")
+        else:
+            flash(f"New {role_label} lesson '{title}' created successfully! It is now available to assign.", "success")
+        log_access(current_user, 'create_configured_lesson', f'lesson_id={new_lesson.id} title={title} is_draft={is_draft}')
         return redirect(url_for('teacher.lesson_studio'))
     else:
         lesson = Lesson.query.get(lesson_id)
@@ -4414,8 +4439,11 @@ def save_lesson():
         lesson.is_supplementary = is_supplementary
         db.session.commit()
         role_label = "Supplementary / Remedial" if is_supplementary else "Core Curriculum"
-        flash(f"{role_label} lesson '{title}' updated successfully!", "success")
-        log_access(current_user, 'save_custom_lesson', f'lesson_id={lesson.id} title={title} is_supplementary={is_supplementary}')
+        if is_draft:
+            flash(f"Lesson '{title}' saved as draft. You can continue editing anytime.", "info")
+        else:
+            flash(f"{role_label} lesson '{title}' updated successfully!", "success")
+        log_access(current_user, 'save_custom_lesson', f'lesson_id={lesson.id} title={title} is_draft={is_draft}')
         return redirect(url_for('teacher.lesson_studio'))
 
 

@@ -796,3 +796,122 @@ if (document.readyState === 'loading') {
   });
 })();
 
+// ══════════════════════════════════════════════════════════════════════
+// Universal In-App Confirmation Modal & Toast (Replacing browser alert/confirm)
+// ══════════════════════════════════════════════════════════════════════
+window.scienceplayConfirm = function({
+  title = "Are you sure?",
+  message = "This action cannot be undone.",
+  confirmText = "Delete",
+  confirmClass = "btn-danger",
+  iconClass = "bi-trash3-fill text-danger",
+  iconBgClass = "bg-danger-subtle",
+  onConfirm = () => {}
+} = {}) {
+  let modalEl = document.getElementById('scienceplayConfirmModal');
+  if (!modalEl) {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `
+      <div class="modal fade" id="scienceplayConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 1090;">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+          <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-body p-4 text-center">
+              <div id="spConfirmIconWrap" class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 58px; height: 58px; font-size: 1.65rem;">
+                <i id="spConfirmIcon" class="bi"></i>
+              </div>
+              <h5 class="fw-bold text-dark mb-1.5 fs-5" id="spConfirmTitle">Are you sure?</h5>
+              <p class="text-secondary mb-4" id="spConfirmMessage" style="line-height: 1.55; font-size: 14.5px;"></p>
+              <div class="d-flex justify-content-center gap-2">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-3.5 py-2 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn rounded-pill px-4 py-2 fw-bold shadow-sm" id="spConfirmActionBtn">Confirm</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(wrapper.firstElementChild);
+    modalEl = document.getElementById('scienceplayConfirmModal');
+  }
+
+  document.getElementById('spConfirmTitle').textContent = title;
+  document.getElementById('spConfirmMessage').textContent = message;
+
+  const iconWrap = document.getElementById('spConfirmIconWrap');
+  if (iconWrap) iconWrap.className = `rounded-circle d-inline-flex align-items-center justify-content-center mb-3 ${iconBgClass}`;
+
+  const icon = document.getElementById('spConfirmIcon');
+  if (icon) icon.className = `bi ${iconClass}`;
+
+  const actionBtn = document.getElementById('spConfirmActionBtn');
+  actionBtn.className = `btn rounded-pill px-4 py-2 fw-bold shadow-sm ${confirmClass}`;
+  actionBtn.textContent = confirmText;
+
+  const bsModal = window.bootstrap ? window.bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+
+  const newActionBtn = actionBtn.cloneNode(true);
+  actionBtn.parentNode.replaceChild(newActionBtn, actionBtn);
+
+  newActionBtn.addEventListener('click', () => {
+    if (bsModal) bsModal.hide();
+    if (typeof onConfirm === 'function') {
+      onConfirm();
+    }
+  });
+
+  if (bsModal) {
+    bsModal.show();
+  } else {
+    if (confirm(`${title}\n\n${message}`)) {
+      if (typeof onConfirm === 'function') onConfirm();
+    }
+  }
+};
+
+window.showScienceplayToast = function(message, type = 'info') {
+  let toastContainer = document.getElementById('spToastContainer');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'spToastContainer';
+    toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+    toastContainer.style.zIndex = '1095';
+    document.body.appendChild(toastContainer);
+  }
+
+  const bgGradient = type === 'success'
+    ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
+    : type === 'warning'
+    ? 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)'
+    : (type === 'danger' || type === 'error')
+    ? 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)'
+    : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)';
+
+  const icon = type === 'success' ? '✨' : type === 'warning' ? '⚠️' : (type === 'danger' || type === 'error') ? '⛔' : 'ℹ️';
+
+  const toastEl = document.createElement('div');
+  toastEl.className = 'toast align-items-center text-white border-0 shadow-lg rounded-4 overflow-hidden mb-2';
+  toastEl.role = 'alert';
+  toastEl.ariaLive = 'assertive';
+  toastEl.ariaAtomic = 'true';
+  toastEl.style.background = bgGradient;
+  toastEl.innerHTML = `
+    <div class="d-flex align-items-center py-2 px-3">
+      <span class="fs-5 me-2">${icon}</span>
+      <div class="toast-body fw-bold py-1 px-0 flex-grow-1" style="font-size: 14px;">
+        ${message}
+      </div>
+      <button type="button" class="btn-close btn-close-white ms-2 me-0" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  `;
+
+  toastContainer.appendChild(toastEl);
+  if (window.bootstrap && window.bootstrap.Toast) {
+    const bsToast = new window.bootstrap.Toast(toastEl, { delay: 4000 });
+    bsToast.show();
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+  } else {
+    setTimeout(() => toastEl.remove(), 4000);
+  }
+};
+
+

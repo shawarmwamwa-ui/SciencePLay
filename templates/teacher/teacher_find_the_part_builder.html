@@ -109,6 +109,7 @@
                 <input type="hidden" name="activity_id" value="{{ activity.id }}">
               {% endif %}
               <input type="hidden" name="rounds_data" id="roundsDataInput" value="">
+              <input type="hidden" name="is_draft" id="isDraftInput" value="0">
 
               <!-- STEP 1: Overview & Curriculum Links -->
               <div class="builder-step-card mb-4">
@@ -244,6 +245,17 @@
                     <div class="col-12 col-xl-7">
                       <div class="interactive-diagram-container rounded-4 border overflow-hidden position-relative" id="diagramCanvasContainer">
                         <div class="diagram-canvas-wrap position-relative" id="diagramCanvasWrap">
+                          <div id="diagramEmptyPlaceholder" class="p-5 text-center d-flex flex-column align-items-center justify-content-center bg-light rounded-4 w-100" style="min-height: 380px; display: none;">
+                            <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-3" style="width: 68px; height: 68px; font-size: 2rem;">
+                              <i class="bi bi-cloud-arrow-up-fill"></i>
+                            </div>
+                            <h4 class="h5 fw-bold text-dark mb-1">No Diagram Illustration Selected</h4>
+                            <p class="text-muted small mb-3" style="max-width: 380px;">Upload your own science diagram or select a preset illustration from the toolbar above to drop target pins and labels.</p>
+                            <label class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="cursor: pointer;">
+                              <i class="bi bi-upload me-1"></i>Upload Diagram Image
+                              <input type="file" class="d-none" id="emptyPlaceholderFileInput" accept="image/png,image/jpeg,image/webp">
+                            </label>
+                          </div>
                           <img src="/static/images/ftp_earth_layers.jpg" alt="Science Diagram" id="diagramImage" class="img-fluid w-100 select-none">
                           <svg class="diagram-svg-overlay position-absolute top-0 start-0 w-100 h-100" id="diagramSvgOverlay" viewBox="0 0 100 100" preserveAspectRatio="none">
                             <!-- SVG leader lines rendered here -->
@@ -328,6 +340,10 @@
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
+                  <button type="button" class="btn btn-outline-primary rounded-pill px-4 py-2.5 fw-bold d-flex align-items-center gap-2" id="btnSaveDraft">
+                    <i class="bi bi-bookmark-check"></i>
+                    <span>Save as Draft</span>
+                  </button>
                   <button type="submit" class="btn btn-primary rounded-pill px-5 py-2.5 fw-bold shadow-sm d-flex align-items-center gap-2" id="btnSaveActivity">
                     <i class="bi bi-check-circle-fill"></i>
                     <span>Save &amp; Publish Diagram Activity</span>
@@ -348,7 +364,8 @@
     window.initialDiagramConfig = {{ (config|tojson) if config else 'null' }};
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script defer src="{{ url_for('static', filename='js/teacher_find_the_part_builder.js', v='20261018_1') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher_find_the_part_builder.js', v='20261018_2') }}"></script>
 </body>
 
 </html>

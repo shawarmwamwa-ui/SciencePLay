@@ -949,11 +949,17 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
       if (target < 0) return;
       if (target >= slides.length) {
         // Reached the final slide and clicked "Finish"
-        if (confirm("🎉 You've reached the end of the lesson! Would you like to Save & Publish this lesson now?")) {
-          submitLessonForm();
+        if (window.scienceplayConfirm) {
+          window.scienceplayConfirm({
+            title: "Lesson Complete!",
+            message: "🎉 You've reached the end of the lesson! Would you like to Save & Publish this lesson now?",
+            confirmText: "Save & Publish",
+            confirmClass: "btn-primary",
+            iconClass: "bi-trophy-fill text-warning",
+            onConfirm: () => submitLessonForm(false)
+          });
         } else {
-          showBuilderToast('Lesson preview complete. Returning to slide 1.', 'info');
-          selectSlide(0);
+          submitLessonForm(false);
         }
         return;
       }
@@ -1100,25 +1106,38 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
 
     async function deleteTeacherLibraryAsset(event, assetId, type) {
       event.stopPropagation();
-      if (!confirm('Remove this asset from your permanent library?')) return;
+      const doDelete = async () => {
+        const formData = new FormData();
+        formData.append('csrf_token', getCsrfToken());
 
-      const formData = new FormData();
-      formData.append('csrf_token', getCsrfToken());
-
-      try {
-        const res = await fetch(`/teacher/api/assets/${assetId}/delete`, {
-          method: 'POST',
-          body: formData
-        });
-        const result = await res.json();
-        if (result.status === 'success') {
-          showBuilderToast('Asset removed from library', 'info');
-          await loadTeacherAssets(type);
-        } else {
-          showBuilderToast(result.message || 'Could not delete asset', 'danger');
+        try {
+          const res = await fetch(`/teacher/api/assets/${assetId}/delete`, {
+            method: 'POST',
+            body: formData
+          });
+          const result = await res.json();
+          if (result.status === 'success') {
+            showBuilderToast('Asset removed from library', 'info');
+            await loadTeacherAssets(type);
+          } else {
+            showBuilderToast(result.message || 'Could not delete asset', 'danger');
+          }
+        } catch (err) {
+          showBuilderToast('Failed communicating with server', 'danger');
         }
-      } catch (err) {
-        showBuilderToast('Failed communicating with server', 'danger');
+      };
+
+      if (window.scienceplayConfirm) {
+        window.scienceplayConfirm({
+          title: "Delete Asset?",
+          message: "Remove this asset from your permanent library?",
+          confirmText: "Delete",
+          confirmClass: "btn-danger",
+          iconClass: "bi-trash3-fill text-danger",
+          onConfirm: doDelete
+        });
+      } else {
+        doDelete();
       }
     }
 
@@ -1336,15 +1355,26 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
     }
 
     // Form Submission
-    function submitLessonForm() {
-      const title = document.getElementById('lessonTitleInput').value.trim();
-      if (!title) {
-        showBuilderToast("Please enter a lesson title.", "warning");
-        document.getElementById('lessonTitleInput').focus();
-        return;
+    function submitLessonForm(isDraft = false) {
+      const isDraftInput = document.getElementById('isDraftInput');
+      if (isDraftInput) {
+        isDraftInput.value = isDraft ? '1' : '0';
       }
 
-      if (slides.length === 0) {
+      const titleInput = document.getElementById('lessonTitleInput');
+      let title = titleInput.value.trim();
+      if (!title) {
+        if (isDraft) {
+          title = 'Untitled Lesson Draft';
+          titleInput.value = title;
+        } else {
+          showBuilderToast("Please enter a lesson title.", "warning");
+          titleInput.focus();
+          return;
+        }
+      }
+
+      if (!isDraft && slides.length === 0) {
         showBuilderToast("Please add at least 1 slide to this lesson.", "warning");
         return;
       }
@@ -1353,7 +1383,8 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
       document.getElementById('lessonBuilderForm').submit();
     }
 
-    document.getElementById('btn-save-lesson')?.addEventListener('click', submitLessonForm);
+    document.getElementById('btn-save-lesson')?.addEventListener('click', () => submitLessonForm(false));
+    document.getElementById('btn-save-draft')?.addEventListener('click', () => submitLessonForm(true));
 
     document.addEventListener('DOMContentLoaded', () => {
       if (new URLSearchParams(location.search).get('preset') === 'basic_needs' && LESSON_PRESETS.basic_needs) {

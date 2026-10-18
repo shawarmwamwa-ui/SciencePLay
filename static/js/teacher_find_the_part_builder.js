@@ -11,31 +11,14 @@
   let rounds = Array.isArray(config.rounds) && config.rounds.length > 0 ? JSON.parse(JSON.stringify(config.rounds)) : [
     {
       id: 'round_1',
-      title: 'Round 1 — Layers of the Earth',
-      subtitle: 'Match each label to the correct layer of Planet Earth.',
-      illustrationSrc: '/static/images/ftp_earth_layers.jpg',
-      illustrationAlt: 'Earth Diagram',
+      title: 'Round 1',
+      subtitle: 'Match each label to the diagram.',
+      illustrationSrc: '',
+      illustrationAlt: '',
       illustrationBg: '#ffffff',
-      zones: [
-        { id: 'crust', label: 'Crust', number: 1, pinX: 50, pinY: 13, slotX: 84, slotY: 14, color: '#fef08a' },
-        { id: 'mantle', label: 'Mantle', number: 2, pinX: 50, pinY: 28, slotX: 84, slotY: 32, color: '#fdba74' },
-        { id: 'outer_core', label: 'Outer Core', number: 3, pinX: 50, pinY: 44, slotX: 16, slotY: 48, color: '#f87171' },
-        { id: 'inner_core', label: 'Inner Core', number: 4, pinX: 50, pinY: 50, slotX: 16, slotY: 72, color: '#fbbf24' }
-      ],
-      wordBank: [
-        { id: 'crust', label: 'Crust', isDecoy: false },
-        { id: 'mantle', label: 'Mantle', isDecoy: false },
-        { id: 'outer_core', label: 'Outer Core', isDecoy: false },
-        { id: 'inner_core', label: 'Inner Core', isDecoy: false },
-        { id: 'atmosphere', label: 'Atmosphere', isDecoy: true },
-        { id: 'hydrosphere', label: 'Hydrosphere', isDecoy: true }
-      ],
-      facts: {
-        crust: "The crust is Earth's solid, rocky outermost shell where all life exists.",
-        mantle: "The mantle is a thick layer of extremely hot, dense semi-solid rock beneath the crust.",
-        outer_core: "The outer core is a churning liquid layer composed of molten iron and nickel.",
-        inner_core: "The inner core is an intensely hot, solid metallic sphere at the center of Earth."
-      }
+      zones: [],
+      wordBank: [],
+      facts: {}
     }
   ];
 
@@ -118,8 +101,24 @@
     if (!round.wordBank) round.wordBank = [];
     if (!round.facts) round.facts = {};
 
-    diagramImage.src = round.illustrationSrc || '/static/images/ftp_earth_layers.jpg';
-    diagramImage.alt = round.illustrationAlt || 'Science Diagram';
+    const hasImage = Boolean(round.illustrationSrc && round.illustrationSrc.trim());
+    const placeholderEl = document.getElementById('diagramEmptyPlaceholder');
+    if (placeholderEl) {
+      placeholderEl.style.display = hasImage ? 'none' : 'flex';
+    }
+    if (diagramImage) {
+      diagramImage.style.display = hasImage ? 'block' : 'none';
+      if (hasImage) {
+        diagramImage.src = round.illustrationSrc;
+        diagramImage.alt = round.illustrationAlt || 'Science Diagram';
+      }
+    }
+    if (diagramSvgOverlay) {
+      diagramSvgOverlay.style.display = hasImage ? 'block' : 'none';
+    }
+    if (pinsSlotsLayer) {
+      pinsSlotsLayer.style.display = hasImage ? 'block' : 'none';
+    }
 
     // Clear SVG and Pins layer
     diagramSvgOverlay.innerHTML = '';
@@ -537,6 +536,26 @@
     roundFileInput.name = `round_image_file_${currentRoundIdx}`;
   });
 
+  // Connect empty placeholder file input
+  const emptyPlaceholderFileInput = document.getElementById('emptyPlaceholderFileInput');
+  if (emptyPlaceholderFileInput) {
+    emptyPlaceholderFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const round = getCurrentRound();
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        round.illustrationSrc = event.target.result;
+        round.illustrationAlt = file.name;
+        currentDiagramLabel.textContent = file.name;
+        renderCanvas();
+      };
+      reader.readAsDataURL(file);
+      emptyPlaceholderFileInput.name = `round_image_file_${currentRoundIdx}`;
+    });
+  }
+
   // ── ROUND MANAGEMENT (ADD & DELETE) ──────────────────────────────────────────
   btnAddRound.addEventListener('click', () => {
     const nextRoundNum = rounds.length + 1;
@@ -544,8 +563,8 @@
       id: `round_${Date.now()}`,
       title: `Round ${nextRoundNum} — Diagram`,
       subtitle: 'Match each label to the correct pointer pin on the diagram.',
-      illustrationSrc: '/static/images/ftp_earth_layers.jpg',
-      illustrationAlt: `Round ${nextRoundNum} Diagram`,
+      illustrationSrc: '',
+      illustrationAlt: '',
       illustrationBg: '#ffffff',
       zones: [],
       wordBank: [],
@@ -559,16 +578,35 @@
 
   btnDeleteCurrentRound.addEventListener('click', () => {
     if (rounds.length <= 1) {
-      alert('You must have at least one round in this activity.');
+      if (window.showScienceplayToast) {
+        window.showScienceplayToast('You must have at least one round in this activity.', 'warning');
+      }
       return;
     }
-    if (confirm(`Are you sure you want to delete Round ${currentRoundIdx + 1}?`)) {
+    const roundNumber = currentRoundIdx + 1;
+    const deleteAction = () => {
       rounds.splice(currentRoundIdx, 1);
       if (currentRoundIdx >= rounds.length) {
         currentRoundIdx = rounds.length - 1;
       }
       activeZoneId = null;
       renderAll();
+      if (window.showScienceplayToast) {
+        window.showScienceplayToast(`Round ${roundNumber} deleted.`, 'info');
+      }
+    };
+
+    if (window.scienceplayConfirm) {
+      window.scienceplayConfirm({
+        title: `Delete Round ${roundNumber}?`,
+        message: `Are you sure you want to delete Round ${roundNumber}? Placed pins and answers will be removed.`,
+        confirmText: 'Delete Round',
+        confirmClass: 'btn-danger',
+        iconClass: 'bi-trash3-fill text-danger',
+        onConfirm: deleteAction
+      });
+    } else {
+      deleteAction();
     }
   });
 
@@ -581,28 +619,65 @@
     getCurrentRound().subtitle = e.target.value.trim();
   });
 
-  // ── FORM SUBMISSION ──────────────────────────────────────────────────────────
-  diagramBuilderForm.addEventListener('submit', (e) => {
-    // Validate each round
-    for (let i = 0; i < rounds.length; i++) {
-      const r = rounds[i];
-      if (!r.zones || r.zones.length === 0) {
-        e.preventDefault();
-        alert(`Round ${i + 1} has no pins placed! Please place at least 1 pin target.`);
-        currentRoundIdx = i;
-        renderAll();
-        return;
+  // ── SAVE AS DRAFT ────────────────────────────────────────────────────────────
+  const btnSaveDraft = document.getElementById('btnSaveDraft');
+  if (btnSaveDraft) {
+    btnSaveDraft.addEventListener('click', () => {
+      const isDraftInput = document.getElementById('isDraftInput');
+      if (isDraftInput) isDraftInput.value = '1';
+
+      const titleInput = document.getElementById('activityTitleInput');
+      if (!titleInput.value.trim()) {
+        titleInput.value = 'Untitled Diagram Match Draft';
       }
 
-      for (let j = 0; j < r.zones.length; j++) {
-        const z = r.zones[j];
-        if (!z.label || !z.label.trim()) {
+      // Serialize rounds without blocking on incomplete pins
+      roundsDataInput.value = JSON.stringify(rounds);
+      diagramBuilderForm.submit();
+    });
+  }
+
+  // ── FORM SUBMISSION (PUBLISH) ────────────────────────────────────────────────
+  diagramBuilderForm.addEventListener('submit', (e) => {
+    const isDraftInput = document.getElementById('isDraftInput');
+    const isDraft = isDraftInput && isDraftInput.value === '1';
+
+    if (!isDraft) {
+      // Validate each round
+      for (let i = 0; i < rounds.length; i++) {
+        const r = rounds[i];
+        if (!r.illustrationSrc || !r.illustrationSrc.trim()) {
           e.preventDefault();
-          alert(`In Round ${i + 1}, Pin #${z.number} has no label/answer. Please provide a correct answer.`);
+          if (window.showScienceplayToast) {
+            window.showScienceplayToast(`Round ${i + 1} has no diagram illustration. Please upload an image or choose a preset.`, 'warning');
+          }
           currentRoundIdx = i;
-          activeZoneId = z.id;
           renderAll();
           return;
+        }
+
+        if (!r.zones || r.zones.length === 0) {
+          e.preventDefault();
+          if (window.showScienceplayToast) {
+            window.showScienceplayToast(`Round ${i + 1} has no pins placed! Click the diagram to place at least 1 pin.`, 'warning');
+          }
+          currentRoundIdx = i;
+          renderAll();
+          return;
+        }
+
+        for (let j = 0; j < r.zones.length; j++) {
+          const z = r.zones[j];
+          if (!z.label || !z.label.trim()) {
+            e.preventDefault();
+            if (window.showScienceplayToast) {
+              window.showScienceplayToast(`In Round ${i + 1}, Pin #${z.number} has no label. Please provide a correct answer.`, 'warning');
+            }
+            currentRoundIdx = i;
+            activeZoneId = z.id;
+            renderAll();
+            return;
+          }
         }
       }
     }

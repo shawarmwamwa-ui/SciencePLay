@@ -8,7 +8,11 @@
 // Text-to-Speech Accessible Reader for Grade 3 pupils
 function readTermCard(cardId) {
   if (!('speechSynthesis' in window)) {
-    alert("Audio reading is not supported on this browser.");
+    if (window.showScienceplayToast) {
+      window.showScienceplayToast("Audio reading is not supported on this browser.", "info");
+    } else {
+      console.warn("Audio reading is not supported on this browser.");
+    }
     return;
   }
   window.speechSynthesis.cancel();

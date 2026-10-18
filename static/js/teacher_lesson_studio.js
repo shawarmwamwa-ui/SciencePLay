@@ -62,3 +62,21 @@ if (document.readyState === 'loading') {
 
 window.openAssignLessonModal = openAssignLessonModal;
 window.openPermanentDeleteLessonModal = openPermanentDeleteLessonModal;
+
+function archiveLessonWithConfirm(formId, title) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  if (window.scienceplayConfirm) {
+    window.scienceplayConfirm({
+      title: 'Archive Lesson?',
+      message: `Move lesson "${title}" to archive? You can restore it anytime from the Archived tab.`,
+      confirmText: 'Archive',
+      confirmClass: 'btn-danger',
+      iconClass: 'bi-archive-fill text-warning',
+      onConfirm: () => form.submit()
+    });
+  } else {
+    form.submit();
+  }
+}
+window.archiveLessonWithConfirm = archiveLessonWithConfirm;
