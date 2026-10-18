@@ -313,7 +313,7 @@ function initCreateUserModalValidation() {
   const usernameInput = document.getElementById('createUserUsername');
   const usernameFeedback = document.getElementById('createUserUsernameFeedback');
 
-  function showError(msg, isUsernameError = false) {
+  function showError(msg, isUsernameError = false, showToast = true) {
     if (errorText) errorText.textContent = msg;
     if (errorAlert) {
       errorAlert.classList.remove('d-none');
@@ -324,12 +324,9 @@ function initCreateUserModalValidation() {
       if (usernameFeedback) usernameFeedback.textContent = msg;
       usernameInput.focus();
     }
-    if (modalContent) {
-      modalContent.classList.remove('shake-card');
-      void modalContent.offsetWidth;
-      modalContent.classList.add('shake-card');
+    if (showToast) {
+      showAdminNotification(msg, 'danger');
     }
-    showAdminNotification(msg, 'danger');
   }
 
   function clearError() {
@@ -362,10 +359,19 @@ function initCreateUserModalValidation() {
         const result = await res.json().catch(() => null);
         if (result && !result.available) {
           const errMsg = result.message || `Username '${uVal}' is already taken. Please choose a different username.`;
-          showError(errMsg, true);
+          // Smooth inline validation feedback only: no shaking, no toast spamming while typing
+          if (usernameInput) {
+            usernameInput.classList.add('is-invalid');
+            usernameInput.classList.remove('is-valid');
+          }
+          if (usernameFeedback) usernameFeedback.textContent = errMsg;
+          if (errorText) errorText.textContent = errMsg;
+          if (errorAlert) errorAlert.classList.remove('d-none');
         } else if (result && result.available) {
-          usernameInput.classList.remove('is-invalid');
-          usernameInput.classList.add('is-valid');
+          if (usernameInput) {
+            usernameInput.classList.remove('is-invalid');
+            usernameInput.classList.add('is-valid');
+          }
           if (usernameFeedback) usernameFeedback.textContent = '';
           if (errorText && errorText.textContent.toLowerCase().includes('username')) {
             clearError();
@@ -461,6 +467,15 @@ function showAdminNotification(message, type = 'danger') {
     stack.setAttribute('aria-atomic', 'true');
     document.body.appendChild(stack);
   }
+
+  // Deduplicate: avoid duplicate stacking of the same toast notification
+  const existingToasts = stack.querySelectorAll('.admin-toast');
+  for (const t of existingToasts) {
+    if (t.textContent && t.textContent.includes(message)) {
+      return; // already displayed
+    }
+  }
+
   const alert = document.createElement('div');
   alert.className = `alert alert-${type} alert-dismissible fade show shadow-lg admin-toast border-2 mb-2`;
   alert.setAttribute('role', 'alert');
@@ -497,11 +512,6 @@ function initUpdateUserModalValidation() {
       if (passwordInput) {
         passwordInput.classList.add('is-invalid');
         passwordInput.focus();
-      }
-      if (modalContent) {
-        modalContent.classList.remove('shake-card');
-        void modalContent.offsetWidth; // Reflow for instant shake animation
-        modalContent.classList.add('shake-card');
       }
       showAdminNotification(msg, 'danger');
     }
