@@ -2852,6 +2852,9 @@ def content_management():
     core_games_count = sum(1 for c in activity_cards if not c['is_supplementary'])
     supp_games_count = sum(1 for c in activity_cards if c['is_supplementary'])
 
+    engine_templates = _get_game_engine_templates()
+    active_engines_count = sum(1 for t in engine_templates if t.get('is_available', False))
+
     return render_template(
         'teacher/teacher_content.html',
         current_user=current_user,
@@ -2861,7 +2864,7 @@ def content_management():
         supp_lessons_count=supp_lessons_count,
         core_games_count=core_games_count,
         supp_games_count=supp_games_count,
-        active_engines_count=1
+        active_engines_count=active_engines_count
     )
 
 
