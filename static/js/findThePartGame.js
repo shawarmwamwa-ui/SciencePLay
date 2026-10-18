@@ -399,11 +399,6 @@ function renderRound(roundIdx) {
     return;
   }
 
-  const roundVoiceKeys = ['ftp_r1_bird', 'ftp_r2_lion', 'ftp_r3_fish'];
-  if (roundVoiceKeys[roundIdx]) {
-    playVoicePrompt(roundVoiceKeys[roundIdx], activeRounds[roundIdx].title);
-  }
-
   state.currentRound = roundIdx;
   state.selectedLabel = null;
   state.selectedSlot = null;
