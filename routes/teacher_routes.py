@@ -3576,75 +3576,80 @@ def pipeline_circuit_builder(activity_id=None):
 def save_pipeline_circuit():
     """Save or update custom Pipeline Circuit activity configuration"""
     current_user = get_current_user()
-    activity_id = request.form.get('activity_id', type=int)
-    title = request.form.get('title', 'Bio-Circuit').strip() or 'Bio-Circuit'
-    instructions = request.form.get('instructions', 'Place the stages in chronological order.').strip()
-    difficulty = request.form.get('difficulty', 'Level 1 — Easy').strip()
-    term = request.form.get('term', 'Term 1').strip() or 'Term 1'
-    is_supplementary = (str(request.form.get('is_supplementary', '')).strip().lower() in ['1', 'true', 'on'])
-    is_draft = (str(request.form.get('is_draft', '')).strip().lower() in ['1', 'true', 'on'])
-
-    steps_json = request.form.get('steps_data', '[]')
     try:
-        steps = json.loads(steps_json)
-        if not isinstance(steps, list):
-            steps = []
-        if not is_draft and len(steps) < 3:
-            raise ValueError("At least 3 sequence stages are required.")
-    except Exception as e:
-        flash(f"Invalid sequence configuration: {e}", "danger")
+        activity_id = request.form.get('activity_id', type=int)
+        title = request.form.get('title', 'Bio-Circuit').strip() or 'Bio-Circuit'
+        instructions = request.form.get('instructions', 'Place the stages in chronological order.').strip()
+        difficulty = request.form.get('difficulty', 'Level 1 — Easy').strip()
+        term = request.form.get('term', 'Term 1').strip() or 'Term 1'
+        is_supplementary = (str(request.form.get('is_supplementary', '')).strip().lower() in ['1', 'true', 'on'])
+        is_draft = (str(request.form.get('is_draft', '')).strip().lower() in ['1', 'true', 'on'])
+
+        steps_json = request.form.get('steps_data', '[]')
+        try:
+            steps = json.loads(steps_json) if steps_json else []
+            if not isinstance(steps, list):
+                steps = []
+            if not is_draft and len(steps) < 3:
+                raise ValueError("At least 3 sequence stages are required.")
+        except Exception as e:
+            flash(f"Invalid sequence configuration: {e}", "danger")
+            return redirect(url_for('teacher.game_studio'))
+
+        config_payload = {
+            "title": title,
+            "instructions": instructions,
+            "difficulty": difficulty,
+            "term": term,
+            "is_supplementary": is_supplementary,
+            "is_draft": is_draft,
+            "rounds": [
+                {
+                    "id": "round_1",
+                    "title": title,
+                    "subtitle": "Chronological Sequence",
+                    "instructions": instructions,
+                    "steps": steps
+                }
+            ]
+        }
+
+        if activity_id:
+            activity = Activity.query.get_or_404(activity_id)
+            activity.type = title
+            activity.engine = 'pipeline_circuit'
+            activity.term = term
+            activity.is_supplementary = is_supplementary
+            activity.config = config_payload
+            role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
+            if is_draft:
+                flash(f"Draft '{title}' updated successfully. You can continue editing anytime.", "info")
+            else:
+                flash(f"{role_label} Pipeline Circuit '{title}' updated and published successfully!", "success")
+        else:
+            activity = Activity(
+                type=title,
+                engine='pipeline_circuit',
+                points=100,
+                term=term,
+                is_supplementary=is_supplementary,
+                config=config_payload
+            )
+            db.session.add(activity)
+            role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
+            if is_draft:
+                flash(f"New Pipeline Circuit game '{title}' saved as draft. You can continue editing anytime.", "info")
+            else:
+                flash(f"New {role_label} Pipeline Circuit game '{title}' created successfully!", "success")
+
+        db.session.commit()
+        log_access(current_user, 'save_custom_activity', f'activity_id={activity.id} title={title} is_draft={is_draft}')
         return redirect(url_for('teacher.game_studio'))
-
-    config_payload = {
-        "title": title,
-        "instructions": instructions,
-        "difficulty": difficulty,
-        "term": term,
-        "is_supplementary": is_supplementary,
-        "rounds": [
-            {
-                "id": "round_1",
-                "title": title,
-                "subtitle": "Chronological Sequence",
-                "instructions": instructions,
-                "steps": steps
-            }
-        ]
-    }
-
-    if activity_id:
-        activity = Activity.query.get_or_404(activity_id)
-        activity.type = title
-        activity.engine = 'pipeline_circuit'
-        activity.term = term
-        activity.is_supplementary = is_supplementary
-        activity.config = config_payload
-        activity.is_draft = is_draft
-        role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
-        if is_draft:
-            flash(f"Draft '{title}' updated successfully. You can continue editing anytime.", "info")
-        else:
-            flash(f"{role_label} Pipeline Circuit '{title}' updated and published successfully!", "success")
-    else:
-        activity = Activity(
-            type=title,
-            engine='pipeline_circuit',
-            points=100,
-            term=term,
-            is_supplementary=is_supplementary,
-            config=config_payload,
-            is_draft=is_draft
-        )
-        db.session.add(activity)
-        role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
-        if is_draft:
-            flash(f"New Pipeline Circuit game '{title}' saved as draft. You can continue editing anytime.", "info")
-        else:
-            flash(f"New {role_label} Pipeline Circuit game '{title}' created successfully!", "success")
-
-    db.session.commit()
-    log_access(current_user, 'save_custom_activity', f'activity_id={activity.id} title={title} is_draft={is_draft}')
-    return redirect(url_for('teacher.game_studio', tab='drafts' if is_draft else 'active'))
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"[save_pipeline_circuit] Error: {e}", exc_info=True)
+        flash(f"An error occurred while saving the activity: {e}", "danger")
+        return redirect(url_for('teacher.game_studio'))
 
 
 @teacher_bp.route('/content/preview/<int:activity_id>')

@@ -54,6 +54,12 @@ class Lesson(BaseModel, ArchivableMixin):
             return bool(self.config.get('is_draft', False))
         return False
 
+    @is_draft.setter
+    def is_draft(self, value):
+        cfg = dict(self.config) if (self.config and isinstance(self.config, dict)) else {}
+        cfg['is_draft'] = bool(value)
+        self.config = cfg
+
 class Activity(BaseModel, ArchivableMixin):
     __tablename__ = 'activity'
     id = db.Column(db.Integer, primary_key=True)
@@ -71,6 +77,12 @@ class Activity(BaseModel, ArchivableMixin):
         if self.config and isinstance(self.config, dict):
             return bool(self.config.get('is_draft', False))
         return False
+
+    @is_draft.setter
+    def is_draft(self, value):
+        cfg = dict(self.config) if (self.config and isinstance(self.config, dict)) else {}
+        cfg['is_draft'] = bool(value)
+        self.config = cfg
 
 
 
