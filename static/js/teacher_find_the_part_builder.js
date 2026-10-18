@@ -239,7 +239,8 @@
         moved = true;
       }
 
-      const rect = diagramImage.getBoundingClientRect();
+      const canvasWrap = document.getElementById('diagramCanvasWrap');
+      const rect = (canvasWrap || diagramImage).getBoundingClientRect();
       if (!rect.width || !rect.height) return;
 
       const pctX = clamp(((clientX - rect.left) / rect.width) * 100, 2, 98);

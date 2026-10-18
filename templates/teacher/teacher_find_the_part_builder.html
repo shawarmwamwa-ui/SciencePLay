@@ -245,27 +245,29 @@
                     </div>
                   </div>
 
-                  <!-- Visual Interactive Canvas (Spanning Full Width for Bigger, Clearer View) -->
+                  <!-- Visual Interactive Canvas (Matching Actual Game Stage Size & Aspect Ratio) -->
                   <div class="mb-4">
                     <div class="interactive-diagram-container rounded-4 border overflow-hidden position-relative shadow-sm" id="diagramCanvasContainer">
-                      <div class="diagram-canvas-wrap position-relative" id="diagramCanvasWrap">
-                        <div id="diagramEmptyPlaceholder" class="p-5 text-center flex-column align-items-center justify-content-center bg-light rounded-4 w-100 d-none" style="min-height: 420px; display: none !important;">
-                          <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-3" style="width: 68px; height: 68px; font-size: 2rem;">
-                            <i class="bi bi-cloud-arrow-up-fill"></i>
+                      <div class="p-3 p-md-4 d-flex justify-content-center align-items-center" style="background: #f1f5f9;">
+                        <div class="diagram-canvas-wrap position-relative" id="diagramCanvasWrap">
+                          <div id="diagramEmptyPlaceholder" class="p-4 text-center flex-column align-items-center justify-content-center bg-light rounded-3 w-100 h-100 d-none" style="display: none !important;">
+                            <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-3" style="width: 56px; height: 56px; font-size: 1.6rem;">
+                              <i class="bi bi-cloud-arrow-up-fill"></i>
+                            </div>
+                            <h4 class="h6 fw-bold text-dark mb-1">No Diagram Illustration Selected</h4>
+                            <p class="text-muted small mb-3" style="max-width: 320px; font-size: 0.8rem;">Upload your own science diagram or select a preset illustration from the toolbar above to drop target pins and labels.</p>
+                            <label class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" style="cursor: pointer;">
+                              <i class="bi bi-upload me-1"></i>Upload Diagram Image
+                              <input type="file" class="d-none" id="emptyPlaceholderFileInput" accept="image/png,image/jpeg,image/webp">
+                            </label>
                           </div>
-                          <h4 class="h5 fw-bold text-dark mb-1">No Diagram Illustration Selected</h4>
-                          <p class="text-muted small mb-3" style="max-width: 380px;">Upload your own science diagram or select a preset illustration from the toolbar above to drop target pins and labels.</p>
-                          <label class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="cursor: pointer;">
-                            <i class="bi bi-upload me-1"></i>Upload Diagram Image
-                            <input type="file" class="d-none" id="emptyPlaceholderFileInput" accept="image/png,image/jpeg,image/webp">
-                          </label>
-                        </div>
-                        <img src="/static/images/ftp_earth_layers.jpg" alt="Science Diagram" id="diagramImage" class="img-fluid select-none">
-                        <svg class="diagram-svg-overlay position-absolute top-0 start-0 w-100 h-100" id="diagramSvgOverlay" viewBox="0 0 100 100" preserveAspectRatio="none">
-                          <!-- SVG leader lines rendered here -->
-                        </svg>
-                        <div class="pins-slots-layer position-absolute top-0 start-0 w-100 h-100" id="pinsSlotsLayer">
-                          <!-- Draggable Pins and Callout Slots rendered here -->
+                          <img src="/static/images/ftp_earth_layers.jpg" alt="Science Diagram" id="diagramImage" class="select-none">
+                          <svg class="diagram-svg-overlay position-absolute top-0 start-0 w-100 h-100" id="diagramSvgOverlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <!-- SVG leader lines rendered here -->
+                          </svg>
+                          <div class="pins-slots-layer position-absolute top-0 start-0 w-100 h-100" id="pinsSlotsLayer">
+                            <!-- Draggable Pins and Callout Slots rendered here -->
+                          </div>
                         </div>
                       </div>
 
