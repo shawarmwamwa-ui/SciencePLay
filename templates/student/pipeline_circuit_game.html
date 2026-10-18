@@ -36,6 +36,11 @@
         <span class="badge bg-warning text-dark border border-dark px-3 py-1.5 fw-bold rounded-pill">
           <i class="bi bi-eye-fill me-1"></i>Teacher Preview
         </span>
+        {% else %}
+        <div class="pc-hud-pill attempts-pill" id="pc-attempts-hud">
+          <i class="bi bi-arrow-repeat text-info"></i>
+          <span id="pc-attempts-today">Attempts: {{ attempts_today if attempts_today is defined else 0 }}/3</span>
+        </div>
         {% endif %}
         <div class="pc-hud-pill score-pill">
           <i class="bi bi-star-fill text-warning"></i>
@@ -64,7 +69,7 @@
     window.isTeacherPreview = {{ 'true' if is_preview else 'false' }};
   </script>
   <script type="module">
-    import { initPipelineCircuit } from "{{ url_for('static', filename='js/pipelineCircuitGame.js', v='20261019_3') }}";
+    import { initPipelineCircuit } from "{{ url_for('static', filename='js/pipelineCircuitGame.js', v='20261019_4') }}";
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     initPipelineCircuit();
     initBgmPlayer('game-bgm', { volume: 0.18, storageKey: 'scienceplay_game_bgm_muted' });

@@ -666,39 +666,81 @@ export function initPipelineCircuit() {
     }
   }
 
+  async function saveProgressToBackend(finalScore, stars) {
+    if (isPreview || !activityId) {
+      return {
+        attemptsToday: 1,
+        attemptsLimit: 3,
+        attemptsExhausted: false
+      };
+    }
+
+    const payload = {
+      activity_id: activityId,
+      score: finalScore,
+      stars: stars,
+      time_spent: Math.max(1, Math.round((Date.now() - startTime) / 1000)),
+      attempts: totalMistakes + 1,
+      correct_first_try: correctFirstTryCount,
+      completed: true
+    };
+
+    try {
+      const res = await fetch('/student/activity_progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload),
+        keepalive: true
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const attemptsToday = Number(data.attempts_today) || 1;
+        const attemptsLimit = Number(data.attempts_limit) || 3;
+        const attemptsExhausted = Boolean(data.attempts_exhausted || attemptsToday >= attemptsLimit);
+
+        // Update HUD attempts pill if present
+        const attemptsHud = document.getElementById('pc-attempts-today');
+        if (attemptsHud) {
+          attemptsHud.textContent = `Attempts: ${attemptsToday}/${attemptsLimit}`;
+        }
+
+        return {
+          attemptsToday,
+          attemptsLimit,
+          attemptsExhausted,
+          rating: data.rating,
+          hint: data.hint
+        };
+      } else {
+        console.warn("activity_progress responded with status:", res.status);
+      }
+    } catch (e) {
+      console.warn("Could not save activity progress:", e);
+    }
+
+    return {
+      attemptsToday: 1,
+      attemptsLimit: 3,
+      attemptsExhausted: false
+    };
+  }
+
   async function finishGame() {
     // Show victory modal
     const finalScore = Math.min(100, Math.max(20, Math.round(score)));
     // Standard SciencePlay star scale: 90%+ = 3 stars, 60%+ = 2 stars, otherwise 1 star
     const stars = finalScore >= 90 ? 3 : (finalScore >= 60 ? 2 : 1);
 
-    // Post progress to student activity backend if not preview
-    if (!isPreview && activityId) {
-      try {
-        await fetch('/student/activity_progress', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            activity_id: activityId,
-            score: finalScore,
-            stars: stars,
-            time_spent: Math.max(1, Math.round((Date.now() - startTime) / 1000)),
-            attempts: totalMistakes + 1,
-            correct_first_try: correctFirstTryCount,
-            completed: true
-          })
-        });
-      } catch (e) {
-        console.warn("Could not save activity progress:", e);
-      }
-    }
+    const progressResult = await saveProgressToBackend(finalScore, stars);
 
     container.innerHTML = `
       <div class="d-flex align-items-center justify-content-center p-4" style="min-height: 60vh;">
         <div class="pc-modal-content p-5 text-center shadow-lg" style="max-width: 520px; width: 100%;">
           <div class="display-3 mb-2">⚡🏆⚡</div>
           <h2 class="fw-black text-white mb-2" style="font-size: 2rem;">Circuit Fully Powered!</h2>
-          <p class="mb-4" style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.5;">You solved all the sequence stages and completed the bio-pipeline!</p>
+          <p class="mb-3" style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.5;">You solved all the sequence stages and completed the bio-pipeline!</p>
           
           <div class="pc-stars-wrap mb-4" style="font-size: 2.3rem;">
             ${Array.from({length: 3}).map((_, i) => `
@@ -709,15 +751,26 @@ export function initPipelineCircuit() {
           <div class="p-3 rounded-4 mb-4" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(56, 189, 248, 0.3);">
             <div class="small fw-bold text-uppercase mb-1" style="color: #94a3b8; letter-spacing: 0.05em;">Final Score</div>
             <div class="h3 fw-bold text-info mb-1">${finalScore} Points</div>
-            <div class="small text-muted">${totalMistakes === 0 ? '🏆 Solved with 0 mistakes (100% accuracy)' : `⚠️ Circuit tripped ${totalMistakes} ${totalMistakes === 1 ? 'time' : 'times'} before sequence completed`}</div>
+            <div class="small text-muted mb-3">${totalMistakes === 0 ? '🏆 Solved with 0 mistakes (100% accuracy)' : `⚠️ Circuit tripped ${totalMistakes} ${totalMistakes === 1 ? 'time' : 'times'} before sequence completed`}</div>
+            ${!isPreview ? `
+              <div class="d-inline-flex align-items-center gap-1.5 px-3 py-1 rounded-pill ${progressResult.attemptsExhausted ? 'bg-danger text-white' : 'bg-primary text-white'} fw-bold" style="font-size: 0.85rem;">
+                <i class="bi bi-clock-history"></i> Attempts today: ${progressResult.attemptsToday}/${progressResult.attemptsLimit}
+              </div>
+            ` : ''}
           </div>
 
           <div class="d-flex flex-column gap-2">
-            <button type="button" class="btn btn-success fw-bold py-2.5 rounded-pill shadow-sm" id="btn-replay">
-              <i class="bi bi-arrow-clockwise me-1"></i> Play Again
-            </button>
-            <a href="${isPreview ? '/teacher/content/games' : '/student/dashboard'}" class="btn btn-outline-light fw-bold py-2.5 rounded-pill">
-              <i class="bi bi-house-door-fill me-1"></i> ${isPreview ? 'Back to Game Studio' : 'Back to Dashboard'}
+            ${(!isPreview && progressResult.attemptsExhausted) ? `
+              <button type="button" class="btn btn-secondary fw-bold py-2.5 rounded-pill shadow-sm" disabled style="cursor: not-allowed; opacity: 0.75;">
+                <i class="bi bi-lock-fill me-1"></i> Daily Limit Reached (3/3)
+              </button>
+            ` : `
+              <button type="button" class="btn btn-success fw-bold py-2.5 rounded-pill shadow-sm" id="btn-replay">
+                <i class="bi bi-arrow-clockwise me-1"></i> Play Again
+              </button>
+            `}
+            <a href="${isPreview ? '/teacher/content/games' : '/student/activities'}" class="btn btn-outline-light fw-bold py-2.5 rounded-pill">
+              <i class="bi bi-grid-fill me-1"></i> ${isPreview ? 'Back to Game Studio' : 'Back to Game Hub'}
             </a>
           </div>
         </div>

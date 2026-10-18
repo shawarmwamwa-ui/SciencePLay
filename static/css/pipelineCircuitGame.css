@@ -83,6 +83,12 @@ body.pipeline-circuit-body {
   color: #f8fafc;
 }
 
+.pc-hud-pill.attempts-pill {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #7dd3fc;
+}
+
 .pc-hud-pill.score-pill {
   background: rgba(245, 158, 11, 0.15);
   border-color: rgba(245, 158, 11, 0.4);

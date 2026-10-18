@@ -693,12 +693,14 @@ def get_attempts_today(student_id, activity_id):
 
     act_ids = [activity_id]
     activity = Activity.query.get(activity_id)
-    if activity:
+    # Only group legacy default activities (IDs 1-5); all custom and teacher-created activities are independent
+    if activity and activity.id in [1, 2, 3, 4, 5]:
         engine = activity.engine
         if not engine and 'Claw Machine' in (activity.type or ''):
             engine = 'claw_machine'
         if engine:
             matched_acts = Activity.query.filter(
+                Activity.id.in_([1, 2, 3, 4, 5]),
                 (Activity.engine == engine) | (Activity.type.ilike(f'%{activity.type}%'))
             ).all()
             act_ids = list({a.id for a in matched_acts} | {activity_id})
@@ -712,7 +714,7 @@ def get_attempts_today(student_id, activity_id):
 
     # If the assignment was reassigned today, count attempts since that reassignment
     if assignment and assignment.assigned_at and assignment.assigned_at >= today_start:
-        since_time = assignment.assigned_at
+        since_time = assignment.assigned_at - timedelta(seconds=30)
     else:
         since_time = today_start
 
@@ -2818,8 +2820,10 @@ def activity_progress():
 
     engine = activity.engine or ('claw_machine' if 'Claw Machine' in (activity.type or '') else None)
     act_ids = [activity.id]
-    if engine:
+    # Only group legacy default activities (IDs 1-5); all custom and teacher-created activities are independent
+    if engine and activity.id in [1, 2, 3, 4, 5]:
         matched_acts = Activity.query.filter(
+            Activity.id.in_([1, 2, 3, 4, 5]),
             (Activity.engine == engine) | (Activity.type.ilike(f'%{activity.type}%'))
         ).all()
         act_ids = list({a.id for a in matched_acts} | {activity.id})
