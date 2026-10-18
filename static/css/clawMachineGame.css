@@ -321,7 +321,7 @@ body.arcade-page {
   min-block-size: 0;
   padding: clamp(4px, 0.8vh, 8px);
   display: grid;
-  grid-template-columns: minmax(80px, 1fr) minmax(0, 3fr) minmax(80px, 1fr);
+  grid-template-columns: minmax(80px, auto) minmax(0, 3fr) minmax(80px, auto);
   gap: clamp(4px, 0.8vw, 8px);
   align-items: stretch;
   overflow: hidden;
@@ -335,9 +335,10 @@ body.arcade-page {
 
 .bins-column {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 6px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch;
+  gap: clamp(4px, 0.6vw, 8px);
   min-height: 0;
 }
 
@@ -345,6 +346,8 @@ body.arcade-page {
   --bin-main: var(--bin-color, var(--living-a));
   --bin-dark: var(--bin-border-color, var(--living-b));
   flex: 1 1 0;
+  min-width: clamp(65px, 7vw, 95px);
+  max-width: clamp(90px, 11vw, 130px);
   min-height: 0;
   padding: 6px 4px;
   display: flex;

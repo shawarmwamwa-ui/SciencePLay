@@ -1,56 +1,58 @@
-// Initial data from server: strictly 2 chutes
-    const clawConfig = window.CLAW_BUILDER_CONFIG || {};
+// Initial data from server: support 2 to 4 chutes
+const clawConfig = window.CLAW_BUILDER_CONFIG || {};
 const getCsrfToken = () => clawConfig.csrfToken || document.querySelector('input[name="csrf_token"]')?.value || "";
 let rawBins = clawConfig.rawBins || [];
 
-    let chutes = Array.isArray(rawBins) && rawBins.length >= 2
-      ? rawBins.slice(0, 2)
-      : [
-          {"id": "category_1", "label": "", "icon": "📦", "color": "#3b82f6"},
-          {"id": "category_2", "label": "", "icon": "⭐", "color": "#10b981"}
-        ];
+let chutes = Array.isArray(rawBins) && rawBins.length >= 2
+  ? rawBins.slice(0, 4)
+  : [
+      {"id": "category_1", "label": "", "icon": "📦", "color": "#3b82f6"},
+      {"id": "category_2", "label": "", "icon": "⭐", "color": "#10b981"}
+    ];
 
-    let objects = clawConfig.objects || [];
+let objects = clawConfig.objects || [];
 
-    let activeObjectPickerIndex = null;
+let activeObjectPickerIndex = null;
 
-    // TOPIC PRESETS (Strictly 2 chutes: Left vs Right)
-    const TOPIC_PRESETS = {
-      living_vs_nonliving: {
-        title: "Living vs Non-Living Sorting",
-        instructions: "Sort objects into Living and Non-Living chutes to win stars.",
-        round_size: 8,
-        bins: [
-          { id: "living", label: "Living", icon: "🌱", color: "#4ade80" },
-          { id: "non-living", label: "Non-Living", icon: "🪨", color: "#fb923c" }
-        ],
-        objects: [
-          { label: "Dog", categoryId: "living", explanation: "Dogs are living animals that breathe, eat, and grow.", image: "/static/images/dog.webp" },
-          { label: "Cat", categoryId: "living", explanation: "Cats are living animals that grow and reproduce.", image: "/static/images/cat.webp" },
-          { label: "Tree", categoryId: "living", explanation: "Trees are living plants that absorb water and sunlight.", image: "/static/images/tree.webp" },
-          { label: "Flower", categoryId: "living", explanation: "Flowers are living organisms that need sunlight and water.", image: "/static/images/flower.webp" },
-          { label: "Rock", categoryId: "non-living", explanation: "Rocks do not eat, breathe, or reproduce.", image: "/static/images/rock.webp" },
-          { label: "Wooden Chair", categoryId: "non-living", explanation: "A manufactured chair is an inanimate object.", image: "/static/images/chair.webp" },
-          { label: "Bicycle", categoryId: "non-living", explanation: "A bicycle is a manufactured machine and is not alive.", image: "/static/images/bicycle.webp" },
-          { label: "Rubber Ball", categoryId: "non-living", explanation: "A rubber ball is non-living.", image: "/static/images/ball.webp" }
-        ]
-      },
-      states_of_matter: {
-        title: "Solid vs Liquid Sorting",
-        instructions: "Sort each object into the Solid or Liquid chute.",
-        round_size: 6,
-        bins: [
-          { id: "solid", label: "Solid", icon: "🧊", color: "#60a5fa" },
-          { id: "liquid", label: "Liquid", icon: "💧", color: "#38bdf8" }
-        ],
-        objects: [
-          { label: "Ice Cube", categoryId: "solid", explanation: "Ice holds a fixed shape firmly as a solid.", image: "/static/images/rock.webp" },
-          { label: "Water Puddle", categoryId: "liquid", explanation: "Water flows and takes the shape of its container.", image: "/static/images/puddle.webp" },
-          { label: "Wooden Chair", categoryId: "solid", explanation: "A chair is solid and keeps its own rigid shape.", image: "/static/images/chair.webp" },
-          { label: "Rock", categoryId: "solid", explanation: "Rocks have definite shapes and volumes as solids.", image: "/static/images/rock.webp" },
-          { label: "Bicycle", categoryId: "solid", explanation: "A bicycle is made of solid parts that keep their shape.", image: "/static/images/bicycle.webp" }
-        ]
-      },
+// TOPIC PRESETS (Multi-chute support: 2, 3, or 4 chutes)
+const TOPIC_PRESETS = {
+  living_vs_nonliving: {
+    title: "Living vs Non-Living Sorting",
+    instructions: "Sort objects into Living and Non-Living chutes to win stars.",
+    round_size: 8,
+    bins: [
+      { id: "living", label: "Living", icon: "🌱", color: "#4ade80" },
+      { id: "non-living", label: "Non-Living", icon: "🪨", color: "#fb923c" }
+    ],
+    objects: [
+      { label: "Dog", categoryId: "living", explanation: "Dogs are living animals that breathe, eat, and grow.", image: "/static/images/dog.webp" },
+      { label: "Cat", categoryId: "living", explanation: "Cats are living animals that grow and reproduce.", image: "/static/images/cat.webp" },
+      { label: "Tree", categoryId: "living", explanation: "Trees are living plants that absorb water and sunlight.", image: "/static/images/tree.webp" },
+      { label: "Flower", categoryId: "living", explanation: "Flowers are living organisms that need sunlight and water.", image: "/static/images/flower.webp" },
+      { label: "Rock", categoryId: "non-living", explanation: "Rocks do not eat, breathe, or reproduce.", image: "/static/images/rock.webp" },
+      { label: "Wooden Chair", categoryId: "non-living", explanation: "A manufactured chair is an inanimate object.", image: "/static/images/chair.webp" },
+      { label: "Bicycle", categoryId: "non-living", explanation: "A bicycle is a manufactured machine and is not alive.", image: "/static/images/bicycle.webp" },
+      { label: "Rubber Ball", categoryId: "non-living", explanation: "A rubber ball is non-living.", image: "/static/images/ball.webp" }
+    ]
+  },
+  states_of_matter: {
+    title: "States of Matter Sorting",
+    instructions: "Sort each object into Solid, Liquid, or Gas chutes to win stars.",
+    round_size: 6,
+    bins: [
+      { id: "solid", label: "Solid", icon: "🧊", color: "#60a5fa" },
+      { id: "liquid", label: "Liquid", icon: "💧", color: "#38bdf8" },
+      { id: "gas", label: "Gas", icon: "💨", color: "#a855f7" }
+    ],
+    objects: [
+      { label: "Ice Cube", categoryId: "solid", explanation: "Ice holds a fixed shape firmly as a solid.", image: "/static/images/rock.webp" },
+      { label: "Water Puddle", categoryId: "liquid", explanation: "Water flows and takes the shape of its container.", image: "/static/images/puddle.webp" },
+      { label: "Steam / Vapor", categoryId: "gas", explanation: "Steam expands to fill all available space as a gas.", image: "/static/images/puddle.webp" },
+      { label: "Wooden Chair", categoryId: "solid", explanation: "A chair is solid and keeps its own rigid shape.", image: "/static/images/chair.webp" },
+      { label: "Rock", categoryId: "solid", explanation: "Rocks have definite shapes and volumes as solids.", image: "/static/images/rock.webp" },
+      { label: "Bicycle", categoryId: "solid", explanation: "A bicycle is made of solid parts that keep their shape.", image: "/static/images/bicycle.webp" }
+    ]
+  },
       waste_sorting: {
         title: "Eco Waste & Recycling Sort",
         instructions: "Sort materials into Organic Compost or Recyclable chutes.",
@@ -129,9 +131,47 @@ let rawBins = clawConfig.rawBins || [];
       showBuilderToast(`Loaded preset template: "${p.title}"`, 'success');
     }
 
-    // RENDER EXACTLY 2 CHUTES (LEFT & RIGHT)
+    window.addChute = function() {
+      if (chutes.length >= 4) {
+        showBuilderToast("Maximum 4 category chutes supported for the arcade cabinet.", "warning");
+        return;
+      }
+      const defaultColors = ['#4ade80', '#fb923c', '#60a5fa', '#a855f7'];
+      const defaultIcons = ['🌱', '🪨', '💧', '💨'];
+      const nextIdx = chutes.length;
+      chutes.push({
+        id: `category_${nextIdx + 1}`,
+        label: `Chute ${nextIdx + 1}`,
+        icon: defaultIcons[nextIdx] || '📦',
+        color: defaultColors[nextIdx] || '#a855f7'
+      });
+      renderChutes();
+      updateLiveCanvas();
+      showBuilderToast(`Added Chute ${chutes.length}! You can now sort items into ${chutes.length} categories.`, "success");
+    };
+
+    window.removeChute = function(idx) {
+      if (chutes.length <= 2) {
+        showBuilderToast("At least 2 chutes are required for a sorting game.", "warning");
+        return;
+      }
+      const removedId = chutes[idx].id;
+      chutes.splice(idx, 1);
+      const fallbackId = chutes[0].id;
+      objects.forEach(obj => {
+        if (obj.categoryId === removedId) {
+          obj.categoryId = fallbackId;
+        }
+      });
+      renderChutes();
+      updateLiveCanvas();
+      showBuilderToast("Chute removed. Objects re-mapped to the first chute.", "info");
+    };
+
+    // RENDER CHUTES (2 TO 4 CHUTES)
     function renderChutes() {
       const container = document.getElementById('chutesContainer');
+      if (!container) return;
       container.innerHTML = '';
 
       if (chutes.length < 2) {
@@ -139,38 +179,53 @@ let rawBins = clawConfig.rawBins || [];
           { id: "category_1", label: "Left Category", icon: "🌱", color: "#4ade80" },
           { id: "category_2", label: "Right Category", icon: "🪨", color: "#fb923c" }
         ];
-      } else if (chutes.length > 2) {
-        chutes = chutes.slice(0, 2);
+      } else if (chutes.length > 4) {
+        chutes = chutes.slice(0, 4);
       }
 
-      const zoneNames = ["Chute 1: Left Drop Zone", "Chute 2: Right Drop Zone"];
-      const zonePositions = ["Arcade Slot: Left Side", "Arcade Slot: Right Side"];
-      const zoneIcons = ["bi-arrow-left-circle-fill", "bi-arrow-right-circle-fill"];
+      const countBadge = document.getElementById('chutesCountBadge');
+      if (countBadge) {
+        countBadge.innerHTML = `<i class="bi bi-layout-split me-1"></i>${chutes.length} Chutes Configured`;
+      }
+      const addBtn = document.getElementById('btnAddChute');
+      if (addBtn) {
+        addBtn.style.display = chutes.length >= 4 ? 'none' : 'inline-flex';
+      }
+
+      const colClass = chutes.length === 2 ? 'col-12 col-md-6' : (chutes.length === 3 ? 'col-12 col-md-4' : 'col-12 col-md-6 col-lg-3');
 
       chutes.forEach((chute, idx) => {
         const col = document.createElement('div');
-        col.className = 'col-12 col-md-6';
+        col.className = colClass;
 
-        const isLeft = idx === 0;
-        const zoneBadgeClass = isLeft ? 'bg-primary-subtle text-primary border-primary-subtle' : 'bg-warning-subtle text-dark border-warning-subtle';
-        const currentColor = chute.color || (isLeft ? '#4ade80' : '#fb923c');
+        const currentColor = chute.color || '#4ade80';
+        const leftCount = Math.ceil(chutes.length / 2);
+        const isLeft = idx < leftCount;
+        const sideLabel = isLeft ? `Left Side (${idx + 1}/${leftCount})` : `Right Side (${idx - leftCount + 1}/${chutes.length - leftCount})`;
 
         col.innerHTML = `
           <div class="chute-config-card" id="chute_card_${idx}">
             <div class="chute-accent-bar" id="chute_accent_${idx}" style="background-color: ${currentColor};"></div>
 
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <span class="badge ${zoneBadgeClass} border fw-bold d-inline-flex align-items-center gap-1 px-2 py-1 shadow-sm">
-                <i class="bi ${zoneIcons[idx]}"></i> ${zoneNames[idx]}
+              <span class="badge ${isLeft ? 'bg-primary-subtle text-primary border-primary-subtle' : 'bg-warning-subtle text-dark border-warning-subtle'} border fw-bold d-inline-flex align-items-center gap-1 px-2 py-1 shadow-sm">
+                <i class="bi ${isLeft ? 'bi-arrow-left-circle-fill' : 'bi-arrow-right-circle-fill'}"></i> Chute ${idx + 1}
               </span>
-              <span class="badge bg-light text-secondary border small fw-semibold">${zonePositions[idx]}</span>
+              <div class="d-flex align-items-center gap-1">
+                <span class="badge bg-light text-secondary border small fw-semibold">${sideLabel}</span>
+                ${chutes.length > 2 ? `
+                  <button type="button" class="btn btn-outline-danger btn-sm border-0 p-0 ms-1" onclick="removeChute(${idx})" title="Delete Chute">
+                    <i class="bi bi-trash3-fill text-danger fs-6"></i>
+                  </button>
+                ` : ''}
+              </div>
             </div>
 
             <div class="chute-card-layout">
               <div>
                 <div class="mini-arcade-bin" id="mini_bin_${idx}" style="background: linear-gradient(180deg, ${currentColor} 0%, rgba(15, 23, 42, 0.45) 140%), ${currentColor};">
                   <div class="mini-bin-icon" id="mini_icon_${idx}">${chute.icon || '📦'}</div>
-                  <div class="mini-bin-title" id="mini_label_${idx}">${chute.label || 'Chute'}</div>
+                  <div class="mini-bin-title" id="mini_label_${idx}">${chute.label || `Chute ${idx + 1}`}</div>
                   <div class="mini-bin-catch"></div>
                 </div>
                 <div class="text-center text-muted mt-1" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em;">IN-GAME LOOK</div>
@@ -179,7 +234,7 @@ let rawBins = clawConfig.rawBins || [];
               <div>
                 <div class="mb-2">
                   <label class="form-label text-muted small fw-bold mb-1">Chute Label <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control form-control-sm fw-bold rounded-3" value="${chute.label}" oninput="updateChuteField(${idx}, 'label', this.value)" required placeholder="e.g. Living or Solid">
+                  <input type="text" class="form-control form-control-sm fw-bold rounded-3" value="${chute.label}" oninput="updateChuteField(${idx}, 'label', this.value)" required placeholder="e.g. Solid or Living">
                 </div>
 
                 <div class="row g-2 align-items-end">
@@ -571,26 +626,32 @@ let rawBins = clawConfig.rawBins || [];
         diffBadge.textContent = diffInput.value;
       }
 
-      // Left Chute
-      if (chutes[0]) {
-        const leftEl = document.getElementById('canvasLeftChute');
-        const color0 = chutes[0].color || '#4ade80';
-        if (leftEl) leftEl.style.background = `linear-gradient(180deg, ${color0} 0%, rgba(15, 23, 42, 0.5) 140%), ${color0}`;
-        const leftIco = document.getElementById('canvasLeftIcon');
-        if (leftIco) leftIco.textContent = chutes[0].icon || '📦';
-        const leftLbl = document.getElementById('canvasLeftTitle');
-        if (leftLbl) leftLbl.textContent = chutes[0].label || 'Chute 1';
-      }
+      // Dynamic Left and Right Chutes for Arcade Live Canvas
+      const leftChutesContainer = document.getElementById('simulatorLeftChutes');
+      const rightChutesContainer = document.getElementById('simulatorRightChutes');
+      
+      const leftCount = Math.ceil(chutes.length / 2);
+      const leftBins = chutes.slice(0, leftCount);
+      const rightBins = chutes.slice(leftCount);
 
-      // Right Chute
-      if (chutes[1]) {
-        const rightEl = document.getElementById('canvasRightChute');
-        const color1 = chutes[1].color || '#fb923c';
-        if (rightEl) rightEl.style.background = `linear-gradient(180deg, ${color1} 0%, rgba(15, 23, 42, 0.5) 140%), ${color1}`;
-        const rightIco = document.getElementById('canvasRightIcon');
-        if (rightIco) rightIco.textContent = chutes[1].icon || '📦';
-        const rightLbl = document.getElementById('canvasRightTitle');
-        if (rightLbl) rightLbl.textContent = chutes[1].label || 'Chute 2';
+      const renderSimChute = (c, idx) => {
+        const color = c.color || '#4318ff';
+        const icon = c.icon || '📦';
+        const label = c.label || `Chute ${idx + 1}`;
+        return `
+          <div class="simulator-chute-box" style="background: linear-gradient(180deg, ${color} 0%, rgba(15, 23, 42, 0.5) 140%), ${color};">
+            <span class="simulator-chute-icon">${icon}</span>
+            <div class="simulator-chute-title">${label}</div>
+            <div class="simulator-chute-pocket"></div>
+          </div>
+        `;
+      };
+
+      if (leftChutesContainer) {
+        leftChutesContainer.innerHTML = leftBins.map((c, i) => renderSimChute(c, i)).join('');
+      }
+      if (rightChutesContainer) {
+        rightChutesContainer.innerHTML = rightBins.map((c, i) => renderSimChute(c, leftCount + i)).join('');
       }
 
       // Objects in Center Bay Conveyor
@@ -643,10 +704,20 @@ let rawBins = clawConfig.rawBins || [];
         return;
       }
 
-      // Ensure both chutes have labels
-      if (!chutes[0].label.trim() || !chutes[1].label.trim()) {
-        showBuilderToast("Please provide labels for both Chute 1 and Chute 2.", "warning");
+      // Ensure at least 2 chutes and at most 4 chutes have non-empty labels
+      if (chutes.length < 2) {
+        showBuilderToast("Please configure at least 2 sorting chutes.", "warning");
         return;
+      }
+      if (chutes.length > 4) {
+        showBuilderToast("A maximum of 4 chutes is supported.", "warning");
+        return;
+      }
+      for (let i = 0; i < chutes.length; i++) {
+        if (!chutes[i].label || !chutes[i].label.trim()) {
+          showBuilderToast(`Please provide a label for Chute ${i + 1}.`, "warning");
+          return;
+        }
       }
 
       if (objects.length < 2) {
@@ -670,30 +741,35 @@ let rawBins = clawConfig.rawBins || [];
         return;
       }
 
-      // Check that every object maps to Chute 1 or Chute 2
+      // Check that every object maps to a valid chute
       const validCategoryIds = new Set(chutes.map(c => c.id));
       for (let i = 0; i < objects.length; i++) {
         if (!validCategoryIds.has(objects[i].categoryId)) {
-          showBuilderToast(`Object "${objects[i].label}" is not assigned to either Chute 1 or Chute 2. Every item must have a valid destination chute.`, "danger");
+          showBuilderToast(`Object "${objects[i].label}" is not assigned to a valid chute. Every item must have a valid destination chute.`, "danger");
           return;
         }
       }
 
       // Assign chute sequential clean IDs and map objects to them
-      const oldId0 = chutes[0].id;
-      const oldId1 = chutes[1].id;
-      const newId0 = chutes[0].label.toLowerCase().replace(/[^a-z0-9]/g, '_') || "category_1";
-      const newId1 = chutes[1].label.toLowerCase().replace(/[^a-z0-9]/g, '_') || "category_2";
-      chutes[0].id = newId0;
-      chutes[1].id = newId1;
+      const idMap = {};
+      chutes.forEach((chute, idx) => {
+        const oldId = chute.id;
+        const cleanBase = chute.label.toLowerCase().replace(/[^a-z0-9]/g, '_') || `category_${idx + 1}`;
+        let newId = cleanBase;
+        if (Object.values(idMap).includes(newId)) {
+          newId = `${cleanBase}_${idx + 1}`;
+        }
+        idMap[oldId] = newId;
+        chute.id = newId;
+      });
 
       // Assign object sequential IDs and preserve chute target mapping
       objects.forEach((obj, idx) => {
         obj.id = idx + 1;
-        if (obj.categoryId === oldId0) {
-          obj.categoryId = newId0;
-        } else if (obj.categoryId === oldId1) {
-          obj.categoryId = newId1;
+        if (idMap[obj.categoryId]) {
+          obj.categoryId = idMap[obj.categoryId];
+        } else if (chutes[0]) {
+          obj.categoryId = chutes[0].id;
         }
       });
 

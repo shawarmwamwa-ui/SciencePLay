@@ -2924,18 +2924,20 @@ def claw_machine_builder(activity_id=None):
         elif preset_key:
             presets = {
                 'states_of_matter': {
-                    "title": "Solid vs Liquid Sorting",
-                    "instructions": "Sort each object into the correct chute to win stars.",
+                    "title": "States of Matter Sorting",
+                    "instructions": "Sort each object into Solid, Liquid, or Gas chutes to win stars.",
                     "round_size": 6,
                     "bins": [
                         {"id": "solid", "label": "Solid", "icon": "🧊", "color": "#60a5fa"},
-                        {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"}
+                        {"id": "liquid", "label": "Liquid", "icon": "💧", "color": "#38bdf8"},
+                        {"id": "gas", "label": "Gas", "icon": "💨", "color": "#a855f7"}
                     ],
                     "objects": [
                         {"id": 1, "label": "Ice Cube", "categoryId": "solid", "explanation": "Ice has a fixed shape and volume as a solid.", "image": "/static/images/rock.webp"},
                         {"id": 2, "label": "Water", "categoryId": "liquid", "explanation": "Water flows and takes the shape of its container.", "image": "/static/images/puddle.webp"},
-                        {"id": 3, "label": "Wooden Chair", "categoryId": "solid", "explanation": "A chair is solid and keeps its own shape.", "image": "/static/images/chair.webp"},
-                        {"id": 4, "label": "Rock", "categoryId": "solid", "explanation": "Rocks are rigid solids that do not flow.", "image": "/static/images/rock.webp"}
+                        {"id": 3, "label": "Steam / Vapor", "categoryId": "gas", "explanation": "Steam expands to fill all available space as a gas.", "image": "/static/images/puddle.webp"},
+                        {"id": 4, "label": "Wooden Chair", "categoryId": "solid", "explanation": "A chair is solid and keeps its own shape.", "image": "/static/images/chair.webp"},
+                        {"id": 5, "label": "Rock", "categoryId": "solid", "explanation": "Rocks are rigid solids that do not flow.", "image": "/static/images/rock.webp"}
                     ]
                 },
                 'living_vs_nonliving': {
@@ -3056,16 +3058,15 @@ def save_claw_machine():
         flash(f"Invalid activity configuration: {e}", "danger")
         return redirect(url_for('teacher.content_management'))
 
-    # Claw machine physical arcade cabinet strictly requires exactly 2 chutes (Left & Right)
-    if len(bins) != 2:
-        flash("The Claw Machine sorting game requires exactly 2 chutes (Left chute and Right chute).", "warning")
-        if len(bins) > 2:
-            bins = bins[:2]
-        elif len(bins) < 2:
-            bins = [
-                {"id": "category_1", "label": "Chute 1", "icon": "📦", "color": "#60a5fa"},
-                {"id": "category_2", "label": "Chute 2", "icon": "📦", "color": "#f59e0b"}
-            ]
+    # Support 2 to 4 chutes for flexible multi-category sorting (e.g. Solid, Liquid, Gas)
+    if len(bins) < 2:
+        bins = [
+            {"id": "category_1", "label": "Chute 1", "icon": "📦", "color": "#60a5fa"},
+            {"id": "category_2", "label": "Chute 2", "icon": "📦", "color": "#f59e0b"}
+        ]
+    elif len(bins) > 4:
+        bins = bins[:4]
+        flash("The Claw Machine sorting game supports up to 4 category chutes.", "info")
 
     # Enforce item limits based on difficulty level: Easy (max 8), Medium (max 12), Hard (max 16)
     diff_lower = difficulty.lower()

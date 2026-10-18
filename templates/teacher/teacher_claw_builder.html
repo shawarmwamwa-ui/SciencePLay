@@ -224,11 +224,7 @@
                 </div>
 
                 <div class="simulator-stage-grid">
-                  <div class="simulator-chute-box" id="canvasLeftChute">
-                    <span class="simulator-chute-icon" id="canvasLeftIcon">🧊</span>
-                    <div class="simulator-chute-title" id="canvasLeftTitle">Solid</div>
-                    <div class="simulator-chute-pocket"></div>
-                  </div>
+                  <div class="simulator-chutes-col" id="simulatorLeftChutes"></div>
 
                   <div class="simulator-center-bay">
                     <div class="simulator-crane-rail">
@@ -241,11 +237,7 @@
                     </div>
                   </div>
 
-                  <div class="simulator-chute-box" id="canvasRightChute">
-                    <span class="simulator-chute-icon" id="canvasRightIcon">💧</span>
-                    <div class="simulator-chute-title" id="canvasRightTitle">Liquid</div>
-                    <div class="simulator-chute-pocket"></div>
-                  </div>
+                  <div class="simulator-chutes-col" id="simulatorRightChutes"></div>
                 </div>
 
                 <div class="simulator-footer-bar">
@@ -268,7 +260,7 @@
                     </div>
                     <div class="col-12 col-md-6 col-lg-3">
                       <span class="badge bg-primary text-white rounded-pill px-2 me-1">2</span>
-                      <strong>Name 2 Chutes:</strong> Label your Left Drop Zone &amp; Right Drop Zone (e.g. <em>Magnetic</em> vs <em>Non-Magnetic</em>).
+                      <strong>Category Chutes:</strong> Configure <strong>2 to 4 chutes</strong> (e.g. <em>Solid, Liquid, Gas</em> or <em>Living vs Non-Living</em>).
                     </div>
                     <div class="col-12 col-md-6 col-lg-3">
                       <span class="badge bg-primary text-white rounded-pill px-2 me-1">3</span>
@@ -282,31 +274,23 @@
                 </div>
               </div>
 
-              <div class="alert alert-warning border-2 rounded-4 p-3 mb-4 d-flex align-items-start gap-3 shadow-sm" style="border-color: #f59e0b !important; background: #fffbeb;">
-                <div class="fs-3 text-warning"><i class="bi bi-lightbulb-fill"></i></div>
-                <div>
-                  <h6 class="fw-bold text-dark mb-1">Claw Machine Cabinet Rule: 2-Chute Target Matching</h6>
-                  <p class="small text-secondary mb-1">
-                    The physical claw machine arcade stage features <strong>2 drop zones (Left Chute vs Right Chute)</strong>. If your science lesson covers 3+ states or concepts (such as <em>Solid, Liquid, and Gas</em>), frame this sorting game as a focused comparison (e.g., <strong>Solid vs. Liquid</strong>, or <strong>Solids vs. Non-Solids</strong>).
-                  </p>
-                  <p class="small text-danger fw-bold mb-0">
-                    <i class="bi bi-check2-circle me-1"></i>Every item configured below must be mapped to Chute 1 or Chute 2 so students always have a matching target chute to score points!
-                  </p>
-                </div>
-              </div>
-
               <div class="builder-step-card">
                 <div class="builder-step-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                   <div class="d-flex align-items-center gap-2">
                     <span class="step-number-badge">2</span>
                     <div>
-                      <h2 class="h5 fw-bold text-dark mb-0">Sorting Chutes (Left &amp; Right Drop Zones)</h2>
-                      <span class="text-muted small">The claw machine arcade stage has 2 physical drop zones: Left Chute and Right Chute.</span>
+                      <h2 class="h5 fw-bold text-dark mb-0">Sorting Chutes (Category Drop Zones)</h2>
+                      <span class="text-muted small">Configure 2 to 4 category drop chutes for students to sort items into.</span>
                     </div>
                   </div>
-                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-bold">
-                    <i class="bi bi-layout-split me-1"></i>Dual-Chute Arcade Setup (2 Zones)
-                  </span>
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-bold" id="chutesCountBadge">
+                      <i class="bi bi-layout-split me-1"></i>2 Chutes Configured
+                    </span>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold" id="btnAddChute" onclick="addChute()">
+                      <i class="bi bi-plus-circle me-1"></i>Add Another Chute (Max 4)
+                    </button>
+                  </div>
                 </div>
 
                 <div class="row g-3" id="chutesContainer">
