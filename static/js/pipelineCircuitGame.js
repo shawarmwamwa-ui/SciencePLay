@@ -168,22 +168,33 @@ export function initPipelineCircuit() {
     setupInteractions(steps);
   }
 
+  let currentDrag = null; // { podId, fromSlot }
+
   function setupInteractions(steps) {
     const trayPods = container.querySelectorAll('.pc-tray-pod');
     const dropzones = container.querySelectorAll('.pc-dropzone');
+    const trayCard = container.querySelector('.pc-tray-card') || document.getElementById('pc-pods-tray');
     const testBtn = document.getElementById('pc-test-btn');
     const hintText = document.getElementById('pc-hint-text');
 
     // Drag and Drop for Tray Pods
     trayPods.forEach(podEl => {
       podEl.addEventListener('dragstart', (e) => {
-        if (isTesting || podEl.classList.contains('placed')) return;
-        e.dataTransfer.setData('text/plain', podEl.dataset.podId);
+        if (isTesting || podEl.classList.contains('placed')) {
+          e.preventDefault();
+          return;
+        }
+        currentDrag = { podId: podEl.dataset.podId, fromSlot: null };
+        e.dataTransfer.setData('text/plain', String(podEl.dataset.podId));
+        e.dataTransfer.setData('application/json', JSON.stringify(currentDrag));
         podEl.style.opacity = '0.5';
       });
 
       podEl.addEventListener('dragend', () => {
         podEl.style.opacity = '1';
+        currentDrag = null;
+        dropzones.forEach(z => z.classList.remove('drag-over'));
+        if (trayCard) trayCard.classList.remove('tray-drag-over');
       });
 
       // Tap-to-select for mobile / tablets
@@ -197,18 +208,19 @@ export function initPipelineCircuit() {
           trayPods.forEach(p => p.style.borderColor = '');
           selectedTrayPodId = podId;
           podEl.style.borderColor = '#10b981';
-          if (hintText) hintText.textContent = `Tap an empty slot on the pipeline to place "${podEl.querySelector('.pc-pod-label').textContent}".`;
+          if (hintText) hintText.textContent = `Tap any slot on the pipeline to place "${podEl.querySelector('.pc-pod-label').textContent}".`;
         }
       });
     });
 
-    // Dropzones
+    // Dropzones (Slot boxes)
     dropzones.forEach(zoneEl => {
       const slotIdx = parseInt(zoneEl.dataset.slotIndex, 10);
 
       zoneEl.addEventListener('dragover', (e) => {
         e.preventDefault();
-        if (isTesting || placedPods[slotIdx]) return;
+        if (isTesting) return;
+        if (currentDrag && currentDrag.fromSlot === slotIdx) return;
         zoneEl.classList.add('drag-over');
       });
 
@@ -219,23 +231,69 @@ export function initPipelineCircuit() {
       zoneEl.addEventListener('drop', (e) => {
         e.preventDefault();
         zoneEl.classList.remove('drag-over');
-        if (isTesting || placedPods[slotIdx]) return;
-        const podId = e.dataTransfer.getData('text/plain');
-        placePodInSlot(podId, slotIdx, steps);
+        if (isTesting) return;
+
+        let dragData = currentDrag;
+        if (!dragData) {
+          try {
+            dragData = JSON.parse(e.dataTransfer.getData('application/json') || '{}');
+          } catch (_) {
+            dragData = { podId: e.dataTransfer.getData('text/plain'), fromSlot: null };
+          }
+        }
+        if (!dragData || !dragData.podId) {
+          const textId = e.dataTransfer.getData('text/plain');
+          if (textId) dragData = { podId: textId, fromSlot: null };
+        }
+        if (!dragData || !dragData.podId) return;
+
+        const fromSlot = (dragData.fromSlot !== undefined && dragData.fromSlot !== null) ? parseInt(dragData.fromSlot, 10) : null;
+        placePodInSlot(dragData.podId, slotIdx, steps, fromSlot);
       });
 
       // Click dropzone to place selected pod or remove existing pod
       zoneEl.addEventListener('click', () => {
         if (isTesting) return;
-        if (placedPods[slotIdx]) {
-          // Return pod to tray
-          removePodFromSlot(slotIdx);
-        } else if (selectedTrayPodId) {
-          placePodInSlot(selectedTrayPodId, slotIdx, steps);
+        if (selectedTrayPodId) {
+          placePodInSlot(selectedTrayPodId, slotIdx, steps, null);
           selectedTrayPodId = null;
+          trayPods.forEach(p => p.style.borderColor = '');
+        } else if (placedPods[slotIdx]) {
+          removePodFromSlot(slotIdx, steps);
         }
       });
     });
+
+    // Word Bank (Tray): Dragging a placed pod back to the word bank removes it from its slot!
+    if (trayCard) {
+      trayCard.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (isTesting) return;
+        if (currentDrag && currentDrag.fromSlot !== null && currentDrag.fromSlot !== undefined) {
+          trayCard.classList.add('tray-drag-over');
+        }
+      });
+
+      trayCard.addEventListener('dragleave', () => {
+        trayCard.classList.remove('tray-drag-over');
+      });
+
+      trayCard.addEventListener('drop', (e) => {
+        e.preventDefault();
+        trayCard.classList.remove('tray-drag-over');
+        if (isTesting) return;
+
+        let dragData = currentDrag;
+        if (!dragData) {
+          try {
+            dragData = JSON.parse(e.dataTransfer.getData('application/json') || '{}');
+          } catch (_) {}
+        }
+        if (dragData && dragData.fromSlot !== null && dragData.fromSlot !== undefined) {
+          removePodFromSlot(parseInt(dragData.fromSlot, 10), steps);
+        }
+      });
+    }
 
     if (testBtn) {
       testBtn.addEventListener('click', () => {
@@ -246,41 +304,113 @@ export function initPipelineCircuit() {
     }
   }
 
-  function placePodInSlot(podId, slotIdx, steps) {
+  function renderDropzoneContent(slotIdx, podData, steps) {
+    const dropzone = document.getElementById(`dropzone-${slotIdx}`);
+    const nodeSlot = document.getElementById(`node-slot-${slotIdx}`);
+    if (!dropzone) return;
+
+    if (!podData) {
+      dropzone.innerHTML = `
+        <div class="pc-dropzone-placeholder">
+          <i class="bi bi-box-arrow-in-down"></i>
+          <span>Slot ${slotIdx + 1}</span>
+        </div>
+      `;
+      if (nodeSlot) {
+        nodeSlot.classList.remove('filled', 'correct', 'error');
+      }
+      return;
+    }
+
+    dropzone.innerHTML = `
+      <div class="pc-pod pc-slot-pod"
+           id="slot-pod-${slotIdx}"
+           data-pod-id="${podData.id}"
+           data-slot-index="${slotIdx}"
+           draggable="true"
+           style="width: 100%; height: 100%; cursor: grab;">
+        ${podData.image_url 
+          ? `<img src="${podData.image_url}" class="pc-pod-img" alt="${podData.label}">` 
+          : `<div class="pc-pod-icon">${podData.icon || '⚡'}</div>`}
+        <div class="pc-pod-label">${podData.label}</div>
+        <small class="text-muted mt-1" style="font-size: 0.65rem;">Drag to move or tap to remove</small>
+      </div>
+    `;
+
+    if (nodeSlot) {
+      nodeSlot.classList.add('filled');
+      nodeSlot.classList.remove('correct', 'error');
+    }
+
+    // Attach drag events to this placed pod
+    const slotPodEl = dropzone.querySelector('.pc-slot-pod');
+    if (slotPodEl) {
+      slotPodEl.addEventListener('dragstart', (e) => {
+        if (isTesting) {
+          e.preventDefault();
+          return;
+        }
+        currentDrag = { podId: podData.id, fromSlot: slotIdx };
+        e.dataTransfer.setData('text/plain', String(podData.id));
+        e.dataTransfer.setData('application/json', JSON.stringify(currentDrag));
+        slotPodEl.style.opacity = '0.4';
+      });
+
+      slotPodEl.addEventListener('dragend', () => {
+        slotPodEl.style.opacity = '1';
+        currentDrag = null;
+        document.querySelectorAll('.pc-dropzone').forEach(z => z.classList.remove('drag-over'));
+        const trayCard = container.querySelector('.pc-tray-card') || document.getElementById('pc-pods-tray');
+        if (trayCard) trayCard.classList.remove('tray-drag-over');
+      });
+    }
+  }
+
+  function placePodInSlot(podId, slotIdx, steps, fromSlot = null) {
     const podData = steps.find(s => String(s.id) === String(podId));
     if (!podData) return;
 
-    placedPods[slotIdx] = podData;
+    if (fromSlot !== null && fromSlot !== undefined) {
+      if (fromSlot === slotIdx) return; // Dropped onto self
+      const existingInTarget = placedPods[slotIdx];
+
+      if (existingInTarget) {
+        // Swap two slots!
+        placedPods[fromSlot] = existingInTarget;
+        placedPods[slotIdx] = podData;
+        renderDropzoneContent(fromSlot, existingInTarget, steps);
+        renderDropzoneContent(slotIdx, podData, steps);
+      } else {
+        // Move from fromSlot to empty slotIdx
+        delete placedPods[fromSlot];
+        placedPods[slotIdx] = podData;
+        renderDropzoneContent(fromSlot, null, steps);
+        renderDropzoneContent(slotIdx, podData, steps);
+      }
+    } else {
+      // Coming from tray (word bank)
+      const existingInTarget = placedPods[slotIdx];
+      if (existingInTarget) {
+        // Return existing target pod back to tray
+        const oldTrayPod = document.getElementById(`pod-${existingInTarget.id}`);
+        if (oldTrayPod) oldTrayPod.classList.remove('placed');
+      }
+
+      placedPods[slotIdx] = podData;
+      // Mark tray pod as placed
+      const trayPod = document.getElementById(`pod-${podId}`);
+      if (trayPod) {
+        trayPod.classList.add('placed');
+        trayPod.style.borderColor = '';
+      }
+      renderDropzoneContent(slotIdx, podData, steps);
+    }
+
     sfxSnap();
-
-    // Mark tray pod as placed
-    const trayPod = document.getElementById(`pod-${podId}`);
-    if (trayPod) {
-      trayPod.classList.add('placed');
-      trayPod.style.borderColor = '';
-    }
-
-    // Render in dropzone
-    const dropzone = document.getElementById(`dropzone-${slotIdx}`);
-    if (dropzone) {
-      dropzone.innerHTML = `
-        <div class="pc-pod" style="width: 100%; height: 100%;">
-          ${podData.image_url 
-            ? `<img src="${podData.image_url}" class="pc-pod-img" alt="${podData.label}">` 
-            : `<div class="pc-pod-icon">${podData.icon || '⚡'}</div>`}
-          <div class="pc-pod-label">${podData.label}</div>
-          <small class="text-muted mt-1" style="font-size: 0.65rem;">Tap to remove</small>
-        </div>
-      `;
-    }
-
-    const nodeSlot = document.getElementById(`node-slot-${slotIdx}`);
-    if (nodeSlot) nodeSlot.classList.add('filled');
-
     checkReadyToTest(steps.length);
   }
 
-  function removePodFromSlot(slotIdx) {
+  function removePodFromSlot(slotIdx, steps = null) {
     const podData = placedPods[slotIdx];
     if (!podData) return;
 
@@ -289,25 +419,15 @@ export function initPipelineCircuit() {
 
     // Unmark tray pod
     const trayPod = document.getElementById(`pod-${podData.id}`);
-    if (trayPod) trayPod.classList.remove('placed');
-
-    // Reset dropzone
-    const dropzone = document.getElementById(`dropzone-${slotIdx}`);
-    if (dropzone) {
-      dropzone.innerHTML = `
-        <div class="pc-dropzone-placeholder">
-          <i class="bi bi-box-arrow-in-down"></i>
-          <span>Slot ${slotIdx + 1}</span>
-        </div>
-      `;
+    if (trayPod) {
+      trayPod.classList.remove('placed');
+      trayPod.style.borderColor = '';
     }
 
-    const nodeSlot = document.getElementById(`node-slot-${slotIdx}`);
-    if (nodeSlot) {
-      nodeSlot.classList.remove('filled', 'correct', 'error');
-    }
+    renderDropzoneContent(slotIdx, null, steps);
 
-    checkReadyToTest(rounds[currentRoundIdx].steps.length);
+    const totalSteps = steps ? steps.length : rounds[currentRoundIdx].steps.length;
+    checkReadyToTest(totalSteps);
   }
 
   function checkReadyToTest(totalSteps) {
