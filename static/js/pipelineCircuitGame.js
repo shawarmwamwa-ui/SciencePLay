@@ -48,6 +48,8 @@ export function initPipelineCircuit() {
     } catch (e) {
       // Audio autoplay policy fallback
     }
+  }
+
   function escapeHtml(str) {
     if (!str) return '';
     return String(str)

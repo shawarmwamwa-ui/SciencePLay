@@ -1405,10 +1405,20 @@ def dashboard():
         Lesson, Lesson.id == LessonAssignment.lesson_id
     ).filter(
         LessonAssignment.student_id == user_id,
-        (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)
+        (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None),
+        (Lesson.is_archived == False) | (Lesson.is_archived == None)
     ).all()
-    lessons = [lesson for _, lesson in lesson_assignment_rows]
-    lesson_due_dates = {lesson.id: assignment.due_date for assignment, lesson in lesson_assignment_rows}
+    
+    seen_lesson_ids = set()
+    lessons = []
+    lesson_due_dates = {}
+    for assignment, lesson in lesson_assignment_rows:
+        if getattr(lesson, 'is_draft', False):
+            continue
+        if lesson.id not in seen_lesson_ids:
+            seen_lesson_ids.add(lesson.id)
+            lessons.append(lesson)
+            lesson_due_dates[lesson.id] = assignment.due_date
 
     # Auto-sync core curriculum activities for enrolled student (Terms 1 & 2)
     playable_engines = ['claw_machine', 'find_the_part', 'pipeline_circuit', 'build_a_plant', 'metal_logic', 'recycle_sorter']
@@ -1455,21 +1465,20 @@ def dashboard():
     ).filter(
         ActivityAssignment.student_id == user_id,
         (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None),
-        ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted']),
-        (Activity.is_draft == False) | (Activity.is_draft == None),
-        (Activity.is_archived == False) | (Activity.is_archived == None),
-        (Activity.engine.in_(playable_engines) | Activity.engine.is_(None))
+        (Activity.is_archived == False) | (Activity.is_archived == None)
     ).all()
 
-    # Deduplicate activities by activity.id so every assigned activity counts toward the student's tasks
+    # Deduplicate activities by activity.id so every assigned non-draft activity counts toward student's tasks
     seen_activity_ids = set()
     activities = []
-    for _, activity in activity_assignment_rows:
+    activity_due_dates = {}
+    for assignment, activity in activity_assignment_rows:
+        if getattr(activity, 'is_draft', False):
+            continue
         if activity.id not in seen_activity_ids:
             seen_activity_ids.add(activity.id)
             activities.append(activity)
-
-    activity_due_dates = {activity.id: assignment.due_date for assignment, activity in activity_assignment_rows}
+            activity_due_dates[activity.id] = assignment.due_date
     progress_logs = []
     completed_by_activity = {}
 
@@ -1554,8 +1563,7 @@ def dashboard():
     # Overall Progress = (Completed Lessons + Completed Activities) / (Total Assigned Lessons + Total Assigned Activities)
     completed_lessons_count = sum(1 for lp in lesson_progress if bool(lp.get('completed')) or lp.get('percent', 0) >= 100)
     total_lessons_count = len(lessons)
-    assigned_activity_ids = {a.id for a in activities}
-    completed_activities_count = sum(1 for aid in completed_by_activity if aid in assigned_activity_ids) if assigned_activity_ids else completed_activities
+    completed_activities_count = completed_activities
 
     total_tasks_count = total_lessons_count + total_activities
     completed_tasks_count = completed_lessons_count + completed_activities_count
