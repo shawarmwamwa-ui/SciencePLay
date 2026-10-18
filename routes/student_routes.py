@@ -983,6 +983,10 @@ def get_student_curriculum_terms_data(user_id):
 
     user_lps = LessonProgress.query.filter_by(student_id=user_id).all()
     user_attempts = LessonAttemptLog.query.filter_by(student_id=user_id).all()
+    user_game_attempts = AttemptLog.query.filter_by(student_id=user_id).all()
+    game_attempts_by_act = defaultdict(list)
+    for g_att in user_game_attempts:
+        game_attempts_by_act[g_att.activity_id].append(g_att)
 
     completed_lesson_ids = set()
     lp_by_lesson_id = {}
@@ -1080,9 +1084,11 @@ def get_student_curriculum_terms_data(user_id):
         if t_name not in terms_dict:
             terms_dict[t_name] = {'name': t_name, 'lessons': [], 'activities': [], 'lessons_completed': 0, 'lessons_total': 0, 'activities_completed': 0, 'activities_total': 0}
 
-        scores = [p.score for p in progress_logs if (p.activity_id == act.id or (p.activity and p.activity.engine == act.engine)) and p.score is not None]
-        best_score = max(scores, default=0)
-        has_played = len(scores) > 0
+        scores = [p.score for p in progress_logs if p.activity_id == act.id and p.score is not None]
+        attempt_scores = [a.score for a in game_attempts_by_act.get(act.id, []) if a.score is not None]
+        all_scores = scores + attempt_scores
+        best_score = max(all_scores, default=0)
+        has_played = len(all_scores) > 0
         # 80%+ Mastery Standard: Student must score >= 80% to mark a game as Mastered / Done
         is_act_done = best_score >= 80
         is_perfect = best_score >= 100
