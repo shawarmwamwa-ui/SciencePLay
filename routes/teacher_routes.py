@@ -3596,6 +3596,39 @@ def save_pipeline_circuit():
             flash(f"Invalid sequence configuration: {e}", "danger")
             return redirect(url_for('teacher.game_studio'))
 
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'activities')
+        os.makedirs(upload_dir, exist_ok=True)
+        ALLOWED_IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp'}
+
+        for idx, step in enumerate(steps):
+            file_key = f"stage_file_{idx}"
+            if file_key in request.files:
+                f = request.files[file_key]
+                if f and f.filename:
+                    ext = os.path.splitext(f.filename)[1].lower()
+                    mimetype = (f.mimetype or '').lower()
+                    if ext in ALLOWED_IMAGE_EXTS and mimetype.startswith('image/'):
+                        unique_name = f"pipe_{uuid.uuid4().hex[:12]}{ext}"
+                        filepath = os.path.join(upload_dir, unique_name)
+                        f.save(filepath)
+                        step['image_url'] = f"/static/uploads/activities/{unique_name}"
+            elif isinstance(step.get('image_url'), str) and step['image_url'].startswith('data:image/'):
+                try:
+                    header, encoded = step['image_url'].split(',', 1)
+                    mime = header.split(';')[0].split(':')[1].lower()
+                    ext = '.png'
+                    if 'jpeg' in mime or 'jpg' in mime:
+                        ext = '.jpg'
+                    elif 'webp' in mime:
+                        ext = '.webp'
+                    unique_name = f"pipe_{uuid.uuid4().hex[:12]}{ext}"
+                    filepath = os.path.join(upload_dir, unique_name)
+                    with open(filepath, 'wb') as out_f:
+                        out_f.write(base64.b64decode(encoded))
+                    step['image_url'] = f"/static/uploads/activities/{unique_name}"
+                except Exception as err:
+                    current_app.logger.warning(f"Could not decode base64 step image: {err}")
+
         config_payload = {
             "title": title,
             "instructions": instructions,

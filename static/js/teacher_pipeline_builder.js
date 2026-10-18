@@ -54,16 +54,35 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
 
-        <div class="row g-2">
-          <div class="col-12 col-md-3">
-            <label class="form-label small text-muted fw-bold mb-1">Icon / Emoji</label>
-            <input type="text" class="form-control form-control-sm text-center fw-bold input-icon" data-index="${idx}" value="${step.icon || '⚡'}" maxlength="4" placeholder="e.g. 🥚">
+        <div class="row g-2 align-items-center">
+          <div class="col-12 col-md-4">
+            <label class="form-label small text-muted fw-bold mb-1">Illustration or Icon</label>
+            <div class="d-flex align-items-center gap-2">
+              <div class="position-relative flex-shrink-0" style="width: 48px; height: 48px;">
+                ${step.image_url ? `
+                  <img src="${step.image_url}" class="rounded-3 border object-fit-cover shadow-xs" style="width: 48px; height: 48px;" alt="${step.label}">
+                  <button type="button" class="btn btn-danger btn-sm p-0 position-absolute top-0 end-0 rounded-circle d-flex align-items-center justify-content-center btn-remove-img" data-index="${idx}" style="width: 18px; height: 18px; font-size: 10px; transform: translate(30%, -30%);" title="Remove custom image">
+                    <i class="bi bi-x"></i>
+                  </button>
+                ` : `
+                  <input type="text" class="form-control form-control-sm text-center fw-bold input-icon p-1" style="height: 48px; font-size: 1.5rem;" data-index="${idx}" value="${step.icon || '⚡'}" maxlength="4" placeholder="⚡" title="Type or paste emoji">
+                `}
+              </div>
+              <div class="d-flex flex-column gap-1">
+                <label class="btn btn-outline-primary btn-sm px-2 py-1 fw-bold d-inline-flex align-items-center gap-1 shadow-xs mb-0" style="font-size: 0.75rem; cursor: pointer;">
+                  <i class="bi bi-upload"></i>
+                  <span>${step.image_url ? 'Replace' : 'Upload'}</span>
+                  <input type="file" name="stage_file_${idx}" class="d-none stage-file-input" data-index="${idx}" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+                </label>
+                <span class="text-muted" style="font-size: 0.65rem;">${step.image_url ? 'Custom image active' : 'Emoji or custom image'}</span>
+              </div>
+            </div>
           </div>
           <div class="col-12 col-md-4">
             <label class="form-label small text-muted fw-bold mb-1">Stage Label <span class="text-danger">*</span></label>
             <input type="text" class="form-control form-control-sm fw-bold input-label" data-index="${idx}" value="${step.label || ''}" placeholder="e.g. Tadpole" required>
           </div>
-          <div class="col-12 col-md-5">
+          <div class="col-12 col-md-4">
             <label class="form-label small text-muted fw-bold mb-1">Pedagogical Clue / Hint</label>
             <input type="text" class="form-control form-control-sm input-hint" data-index="${idx}" value="${step.hint || ''}" placeholder="Hint shown if student places this wrong">
           </div>
@@ -110,6 +129,40 @@ document.addEventListener('DOMContentLoaded', () => {
       inp.addEventListener('input', (e) => {
         const idx = parseInt(e.target.dataset.index, 10);
         steps[idx].hint = e.target.value.trim();
+      });
+    });
+
+    // File upload
+    stagesContainer.querySelectorAll('.stage-file-input').forEach(inp => {
+      inp.addEventListener('change', (e) => {
+        const idx = parseInt(e.target.dataset.index, 10);
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const validExtensions = ['png', 'jpg', 'jpeg', 'webp'];
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        if (!validExtensions.includes(ext) || !file.type.startsWith('image/')) {
+          showInlineFeedback("Only image files (.png, .jpg, .jpeg, .webp) are supported.", "danger");
+          inp.value = '';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(loadEvent) {
+          steps[idx].image_url = loadEvent.target.result;
+          renderStages();
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    // Remove custom image
+    stagesContainer.querySelectorAll('.btn-remove-img').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.index, 10);
+        delete steps[idx].image_url;
+        renderStages();
       });
     });
 
@@ -166,7 +219,9 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="d-flex flex-column align-items-center" style="min-width: 120px;">
         <div class="pc-slot-number-badge mb-1">${idx + 1}</div>
         <div class="pc-pod" style="width: 110px; height: 110px; padding: 0.5rem;">
-          <div class="pc-pod-icon" style="font-size: 1.8rem;">${step.icon || '⚡'}</div>
+          ${step.image_url 
+            ? `<img src="${step.image_url}" class="pc-pod-img" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px; margin-bottom: 0.3rem;" alt="${step.label}">` 
+            : `<div class="pc-pod-icon" style="font-size: 1.8rem; margin-bottom: 0.3rem;">${step.icon || '⚡'}</div>`}
           <div class="pc-pod-label" style="font-size: 0.75rem;">${step.label || 'Step ' + (idx + 1)}</div>
         </div>
       </div>

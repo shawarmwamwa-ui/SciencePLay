@@ -549,6 +549,12 @@ body.pipeline-circuit-body {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.2);
 }
 
+.pc-modal-content p {
+  color: #cbd5e1 !important;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
 .pc-stars-wrap {
   display: flex;
   justify-content: center;

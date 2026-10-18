@@ -529,7 +529,8 @@ export function initPipelineCircuit() {
   async function finishGame() {
     // Show victory modal
     const finalScore = score;
-    const stars = score >= 300 ? 3 : (score >= 150 ? 2 : 1);
+    // Standard SciencePlay star scale: 90%+ = 3 stars, 60%+ = 2 stars, otherwise 1 star
+    const stars = finalScore >= 90 ? 3 : (finalScore >= 60 ? 2 : 1);
 
     // Post progress to student activity backend if not preview
     if (!isPreview && activityId) {
@@ -539,7 +540,7 @@ export function initPipelineCircuit() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             activity_id: activityId,
-            score: Math.min(100, Math.round((score / (rounds.length * 120)) * 100)),
+            score: Math.min(100, finalScore),
             stars: stars,
             completed: true
           })
@@ -553,17 +554,17 @@ export function initPipelineCircuit() {
       <div class="d-flex align-items-center justify-content-center p-4" style="min-height: 60vh;">
         <div class="pc-modal-content p-5 text-center shadow-lg" style="max-width: 520px; width: 100%;">
           <div class="display-3 mb-2">⚡🏆⚡</div>
-          <h2 class="fw-black text-white mb-1">Circuit Fully Powered!</h2>
-          <p class="text-muted mb-4">You solved all the sequence stages and completed the bio-pipeline!</p>
+          <h2 class="fw-black text-white mb-2" style="font-size: 2rem;">Circuit Fully Powered!</h2>
+          <p class="mb-4" style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.5;">You solved all the sequence stages and completed the bio-pipeline!</p>
           
-          <div class="pc-stars-wrap">
+          <div class="pc-stars-wrap mb-4" style="font-size: 2.3rem;">
             ${Array.from({length: 3}).map((_, i) => `
               <i class="bi ${i < stars ? 'bi-star-fill text-warning' : 'bi-star text-secondary'}"></i>
             `).join('')}
           </div>
 
-          <div class="p-3 bg-dark rounded-4 border border-secondary mb-4">
-            <div class="text-muted small fw-bold text-uppercase">Final Score</div>
+          <div class="p-3 rounded-4 mb-4" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(56, 189, 248, 0.3);">
+            <div class="small fw-bold text-uppercase mb-1" style="color: #94a3b8; letter-spacing: 0.05em;">Final Score</div>
             <div class="h3 fw-bold text-info mb-0">${finalScore} Points</div>
           </div>
 
