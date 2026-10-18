@@ -39,6 +39,20 @@
     }
   ];
 
+  // If teacher uploaded a custom diagram from the creation modal, initialize round 1 with it
+  try {
+    const pendingImg = sessionStorage.getItem('pendingDiagramImage');
+    const pendingName = sessionStorage.getItem('pendingDiagramName');
+    if (pendingImg && rounds[0]) {
+      rounds[0].illustrationSrc = pendingImg;
+      if (pendingName) rounds[0].illustrationAlt = pendingName;
+      sessionStorage.removeItem('pendingDiagramImage');
+      sessionStorage.removeItem('pendingDiagramName');
+    }
+  } catch (err) {
+    console.warn('Could not read pending diagram from sessionStorage', err);
+  }
+
   let currentRoundIdx = 0;
   let activeZoneId = null;
 

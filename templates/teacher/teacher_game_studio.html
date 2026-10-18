@@ -14,8 +14,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260903_4') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher_game_studio.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher_game_studio.css', v='20261018_modal_v2') }}">
 </head>
 
 <body class="teacher-page teacher-dashboard-page">
@@ -550,70 +549,117 @@
     </div>
   </div>
 
-  <div class="modal fade" id="newClawChoiceModal" tabindex="-1" aria-labelledby="newClawChoiceLabel" aria-hidden="true" style="z-index: 1065;">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+  <!-- Modal for Creating Sorting Claw Activity -->
+  <div class="modal fade game-engine-creation-modal" id="newClawChoiceModal" tabindex="-1" aria-labelledby="newClawChoiceLabel" aria-hidden="true" style="z-index: 1065;">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
       <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-        <div class="modal-header bg-primary text-white border-0 py-3 px-4">
-          <h5 class="modal-title fw-black fs-5 d-flex align-items-center gap-2" id="newClawChoiceLabel">
-            <i class="bi bi-controller fs-4"></i>
-            <span>Create Sorting Claw Activity</span>
-          </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-header game-engine-modal-header border-bottom py-3 px-4 px-md-4 d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <div class="game-engine-modal-icon">
+              <i class="bi bi-controller"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold fs-5 text-dark mb-0" id="newClawChoiceLabel">Create Sorting Claw Activity</h5>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body p-4">
-          <p class="text-muted fw-bold mb-4">Choose how you would like to build your arcade sorting game:</p>
-          <div class="row g-4">
-            <div class="col-12 col-md-6">
-              <div class="card h-100 border-2 rounded-4 p-4 shadow-sm text-center d-flex flex-column justify-content-between hover-card" style="border-color: #3b82f6; background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);">
+        <div class="modal-body p-3 p-md-4">
+          <p class="text-secondary fw-semibold mb-3 fs-6">Choose how you would like to build your arcade sorting game:</p>
+          <div class="row g-3 g-md-4 align-items-stretch">
+            <!-- Left Card: Start from Scratch -->
+            <div class="col-12 col-md-6 d-flex flex-column">
+              <div class="game-choice-card">
                 <div>
-                  <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-primary text-white mb-3" style="width: 60px; height: 60px; font-size: 1.75rem;">
+                  <div class="game-choice-icon-badge">
                     <i class="bi bi-box-seam-fill"></i>
                   </div>
-                  <h3 class="h5 fw-bold text-dark mb-2">Start from Scratch</h3>
-                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold mb-3">Clean Workspace</span>
-                  <p class="text-muted small mb-3" style="line-height: 1.55;">
-                    Begin with an empty 2-chute arcade cabinet. Follow step-by-step teacher instructions to name your categories and add your custom sorting items.
+                  <h3 class="h5 fw-bold text-dark mb-1">Start from Scratch</h3>
+                  <p class="game-choice-description">
+                    Begin with an empty arcade cabinet. Follow step-by-step teacher instructions to name your category chutes and add your custom sorting items.
                   </p>
                 </div>
-                <a href="{{ url_for('teacher.claw_machine_builder', mode='blank') }}" class="btn btn-primary rounded-pill fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
-                  <span>Start Blank Game</span>
-                  <i class="bi bi-arrow-right"></i>
-                </a>
+                <div class="mt-3 pt-2">
+                  <a href="{{ url_for('teacher.claw_machine_builder', mode='blank') }}" class="btn btn-primary rounded-pill fw-bold py-2 w-100 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                    <span>Start Blank Game</span>
+                    <i class="bi bi-arrow-right"></i>
+                  </a>
+                </div>
               </div>
             </div>
 
-            <div class="col-12 col-md-6">
-              <div class="card h-100 border-2 rounded-4 p-4 shadow-sm d-flex flex-column justify-content-between hover-card" style="border-color: #cbd5e1; background: #ffffff;">
+            <!-- Right Card: Use a Topic Preset -->
+            <div class="col-12 col-md-6 d-flex flex-column">
+              <div class="game-choice-card">
                 <div>
-                  <div class="text-center">
-                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-warning-subtle text-warning-emphasis mb-3" style="width: 60px; height: 60px; font-size: 1.75rem;">
-                      <i class="bi bi-magic"></i>
-                    </div>
-                    <h3 class="h5 fw-bold text-dark mb-2">Use a Topic Preset</h3>
-                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold mb-3">Pre-Configured</span>
-                    <p class="text-muted small mb-3" style="line-height: 1.55;">
-                      Start with pre-loaded categories, items, and kid-friendly explanations ready to play or customize.
-                    </p>
+                  <div class="game-choice-icon-badge">
+                    <i class="bi bi-collection-play-fill"></i>
                   </div>
+                  <h3 class="h5 fw-bold text-dark mb-1">Use a Topic Preset</h3>
+                  <p class="game-choice-description">
+                    Start with pre-loaded categories, items, and kid-friendly explanations ready to play or customize.
+                  </p>
 
-                  <div class="d-grid gap-2 mb-2">
-                    <a href="{{ url_for('teacher.claw_machine_builder', preset='states_of_matter') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
-                      <span><i class="bi bi-droplet-half text-primary me-2"></i>Solid vs Liquid Sorting</span>
-                      <i class="bi bi-chevron-right text-muted small"></i>
-                    </a>
-                    <a href="{{ url_for('teacher.claw_machine_builder', preset='living_vs_nonliving') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
-                      <span><i class="bi bi-flower1 text-success me-2"></i>Living vs Non-Living</span>
-                      <i class="bi bi-chevron-right text-muted small"></i>
-                    </a>
-                    <a href="{{ url_for('teacher.claw_machine_builder', preset='waste_sorting') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
-                      <span><i class="bi bi-recycle text-success me-2"></i>Organic vs Recyclable</span>
-                      <i class="bi bi-chevron-right text-muted small"></i>
-                    </a>
-                    <a href="{{ url_for('teacher.claw_machine_builder', preset='herbivore_vs_carnivore') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
-                      <span><i class="bi bi-egg-fried text-warning me-2"></i>Herbivore vs Carnivore</span>
-                      <i class="bi bi-chevron-right text-muted small"></i>
-                    </a>
+                  <div class="preset-options-list my-3">
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.claw_machine_builder', preset='states_of_matter') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0"><i class="bi bi-droplet-half"></i></span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">States of Matter Sorting</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">3 chutes • 12 items • Grades 1–3</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
+
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.claw_machine_builder', preset='living_vs_nonliving') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0"><i class="bi bi-flower1"></i></span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">Living vs Non-Living</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">2 chutes • 8 items • Kindergarten–Grade 2</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
+
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.claw_machine_builder', preset='waste_sorting') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0"><i class="bi bi-recycle"></i></span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">Organic vs Recyclable Waste</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">2 chutes • 10 items • Grades 2–4</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
+
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.claw_machine_builder', preset='herbivore_vs_carnivore') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0"><i class="bi bi-egg-fried"></i></span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">Herbivore vs Carnivore Diet</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">2 chutes • 8 items • Grades 1–3</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                <div class="mt-auto pt-2">
+                  <button type="button" class="btn btn-secondary rounded-pill fw-bold py-2 w-100 d-flex align-items-center justify-content-center gap-2 disabled btn-start-preset shadow-sm" disabled>
+                    <span>Start with this preset</span>
+                    <i class="bi bi-arrow-right"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -623,67 +669,135 @@
     </div>
   </div>
 
-  <!-- Modal for Creating Diagram Match Activity -->
-  <div class="modal fade" id="newFindThePartChoiceModal" tabindex="-1" aria-labelledby="newFindThePartChoiceLabel" aria-hidden="true" style="z-index: 1065;">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+  <!-- Modal for Creating Diagram Match & Label Activity -->
+  <div class="modal fade game-engine-creation-modal" id="newFindThePartChoiceModal" tabindex="-1" aria-labelledby="newFindThePartChoiceLabel" aria-hidden="true" style="z-index: 1065;">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
       <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-        <div class="modal-header bg-info text-white border-0 py-3 px-4" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;">
-          <h5 class="modal-title fw-black fs-5 d-flex align-items-center gap-2" id="newFindThePartChoiceLabel">
-            <i class="bi bi-pin-map-fill fs-4"></i>
-            <span>Create Diagram Match &amp; Label Activity</span>
-          </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-header game-engine-modal-header border-bottom py-3 px-4 px-md-4 d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <div class="game-engine-modal-icon">
+              <i class="bi bi-pin-map-fill"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold fs-5 text-dark mb-0" id="newFindThePartChoiceLabel">Create Diagram Match &amp; Label Activity</h5>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body p-4">
-          <p class="text-muted fw-bold mb-4">Choose how you would like to create your interactive diagram labeling game:</p>
-          <div class="row g-4">
-            <div class="col-12 col-md-6">
-              <div class="card h-100 border-2 rounded-4 p-4 shadow-sm text-center d-flex flex-column justify-content-between hover-card" style="border-color: #0284c7; background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);">
+        <div class="modal-body p-3 p-md-4">
+          <p class="text-secondary fw-semibold mb-3 fs-6">Choose how you would like to create your interactive diagram labeling game:</p>
+          <div class="row g-3 g-md-4 align-items-stretch">
+            <!-- Left Card: Upload Custom Diagram -->
+            <div class="col-12 col-md-6 d-flex flex-column">
+              <div class="game-choice-card">
                 <div>
-                  <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-info text-white mb-3" style="width: 60px; height: 60px; font-size: 1.75rem;">
+                  <div class="game-choice-icon-badge">
                     <i class="bi bi-cloud-arrow-up-fill"></i>
                   </div>
-                  <h3 class="h5 fw-bold text-dark mb-2">Upload Custom Diagram</h3>
-                  <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1 fw-bold mb-3">Any Curriculum Illustration</span>
-                  <p class="text-muted small mb-3" style="line-height: 1.55;">
-                    Upload any diagram (.png, .jpg, .webp). Click to drop pins on organs, layers, or parts, type the correct answers, and customize distractors for your word bank.
+                  <h3 class="h5 fw-bold text-dark mb-1">Upload Custom Diagram</h3>
+                  <p class="game-choice-description">
+                    Upload any diagram illustration (.png, .jpg, .webp). Click to drop pins on organs, layers, or parts, type the correct answers, and customize distractors.
                   </p>
+
+                  <!-- Image Dropzone Area -->
+                  <div class="diagram-dropzone my-3 p-3 text-center position-relative" id="diagramModalDropzone">
+                    <input type="file" id="diagramModalFileInput" class="d-none" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+                    
+                    <!-- Empty / Prompt State -->
+                    <div id="diagramDropzonePrompt" class="py-2">
+                      <div class="text-primary mb-1 fs-3">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                      </div>
+                      <div class="fw-bold text-dark small mb-0.5">Drag an image here or <span class="text-primary text-decoration-underline" style="cursor: pointer;">browse</span></div>
+                      <div class="text-muted" style="font-size: 0.75rem;">Supports .png, .jpg, .webp</div>
+                    </div>
+
+                    <!-- Chosen / Preview State -->
+                    <div id="diagramDropzonePreview" class="diagram-dropzone-preview align-items-center justify-content-between gap-2 p-2 bg-white rounded-3 border">
+                      <div class="d-flex align-items-center gap-2 overflow-hidden text-start">
+                        <img id="diagramThumbnail" src="" alt="Thumbnail" class="rounded object-fit-cover border" style="width: 44px; height: 44px; flex-shrink: 0;">
+                        <div class="overflow-hidden">
+                          <div id="diagramFileName" class="fw-bold text-dark text-truncate small" style="max-width: 160px;">diagram.png</div>
+                          <div id="diagramFileSize" class="text-muted" style="font-size: 0.72rem;">240 KB</div>
+                        </div>
+                      </div>
+                      <button type="button" class="btn btn-link text-danger p-0 text-decoration-none fw-bold small flex-shrink-0" id="btnRemoveDiagramFile">
+                        <i class="bi bi-x-circle me-1"></i>Remove
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <a href="{{ url_for('teacher.find_the_part_builder', mode='blank') }}" class="btn btn-info text-white rounded-pill fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
-                  <span>Start Custom Diagram</span>
-                  <i class="bi bi-arrow-right"></i>
-                </a>
+
+                <div class="mt-auto pt-2">
+                  <span class="d-inline-block w-100" id="btnStartCustomDiagramWrapper" data-bs-toggle="tooltip" data-bs-placement="top" title="Upload a diagram first">
+                    <button type="button" id="btnStartCustomDiagram" class="btn btn-secondary rounded-pill fw-bold py-2 w-100 d-flex align-items-center justify-content-center gap-2 disabled shadow-sm" disabled data-blank-url="{{ url_for('teacher.find_the_part_builder', mode='blank') }}">
+                      <span>Start Custom Diagram</span>
+                      <i class="bi bi-arrow-right"></i>
+                    </button>
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div class="col-12 col-md-6">
-              <div class="card h-100 border-2 rounded-4 p-4 shadow-sm d-flex flex-column justify-content-between hover-card" style="border-color: #cbd5e1; background: #ffffff;">
+            <!-- Right Card: Use a Science Preset -->
+            <div class="col-12 col-md-6 d-flex flex-column">
+              <div class="game-choice-card">
                 <div>
-                  <div class="text-center">
-                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-warning-subtle text-warning-emphasis mb-3" style="width: 60px; height: 60px; font-size: 1.75rem;">
-                      <i class="bi bi-magic"></i>
-                    </div>
-                    <h3 class="h5 fw-bold text-dark mb-2">Use a Science Preset</h3>
-                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold mb-3">Pre-Configured Diagrams</span>
-                    <p class="text-muted small mb-3" style="line-height: 1.55;">
-                      Start with ready-made science diagrams with placed pins, answers, and kid-friendly fact explanations ready to edit.
-                    </p>
+                  <div class="game-choice-icon-badge">
+                    <i class="bi bi-collection-play-fill"></i>
                   </div>
+                  <h3 class="h5 fw-bold text-dark mb-1">Use a Science Preset</h3>
+                  <p class="game-choice-description">
+                    Start with ready-made science diagrams with placed pins, answers, and kid-friendly fact explanations ready to edit.
+                  </p>
 
-                  <div class="d-grid gap-2 mb-2">
-                    <a href="{{ url_for('teacher.find_the_part_builder', preset='earth_layers') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
-                      <span><i class="bi bi-globe-americas text-warning me-2"></i>Earth's Layers (Crust, Mantle, Core)</span>
-                      <i class="bi bi-chevron-right text-muted small"></i>
-                    </a>
-                    <a href="{{ url_for('teacher.find_the_part_builder', preset='animal_body_parts') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
-                      <span><i class="bi bi-feather text-primary me-2"></i>Animal Anatomy (3 Rounds)</span>
-                      <i class="bi bi-chevron-right text-muted small"></i>
-                    </a>
-                    <a href="{{ url_for('teacher.find_the_part_builder', preset='plant_parts') }}" class="btn btn-outline-secondary rounded-3 text-start fw-bold py-2 small d-flex align-items-center justify-content-between">
-                      <span><i class="bi bi-flower1 text-success me-2"></i>Plant Anatomy (Flower, Roots, etc.)</span>
-                      <i class="bi bi-chevron-right text-muted small"></i>
-                    </a>
+                  <div class="preset-options-list my-3">
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.find_the_part_builder', preset='earth_layers') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0"><i class="bi bi-globe-americas"></i></span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">Earth's Layers (Crust, Mantle, Core)</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">4 parts • 1 round • Grades 3–5</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
+
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.find_the_part_builder', preset='animal_body_parts') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0"><i class="bi bi-feather"></i></span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">Animal Anatomy (Bird, Lion, Fish)</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">6 parts • 3 rounds • Grades 1–3</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
+
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.find_the_part_builder', preset='plant_parts') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0"><i class="bi bi-flower1"></i></span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">Plant Anatomy (Flower, Roots, etc.)</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">5 parts • 1 round • Grades 1–4</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                <div class="mt-auto pt-2">
+                  <button type="button" class="btn btn-secondary rounded-pill fw-bold py-2 w-100 d-flex align-items-center justify-content-center gap-2 disabled btn-start-preset shadow-sm" disabled>
+                    <span>Start with this preset</span>
+                    <i class="bi bi-arrow-right"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -694,6 +808,6 @@
   </div>
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script defer src="{{ url_for('static', filename='js/teacher_game_studio.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher_game_studio.js', v='20261018_modal_v2') }}"></script>
 </body>
 </html>

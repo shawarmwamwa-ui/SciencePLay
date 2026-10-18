@@ -3358,6 +3358,23 @@ def save_find_the_part():
                     filepath = os.path.join(upload_dir, unique_name)
                     file.save(filepath)
                     round_data['illustrationSrc'] = f"/static/uploads/activities/{unique_name}"
+        elif isinstance(round_data.get('illustrationSrc'), str) and round_data['illustrationSrc'].startswith('data:image/'):
+            try:
+                import base64
+                header, encoded = round_data['illustrationSrc'].split(',', 1)
+                mime = header.split(';')[0].split(':')[1].lower()
+                ext = '.png'
+                if 'jpeg' in mime or 'jpg' in mime:
+                    ext = '.jpg'
+                elif 'webp' in mime:
+                    ext = '.webp'
+                unique_name = f"diag_{uuid.uuid4().hex[:12]}{ext}"
+                filepath = os.path.join(upload_dir, unique_name)
+                with open(filepath, 'wb') as f:
+                    f.write(base64.b64decode(encoded))
+                round_data['illustrationSrc'] = f"/static/uploads/activities/{unique_name}"
+            except Exception as e:
+                current_app.logger.warning(f"Could not decode base64 diagram upload: {e}")
 
     config_payload = {
         "title": title,

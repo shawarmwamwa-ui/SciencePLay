@@ -110,3 +110,160 @@
   align-items: center;
   gap: 0.35rem;
 }
+
+/* ==========================================================================
+   Shared Game Engine Creation Modal Component
+   ========================================================================== */
+.game-engine-creation-modal .modal-content {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.game-engine-modal-header {
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 1.15rem 1.5rem;
+}
+
+.game-engine-modal-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 0.85rem;
+  background: #eff6ff;
+  color: #4318ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.game-engine-creation-modal .modal-body {
+  max-height: calc(85vh - 120px);
+  overflow-y: auto;
+}
+
+/* Choice Cards (Neutral by default, Blue tint on hover/focus/selected) */
+.game-choice-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 1.15rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  position: relative;
+}
+
+.game-choice-card:hover,
+.game-choice-card:focus-within,
+.game-choice-card.selected {
+  border-color: #3b82f6;
+  background: #f8faff;
+  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.12);
+}
+
+.game-choice-icon-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 0.85rem;
+  background: #eff6ff;
+  color: #4318ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.game-choice-description {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #475569; /* Slate 600 - Contrast > 7:1 (exceeds WCAG AA 4.5:1) */
+  margin-bottom: 0.25rem;
+}
+
+/* Preset Options List & Selectable Rows */
+.preset-options-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.preset-option-row {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preset-option-row:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.preset-option-row.selected {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.preset-icon-badge {
+  font-size: 1.2rem;
+  color: #4318ff !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.preset-check-radio {
+  font-size: 1.1rem;
+  transition: transform 0.15s ease;
+}
+
+.preset-option-row.selected .preset-check-radio {
+  transform: scale(1.08);
+}
+
+/* Diagram Dropzone */
+.diagram-dropzone {
+  border: 2px dashed #cbd5e1;
+  background: #f8fafc;
+  border-radius: 0.85rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.diagram-dropzone:hover,
+.diagram-dropzone.dragover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.diagram-dropzone-preview {
+  display: none;
+}
+
+.diagram-dropzone-preview.active {
+  display: flex;
+}
+
+@media (max-width: 767.98px) {
+  .game-engine-creation-modal .modal-body {
+    padding: 1.25rem;
+  }
+  .game-choice-card {
+    padding: 1.25rem;
+  }
+}
+
