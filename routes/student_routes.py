@@ -730,24 +730,15 @@ def is_activity_unlocked(user_id, activity):
     if not activity or activity.id is None:
         return False
 
-    # Standalone activities not linked to any curriculum lesson are always unlocked for immediate play
-    if not activity.lesson_id:
-        return True
-
-    # If the activity is linked to a lesson, check if student has completed it
-    if activity.lesson_id:
-        if has_student_completed_lesson(user_id, activity.lesson_id):
+    # 1. If the student has already played and completed this activity, it is always unlocked for replay
+    if user_id:
+        completed_log = ProgressLog.query.filter_by(student_id=user_id, activity_id=activity.id).first()
+        if completed_log and ((completed_log.score or 0) > 0 or getattr(completed_log, 'completed', False)):
             return True
 
-    # If the student has been directly assigned this activity
-    if user_id:
-        assigned = ActivityAssignment.query.filter(
-            ActivityAssignment.student_id == user_id,
-            ActivityAssignment.activity_id == activity.id,
-            (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None),
-            ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted'])
-        ).first()
-        if assigned:
+    # 2. If the activity is linked to a lesson, check if student has completed that lesson
+    if activity.lesson_id:
+        if has_student_completed_lesson(user_id, activity.lesson_id):
             return True
 
     ENGINE_LESSON_TITLES = {
@@ -759,10 +750,15 @@ def is_activity_unlocked(user_id, activity):
         'pipeline_circuit': 'Living vs Non-Living'
     }
 
-    # Fallback: check by engine matching if lesson_id wasn't satisfied or set
+    # 3. Fallback: check by engine matching if lesson_id wasn't set or was different
     if activity.engine in ENGINE_LESSON_TITLES:
         matching_lessons = Lesson.query.filter(Lesson.title.ilike(ENGINE_LESSON_TITLES[activity.engine])).all()
-        return any(has_student_completed_lesson(user_id, l.id) for l in matching_lessons)
+        if matching_lessons:
+            return any(has_student_completed_lesson(user_id, l.id) for l in matching_lessons)
+
+    # 4. Standalone custom activities with no linked curriculum lesson are unlocked once assigned
+    if not activity.lesson_id:
+        return True
 
     return False
 
@@ -904,20 +900,8 @@ def get_student_curriculum_terms_data(user_id):
             lessons_dict[l.id] = l
     lessons = list(lessons_dict.values())
 
-    # 2. Fetch only default starter core curriculum activities (IDs 1-5 without custom config)
-    # Strictly filter for real playable games — SLIDE QUESTIONS / QUICK CHECKS ARE NEVER GAMES!
+    # 2. Fetch only activities explicitly assigned to this student with an academic term
     playable_engines = ['claw_machine', 'find_the_part', 'pipeline_circuit', 'build_a_plant', 'metal_logic', 'recycle_sorter']
-    all_term_activities_query = Activity.query.filter(
-        Activity.id.in_([1, 2, 3, 4, 5]),
-        Activity.config.is_(None),
-        Activity.term.isnot(None),
-        Activity.term.like('Term %'),
-        (Activity.is_archived == False) | (Activity.is_archived == None),
-        (Activity.is_supplementary == False) | (Activity.is_supplementary == None),
-        Activity.engine.in_(playable_engines)
-    ).all()
-
-    # Also include any activity explicitly assigned to this student with an academic term
     assigned_activity_rows = db.session.query(ActivityAssignment, Activity).join(
         Activity, Activity.id == ActivityAssignment.activity_id
     ).filter(
@@ -930,16 +914,13 @@ def get_student_curriculum_terms_data(user_id):
     ).all()
 
     activities_dict = {}
-    for a in all_term_activities_query:
-        if a and (a.engine in playable_engines or a.config):
-            activities_dict[a.id] = a
     for aa, a in assigned_activity_rows:
         if a and a.term and a.term.startswith('Term '):
             if a.engine in playable_engines or a.config:
                 activities_dict[a.id] = a
     activities = list(activities_dict.values())
 
-    # Auto-sync assignments ONLY for starter default items — never auto-assign custom content
+    # Auto-sync lesson assignments ONLY for starter default items — never auto-assign activities
     needed_commit = False
     existing_la_ids = {la.lesson_id for la in existing_la_list}
     for l in lessons:
@@ -951,18 +932,6 @@ def get_student_curriculum_terms_data(user_id):
                 status='assigned'
             ))
             existing_la_ids.add(l.id)
-            needed_commit = True
-
-    existing_act_ids = {aa.activity_id for aa in existing_aa_list}
-    for a in activities:
-        if (a.id in [1, 2, 3, 4, 5] and not getattr(a, 'config', None)) and a.id not in existing_act_ids:
-            db.session.add(ActivityAssignment(
-                activity_id=a.id,
-                student_id=user_id,
-                assigned_by=teacher_id,
-                status='assigned'
-            ))
-            existing_act_ids.add(a.id)
             needed_commit = True
 
     if needed_commit:
@@ -1427,46 +1396,6 @@ def dashboard():
             seen_lesson_ids.add(lesson.id)
             lessons.append(lesson)
             lesson_due_dates[lesson.id] = assignment.due_date
-
-    # Auto-sync core curriculum activities for enrolled student (Terms 1 & 2)
-    playable_engines = ['claw_machine', 'find_the_part', 'pipeline_circuit', 'build_a_plant', 'metal_logic', 'recycle_sorter']
-    core_activities = Activity.query.filter(
-        Activity.engine.in_(playable_engines),
-        Activity.id.in_([1, 2, 3, 4, 5]),
-        Activity.config.is_(None)
-    ).all()
-    engine_to_act = {}
-    for a in core_activities:
-        if a.engine not in engine_to_act:
-            engine_to_act[a.engine] = a
-
-    existing_aa_list = ActivityAssignment.query.filter_by(student_id=user_id).all() if user_id else []
-    existing_act_ids = {aa.activity_id for aa in existing_aa_list}
-    existing_engines = {aa.activity.engine for aa in existing_aa_list if aa.activity and aa.activity.engine}
-
-    teacher_id = 1
-    if lesson_assignment_rows and lesson_assignment_rows[0][0].assigned_by:
-        teacher_id = lesson_assignment_rows[0][0].assigned_by
-    else:
-        teacher_user = User.query.filter_by(role='teacher').first() or User.query.filter_by(role='admin').first()
-        if teacher_user:
-            teacher_id = teacher_user.id
-
-    needed_commit = False
-    for engine, act in engine_to_act.items():
-        if engine not in existing_engines and act.id not in existing_act_ids:
-            db.session.add(ActivityAssignment(
-                activity_id=act.id,
-                student_id=user_id,
-                assigned_by=teacher_id,
-                status='assigned'
-            ))
-            needed_commit = True
-    if needed_commit:
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
 
     activity_assignment_rows = db.session.query(ActivityAssignment, Activity).join(
         Activity, Activity.id == ActivityAssignment.activity_id
@@ -2153,13 +2082,9 @@ def activities():
     progress_logs = []
     completed_by_activity = {}
 
-    # Seed attempts_today for all game-engine activities the student is assigned
-    attempts_today_by_activity = {
-        claw_machine_activity.id: get_attempts_today(user_id, claw_machine_activity.id)
-    }
+    attempts_today_by_activity = {}
     for act in activities:
-        if act.id not in attempts_today_by_activity:
-            attempts_today_by_activity[act.id] = get_attempts_today(user_id, act.id)
+        attempts_today_by_activity[act.id] = get_attempts_today(user_id, act.id)
 
     unlocked_by_activity = {}
 

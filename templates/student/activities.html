@@ -118,6 +118,17 @@
           </div>
         </div>
       </div>
+    {% else %}
+      <div class="col-12">
+        <div class="activity-grid-card text-center py-5">
+          <i class="bi bi-controller display-3 text-muted mb-3 d-block"></i>
+          <h2 class="fw-black text-dark fs-3 mb-2">No Activities Assigned Yet</h2>
+          <p class="text-muted fw-bold fs-6 mb-3">Your teacher hasn't assigned any games yet. Check back once your teacher assigns an activity!</p>
+          <a href="{{ url_for('student.dashboard') }}" class="brutal-btn brutal-btn-primary">
+            <i class="bi bi-house-door-fill me-1"></i> Back to Dashboard
+          </a>
+        </div>
+      </div>
     {% endfor %}
   </main>
 
