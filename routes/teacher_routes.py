@@ -2550,53 +2550,98 @@ def api_live_lesson_tracker():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _get_active_game_cards(default_claw_id):
-    """Helper to load all active Claw Machine sorting activity cards"""
-    from routes.student_routes import load_sorting_activity_config
+    """Helper to load all active Claw Machine and Diagram Match activity cards"""
+    from routes.student_routes import load_sorting_activity_config, load_find_the_part_activity_config
     raw_activities = Activity.query.filter(
-        Activity.engine == 'claw_machine',
+        Activity.engine.in_(['claw_machine', 'find_the_part']),
         (Activity.is_archived == False) | (Activity.is_archived == None)
     ).order_by(Activity.id.asc()).all()
 
     activity_cards = []
     for act in raw_activities:
-        cfg = load_sorting_activity_config(act.id)
         is_supp = bool(getattr(act, 'is_supplementary', False))
         term = getattr(act, 'term', None) or 'Term 1'
-        activity_cards.append({
-            'activity': act,
-            'config': cfg,
-            'title': cfg.get('title') or act.type or 'Sorting Game',
-            'instructions': cfg.get('instructions') or '',
-            'bins': cfg.get('bins', []),
-            'objects_count': len(cfg.get('objects', [])),
-            'round_size': cfg.get('round_size', 12),
-            'is_default': (act.id == default_claw_id),
-            'is_supplementary': is_supp,
-            'term': term
-        })
+        if act.engine == 'find_the_part':
+            cfg = load_find_the_part_activity_config(act.id)
+            rounds = cfg.get('rounds', [])
+            zones_count = sum(len(r.get('zones', [])) for r in rounds)
+            thumb = rounds[0].get('illustrationSrc') if rounds else '/static/images/ftp_bird.webp'
+            activity_cards.append({
+                'activity': act,
+                'engine': 'find_the_part',
+                'engine_name': 'Diagram Match & Label',
+                'config': cfg,
+                'title': cfg.get('title') or act.type or 'Diagram Match',
+                'instructions': cfg.get('instructions') or '',
+                'rounds_count': len(rounds),
+                'zones_count': zones_count,
+                'objects_count': zones_count,
+                'thumbnail': thumb,
+                'is_default': False,
+                'is_supplementary': is_supp,
+                'term': term
+            })
+        else:
+            cfg = load_sorting_activity_config(act.id)
+            activity_cards.append({
+                'activity': act,
+                'engine': 'claw_machine',
+                'engine_name': 'Sorting Claw Machine',
+                'config': cfg,
+                'title': cfg.get('title') or act.type or 'Sorting Game',
+                'instructions': cfg.get('instructions') or '',
+                'bins': cfg.get('bins', []),
+                'objects_count': len(cfg.get('objects', [])),
+                'round_size': cfg.get('round_size', 12),
+                'is_default': (act.id == default_claw_id),
+                'is_supplementary': is_supp,
+                'term': term
+            })
     return activity_cards
 
 
 def _get_archived_game_cards():
-    """Helper to load all archived Claw Machine sorting activity cards"""
-    from routes.student_routes import load_sorting_activity_config
+    """Helper to load all archived game activity cards"""
+    from routes.student_routes import load_sorting_activity_config, load_find_the_part_activity_config
     raw_activities = Activity.query.filter(
+        Activity.engine.in_(['claw_machine', 'find_the_part']),
         Activity.is_archived == True
     ).order_by(Activity.deleted_at.desc(), Activity.id.desc()).all()
 
     archived_cards = []
     for act in raw_activities:
-        cfg = load_sorting_activity_config(act.id)
-        archived_cards.append({
-            'activity': act,
-            'config': cfg,
-            'title': cfg.get('title') or act.type or 'Sorting Game',
-            'instructions': cfg.get('instructions') or '',
-            'bins': cfg.get('bins', []),
-            'objects_count': len(cfg.get('objects', [])),
-            'round_size': cfg.get('round_size', 12),
-            'deleted_at': act.deleted_at.strftime('%b %d, %Y %I:%M %p') if act.deleted_at else 'Archived'
-        })
+        if act.engine == 'find_the_part':
+            cfg = load_find_the_part_activity_config(act.id)
+            rounds = cfg.get('rounds', [])
+            zones_count = sum(len(r.get('zones', [])) for r in rounds)
+            thumb = rounds[0].get('illustrationSrc') if rounds else '/static/images/ftp_bird.webp'
+            archived_cards.append({
+                'activity': act,
+                'engine': 'find_the_part',
+                'engine_name': 'Diagram Match & Label',
+                'config': cfg,
+                'title': cfg.get('title') or act.type or 'Diagram Match',
+                'instructions': cfg.get('instructions') or '',
+                'rounds_count': len(rounds),
+                'zones_count': zones_count,
+                'objects_count': zones_count,
+                'thumbnail': thumb,
+                'deleted_at': act.deleted_at.strftime('%b %d, %Y %I:%M %p') if act.deleted_at else 'Archived'
+            })
+        else:
+            cfg = load_sorting_activity_config(act.id)
+            archived_cards.append({
+                'activity': act,
+                'engine': 'claw_machine',
+                'engine_name': 'Sorting Claw Machine',
+                'config': cfg,
+                'title': cfg.get('title') or act.type or 'Sorting Game',
+                'instructions': cfg.get('instructions') or '',
+                'bins': cfg.get('bins', []),
+                'objects_count': len(cfg.get('objects', [])),
+                'round_size': cfg.get('round_size', 12),
+                'deleted_at': act.deleted_at.strftime('%b %d, %Y %I:%M %p') if act.deleted_at else 'Archived'
+            })
     return archived_cards
 
 
@@ -2685,19 +2730,19 @@ def _get_game_engine_templates():
             'category': 'Classification & Categorization',
             'icon': 'bi-joystick',
             'accent': '#4318ff',
-            'description': 'An interactive arcade claw game where students sort and classify items into two customizable categories.',
+            'description': 'An interactive arcade claw game where students sort and classify items into customizable category chutes.',
             'status': 'Ready to Customize',
             'is_available': True
         },
         {
             'engine': 'find_the_part',
-            'name': 'Find the Part (Hotspot Identifier)',
-            'category': 'Anatomy & Diagrams',
-            'icon': 'bi-crosshair',
+            'name': 'Diagram Match & Label (Find the Part)',
+            'category': 'Diagrams & Anatomy',
+            'icon': 'bi-pin-map-fill',
             'accent': '#0284c7',
-            'description': 'Interactive click-to-identify game where students pinpoint organs, body parts, or diagram components.',
-            'status': 'Engine Template Coming Soon',
-            'is_available': False
+            'description': 'Interactive visual diagram matching game where students drag or tap labels onto custom callout pins placed on any diagram or illustration.',
+            'status': 'Ready to Customize',
+            'is_available': True
         },
         {
             'engine': 'build_a_plant',
@@ -3106,6 +3151,248 @@ def save_claw_machine():
     return redirect(url_for('teacher.game_studio'))
 
 
+@teacher_bp.route('/content/find_the_part/builder')
+@teacher_bp.route('/content/find_the_part/builder/<int:activity_id>')
+@require_role('teacher')
+def find_the_part_builder(activity_id=None):
+    """Visual workspace for customizing the Diagram Match & Label (Find the Part) Template"""
+    current_user = get_current_user()
+    from routes.student_routes import load_find_the_part_activity_config, DEFAULT_FIND_THE_PART_ROUNDS
+
+    activity = None
+    if activity_id:
+        activity = Activity.query.get_or_404(activity_id)
+        config = load_find_the_part_activity_config(activity.id)
+    else:
+        mode = request.args.get('mode', '')
+        preset_key = request.args.get('preset', '')
+        if mode == 'blank':
+            config = {
+                "title": "",
+                "instructions": "Match each label to the correct pointer pin on the diagram.",
+                "difficulty": "Level 1 — Easy",
+                "points": 100,
+                "rounds": [
+                    {
+                        "id": "round_1",
+                        "title": "Round 1 — Custom Diagram",
+                        "subtitle": "Match each label to the correct pointer pin.",
+                        "illustrationSrc": "/static/images/ftp_earth_layers.jpg",
+                        "illustrationAlt": "Custom Diagram",
+                        "illustrationBg": "#ffffff",
+                        "zones": [],
+                        "wordBank": [],
+                        "facts": {}
+                    }
+                ]
+            }
+        elif preset_key:
+            presets = {
+                'earth_layers': {
+                    "title": "Earth's Layers Diagram Match",
+                    "instructions": "Match each label to the correct layer of Planet Earth.",
+                    "difficulty": "Level 1 — Easy",
+                    "points": 100,
+                    "rounds": [
+                        {
+                            "id": "round_1",
+                            "title": "Round 1 — Layers of the Earth",
+                            "subtitle": "Match each label to the correct layer of Planet Earth.",
+                            "illustrationSrc": "/static/images/ftp_earth_layers.jpg",
+                            "illustrationAlt": "Earth Layers Cross-Section",
+                            "illustrationBg": "#ffffff",
+                            "zones": [
+                                { "id": "crust", "label": "Crust", "number": 1, "pinX": 50, "pinY": 13, "slotX": 84, "slotY": 14, "color": "#fef08a" },
+                                { "id": "mantle", "label": "Mantle", "number": 2, "pinX": 50, "pinY": 28, "slotX": 84, "slotY": 32, "color": "#fdba74" },
+                                { "id": "outer_core", "label": "Outer Core", "number": 3, "pinX": 50, "pinY": 44, "slotX": 16, "slotY": 48, "color": "#f87171" },
+                                { "id": "inner_core", "label": "Inner Core", "number": 4, "pinX": 50, "pinY": 50, "slotX": 16, "slotY": 72, "color": "#fbbf24" }
+                            ],
+                            "wordBank": [
+                                { "id": "crust", "label": "Crust", "isDecoy": False },
+                                { "id": "mantle", "label": "Mantle", "isDecoy": False },
+                                { "id": "outer_core", "label": "Outer Core", "isDecoy": False },
+                                { "id": "inner_core", "label": "Inner Core", "isDecoy": False },
+                                { "id": "atmosphere", "label": "Atmosphere", "isDecoy": True },
+                                { "id": "hydrosphere", "label": "Hydrosphere", "isDecoy": True }
+                            ],
+                            "facts": {
+                                "crust": "The crust is Earth's solid, rocky outermost shell where all life exists.",
+                                "mantle": "The mantle is a thick layer of extremely hot, dense semi-solid rock beneath the crust.",
+                                "outer_core": "The outer core is a churning liquid layer composed of molten iron and nickel.",
+                                "inner_core": "The inner core is an intensely hot, solid metallic sphere at the center of Earth."
+                            }
+                        }
+                    ]
+                },
+                'animal_body_parts': {
+                    "title": "Animal Body Parts — Find the Part",
+                    "instructions": "Match each body part label to the correct pointer pin on the diagram.",
+                    "difficulty": "Level 1 — Easy",
+                    "points": 100,
+                    "rounds": DEFAULT_FIND_THE_PART_ROUNDS
+                },
+                'plant_parts': {
+                    "title": "Plant Anatomy Diagram Match",
+                    "instructions": "Match each plant part label to the correct pointer pin on the plant.",
+                    "difficulty": "Level 1 — Easy",
+                    "points": 100,
+                    "rounds": [
+                        {
+                            "id": "round_1",
+                            "title": "Round 1 — Label the Plant Parts",
+                            "subtitle": "Match each plant part label to the correct pointer pin on the plant.",
+                            "illustrationSrc": "/static/images/plant_whole.webp",
+                            "illustrationAlt": "Plant Diagram",
+                            "illustrationBg": "#f0fdf4",
+                            "zones": [
+                                { "id": "flower", "label": "Flower", "number": 1, "pinX": 50, "pinY": 18, "slotX": 82, "slotY": 18, "color": "#fbcfe8" },
+                                { "id": "leaves", "label": "Leaves", "number": 2, "pinX": 35, "pinY": 45, "slotX": 16, "slotY": 42, "color": "#bbf7d0" },
+                                { "id": "stem",   "label": "Stem",   "number": 3, "pinX": 50, "pinY": 58, "slotX": 82, "slotY": 58, "color": "#fed7aa" },
+                                { "id": "roots",  "label": "Roots",  "number": 4, "pinX": 50, "pinY": 86, "slotX": 16, "slotY": 84, "color": "#e9d5ff" }
+                            ],
+                            "wordBank": [
+                                { "id": "flower", "label": "Flower", "isDecoy": False },
+                                { "id": "leaves", "label": "Leaves", "isDecoy": False },
+                                { "id": "stem",   "label": "Stem",   "isDecoy": False },
+                                { "id": "roots",  "label": "Roots",  "isDecoy": False },
+                                { "id": "bark",   "label": "Bark",   "isDecoy": True },
+                                { "id": "seeds",  "label": "Seeds",  "isDecoy": True }
+                            ],
+                            "facts": {
+                                "flower": "Flowers help the plant reproduce and produce fruits and seeds.",
+                                "leaves": "Leaves capture sunlight to make food for the plant through photosynthesis.",
+                                "stem": "The stem supports the plant and transports water and nutrients from roots to leaves.",
+                                "roots": "Roots anchor the plant firmly in the soil and absorb water and minerals."
+                            }
+                        }
+                    ]
+                }
+            }
+            config = presets.get(preset_key, presets['earth_layers'])
+        else:
+            config = {
+                "title": "",
+                "instructions": "Match each label to the correct pointer pin on the diagram.",
+                "difficulty": "Level 1 — Easy",
+                "points": 100,
+                "rounds": [
+                    {
+                        "id": "round_1",
+                        "title": "Round 1 — Custom Diagram",
+                        "subtitle": "Match each label to the correct pointer pin.",
+                        "illustrationSrc": "/static/images/ftp_earth_layers.jpg",
+                        "illustrationAlt": "Custom Diagram",
+                        "illustrationBg": "#ffffff",
+                        "zones": [],
+                        "wordBank": [],
+                        "facts": {}
+                    }
+                ]
+            }
+
+    preset_diagrams = [
+        {"label": "Earth's Layers", "src": "/static/images/ftp_earth_layers.jpg"},
+        {"label": "Bird Diagram", "src": "/static/images/ftp_bird.webp"},
+        {"label": "Lion Diagram", "src": "/static/images/ftp_lion.webp"},
+        {"label": "Fish Diagram", "src": "/static/images/ftp_fish.webp"},
+        {"label": "Plant Anatomy", "src": "/static/images/plant_whole.webp"},
+    ]
+
+    all_lessons = Lesson.query.filter(
+        (Lesson.is_archived == False) | (Lesson.is_archived == None)
+    ).order_by(Lesson.title.asc()).all()
+
+    return render_template(
+        'teacher/teacher_find_the_part_builder.html',
+        current_user=current_user,
+        activity=activity,
+        config=config,
+        preset_diagrams=preset_diagrams,
+        all_lessons=all_lessons
+    )
+
+
+@teacher_bp.route('/content/find_the_part/save', methods=['POST'])
+@require_role('teacher')
+def save_find_the_part():
+    """Save or update custom Find the Part (Diagram Match & Label) activity configuration and diagram uploads"""
+    import os, uuid
+    from flask import current_app
+
+    current_user = get_current_user()
+    activity_id = request.form.get('activity_id', type=int)
+    title = request.form.get('title', 'Custom Diagram Match').strip() or 'Custom Diagram Match'
+    instructions = request.form.get('instructions', 'Match each label to the correct pointer pin on the diagram.').strip()
+    difficulty = request.form.get('difficulty', 'Level 1 — Easy').strip()
+    points = request.form.get('points', 100, type=int)
+    lesson_id = request.form.get('lesson_id', type=int)
+
+    is_supplementary = (str(request.form.get('is_supplementary', '')).strip().lower() in ['1', 'true', 'on'])
+    term = request.form.get('term', 'Term 2').strip() or 'Term 2'
+
+    rounds_json = request.form.get('rounds_data', '[]')
+    try:
+        rounds = json.loads(rounds_json)
+        if not isinstance(rounds, list) or len(rounds) == 0:
+            raise ValueError("At least one round with a diagram is required.")
+    except Exception as e:
+        flash(f"Invalid activity configuration: {e}", "danger")
+        return redirect(url_for('teacher.game_studio'))
+
+    upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'activities')
+    os.makedirs(upload_dir, exist_ok=True)
+    ALLOWED_IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp'}
+
+    for idx, round_data in enumerate(rounds):
+        file_key = f"round_image_file_{idx}"
+        if file_key in request.files:
+            file = request.files[file_key]
+            if file and file.filename:
+                ext = os.path.splitext(file.filename)[1].lower()
+                mimetype = (file.mimetype or '').lower()
+                if ext in ALLOWED_IMAGE_EXTS and mimetype.startswith('image/'):
+                    unique_name = f"diag_{uuid.uuid4().hex[:12]}{ext}"
+                    filepath = os.path.join(upload_dir, unique_name)
+                    file.save(filepath)
+                    round_data['illustrationSrc'] = f"/static/uploads/activities/{unique_name}"
+
+    config_payload = {
+        "title": title,
+        "instructions": instructions,
+        "difficulty": difficulty,
+        "points": points,
+        "rounds": rounds
+    }
+
+    if activity_id:
+        activity = Activity.query.get_or_404(activity_id)
+        activity.type = title
+        activity.engine = 'find_the_part'
+        activity.points = points
+        activity.term = term
+        activity.is_supplementary = is_supplementary
+        activity.lesson_id = lesson_id
+        activity.config = config_payload
+        flash(f"Diagram Match activity '{title}' updated successfully!", "success")
+    else:
+        activity = Activity(
+            lesson_id=lesson_id,
+            type=title,
+            engine='find_the_part',
+            points=points,
+            term=term,
+            is_supplementary=is_supplementary,
+            config=config_payload
+        )
+        db.session.add(activity)
+        role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
+        flash(f"New {role_label} Diagram Match game '{title}' created successfully!", "success")
+
+    db.session.commit()
+    log_access(current_user, 'save_custom_activity', f'activity_id={activity.id} title={title}')
+    return redirect(url_for('teacher.game_studio'))
+
+
 @teacher_bp.route('/content/preview/<int:activity_id>')
 @require_role('teacher')
 def preview_activity(activity_id):
@@ -3113,7 +3400,11 @@ def preview_activity(activity_id):
     activity = Activity.query.get_or_404(activity_id)
     if activity.engine == 'claw_machine':
         return render_template('student/claw_machine_game.html', activity=activity, activity_id=activity.id, attempts_today=0, is_preview=True)
-    flash("Live preview is only available for Claw Machine activities currently.", "info")
+    elif activity.engine == 'find_the_part':
+        from routes.student_routes import load_find_the_part_activity_config
+        config = load_find_the_part_activity_config(activity.id)
+        return render_template('student/find_the_part_game.html', activity=activity, activity_id=activity.id, config=config, attempts_today=0, is_preview=True)
+    flash(f"Live preview is not supported for engine {activity.engine}.", "info")
     return redirect(url_for('teacher.game_studio'))
 
 

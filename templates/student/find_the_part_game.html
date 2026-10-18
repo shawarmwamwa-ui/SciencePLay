@@ -21,16 +21,21 @@
 
     <header class="ftp-header">
       <div class="d-flex align-items-center gap-3 flex-wrap">
-        <a href="{{ url_for('student.activities') }}" class="game-leave-btn ftp-back-btn" id="ftp-back-link" title="Leave Game">
+        <a href="{{ url_for('teacher.game_studio') if is_preview else url_for('student.activities') }}" class="game-leave-btn ftp-back-btn" id="ftp-back-link" title="Leave Game">
           <i class="bi bi-arrow-left"></i>
-          <span>Leave Game</span>
+          <span>{{ 'Back to Studio' if is_preview else 'Leave Game' }}</span>
         </a>
         <div class="ftp-header-title">
-          <h1><i class="bi bi-crosshair2 me-2 text-primary"></i>Find the Part</h1>
-          <p>Label each animal's body parts by matching them correctly</p>
+          <h1><i class="bi bi-crosshair2 me-2 text-primary"></i>{{ config.title if config and config.title else 'Find the Part' }}</h1>
+          <p>{{ config.instructions if config and config.instructions else 'Match each label to the correct pointer pin on the diagram' }}</p>
         </div>
       </div>
       <div class="ftp-hud">
+        {% if is_preview %}
+        <span class="badge bg-warning text-dark border border-dark px-3 py-1.5 fw-bold rounded-pill">
+          <i class="bi bi-eye-fill me-1"></i>Teacher Preview Mode
+        </span>
+        {% endif %}
         <div class="ftp-score-badge">
           <i class="bi bi-star-fill"></i>
           <span id="ftp-score">0</span>
@@ -75,9 +80,11 @@
   <script>
     window.findThePartActivityId = {{ activity_id if activity_id else 'null' }};
     window.initialAttemptsToday = {{ attempts_today if attempts_today is defined else 0 }};
+    window.findThePartCustomConfig = {{ (config|tojson) if config else 'null' }};
+    window.isTeacherPreview = {{ 'true' if is_preview else 'false' }};
   </script>
   <script type="module">
-    import { initFindThePart } from "{{ url_for('static', filename='js/findThePartGame.js', v='20260924_1') }}";
+    import { initFindThePart } from "{{ url_for('static', filename='js/findThePartGame.js', v='20261018_1') }}";
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     initFindThePart();
     initBgmPlayer('game-bgm', { volume: 0.20, storageKey: 'scienceplay_game_bgm_muted' });

@@ -74,6 +74,112 @@ def load_sorting_activity_config(activity_id):
     return default_payload
 
 
+DEFAULT_FIND_THE_PART_ROUNDS = [
+    {
+        "id": "round_1",
+        "title": "Round 1 — Label the Bird",
+        "subtitle": "Match each body part label to the correct pointer pin on the bird.",
+        "illustrationSrc": "/static/images/ftp_bird.webp",
+        "illustrationAlt": "Bird Diagram",
+        "illustrationBg": "#e0f2fe",
+        "zones": [
+            { "id": "beak",  "label": "Beak",  "number": 1, "pinX": 74, "pinY": 30, "slotX": 84, "slotY": 18, "color": "#fef08a" },
+            { "id": "wings", "label": "Wings", "number": 2, "pinX": 46, "pinY": 48, "slotX": 16, "slotY": 36, "color": "#dbeafe" },
+            { "id": "legs",  "label": "Legs",  "number": 3, "pinX": 50, "pinY": 72, "slotX": 18, "slotY": 76, "color": "#dcfce7" },
+            { "id": "claws", "label": "Claws", "number": 4, "pinX": 58, "pinY": 82, "slotX": 80, "slotY": 84, "color": "#fce7f3" }
+        ],
+        "wordBank": [
+            { "id": "beak",  "label": "Beak",  "isDecoy": False },
+            { "id": "wings", "label": "Wings", "isDecoy": False },
+            { "id": "legs",  "label": "Legs",  "isDecoy": False },
+            { "id": "claws", "label": "Claws", "isDecoy": False },
+            { "id": "fin",   "label": "Fin",   "isDecoy": True },
+            { "id": "tail",  "label": "Tail",  "isDecoy": True }
+        ],
+        "facts": {
+            "beak": "Beaks help birds pick up seeds, berries, and insects to eat.",
+            "wings": "Wings let the bird fly into the air to travel and escape danger.",
+            "legs": "Legs help the bird hop along the ground and perch securely.",
+            "claws": "Claws grip tree branches tightly so the bird stays balanced while resting."
+        }
+    },
+    {
+        "id": "round_2",
+        "title": "Round 2 — Label the Lion",
+        "subtitle": "Match each body part label to the correct pointer pin on the lion.",
+        "illustrationSrc": "/static/images/ftp_lion.webp",
+        "illustrationAlt": "Lion Diagram",
+        "illustrationBg": "#fef9c3",
+        "zones": [
+            { "id": "eyes",  "label": "Eyes",  "number": 1, "pinX": 76, "pinY": 30, "slotX": 84, "slotY": 16, "color": "#fde68a" },
+            { "id": "mouth", "label": "Mouth", "number": 2, "pinX": 82, "pinY": 41, "slotX": 84, "slotY": 52, "color": "#fee2e2" },
+            { "id": "legs",  "label": "Legs",  "number": 3, "pinX": 56, "pinY": 66, "slotX": 34, "slotY": 84, "color": "#dcfce7" },
+            { "id": "paws",  "label": "Paws",  "number": 4, "pinX": 62, "pinY": 86, "slotX": 82, "slotY": 84, "color": "#fce7f3" }
+        ],
+        "wordBank": [
+            { "id": "eyes",   "label": "Eyes",   "isDecoy": False },
+            { "id": "mouth",  "label": "Mouth",  "isDecoy": False },
+            { "id": "paws",   "label": "Paws",   "isDecoy": False },
+            { "id": "legs",   "label": "Legs",   "isDecoy": False },
+            { "id": "wings",  "label": "Wings",  "isDecoy": True },
+            { "id": "beak",   "label": "Beak",   "isDecoy": True }
+        ],
+        "facts": {
+            "eyes": "Forward-facing eyes help lions spot prey and judge leaping distances.",
+            "mouth": "Powerful jaws and teeth help the lion bite, grip, and chew food.",
+            "paws": "Wide, padded paws let the lion walk quietly without making noise.",
+            "legs": "Muscular legs give the lion explosive speed to run fast."
+        }
+    },
+    {
+        "id": "round_3",
+        "title": "Round 3 — Label the Fish",
+        "subtitle": "Match each body part label to the correct pointer pin on the fish.",
+        "illustrationSrc": "/static/images/ftp_fish.webp",
+        "illustrationAlt": "Fish Diagram",
+        "illustrationBg": "#e0f2fe",
+        "zones": [
+            { "id": "dorsal_fin", "label": "Dorsal Fin", "number": 1, "pinX": 52, "pinY": 22, "slotX": 50, "slotY": 10, "color": "#dbeafe" },
+            { "id": "eye",        "label": "Eye",        "number": 2, "pinX": 73, "pinY": 45, "slotX": 84, "slotY": 28, "color": "#fde68a" },
+            { "id": "mouth",      "label": "Mouth",      "number": 3, "pinX": 82, "pinY": 53, "slotX": 84, "slotY": 66, "color": "#fee2e2" },
+            { "id": "tail_fin",   "label": "Tail Fin",   "number": 4, "pinX": 24, "pinY": 48, "slotX": 14, "slotY": 48, "color": "#e9d5ff" }
+        ],
+        "wordBank": [
+            { "id": "eye",        "label": "Eye",        "isDecoy": False },
+            { "id": "mouth",      "label": "Mouth",      "isDecoy": False },
+            { "id": "dorsal_fin", "label": "Dorsal Fin", "isDecoy": False },
+            { "id": "tail_fin",   "label": "Tail Fin",   "isDecoy": False },
+            { "id": "wings",      "label": "Wings",      "isDecoy": True },
+            { "id": "claws",      "label": "Claws",      "isDecoy": True }
+        ],
+        "facts": {
+            "eye": "Large fish eyes help them spot food and steer safely underwater.",
+            "mouth": "The mouth opens to swallow water and catch tiny plants and prey.",
+            "dorsal_fin": "The dorsal fin along the fish’s back keeps it upright and stable in water.",
+            "tail_fin": "The tail fin swishes side to side to propel the fish forward."
+        }
+    }
+]
+
+def load_find_the_part_activity_config(activity_id):
+    """Load teacher-configurable Find the Part diagram matching data by activity_id from DB."""
+    default_payload = {
+        "title": "Animal Body Parts — Find the Part",
+        "instructions": "Match each body part label to the correct pointer pin on the diagram.",
+        "difficulty": "Level 1 — Easy",
+        "points": 100,
+        "rounds": DEFAULT_FIND_THE_PART_ROUNDS
+    }
+    activity = Activity.query.get(activity_id)
+    if activity and activity.config:
+        merged = dict(default_payload)
+        merged.update(activity.config)
+        if not merged.get("rounds") or not isinstance(merged.get("rounds"), list) or len(merged.get("rounds")) == 0:
+            merged["rounds"] = DEFAULT_FIND_THE_PART_ROUNDS
+        return merged
+    return default_payload
+
+
 def get_or_create_badge(name, description, icon='🏅'):
     """Get or create a badge by name"""
     badge = Badge.query.filter_by(name=name).first()
@@ -2038,8 +2144,9 @@ def find_the_part_game():
         flash('You have already used all 3 attempts for today on this activity. Check back tomorrow!', 'warning')
         return redirect(url_for('student.activities'))
 
+    config = load_find_the_part_activity_config(activity.id)
     log_access(current_user, 'page_view', f'find_the_part activity_id={activity.id}')
-    return render_template('student/find_the_part_game.html', activity_id=activity.id, attempts_today=used_today)
+    return render_template('student/find_the_part_game.html', activity=activity, activity_id=activity.id, config=config, attempts_today=used_today)
 
 
 # ── Lesson 2B — Plant Parts ───────────────────────────────────────────────────

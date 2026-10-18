@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if activity %}Edit Diagram Match: {{ activity.type }}{% else %}New Diagram Match &amp; Label{% endif %} — Content Studio</title>
+  <meta name="description" content="SciencePlay Template Builder: Configure custom diagram matching and callout pin labeling games for any curriculum illustration.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260903_4') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher_find_the_part_builder.css', v='20261018_1') }}">
+</head>
+
+<body class="teacher-page teacher-dashboard-page">
+
+  <div class="teacher-layout container-fluid">
+    <div class="row g-3 g-lg-4">
+
+      <aside class="col-12 col-lg-3 col-xl-2">
+        <nav class="teacher-sidebar h-100">
+          <div>
+            <div class="teacher-brand-wrap">
+              <span class="teacher-brand-icon"><i class="bi bi-journal-check"></i></span>
+              <div>
+                <div class="teacher-brand-title">SciencePlay</div>
+                <p class="teacher-brand-subtitle">Teacher Portal</p>
+              </div>
+            </div>
+
+            <div class="teacher-menu-group mt-4">
+              <a class="teacher-menu-link" data-nav="dashboard" href="{{ url_for('teacher.dashboard') }}">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="students" href="{{ url_for('teacher.students') }}">
+                <i class="bi bi-people"></i>
+                <span>Students</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="lessons" href="{{ url_for('teacher.lessons') }}">
+                <i class="bi bi-journal-bookmark"></i>
+                <span>Lessons &amp; Assignments</span>
+              </a>
+
+              <a class="teacher-menu-link active" data-nav="content" href="{{ url_for('teacher.content_management') }}">
+                <i class="bi bi-controller"></i>
+                <span>Content Studio</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="analytics" href="{{ url_for('teacher.analytics') }}">
+                <i class="bi bi-bar-chart"></i>
+                <span>Analytics</span>
+              </a>
+
+              <a class="teacher-menu-link" data-nav="feedback" href="{{ url_for('teacher.feedback') }}">
+                <i class="bi bi-chat-square-quote-fill"></i>
+                <span>Feedback</span>
+                {% if needs_feedback_count and needs_feedback_count > 0 %}
+                  <span class="feedback-nav-badge">{{ needs_feedback_count }}</span>
+                {% endif %}
+              </a>
+            </div>
+          </div>
+
+          <a href="{{ url_for('auth.logout') }}" class="teacher-logout-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="col-12 col-lg-9 col-xl-10">
+        <section class="teacher-content">
+          <div class="teacher-center-wrap" style="max-width: 1180px;">
+
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+              <div>
+                <a href="{{ url_for('teacher.game_studio') }}" class="text-decoration-none text-muted small fw-bold d-inline-flex align-items-center gap-1 mb-2">
+                  <i class="bi bi-arrow-left"></i><span>Back to Game Studio</span>
+                </a>
+                <h1 class="page-title fw-black text-dark mb-1">
+                  {% if activity %}Edit Activity: {{ activity.type }}{% else %}New Diagram Match &amp; Label Builder{% endif %}
+                </h1>
+                <p class="page-subtitle text-muted mb-0">Engine Template: <strong>Visual Diagram Match &amp; Callout Pins</strong> (Position pins, set answers, and manage word bank).</p>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('teacher.game_studio') }}" class="btn btn-outline-secondary rounded-pill px-3 fw-bold">
+                  <i class="bi bi-arrow-left me-1"></i>Cancel
+                </a>
+                {% if activity %}
+                  <a href="{{ url_for('teacher.preview_activity', activity_id=activity.id) }}" class="btn btn-outline-dark rounded-pill px-3 fw-bold">
+                    <i class="bi bi-play-circle-fill me-1"></i>Test Play
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+
+            <form id="diagramBuilderForm" method="POST" action="{{ url_for('teacher.save_find_the_part') }}" enctype="multipart/form-data">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              {% if activity %}
+                <input type="hidden" name="activity_id" value="{{ activity.id }}">
+              {% endif %}
+              <input type="hidden" name="rounds_data" id="roundsDataInput" value="">
+
+              <!-- STEP 1: Overview & Curriculum Links -->
+              <div class="builder-step-card mb-4">
+                <div class="builder-step-header">
+                  <span class="step-number-badge bg-info text-white">1</span>
+                  <div>
+                    <h2 class="h5 fw-bold text-dark mb-0">Activity Overview &amp; Curriculum Link</h2>
+                    <span class="text-muted small">Define game title, instructions, and target curriculum lesson</span>
+                  </div>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-12 col-md-7">
+                    <label class="form-label fw-bold text-dark small">Activity Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="activityTitleInput" value="{{ config.title if config and config.title else (activity.type if activity and activity.type else '') }}" required placeholder="e.g. Earth's Layers Diagram Match">
+                  </div>
+                  <div class="col-12 col-md-5">
+                    <label class="form-label fw-bold text-dark small">Link to Curriculum Lesson</label>
+                    <select class="form-select form-select-lg rounded-3" name="lesson_id">
+                      {% for l in all_lessons %}
+                        <option value="{{ l.id }}" {% if activity and activity.lesson_id == l.id %}selected{% endif %}>{{ l.title }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label fw-bold text-dark small">Student Instructions (Banner displayed during game play)</label>
+                    <input type="text" class="form-control rounded-3" name="instructions" id="activityInstructionsInput" value="{{ config.instructions or 'Match each label from the word bank to the correct pointer pin on the diagram.' }}" placeholder="e.g. Match each label to the correct pointer pin on the diagram.">
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label fw-bold text-dark small">Difficulty Level</label>
+                    <select class="form-select rounded-3" name="difficulty" id="activityDifficultySelect">
+                      <option value="Level 1 — Easy" {% if config and config.difficulty and 'easy' in config.difficulty|lower %}selected{% endif %}>Level 1 — Easy</option>
+                      <option value="Level 2 — Medium" {% if config and config.difficulty and 'medium' in config.difficulty|lower %}selected{% endif %}>Level 2 — Medium</option>
+                      <option value="Level 3 — Hard" {% if config and config.difficulty and 'hard' in config.difficulty|lower %}selected{% endif %}>Level 3 — Hard</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label fw-bold text-dark small">Points Awarded</label>
+                    <input type="number" class="form-control rounded-3" name="points" id="activityPointsInput" value="{{ activity.points or (config.points if config and config.points else 100) }}" min="10" max="500" step="10">
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label fw-bold text-dark small">Curriculum Term</label>
+                    <select class="form-select rounded-3" name="term">
+                      <option value="Term 1" {% if activity and activity.term == 'Term 1' %}selected{% endif %}>Term 1</option>
+                      <option value="Term 2" {% if (activity and activity.term == 'Term 2') or (not activity) %}selected{% endif %}>Term 2</option>
+                      <option value="Term 3" {% if activity and activity.term == 'Term 3' %}selected{% endif %}>Term 3</option>
+                      <option value="Term 4" {% if activity and activity.term == 'Term 4' %}selected{% endif %}>Term 4</option>
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <div class="form-check form-switch p-2 border rounded-3 bg-light d-flex align-items-center justify-content-between">
+                      <div class="ms-1">
+                        <label class="form-check-label fw-bold text-dark d-block" for="isSupplementaryCheck">Supplementary Practice Activity</label>
+                        <small class="text-muted">If turned ON, this activity is designated for extra practice or remedial support rather than mandatory core progression.</small>
+                      </div>
+                      <input class="form-check-input flex-shrink-0 ms-2 me-1" type="checkbox" role="switch" id="isSupplementaryCheck" name="is_supplementary" value="1" {% if activity and activity.is_supplementary %}checked{% endif %}>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- STEP 2: Illustration Rounds & Visual Pin Placement Canvas -->
+              <div class="builder-step-card mb-4">
+                <div class="builder-step-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="step-number-badge bg-info text-white">2</span>
+                    <div>
+                      <h2 class="h5 fw-bold text-dark mb-0">Diagram Rounds &amp; Pin Placement</h2>
+                      <span class="text-muted small">Upload diagram illustrations, click to drop callout pins, and set correct answers</span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-outline-primary btn-sm rounded-pill fw-bold px-3 shadow-sm" id="btnAddRound">
+                    <i class="bi bi-plus-circle-fill me-1"></i>Add Another Illustration Round
+                  </button>
+                </div>
+
+                <!-- Rounds Navigation Tabs -->
+                <div class="rounds-tab-bar mb-3 d-flex align-items-center gap-2 overflow-auto pb-1" id="roundsTabBar">
+                  <!-- Dynamically rendered round pill buttons -->
+                </div>
+
+                <!-- Current Round Workspace Card -->
+                <div class="round-workspace border rounded-4 p-3 p-md-4 bg-white shadow-sm mb-4" id="roundWorkspaceCard">
+                  <div class="row g-3 align-items-center mb-3">
+                    <div class="col-12 col-md-6">
+                      <label class="form-label fw-bold text-dark small">Round Title</label>
+                      <input type="text" class="form-control rounded-3 fw-bold" id="roundTitleInput" placeholder="e.g. Round 1 — Layers of the Earth">
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label fw-bold text-dark small">Round Subtitle / Hint</label>
+                      <input type="text" class="form-control rounded-3" id="roundSubtitleInput" placeholder="e.g. Match each label to the correct layer.">
+                    </div>
+                  </div>
+
+                  <!-- Diagram Selection & Upload Toolbar -->
+                  <div class="diagram-toolbar p-3 rounded-3 bg-light border mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                      <span class="fw-bold small text-dark"><i class="bi bi-image text-primary me-1"></i>Diagram Image:</span>
+                      <span class="badge bg-white text-dark border rounded-pill px-3 py-1.5 fw-semibold" id="currentDiagramLabel">Earth's Layers</span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                      <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill fw-bold dropdown-toggle px-3" type="button" data-bs-toggle="dropdown">
+                          <i class="bi bi-collection me-1"></i>Choose Science Preset
+                        </button>
+                        <ul class="dropdown-menu shadow-sm rounded-3">
+                          {% for pimg in preset_diagrams %}
+                          <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2 btn-select-preset-diagram" data-src="{{ pimg.src }}" data-label="{{ pimg.label }}">
+                              <img src="{{ pimg.src }}" alt="{{ pimg.label }}" class="rounded border" style="width: 28px; height: 28px; object-fit: cover;">
+                              <span class="fw-bold small">{{ pimg.label }}</span>
+                            </button>
+                          </li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+
+                      <label class="btn btn-sm btn-primary rounded-pill fw-bold px-3 mb-0" style="cursor: pointer;">
+                        <i class="bi bi-upload me-1"></i>Upload Custom Diagram
+                        <input type="file" class="d-none" id="roundFileInput" accept="image/png,image/jpeg,image/webp">
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Visual Interactive Canvas & Pin Inspector Layout -->
+                  <div class="row g-4">
+                    <!-- Left: Interactive Canvas -->
+                    <div class="col-12 col-xl-7">
+                      <div class="interactive-diagram-container rounded-4 border overflow-hidden position-relative" id="diagramCanvasContainer">
+                        <div class="diagram-canvas-wrap position-relative" id="diagramCanvasWrap">
+                          <img src="/static/images/ftp_earth_layers.jpg" alt="Science Diagram" id="diagramImage" class="img-fluid w-100 select-none">
+                          <svg class="diagram-svg-overlay position-absolute top-0 start-0 w-100 h-100" id="diagramSvgOverlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <!-- SVG leader lines rendered here -->
+                          </svg>
+                          <div class="pins-slots-layer position-absolute top-0 start-0 w-100 h-100" id="pinsSlotsLayer">
+                            <!-- Draggable Pins and Callout Slots rendered here -->
+                          </div>
+                        </div>
+
+                        <div class="diagram-canvas-hint text-center py-2 px-3 bg-light border-top small text-muted d-flex align-items-center justify-content-between flex-wrap gap-2">
+                          <span>
+                            <i class="bi bi-hand-index-thumb-fill text-primary me-1"></i>
+                            <strong>Click diagram</strong> to place a target pin. Drag pin dots or callout boxes to position anywhere!
+                          </span>
+                          <span class="badge bg-secondary-subtle text-secondary rounded-pill" id="pinCountBadge">0 Pins Placed</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Right: Pin Targets Inspector & Answers Editor -->
+                    <div class="col-12 col-xl-5">
+                      <div class="pin-inspector-panel border rounded-4 p-3 bg-light h-100 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                          <h3 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-1.5">
+                            <i class="bi bi-list-check text-primary"></i>
+                            <span>Placed Callout Targets &amp; Answers</span>
+                          </h3>
+                          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill fw-bold" id="btnAddPinManual">
+                            <i class="bi bi-plus me-1"></i>Add Pin
+                          </button>
+                        </div>
+
+                        <div class="pin-list-scroll flex-grow-1 overflow-auto pe-1" id="pinTargetsList" style="max-height: 480px;">
+                          <!-- Target pin configuration cards rendered here -->
+                        </div>
+
+                        <!-- Word Bank Decoys Section -->
+                        <div class="word-bank-box mt-3 pt-3 border-top">
+                          <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="fw-bold small text-dark mb-0 d-flex align-items-center gap-1">
+                              <i class="bi bi-card-text text-success"></i>
+                              <span>Word Bank Decoy Words (Distractors)</span>
+                            </label>
+                            <span class="badge bg-light text-muted border rounded-pill small" id="decoyCountBadge">0 Decoys</span>
+                          </div>
+                          <p class="text-muted small mb-2" style="font-size: 0.74rem;">
+                            Correct answers are automatically added to the student's word bank. Add extra decoy options below to test mastery:
+                          </p>
+
+                          <div class="d-flex gap-2 mb-2">
+                            <input type="text" class="form-control form-control-sm rounded-pill" id="decoyInput" placeholder="e.g. Atmosphere">
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-bold flex-shrink-0 px-3" id="btnAddDecoy">
+                              <i class="bi bi-plus-lg me-1"></i>Add
+                            </button>
+                          </div>
+
+                          <div class="decoy-chips-wrap d-flex flex-wrap gap-1.5" id="decoyChipsList">
+                            <!-- Decoy word chips rendered here -->
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-3" id="btnDeleteCurrentRound">
+                      <i class="bi bi-trash3-fill me-1"></i>Delete This Round
+                    </button>
+                    <span class="text-muted small" id="roundSummaryNote">Round 1 of 1</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- ACTION FOOTER BAR -->
+              <div class="builder-actions-card d-flex justify-content-between align-items-center flex-wrap gap-3 p-4 rounded-4 shadow-sm bg-white border">
+                <div class="d-flex align-items-center gap-2">
+                  <a href="{{ url_for('teacher.game_studio') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                    Cancel
+                  </a>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                  <button type="submit" class="btn btn-primary rounded-pill px-5 py-2.5 fw-bold shadow-sm d-flex align-items-center gap-2" id="btnSaveActivity">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Save &amp; Publish Diagram Activity</span>
+                  </button>
+                </div>
+              </div>
+
+            </form>
+
+          </div>
+        </section>
+      </main>
+
+    </div>
+  </div>
+
+  <script>
+    window.initialDiagramConfig = {{ (config|tojson) if config else 'null' }};
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher_find_the_part_builder.js', v='20261018_1') }}"></script>
+</body>
+
+</html>

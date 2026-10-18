@@ -149,6 +149,13 @@ const ROUNDS = [
   },
 ];
 
+function getActiveRounds() {
+  if (window.findThePartCustomConfig && Array.isArray(window.findThePartCustomConfig.rounds) && window.findThePartCustomConfig.rounds.length > 0) {
+    return window.findThePartCustomConfig.rounds;
+  }
+  return ROUNDS;
+}
+
 // ── STATE ─────────────────────────────────────────────────────────────────────
 
 const state = {
@@ -215,7 +222,7 @@ function getStorageKey() {
 }
 
 function getTotalZones() {
-  return ROUNDS.reduce((acc, r) => acc + r.zones.length, 0);
+  return getActiveRounds().reduce((acc, r) => acc + (r.zones ? r.zones.length : 0), 0);
 }
 
 async function saveResult(silent = false) {
@@ -232,6 +239,11 @@ async function saveResult(silent = false) {
     state.score = Math.min(100, state.score + 4);
   }
   state.score = Math.min(100, Math.max(20, state.score));
+
+  if (window.isTeacherPreview) {
+    if (!silent) showSummary({ attempts_today: 0, attempts_limit: 3 });
+    return null;
+  }
 
   const timeSpent = Math.max(1, getActiveElapsedSeconds());
   const actId = window.findThePartActivityId || state.activityId;
@@ -278,21 +290,31 @@ function showSummary(data) {
 
   const maxScore = 100;
   const pct = Math.round(state.score);
-  const total = ROUNDS.reduce((acc, r) => acc + r.zones.length, 0);
+  const total = getTotalZones();
   const stars = state.score >= 90 ? 3 : state.score >= 60 ? 2 : 1;
   const starStr = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
   const timeSpentStr = `${getActiveElapsedSeconds()}s`;
 
   const attemptsUsed = state.attemptsToday || (data && data.attempts_today) || 1;
   const limit = state.attemptsLimit || 3;
-  const exhausted = attemptsUsed >= limit;
+  const exhausted = !window.isTeacherPreview && (attemptsUsed >= limit);
   const left = Math.max(0, limit - attemptsUsed);
 
   let attemptBadge = '';
   let restartBtnHtml = '';
   let coachHintHtml = '';
 
-  if (exhausted) {
+  if (window.isTeacherPreview) {
+    attemptBadge = `
+      <div class="ftp-stat-box ftp-stat-box-warn">
+        <span class="ftp-stat-val text-primary"><i class="bi bi-eye-fill me-1"></i>Preview</span>
+        <span class="ftp-stat-lbl">No Attempts Recorded</span>
+      </div>`;
+    restartBtnHtml = `
+      <button id="ftp-restart" class="ftp-btn ftp-btn-secondary">
+        <i class="bi bi-arrow-clockwise me-1"></i>Test Play Again
+      </button>`;
+  } else if (exhausted) {
     attemptBadge = `
       <div class="ftp-stat-box ftp-stat-box-warn">
         <span class="ftp-stat-val text-danger"><i class="bi bi-lock-fill me-1"></i>${attemptsUsed}/${limit}</span>
@@ -314,7 +336,7 @@ function showSummary(data) {
       </button>`;
   }
 
-  if (data && data.hint && !exhausted) {
+  if (data && data.hint && !exhausted && !window.isTeacherPreview) {
     coachHintHtml = `
       <div class="ftp-hint-box">
         <i class="bi bi-lightbulb-fill me-2 text-warning"></i>
@@ -322,13 +344,16 @@ function showSummary(data) {
       </div>`;
   }
 
+  const finishHref = window.isTeacherPreview ? '/teacher/game_studio' : '/student/activities';
+  const finishText = window.isTeacherPreview ? 'Return to Game Studio' : 'Finish & Return to Playground';
+
   container.innerHTML = `
     <div class="ftp-summary text-center">
       <div class="ftp-summary-icon" style="font-size: 2.2rem; margin-bottom: 4px;">
         ${starStr}
       </div>
       <h2 class="ftp-summary-title">Find the Part — Complete!</h2>
-      <p class="ftp-summary-sub">You labeled all animal body parts. Great effort!</p>
+      <p class="ftp-summary-sub">Great job! All diagram parts matched successfully.</p>
       
       <div class="ftp-stats-row">
         <div class="ftp-stat-box">
@@ -349,8 +374,8 @@ function showSummary(data) {
       ${coachHintHtml}
 
       <div class="ftp-summary-btns">
-        <a href="/student/activities" class="ftp-btn ftp-btn-primary">
-          <i class="bi bi-check-circle-fill me-1"></i>Finish & Return to Playground
+        <a href="${finishHref}" class="ftp-btn ftp-btn-primary">
+          <i class="bi bi-check-circle-fill me-1"></i>${finishText}
         </a>
         ${restartBtnHtml}
       </div>
@@ -367,7 +392,8 @@ function showSummary(data) {
 // ── ROUND RENDERER ────────────────────────────────────────────────────────────
 
 function renderRound(roundIdx) {
-  if (roundIdx >= ROUNDS.length) {
+  const activeRounds = getActiveRounds();
+  if (roundIdx >= activeRounds.length) {
     playVoicePrompt('level_complete', 'Level complete! Great job!');
     saveResult();
     return;
@@ -375,7 +401,7 @@ function renderRound(roundIdx) {
 
   const roundVoiceKeys = ['ftp_r1_bird', 'ftp_r2_lion', 'ftp_r3_fish'];
   if (roundVoiceKeys[roundIdx]) {
-    playVoicePrompt(roundVoiceKeys[roundIdx], ROUNDS[roundIdx].title);
+    playVoicePrompt(roundVoiceKeys[roundIdx], activeRounds[roundIdx].title);
   }
 
   state.currentRound = roundIdx;
@@ -384,14 +410,14 @@ function renderRound(roundIdx) {
   state.matched = new Set();
   state.attempts = {};
 
-  const round = ROUNDS[roundIdx];
+  const round = activeRounds[roundIdx];
   const container = document.getElementById('ftp-container');
   if (!container) return;
 
-  const shuffledBank = shuffle(round.wordBank);
+  const shuffledBank = shuffle(round.wordBank || []);
 
   // SVG Leader lines connecting pins to slots
-  const svgLinesHtml = round.zones.map(z => `
+  const svgLinesHtml = (round.zones || []).map(z => `
     <line class="ftp-leader-line" data-line-id="${z.id}"
           x1="${z.pinX}" y1="${z.pinY}" x2="${z.slotX}" y2="${z.slotY}" />
     <circle class="ftp-pin-halo" data-halo-id="${z.id}"
@@ -401,7 +427,7 @@ function renderRound(roundIdx) {
   `).join('');
 
   // Callout Slots HTML
-  const slotsHtml = round.zones.map(z => `
+  const slotsHtml = (round.zones || []).map(z => `
     <div class="ftp-slot ftp-slot-empty"
          data-zone-id="${z.id}"
          style="left:${z.slotX}%;top:${z.slotY}%;"
@@ -427,7 +453,7 @@ function renderRound(roundIdx) {
     <div class="ftp-round">
       <!-- Round header -->
       <div class="ftp-round-header">
-        <span class="ftp-round-badge">Round ${roundIdx + 1} / ${ROUNDS.length}</span>
+        <span class="ftp-round-badge">Round ${roundIdx + 1} / ${activeRounds.length}</span>
         <h2 class="ftp-round-title">${round.title}</h2>
         <p class="ftp-round-sub">${round.subtitle}</p>
       </div>
@@ -838,30 +864,32 @@ export function initFindThePart() {
 
   // If resumed with matches on this round, apply matched visuals
   if (resumed && state.matched.size > 0) {
-    const round = ROUNDS[state.currentRound];
-    state.matched.forEach(zoneId => {
-      const zone = round.zones.find(z => z.id === zoneId);
-      const chip = document.querySelector(`.ftp-chip[data-label-id="${zoneId}"]`);
-      if (chip) {
-        chip.classList.add('ftp-chip-used');
-        chip.disabled = true;
-        chip.draggable = false;
-      }
-      const slotEl = document.querySelector(`.ftp-slot[data-zone-id="${zoneId}"]`);
-      if (slotEl && zone) {
-        slotEl.className = 'ftp-slot ftp-slot-matched';
-        slotEl.innerHTML = `
-          <span class="ftp-slot-badge"><i class="bi bi-check-lg"></i></span>
-          <span class="ftp-slot-label">${zone.label}</span>
-        `;
-      }
-      const line = document.querySelector(`.ftp-leader-line[data-line-id="${zoneId}"]`);
-      if (line) line.classList.add('ftp-leader-matched');
-      const halo = document.querySelector(`.ftp-pin-halo[data-halo-id="${zoneId}"]`);
-      if (halo) halo.classList.add('ftp-pin-halo-matched');
-      const dot = document.querySelector(`.ftp-pin-dot[data-pin-id="${zoneId}"]`);
-      if (dot) dot.classList.add('ftp-pin-dot-matched');
-    });
+    const round = getActiveRounds()[state.currentRound];
+    if (round && Array.isArray(round.zones)) {
+      state.matched.forEach(zoneId => {
+        const zone = round.zones.find(z => z.id === zoneId);
+        const chip = document.querySelector(`.ftp-chip[data-label-id="${zoneId}"]`);
+        if (chip) {
+          chip.classList.add('ftp-chip-used');
+          chip.disabled = true;
+          chip.draggable = false;
+        }
+        const slotEl = document.querySelector(`.ftp-slot[data-zone-id="${zoneId}"]`);
+        if (slotEl && zone) {
+          slotEl.className = 'ftp-slot ftp-slot-matched';
+          slotEl.innerHTML = `
+            <span class="ftp-slot-badge"><i class="bi bi-check-lg"></i></span>
+            <span class="ftp-slot-label">${zone.label}</span>
+          `;
+        }
+        const line = document.querySelector(`.ftp-leader-line[data-line-id="${zoneId}"]`);
+        if (line) line.classList.add('ftp-leader-matched');
+        const halo = document.querySelector(`.ftp-pin-halo[data-halo-id="${zoneId}"]`);
+        if (halo) halo.classList.add('ftp-pin-halo-matched');
+        const dot = document.querySelector(`.ftp-pin-dot[data-pin-id="${zoneId}"]`);
+        if (dot) dot.classList.add('ftp-pin-dot-matched');
+      });
+    }
   }
 }
 
@@ -870,6 +898,9 @@ function bindBackConfirmation() {
   if (backBtn && !backBtn._confirmBound) {
     backBtn._confirmBound = true;
     backBtn.addEventListener('click', (e) => {
+      if (window.isTeacherPreview) {
+        return; // Direct navigation back to teacher studio
+      }
       if (state.completed || (state.currentRound === 0 && state.matched.size === 0)) {
         return;
       }
