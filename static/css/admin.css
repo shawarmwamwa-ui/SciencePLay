@@ -608,16 +608,18 @@ body.admin-page {
 
 .admin-toast-stack {
   position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1080;
-  width: min(360px, calc(100vw - 1rem));
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 999999 !important;
+  width: min(390px, calc(100vw - 1.5rem));
   display: grid;
   gap: 0.5rem;
+  pointer-events: none;
 }
 
 .admin-toast {
   margin: 0;
+  pointer-events: auto;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.45);
   box-shadow: 0 12px 24px rgba(16, 31, 64, 0.2);

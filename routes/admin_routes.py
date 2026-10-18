@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from database.models import (
     db, AccessLog, User, AttemptLog, AttemptObjectLog,
@@ -211,6 +212,29 @@ def user_management():
         effective_last_seen_map=effective_last_seen_map
     )
 
+@admin_bp.route('/check_username')
+@require_role('admin')
+def check_username():
+    raw_username = request.args.get('username', '').strip()
+    exclude_id = request.args.get('exclude_id', type=int)
+    if not raw_username:
+        return jsonify({'available': True, 'exists': False})
+
+    query = User.query.filter(func.lower(User.username) == func.lower(raw_username))
+    if exclude_id:
+        query = query.filter(User.id != exclude_id)
+    existing = query.first()
+
+    if existing:
+        is_archived = getattr(existing, 'is_archived', False)
+        status_note = " (archived account)" if is_archived else ""
+        return jsonify({
+            'available': False,
+            'exists': True,
+            'message': f"Username '{raw_username}' already exists{status_note}. Please choose a different username."
+        })
+    return jsonify({'available': True, 'exists': False})
+
 @admin_bp.route('/create_user', methods=['POST'])
 @require_role('admin')
 def create_user():
@@ -229,10 +253,12 @@ def create_user():
         flash(err_msg, "danger")
         return redirect(url_for('admin.user_management'))
 
-    # Duplicate username check
-    existing_user = User.query.filter(User.username == username).first()
+    # Duplicate username check (case-insensitive)
+    existing_user = User.query.filter(func.lower(User.username) == func.lower(username)).first()
     if existing_user:
-        err_msg = "Username already exists. Please use a different username."
+        is_archived = getattr(existing_user, 'is_archived', False)
+        status_note = " (in archived accounts)" if is_archived else ""
+        err_msg = f"Username '{username}' already exists{status_note}. Please use a different username."
         if is_ajax:
             return jsonify({'success': False, 'message': err_msg}), 400
         flash(err_msg, "danger")
@@ -309,10 +335,12 @@ def update_user(user_id):
             return redirect(url_for('admin.user_management', edit_error_user_id=user_id, edit_error=err_msg))
 
     # Duplicate username check if changing username
-    if new_username != user.username:
-        existing = User.query.filter(User.username == new_username, User.id != user.id).first()
+    if new_username.lower() != user.username.lower():
+        existing = User.query.filter(func.lower(User.username) == func.lower(new_username), User.id != user.id).first()
         if existing:
-            err_msg = f"Username '{new_username}' is already taken. Please choose a different username."
+            is_archived = getattr(existing, 'is_archived', False)
+            status_note = " (in archived accounts)" if is_archived else ""
+            err_msg = f"Username '{new_username}' is already taken{status_note}. Please choose a different username."
             if is_ajax:
                 return jsonify({'success': False, 'message': err_msg}), 400
             flash(err_msg, "danger")

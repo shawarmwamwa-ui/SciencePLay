@@ -309,22 +309,82 @@ function initCreateUserModalValidation() {
   const btnText = document.getElementById('createUserBtnText');
   const spinner = document.getElementById('createUserSpinner');
   const modalEl = document.getElementById('createUserModal');
+  const modalContent = modalEl?.querySelector('.modal-content');
+  const usernameInput = document.getElementById('createUserUsername');
+  const usernameFeedback = document.getElementById('createUserUsernameFeedback');
 
-  function showError(msg) {
+  function showError(msg, isUsernameError = false) {
     if (errorText) errorText.textContent = msg;
     if (errorAlert) {
       errorAlert.classList.remove('d-none');
     }
+    if (isUsernameError && usernameInput) {
+      usernameInput.classList.add('is-invalid');
+      usernameInput.classList.remove('is-valid');
+      if (usernameFeedback) usernameFeedback.textContent = msg;
+      usernameInput.focus();
+    }
+    if (modalContent) {
+      modalContent.classList.remove('shake-card');
+      void modalContent.offsetWidth;
+      modalContent.classList.add('shake-card');
+    }
+    showAdminNotification(msg, 'danger');
   }
 
   function clearError() {
     if (errorText) errorText.textContent = '';
     if (errorAlert) errorAlert.classList.add('d-none');
+    if (usernameInput) {
+      usernameInput.classList.remove('is-invalid');
+      usernameInput.classList.remove('is-valid');
+    }
+    if (usernameFeedback) usernameFeedback.textContent = '';
   }
 
   if (modalEl) {
     modalEl.addEventListener('hidden.bs.modal', clearError);
     modalEl.addEventListener('show.bs.modal', clearError);
+  }
+
+  // Live duplicate username check
+  let usernameDebounceTimer = null;
+  if (usernameInput) {
+    const checkUsernameAvailability = async () => {
+      const uVal = usernameInput.value.trim();
+      if (!uVal) {
+        usernameInput.classList.remove('is-invalid', 'is-valid');
+        if (usernameFeedback) usernameFeedback.textContent = '';
+        return;
+      }
+      try {
+        const res = await fetch(`/admin/check_username?username=${encodeURIComponent(uVal)}`);
+        const result = await res.json().catch(() => null);
+        if (result && !result.available) {
+          const errMsg = result.message || `Username '${uVal}' is already taken. Please choose a different username.`;
+          showError(errMsg, true);
+        } else if (result && result.available) {
+          usernameInput.classList.remove('is-invalid');
+          usernameInput.classList.add('is-valid');
+          if (usernameFeedback) usernameFeedback.textContent = '';
+          if (errorText && errorText.textContent.toLowerCase().includes('username')) {
+            clearError();
+          }
+        }
+      } catch (err) {
+        // silent on network error during typing
+      }
+    };
+
+    usernameInput.addEventListener('input', () => {
+      clearTimeout(usernameDebounceTimer);
+      usernameDebounceTimer = setTimeout(checkUsernameAvailability, 400);
+    });
+
+    usernameInput.addEventListener('blur', () => {
+      clearTimeout(usernameDebounceTimer);
+      checkUsernameAvailability();
+    });
   }
 
   form.addEventListener('submit', async (e) => {
@@ -337,7 +397,7 @@ function initCreateUserModalValidation() {
     const confirmPassword = form.confirm_password?.value || '';
 
     if (!name || !username) {
-      showError('Please enter both Name and Username.');
+      showError('Please enter both Name and Username.', !username);
       return;
     }
 
@@ -377,7 +437,8 @@ function initCreateUserModalValidation() {
 
       if (!res.ok || !data?.success) {
         const msg = data?.message || 'Failed to create user. Please check your inputs.';
-        showError(msg);
+        const isUserErr = msg.toLowerCase().includes('username');
+        showError(msg, isUserErr);
       } else {
         window.location.reload();
       }
@@ -396,16 +457,17 @@ function showAdminNotification(message, type = 'danger') {
   if (!stack) {
     stack = document.createElement('div');
     stack.className = 'alerts-container admin-toast-stack';
-    stack.style.cssText = 'position:fixed; top:24px; right:24px; z-index:99999; max-width:420px; width:calc(100% - 48px);';
+    stack.setAttribute('aria-live', 'polite');
+    stack.setAttribute('aria-atomic', 'true');
     document.body.appendChild(stack);
   }
   const alert = document.createElement('div');
   alert.className = `alert alert-${type} alert-dismissible fade show shadow-lg admin-toast border-2 mb-2`;
-  alert.style.cssText = 'border-radius: 12px; font-weight: 600; font-size: 0.9rem; animation: adminShakeAnim 0.4s ease;';
   alert.setAttribute('role', 'alert');
+  const icon = type === 'success' ? 'bi-check-circle-fill text-success' : (type === 'warning' ? 'bi-exclamation-circle-fill text-warning' : 'bi-exclamation-triangle-fill text-danger');
   alert.innerHTML = `
     <div class="d-flex align-items-center">
-      <i class="bi bi-exclamation-triangle-fill fs-5 me-2 flex-shrink-0"></i>
+      <i class="bi ${icon} fs-5 me-2 flex-shrink-0"></i>
       <div class="flex-grow-1">${message}</div>
       <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -414,7 +476,7 @@ function showAdminNotification(message, type = 'danger') {
   setTimeout(() => {
     alert.classList.remove('show');
     alert.classList.add('fade');
-    setTimeout(() => alert.remove(), 350);
+    setTimeout(() => alert.remove(), 400);
   }, 5000);
 }
 
@@ -441,7 +503,7 @@ function initUpdateUserModalValidation() {
         void modalContent.offsetWidth; // Reflow for instant shake animation
         modalContent.classList.add('shake-card');
       }
-      showAdminNotification(`<strong>Password Error:</strong> ${msg}`, 'danger');
+      showAdminNotification(msg, 'danger');
     }
 
     function clearError() {
