@@ -14,7 +14,7 @@
     rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20260924_7') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/teacher.css', v='20261019_1') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}">
 </head>
 
@@ -509,7 +509,7 @@
                       </div>
                       <p class="teacher-panel-note mb-3">Items students found most difficult during lessons and games.</p>
 
-                      <div class="flex-grow-1 d-flex flex-column justify-content-center">
+                      <div class="flex-grow-1 d-flex flex-column justify-content-start">
                         {% if struggle_chart_labels %}
                           <div class="chart-wrapper position-relative p-1" style="height: 250px; width: 100%;">
                             <canvas id="dashboardStruggleChart"
@@ -606,10 +606,10 @@
                         </div>
 
                         <div class="tab-pane fade" id="dt-online-students" role="tabpanel">
-                          <ul class="activity-status-list">
+                          <ul class="activity-status-list mb-0" id="dt-online-students-list">
                             {% if student_activity_status %}
                             {% for st in student_activity_status %}
-                            <li class="py-2.5 border-bottom d-flex justify-content-between align-items-center gap-2">
+                            <li class="py-2.5 border-bottom d-flex justify-content-between align-items-center gap-2 dt-online-student-row">
                               <div class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden" style="min-width: 0;">
                                 {% if st.is_online %}
                                   <span class="status-pulse-dot flex-shrink-0" title="Online Now"></span>
@@ -641,6 +641,15 @@
                             </div>
                             {% endif %}
                           </ul>
+
+                          {% if student_activity_status and student_activity_status|length > 5 %}
+                          <div class="d-flex justify-content-between align-items-center pt-2.5 mt-2 border-top" id="dt-online-pagination-wrap">
+                            <small class="text-muted fw-semibold" id="dt-online-page-info" style="font-size: 0.74rem;">Showing 1 to 5 of {{ student_activity_status|length }} students</small>
+                            <nav aria-label="Online students navigation">
+                              <ul class="pagination pagination-sm pagination-smooth mb-0" id="dt-online-pagination-nav"></ul>
+                            </nav>
+                          </div>
+                          {% endif %}
                         </div>
 
                         <div class="tab-pane fade" id="dt-leaderboards" role="tabpanel">
@@ -859,7 +868,7 @@
   {% if dashboard_charts %}
   <script type="application/json" id="dashboardChartsData">{{ dashboard_charts|tojson }}</script>
   {% endif %}
-  <script defer src="{{ url_for('static', filename='js/teacher_dashboard.js', v='20260913_2') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/teacher_dashboard.js', v='20261019_1') }}"></script>
 </body>
 
 </html>

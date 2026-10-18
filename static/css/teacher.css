@@ -1557,6 +1557,13 @@
   transform: none !important;
 }
 
+.pagination-smooth.pagination-sm .page-item .page-link {
+  padding: 2px 7px;
+  font-size: 0.72rem;
+  border-radius: 6px !important;
+  margin: 0 1px;
+}
+
 .teacher-dashboard-page .table tbody tr {
   height: 64px;
 }

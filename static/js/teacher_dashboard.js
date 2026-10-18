@@ -504,4 +504,104 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
   }
+
+  // -------------------------------------------------------------
+  // 4. Online / Active Students Pagination (5 per page)
+  // -------------------------------------------------------------
+  const onlineList = document.getElementById('dt-online-students-list');
+  const onlineNav = document.getElementById('dt-online-pagination-nav');
+  const onlineInfo = document.getElementById('dt-online-page-info');
+
+  if (onlineList) {
+    const rows = Array.from(onlineList.querySelectorAll('.dt-online-student-row'));
+    const totalRows = rows.length;
+    const perPage = 5;
+
+    if (totalRows > perPage && onlineNav) {
+      let currentPage = 1;
+      const totalPages = Math.ceil(totalRows / perPage);
+
+      function renderOnlinePage(page) {
+        currentPage = Math.max(1, Math.min(page, totalPages));
+        const start = (currentPage - 1) * perPage;
+        const end = start + perPage;
+
+        rows.forEach((row, index) => {
+          if (index >= start && index < end) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+
+        if (onlineInfo) {
+          onlineInfo.textContent = `Showing ${start + 1} to ${Math.min(end, totalRows)} of ${totalRows} students`;
+        }
+
+        renderOnlinePaginationNav();
+      }
+
+      function renderOnlinePaginationNav() {
+        if (!onlineNav) return;
+        onlineNav.innerHTML = '';
+
+        // Prev button
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevLi.innerHTML = `<button type="button" class="page-link" aria-label="Previous">&laquo;</button>`;
+        if (currentPage > 1) {
+          prevLi.addEventListener('click', (e) => {
+            e.preventDefault();
+            renderOnlinePage(currentPage - 1);
+          });
+        }
+        onlineNav.appendChild(prevLi);
+
+        // Page buttons with smart windowing if > 5 pages
+        const pagesToShow = [];
+        if (totalPages <= 5) {
+          for (let p = 1; p <= totalPages; p++) pagesToShow.push(p);
+        } else {
+          pagesToShow.push(1);
+          let startPage = Math.max(2, currentPage - 1);
+          let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+          if (startPage > 2) pagesToShow.push('...');
+          for (let p = startPage; p <= endPage; p++) pagesToShow.push(p);
+          if (endPage < totalPages - 1) pagesToShow.push('...');
+          pagesToShow.push(totalPages);
+        }
+
+        pagesToShow.forEach(item => {
+          const pageLi = document.createElement('li');
+          if (item === '...') {
+            pageLi.className = 'page-item disabled page-indicator';
+            pageLi.innerHTML = `<span class="page-link">&hellip;</span>`;
+          } else {
+            pageLi.className = `page-item ${item === currentPage ? 'active' : ''}`;
+            pageLi.innerHTML = `<button type="button" class="page-link">${item}</button>`;
+            pageLi.addEventListener('click', (e) => {
+              e.preventDefault();
+              renderOnlinePage(item);
+            });
+          }
+          onlineNav.appendChild(pageLi);
+        });
+
+        // Next button
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+        nextLi.innerHTML = `<button type="button" class="page-link" aria-label="Next">&raquo;</button>`;
+        if (currentPage < totalPages) {
+          nextLi.addEventListener('click', (e) => {
+            e.preventDefault();
+            renderOnlinePage(currentPage + 1);
+          });
+        }
+        onlineNav.appendChild(nextLi);
+      }
+
+      renderOnlinePage(1);
+    }
+  }
 });
