@@ -49,6 +49,30 @@ def _get_admin_dashboard_data():
         db.session.rollback()
         audit_count = 0
 
+    from routes.utils import format_relative_time, to_ph_time, get_all_users_effective_last_seen_map
+    effective_last_seen = get_all_users_effective_last_seen_map()
+
+    user_activity_status = []
+    for u in users:
+        if getattr(u, 'is_archived', False):
+            continue
+        ls = effective_last_seen.get(u.id) or u.last_seen or u.created_at
+        is_online = bool(ls and ls >= online_threshold)
+        rel_time = 'Online Now' if is_online else (format_relative_time(ls) if ls else 'Never active')
+        fmt_time = to_ph_time(ls).strftime('%b %d, %Y at %I:%M %p') if ls else 'Never active'
+        user_activity_status.append({
+            'id': u.id,
+            'name': u.name,
+            'username': getattr(u, 'username', ''),
+            'email': getattr(u, 'email', None) or f"@{getattr(u, 'username', '')}",
+            'role': u.role,
+            'is_online': is_online,
+            'last_seen': ls,
+            'last_seen_relative': rel_time,
+            'last_seen_formatted': fmt_time
+        })
+    user_activity_status.sort(key=lambda x: (1 if x['is_online'] else 0, x['last_seen'] or datetime.min), reverse=True)
+
     dashboard_stats = {
         'total_users': len(users),
         'admin_count': sum(1 for user in users if user.role == 'admin'),
@@ -59,7 +83,7 @@ def _get_admin_dashboard_data():
         'total_audit_logs': audit_count
     }
     
-    _ADMIN_DASHBOARD_CACHE = (online_users, dashboard_stats, online_threshold)
+    _ADMIN_DASHBOARD_CACHE = (online_users, dashboard_stats, online_threshold, user_activity_status)
     _ADMIN_DASHBOARD_CACHE_TIME = now
     return _ADMIN_DASHBOARD_CACHE
 
@@ -69,11 +93,12 @@ def _get_admin_dashboard_data():
 def dashboard():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'admin_dashboard')
-    online_users, dashboard_stats, online_threshold = _get_admin_dashboard_data()
+    online_users, dashboard_stats, online_threshold, user_activity_status = _get_admin_dashboard_data()
 
     return render_template(
         'admin/admin_dashboard.html',
         online_users=online_users,
+        user_activity_status=user_activity_status,
         current_user=current_user,
         dashboard_stats=dashboard_stats,
         online_threshold=online_threshold

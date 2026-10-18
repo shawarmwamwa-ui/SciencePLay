@@ -547,14 +547,22 @@
                     <div class="flex-grow-1 d-flex flex-column">
                       <div class="d-flex justify-content-between align-items-center mb-2">
                         <h2 class="h5 mb-0"><i class="bi bi-lightning-charge-fill text-primary me-2"></i>Activity &amp; Recognition</h2>
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Submissions &amp; Ranks</span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Activity &amp; Presence</span>
                       </div>
-                      <p class="teacher-panel-note mb-3">Latest game completions and class leaderboards in one view.</p>
+                      <p class="teacher-panel-note mb-3">Live student activity presence, latest game submissions, and class leaderboards.</p>
 
                       <ul class="nav nav-tabs nav-sm mb-3" id="dashActivityTabs" role="tablist" style="font-size:0.84rem;">
                         <li class="nav-item" role="presentation">
                           <button class="nav-link active py-1 px-3 fw-semibold" id="dt-recent-activity-tab" data-bs-toggle="tab" data-bs-target="#dt-recent-activity" type="button" role="tab">
                             <i class="bi bi-activity text-primary me-1"></i>Recent Submissions
+                          </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                          <button class="nav-link py-1 px-3 fw-semibold" id="dt-online-students-tab" data-bs-toggle="tab" data-bs-target="#dt-online-students" type="button" role="tab">
+                            <span class="status-pulse-dot me-1"></span>Students Active / Last Seen
+                            {% if online_count is defined and online_count > 0 %}
+                              <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill ms-1 px-1.5 py-0.5" style="font-size: 0.7rem;">{{ online_count }} Online</span>
+                            {% endif %}
                           </button>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -574,10 +582,13 @@
                                 <span class="status-label fw-bold text-dark d-block text-truncate" title="{{ student_name }} &bull; completed {{ activity_type }}">
                                   {{ student_name }} <span class="text-muted fw-normal small">&bull; completed <strong>{{ activity_type }}</strong></span>
                                 </span>
+                                {% if log.created_at %}
+                                  <small class="text-muted" style="font-size: 0.74rem;"><i class="bi bi-clock me-1"></i>{{ log.created_at|relative_time }}</small>
+                                {% endif %}
                               </div>
                               <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto">
-                                <span class="badge bg-light text-dark border fw-bold">{{ log.score }} pts</span>
-                                {% if log.feedback %}
+                                <span class="badge bg-light text-dark border fw-bold">{{ log.score if log.score is not none else 0 }} pts</span>
+                                {% if log.teacher_feedback %}
                                 <span class="badge bg-success">Reviewed</span>
                                 {% else %}
                                 <span class="badge bg-warning text-dark">Needs Review</span>
@@ -589,6 +600,44 @@
                             <div class="text-center text-muted py-4">
                               <i class="bi bi-clock-history fs-3 d-block mb-1 opacity-50"></i>
                               <span class="small">No recent activity recorded yet</span>
+                            </div>
+                            {% endif %}
+                          </ul>
+                        </div>
+
+                        <div class="tab-pane fade" id="dt-online-students" role="tabpanel">
+                          <ul class="activity-status-list">
+                            {% if student_activity_status %}
+                            {% for st in student_activity_status %}
+                            <li class="py-2.5 border-bottom d-flex justify-content-between align-items-center gap-2">
+                              <div class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden" style="min-width: 0;">
+                                {% if st.is_online %}
+                                  <span class="status-pulse-dot flex-shrink-0" title="Online Now"></span>
+                                {% else %}
+                                  <i class="bi bi-clock-history text-muted flex-shrink-0" style="font-size: 0.88rem;"></i>
+                                {% endif %}
+                                <div class="text-truncate">
+                                  <span class="fw-bold text-dark d-block text-truncate">{{ st.name }}</span>
+                                  <small class="text-muted" style="font-size: 0.74rem;">@{{ st.username }}</small>
+                                </div>
+                              </div>
+                              <div class="flex-shrink-0 text-end">
+                                {% if st.is_online %}
+                                  <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.74rem;">
+                                    <i class="bi bi-broadcast me-1"></i>Online Now
+                                  </span>
+                                {% else %}
+                                  <span class="badge bg-light text-secondary border rounded-pill px-2.5 py-1 fw-semibold" style="font-size: 0.74rem;" title="{{ st.last_seen_formatted }}">
+                                    Last seen: {{ st.last_seen_relative }}
+                                  </span>
+                                {% endif %}
+                              </div>
+                            </li>
+                            {% endfor %}
+                            {% else %}
+                            <div class="text-center text-muted py-4">
+                              <i class="bi bi-people fs-3 d-block mb-1 opacity-50"></i>
+                              <span class="small">No students enrolled yet</span>
                             </div>
                             {% endif %}
                           </ul>

@@ -810,12 +810,51 @@ def dashboard():
         User.role == 'student'
     ).group_by(User.id).order_by(db.desc('total_score')).limit(5).all()
 
+    # Fetch real latest submissions from AttemptLog
     recent_activity = db.session.query(
-        ProgressLog,
+        AttemptLog,
         User.name.label('student_name'),
         Activity.type.label('activity_type')
-    ).join(User, User.id == ProgressLog.student_id).join(Activity, Activity.id == ProgressLog.activity_id
-    ).order_by(ProgressLog.created_at.desc()).limit(5).all()
+    ).join(User, User.id == AttemptLog.student_id
+    ).join(Activity, Activity.id == AttemptLog.activity_id
+    ).filter(
+        User.role == 'student',
+        ~Activity.engine.in_(['quick_check', 'lesson']),
+        ~Activity.type.ilike('%Quick Check%'),
+        ~Activity.type.ilike('%Slide Questions%')
+    ).order_by(AttemptLog.created_at.desc()).limit(8).all()
+
+    # Fallback to ProgressLog if no AttemptLog yet
+    if not recent_activity:
+        recent_activity = db.session.query(
+            ProgressLog,
+            User.name.label('student_name'),
+            Activity.type.label('activity_type')
+        ).join(User, User.id == ProgressLog.student_id).join(Activity, Activity.id == ProgressLog.activity_id
+        ).order_by(ProgressLog.created_at.desc()).limit(5).all()
+
+    # Compute effective Last Seen Active status for all students
+    from routes.utils import format_relative_time, to_ph_time, get_all_users_effective_last_seen_map
+    effective_last_seen = get_all_users_effective_last_seen_map()
+    student_activity_status = []
+    for st in students:
+        if getattr(st, 'is_archived', False):
+            continue
+        ls = effective_last_seen.get(st.id) or st.last_seen or st.created_at
+        is_online = bool(ls and ls >= online_threshold)
+        rel_time = 'Online Now' if is_online else (format_relative_time(ls) if ls else 'Never active')
+        fmt_time = to_ph_time(ls).strftime('%b %d, %Y at %I:%M %p') if ls else 'Never active'
+        student_activity_status.append({
+            'id': st.id,
+            'name': st.name,
+            'username': st.username,
+            'is_online': is_online,
+            'last_seen': ls,
+            'last_seen_relative': rel_time,
+            'last_seen_formatted': fmt_time
+        })
+    student_activity_status.sort(key=lambda s: (1 if s['is_online'] else 0, s['last_seen'] or datetime.min), reverse=True)
+    online_count = sum(1 for s in student_activity_status if s['is_online'])
 
     most_missed_lessons = get_struggling_concepts(is_lesson=True, limit=5)
     most_missed_activities = get_struggling_concepts(is_lesson=False, limit=5)
@@ -833,6 +872,8 @@ def dashboard():
         students=students,
         student_count=student_count,
         online_students=online_students,
+        student_activity_status=student_activity_status,
+        online_count=online_count,
         avg_progress=avg_progress,
         avg_time_spent=avg_time_spent,
         total_assignments=total_assignments,

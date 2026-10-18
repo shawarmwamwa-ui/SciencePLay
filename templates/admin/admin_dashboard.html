@@ -225,24 +225,42 @@
             </section>
 
             <section class="card border-0 shadow-sm mt-4">
-              <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h2 class="h5 mb-0 fw-bold">Currently Online Users</h2>
-                <span class="badge bg-success online-count-badge">{{ dashboard_stats.online_count }} Active</span>
+              <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                  <h2 class="h5 mb-0 fw-bold"><i class="bi bi-clock-history text-primary me-2"></i>User Activity &amp; Last Seen</h2>
+                  <span class="badge bg-light text-secondary border rounded-pill">{{ user_activity_status|length if user_activity_status else 0 }} Total</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-success online-count-badge">
+                    <span class="status-indicator online me-1" style="width: 8px; height: 8px; display: inline-block;"></span>
+                    {{ dashboard_stats.online_count }} Online Now
+                  </span>
+                </div>
               </div>
               <div class="card-body">
-                {% if online_users %}
+                {% if user_activity_status %}
                   <div class="row g-2">
-                    {% for u in online_users %}
+                    {% for u in user_activity_status %}
                       <div class="col-md-6 col-lg-4">
-                        <div class="p-2 border rounded d-flex align-items-center justify-content-between bg-light">
-                          <div class="d-flex align-items-center gap-2">
-                            <span class="status-indicator online"></span>
-                            <div>
-                              <div class="fw-semibold text-dark">{{ u.name }}</div>
-                              <small class="text-muted">{{ u.email }}</small>
+                        <div class="p-2.5 border rounded-3 d-flex align-items-center justify-content-between bg-light">
+                          <div class="d-flex align-items-center gap-2 overflow-hidden" style="min-width: 0;">
+                            {% if u.is_online %}
+                              <span class="status-indicator online flex-shrink-0" title="Online Now"></span>
+                            {% else %}
+                              <i class="bi bi-clock-history text-muted flex-shrink-0" style="font-size: 0.88rem;"></i>
+                            {% endif %}
+                            <div class="text-truncate">
+                              <div class="fw-semibold text-dark text-truncate">{{ u.name }}</div>
+                              <small class="text-muted d-block text-truncate" style="font-size: 0.74rem;">
+                                {% if u.is_online %}
+                                  <span class="text-success fw-bold"><i class="bi bi-broadcast me-1"></i>Online Now</span>
+                                {% else %}
+                                  <span title="{{ u.last_seen_formatted }}">Last seen: {{ u.last_seen_relative }}</span>
+                                {% endif %}
+                              </small>
                             </div>
                           </div>
-                          <span class="badge bg-{{ 'primary' if u.role == 'teacher' else ('info text-dark' if u.role == 'student' else 'dark') }}">
+                          <span class="badge bg-{{ 'primary' if u.role == 'teacher' else ('info text-dark' if u.role == 'student' else 'dark') }} flex-shrink-0 ms-2">
                             {{ u.role|capitalize }}
                           </span>
                         </div>
@@ -252,7 +270,7 @@
                 {% else %}
                   <div class="text-center text-muted py-3">
                     <i class="bi bi-person-x fs-3 d-block mb-1 opacity-50"></i>
-                    <span class="small">No teachers or students currently online</span>
+                    <span class="small">No users registered yet</span>
                   </div>
                 {% endif %}
               </div>
