@@ -446,6 +446,8 @@ function initCreateUserModalValidation() {
         const isUserErr = msg.toLowerCase().includes('username');
         showError(msg, isUserErr);
       } else {
+        const successMsg = data?.message || `User '${name}' created successfully!`;
+        sessionStorage.setItem('admin_pending_toast', JSON.stringify({ message: successMsg, type: 'success' }));
         window.location.reload();
       }
     } catch (err) {
@@ -479,7 +481,7 @@ function showAdminNotification(message, type = 'danger') {
   const alert = document.createElement('div');
   alert.className = `alert alert-${type} alert-dismissible fade show shadow-lg admin-toast border-2 mb-2`;
   alert.setAttribute('role', 'alert');
-  const icon = type === 'success' ? 'bi-check-circle-fill text-success' : (type === 'warning' ? 'bi-exclamation-circle-fill text-warning' : 'bi-exclamation-triangle-fill text-danger');
+  const icon = type === 'success' ? 'bi-check-circle-fill text-success' : (type === 'warning' ? 'bi-exclamation-circle-fill text-warning' : (type === 'info' ? 'bi-info-circle-fill text-info' : 'bi-exclamation-triangle-fill text-danger'));
   alert.innerHTML = `
     <div class="d-flex align-items-center">
       <i class="bi ${icon} fs-5 me-2 flex-shrink-0"></i>
@@ -580,6 +582,8 @@ function initUpdateUserModalValidation() {
           const msg = data?.message || 'Failed to update user. Please check your inputs.';
           showError(msg);
         } else {
+          const successMsg = data?.message || `User '${name}' updated successfully!`;
+          sessionStorage.setItem('admin_pending_toast', JSON.stringify({ message: successMsg, type: 'success' }));
           window.location.reload();
         }
       } catch (err) {
@@ -603,6 +607,18 @@ document.addEventListener('DOMContentLoaded', () => {
   initClearUserLogsModal();
   initCreateUserModalValidation();
   initUpdateUserModalValidation();
+
+  // Display any pending toast (e.g. from create/update user reload)
+  const pendingToast = sessionStorage.getItem('admin_pending_toast');
+  if (pendingToast) {
+    try {
+      const parsed = JSON.parse(pendingToast);
+      if (parsed && parsed.message) {
+        showAdminNotification(parsed.message, parsed.type || 'success');
+      }
+    } catch (e) {}
+    sessionStorage.removeItem('admin_pending_toast');
+  }
 
   const navLinks = document.querySelectorAll('.admin-sidebar .menu-link[data-nav]');
   navLinks.forEach((link) => {

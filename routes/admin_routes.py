@@ -283,9 +283,9 @@ def create_user():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
+        flash(f"User '{name}' created successfully!", "success")
         if is_ajax:
             return jsonify({'success': True, 'message': f"User '{name}' created successfully!"})
-        flash(f"User '{name}' created successfully!", "success")
     except IntegrityError:
         db.session.rollback()
         err_msg = "Username already exists. Please use a different username."
@@ -354,9 +354,9 @@ def update_user(user_id):
         if new_password:
             user.set_password(new_password)
         db.session.commit()
+        flash(f"User '{user.name}' updated successfully!", "success")
         if is_ajax:
             return jsonify({'success': True, 'message': f"User '{user.name}' updated successfully!"})
-        flash(f"User '{user.name}' updated successfully!", "info")
     except IntegrityError:
         db.session.rollback()
         err_msg = f"Username '{new_username}' is already taken. Please choose a different username."
