@@ -63,20 +63,64 @@ if (document.readyState === 'loading') {
 window.openAssignLessonModal = openAssignLessonModal;
 window.openPermanentDeleteLessonModal = openPermanentDeleteLessonModal;
 
-function archiveLessonWithConfirm(formId, title) {
+function archiveLessonWithConfirm(formId, title, isDraft = false) {
   const form = document.getElementById(formId);
   if (!form) return;
+  const isDraftItem = Boolean(isDraft);
+  const actionTitle = isDraftItem ? 'Delete Draft?' : 'Archive Lesson?';
+  const actionMsg = isDraftItem
+    ? `Permanently delete draft "${title}"? This cannot be undone.`
+    : `Move lesson "${title}" to archive? You can restore it anytime from the Archived tab.`;
+  const confirmText = isDraftItem ? 'Delete Draft' : 'Archive';
+
   if (window.scienceplayConfirm) {
     window.scienceplayConfirm({
-      title: 'Archive Lesson?',
-      message: `Move lesson "${title}" to archive? You can restore it anytime from the Archived tab.`,
-      confirmText: 'Archive',
+      title: actionTitle,
+      message: actionMsg,
+      confirmText: confirmText,
       confirmClass: 'btn-danger',
-      iconClass: 'bi-archive-fill text-warning',
+      iconClass: isDraftItem ? 'bi-trash3-fill text-danger' : 'bi-archive-fill text-warning',
+      iconBgClass: isDraftItem ? 'bg-danger-subtle' : 'bg-warning-subtle',
       onConfirm: () => form.submit()
     });
   } else {
-    form.submit();
+    if (confirm(actionMsg)) {
+      form.submit();
+    }
   }
 }
 window.archiveLessonWithConfirm = archiveLessonWithConfirm;
+
+function handleArchiveLessonBtn(btn) {
+  if (!btn) return;
+  const formId = btn.dataset.formId;
+  const title = btn.dataset.title || 'this lesson';
+  const isDraft = btn.dataset.isDraft === 'true';
+  archiveLessonWithConfirm(formId, title, isDraft);
+}
+window.handleArchiveLessonBtn = handleArchiveLessonBtn;
+
+// Restore tab from URL query param ?tab=drafts or hash #tab-draft-lessons
+function initLessonStudioTabs() {
+  const hash = window.location.hash;
+  const urlParams = new URLSearchParams(window.location.search);
+  const tabParam = urlParams.get('tab');
+
+  if (hash === '#tab-draft-lessons' || tabParam === 'drafts') {
+    const draftTab = document.getElementById('tab-draft-lessons');
+    if (draftTab && window.bootstrap && window.bootstrap.Tab) {
+      bootstrap.Tab.getOrCreateInstance(draftTab).show();
+    }
+  } else if (hash === '#tab-archived-lessons' || tabParam === 'archived') {
+    const archiveTab = document.getElementById('tab-archived-lessons');
+    if (archiveTab && window.bootstrap && window.bootstrap.Tab) {
+      bootstrap.Tab.getOrCreateInstance(archiveTab).show();
+    }
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLessonStudioTabs);
+} else {
+  initLessonStudioTabs();
+}

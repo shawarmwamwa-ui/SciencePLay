@@ -3460,9 +3460,28 @@ def preview_activity(activity_id):
 @teacher_bp.route('/content/delete/<int:activity_id>', methods=['POST'])
 @require_role('teacher')
 def delete_activity(activity_id):
-    """Soft-delete a custom activity"""
+    """Soft-delete a custom activity or permanently delete an unpublished draft"""
     current_user = get_current_user()
     activity = Activity.query.get_or_404(activity_id)
+
+    if activity.is_draft:
+        act_title = activity.type or 'Draft Activity'
+        try:
+            ActivityAssignment.query.filter_by(activity_id=activity.id).delete()
+            ProgressLog.query.filter_by(activity_id=activity.id).delete()
+            attempt_logs = AttemptLog.query.filter_by(activity_id=activity.id).all()
+            for al in attempt_logs:
+                AttemptObjectLog.query.filter_by(attempt_log_id=al.id).delete()
+            AttemptLog.query.filter_by(activity_id=activity.id).delete()
+            db.session.delete(activity)
+            db.session.commit()
+            log_access(current_user, 'delete_draft_activity', f'activity_id={activity_id} title={act_title}')
+            flash(f"Draft activity '{act_title}' has been deleted.", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Could not delete draft: {e}", "danger")
+        return redirect(url_for('teacher.game_studio', tab='drafts'))
+
     activity.archive()
     db.session.commit()
     log_access(current_user, 'archive_custom_activity', f'activity_id={activity_id}')
@@ -4490,9 +4509,26 @@ def preview_lesson(lesson_id):
 @teacher_bp.route('/content/lesson/delete/<int:lesson_id>', methods=['POST'])
 @require_role('teacher')
 def delete_lesson(lesson_id):
-    """Soft-delete a custom lesson"""
+    """Soft-delete a custom lesson or permanently delete an unpublished draft"""
     current_user = get_current_user()
     lesson = Lesson.query.get_or_404(lesson_id)
+
+    if lesson.is_draft:
+        lesson_title = lesson.title or 'Draft Lesson'
+        try:
+            LessonAssignment.query.filter_by(lesson_id=lesson.id).delete()
+            LessonProgress.query.filter_by(lesson_id=lesson.id).delete()
+            LessonAttemptLog.query.filter_by(lesson_id=lesson.id).delete()
+            Activity.query.filter_by(lesson_id=lesson.id).update({'lesson_id': None})
+            db.session.delete(lesson)
+            db.session.commit()
+            log_access(current_user, 'delete_draft_lesson', f'lesson_id={lesson_id} title={lesson_title}')
+            flash(f"Draft lesson '{lesson_title}' has been deleted.", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Could not delete draft lesson: {e}", "danger")
+        return redirect(url_for('teacher.lesson_studio', tab='drafts'))
+
     lesson.archive()
     db.session.commit()
     log_access(current_user, 'archive_custom_lesson', f'lesson_id={lesson_id}')

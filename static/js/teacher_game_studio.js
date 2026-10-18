@@ -271,21 +271,65 @@ function initGameCreationModals() {
 window.openAssignGameModal = openAssignGameModal;
 window.openPermanentDeleteActivityModal = openPermanentDeleteActivityModal;
 
-function archiveGameWithConfirm(formId, title) {
+function archiveGameWithConfirm(formId, title, isDraft = false) {
   const form = document.getElementById(formId);
   if (!form) return;
+  const isDraftItem = Boolean(isDraft);
+  const actionTitle = isDraftItem ? 'Delete Draft?' : 'Archive Game?';
+  const actionMsg = isDraftItem
+    ? `Permanently delete draft "${title}"? This cannot be undone.`
+    : `Move activity "${title}" to archive? You can restore it anytime from the Archived tab.`;
+  const confirmText = isDraftItem ? 'Delete Draft' : 'Archive';
+
   if (window.scienceplayConfirm) {
     window.scienceplayConfirm({
-      title: 'Archive Game?',
-      message: `Move activity "${title}" to archive? You can restore it anytime from the Archived tab.`,
-      confirmText: 'Archive',
+      title: actionTitle,
+      message: actionMsg,
+      confirmText: confirmText,
       confirmClass: 'btn-danger',
-      iconClass: 'bi-archive-fill text-warning',
+      iconClass: isDraftItem ? 'bi-trash3-fill text-danger' : 'bi-archive-fill text-warning',
+      iconBgClass: isDraftItem ? 'bg-danger-subtle' : 'bg-warning-subtle',
       onConfirm: () => form.submit()
     });
   } else {
-    form.submit();
+    if (confirm(actionMsg)) {
+      form.submit();
+    }
   }
 }
 window.archiveGameWithConfirm = archiveGameWithConfirm;
+
+function handleArchiveGameBtn(btn) {
+  if (!btn) return;
+  const formId = btn.dataset.formId;
+  const title = btn.dataset.title || 'this game';
+  const isDraft = btn.dataset.isDraft === 'true';
+  archiveGameWithConfirm(formId, title, isDraft);
+}
+window.handleArchiveGameBtn = handleArchiveGameBtn;
+
+// Restore tab from URL query param ?tab=drafts or hash #tab-draft-games
+function initGameStudioTabs() {
+  const hash = window.location.hash;
+  const urlParams = new URLSearchParams(window.location.search);
+  const tabParam = urlParams.get('tab');
+
+  if (hash === '#tab-draft-games' || tabParam === 'drafts') {
+    const draftTab = document.getElementById('tab-draft-games');
+    if (draftTab && window.bootstrap && window.bootstrap.Tab) {
+      bootstrap.Tab.getOrCreateInstance(draftTab).show();
+    }
+  } else if (hash === '#tab-archived-games' || tabParam === 'archived') {
+    const archiveTab = document.getElementById('tab-archived-games');
+    if (archiveTab && window.bootstrap && window.bootstrap.Tab) {
+      bootstrap.Tab.getOrCreateInstance(archiveTab).show();
+    }
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initGameStudioTabs);
+} else {
+  initGameStudioTabs();
+}
 
