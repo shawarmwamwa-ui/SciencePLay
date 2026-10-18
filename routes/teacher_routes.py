@@ -2561,6 +2561,7 @@ def _get_active_game_cards(default_claw_id):
     for act in raw_activities:
         is_supp = bool(getattr(act, 'is_supplementary', False))
         term = getattr(act, 'term', None) or 'Term 1'
+        lesson_title = act.lesson.title if getattr(act, 'lesson', None) else None
         if act.engine == 'find_the_part':
             cfg = load_find_the_part_activity_config(act.id)
             rounds = cfg.get('rounds', [])
@@ -2579,7 +2580,8 @@ def _get_active_game_cards(default_claw_id):
                 'thumbnail': thumb,
                 'is_default': False,
                 'is_supplementary': is_supp,
-                'term': term
+                'term': term,
+                'lesson_title': lesson_title
             })
         else:
             cfg = load_sorting_activity_config(act.id)
@@ -2595,7 +2597,8 @@ def _get_active_game_cards(default_claw_id):
                 'round_size': cfg.get('round_size', 12),
                 'is_default': (act.id == default_claw_id),
                 'is_supplementary': is_supp,
-                'term': term
+                'term': term,
+                'lesson_title': lesson_title
             })
     return activity_cards
 
@@ -2610,6 +2613,7 @@ def _get_archived_game_cards():
 
     archived_cards = []
     for act in raw_activities:
+        lesson_title = act.lesson.title if getattr(act, 'lesson', None) else None
         if act.engine == 'find_the_part':
             cfg = load_find_the_part_activity_config(act.id)
             rounds = cfg.get('rounds', [])
@@ -2626,7 +2630,8 @@ def _get_archived_game_cards():
                 'zones_count': zones_count,
                 'objects_count': zones_count,
                 'thumbnail': thumb,
-                'deleted_at': act.deleted_at.strftime('%b %d, %Y %I:%M %p') if act.deleted_at else 'Archived'
+                'deleted_at': act.deleted_at.strftime('%b %d, %Y %I:%M %p') if act.deleted_at else 'Archived',
+                'lesson_title': lesson_title
             })
         else:
             cfg = load_sorting_activity_config(act.id)
@@ -2640,7 +2645,8 @@ def _get_archived_game_cards():
                 'bins': cfg.get('bins', []),
                 'objects_count': len(cfg.get('objects', [])),
                 'round_size': cfg.get('round_size', 12),
-                'deleted_at': act.deleted_at.strftime('%b %d, %Y %I:%M %p') if act.deleted_at else 'Archived'
+                'deleted_at': act.deleted_at.strftime('%b %d, %Y %I:%M %p') if act.deleted_at else 'Archived',
+                'lesson_title': lesson_title
             })
     return archived_cards
 
@@ -3034,7 +3040,8 @@ def save_claw_machine():
     difficulty = request.form.get('difficulty', 'Level 1 — Easy').strip()
     points = request.form.get('points', 100, type=int)
     round_size = request.form.get('round_size', 8, type=int)
-    lesson_id = request.form.get('lesson_id', type=int)
+    lesson_id_raw = request.form.get('lesson_id')
+    lesson_id = int(lesson_id_raw) if lesson_id_raw and str(lesson_id_raw).strip().isdigit() else None
 
     is_supplementary = (str(request.form.get('is_supplementary', '')).strip().lower() in ['1', 'true', 'on'])
     term = request.form.get('term', 'Term 1').strip() or 'Term 1'
@@ -3122,17 +3129,11 @@ def save_claw_machine():
         activity.points = points
         activity.term = term
         activity.is_supplementary = is_supplementary
-        if lesson_id:
-            activity.lesson_id = lesson_id
+        activity.lesson_id = lesson_id
         activity.config = config_payload
         role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
         flash(f"{role_label} game '{title}' updated successfully!", "success")
     else:
-        if not lesson_id:
-            from routes.student_routes import get_or_create_default_lesson
-            def_l = get_or_create_default_lesson()
-            lesson_id = def_l.id
-
         activity = Activity(
             lesson_id=lesson_id,
             type=title,
@@ -3325,7 +3326,8 @@ def save_find_the_part():
     instructions = request.form.get('instructions', 'Match each label to the correct pointer pin on the diagram.').strip()
     difficulty = request.form.get('difficulty', 'Level 1 — Easy').strip()
     points = request.form.get('points', 100, type=int)
-    lesson_id = request.form.get('lesson_id', type=int)
+    lesson_id_raw = request.form.get('lesson_id')
+    lesson_id = int(lesson_id_raw) if lesson_id_raw and str(lesson_id_raw).strip().isdigit() else None
 
     is_supplementary = (str(request.form.get('is_supplementary', '')).strip().lower() in ['1', 'true', 'on'])
     term = request.form.get('term', 'Term 2').strip() or 'Term 2'

@@ -61,7 +61,7 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div>
                 <h2 class="fw-black text-dark fs-3 mb-1">{{ activity.type }}</h2>
-                <p class="fw-extrabold text-dark fs-6 mb-2">{{ lesson.title if lesson else 'Unassigned' }} • {{ activity.points }} pts</p>
+                <p class="fw-extrabold text-dark fs-6 mb-2">{{ lesson.title if lesson else 'Standalone / General Practice' }} • {{ activity.points }} pts</p>
               </div>
               <span class="brutal-badge {{ 'brutal-badge-green' if completed else 'brutal-badge-yellow' if unlocked else 'brutal-badge-pink' }}">
                 {{ 'Completed' if completed else 'Unlocked' if unlocked else 'Locked' }}

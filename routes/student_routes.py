@@ -584,6 +584,26 @@ def is_activity_unlocked(user_id, activity):
     if not activity or activity.id is None:
         return False
 
+    # Standalone activities not linked to any curriculum lesson are always unlocked for immediate play
+    if not activity.lesson_id:
+        return True
+
+    # If the activity is linked to a lesson, check if student has completed it
+    if activity.lesson_id:
+        if has_student_completed_lesson(user_id, activity.lesson_id):
+            return True
+
+    # If the student has been directly assigned this activity
+    if user_id:
+        assigned = ActivityAssignment.query.filter(
+            ActivityAssignment.student_id == user_id,
+            ActivityAssignment.activity_id == activity.id,
+            (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None),
+            ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted'])
+        ).first()
+        if assigned:
+            return True
+
     ENGINE_LESSON_TITLES = {
         'claw_machine': 'Living vs Non-Living',
         'find_the_part': 'Animal Body Parts',
@@ -592,15 +612,12 @@ def is_activity_unlocked(user_id, activity):
         'recycle_sorter': 'Recycling'
     }
 
-    # If the activity is linked to a lesson, check if student has completed it
-    if activity.lesson_id:
-        if has_student_completed_lesson(user_id, activity.lesson_id):
-            return True
-
     # Fallback: check by engine matching if lesson_id wasn't satisfied or set
     if activity.engine in ENGINE_LESSON_TITLES:
         matching_lessons = Lesson.query.filter(Lesson.title.ilike(ENGINE_LESSON_TITLES[activity.engine])).all()
         return any(has_student_completed_lesson(user_id, l.id) for l in matching_lessons)
+
+    return False
 
 def is_lesson_unlocked_for_student(user_id, lesson):
     """

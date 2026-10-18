@@ -128,10 +128,14 @@
                   <div class="col-12 col-md-5">
                     <label class="form-label fw-bold text-dark small">Link to Curriculum Lesson</label>
                     <select class="form-select form-select-lg rounded-3" name="lesson_id">
+                      <option value="" {% if not activity or not activity.lesson_id %}selected{% endif %}>None (Standalone / Not Linked to Curriculum)</option>
                       {% for l in all_lessons %}
                         <option value="{{ l.id }}" {% if activity and activity.lesson_id == l.id %}selected{% endif %}>{{ l.title }}</option>
                       {% endfor %}
                     </select>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                      <i class="bi bi-info-circle me-1"></i>Choose <strong>None</strong> if you haven't created a lesson yet or want this as a standalone game.
+                    </small>
                   </div>
                   <div class="col-12">
                     <label class="form-label fw-bold text-dark small">Player Instructions (Shown on cabinet marquee)</label>

@@ -236,6 +236,15 @@
                             <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
                               {{ card.term or 'Term 1' }}
                             </span>
+                            {% if card.lesson_title %}
+                              <span class="badge bg-light text-primary border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-journal-bookmark me-1"></i>{{ card.lesson_title }}
+                              </span>
+                            {% else %}
+                              <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-dash-circle me-1"></i>Standalone Game
+                              </span>
+                            {% endif %}
                             {% if card.config and card.config.difficulty %}
                               <span class="badge bg-warning-subtle text-dark border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">{{ card.config.difficulty }}</span>
                             {% endif %}
