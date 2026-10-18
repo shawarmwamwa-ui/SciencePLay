@@ -104,7 +104,15 @@
     const hasImage = Boolean(round.illustrationSrc && round.illustrationSrc.trim());
     const placeholderEl = document.getElementById('diagramEmptyPlaceholder');
     if (placeholderEl) {
-      placeholderEl.style.display = hasImage ? 'none' : 'flex';
+      if (hasImage) {
+        placeholderEl.classList.add('d-none');
+        placeholderEl.classList.remove('d-flex');
+        placeholderEl.style.setProperty('display', 'none', 'important');
+      } else {
+        placeholderEl.classList.remove('d-none');
+        placeholderEl.classList.add('d-flex');
+        placeholderEl.style.removeProperty('display');
+      }
     }
     if (diagramImage) {
       diagramImage.style.display = hasImage ? 'block' : 'none';
