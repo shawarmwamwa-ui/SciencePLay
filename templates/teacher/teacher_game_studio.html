@@ -513,7 +513,7 @@
                           </form>
                           <form method="POST" action="{{ url_for('teacher.delete_activity', activity_id=card.activity.id) }}" class="d-inline" id="archiveDraftGameForm_{{ card.activity.id }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Delete Draft Activity"
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Draft Activity"
                                     data-form-id="archiveDraftGameForm_{{ card.activity.id }}"
                                     data-title="{{ card.title }}"
                                     data-is-draft="true"

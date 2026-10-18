@@ -67,11 +67,11 @@ function archiveLessonWithConfirm(formId, title, isDraft = false) {
   const form = document.getElementById(formId);
   if (!form) return;
   const isDraftItem = Boolean(isDraft);
-  const actionTitle = isDraftItem ? 'Delete Draft?' : 'Archive Lesson?';
+  const actionTitle = isDraftItem ? 'Archive Draft?' : 'Archive Lesson?';
   const actionMsg = isDraftItem
-    ? `Permanently delete draft "${title}"? This cannot be undone.`
+    ? `Move draft "${title}" to archive? You can restore it anytime from the Archived tab.`
     : `Move lesson "${title}" to archive? You can restore it anytime from the Archived tab.`;
-  const confirmText = isDraftItem ? 'Delete Draft' : 'Archive';
+  const confirmText = isDraftItem ? 'Archive Draft' : 'Archive';
 
   if (window.scienceplayConfirm) {
     window.scienceplayConfirm({
@@ -79,8 +79,8 @@ function archiveLessonWithConfirm(formId, title, isDraft = false) {
       message: actionMsg,
       confirmText: confirmText,
       confirmClass: 'btn-danger',
-      iconClass: isDraftItem ? 'bi-trash3-fill text-danger' : 'bi-archive-fill text-warning',
-      iconBgClass: isDraftItem ? 'bg-danger-subtle' : 'bg-warning-subtle',
+      iconClass: 'bi-archive-fill text-warning',
+      iconBgClass: 'bg-warning-subtle',
       onConfirm: () => form.submit()
     });
   } else {

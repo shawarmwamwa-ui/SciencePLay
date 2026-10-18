@@ -275,11 +275,11 @@ function archiveGameWithConfirm(formId, title, isDraft = false) {
   const form = document.getElementById(formId);
   if (!form) return;
   const isDraftItem = Boolean(isDraft);
-  const actionTitle = isDraftItem ? 'Delete Draft?' : 'Archive Game?';
+  const actionTitle = isDraftItem ? 'Archive Draft?' : 'Archive Game?';
   const actionMsg = isDraftItem
-    ? `Permanently delete draft "${title}"? This cannot be undone.`
+    ? `Move draft "${title}" to archive? You can restore it anytime from the Archived tab.`
     : `Move activity "${title}" to archive? You can restore it anytime from the Archived tab.`;
-  const confirmText = isDraftItem ? 'Delete Draft' : 'Archive';
+  const confirmText = isDraftItem ? 'Archive Draft' : 'Archive';
 
   if (window.scienceplayConfirm) {
     window.scienceplayConfirm({
@@ -287,8 +287,8 @@ function archiveGameWithConfirm(formId, title, isDraft = false) {
       message: actionMsg,
       confirmText: confirmText,
       confirmClass: 'btn-danger',
-      iconClass: isDraftItem ? 'bi-trash3-fill text-danger' : 'bi-archive-fill text-warning',
-      iconBgClass: isDraftItem ? 'bg-danger-subtle' : 'bg-warning-subtle',
+      iconClass: 'bi-archive-fill text-warning',
+      iconBgClass: 'bg-warning-subtle',
       onConfirm: () => form.submit()
     });
   } else {

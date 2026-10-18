@@ -348,7 +348,7 @@
                           </form>
                           <form method="POST" action="{{ url_for('teacher.delete_lesson', lesson_id=card.lesson.id) }}" class="d-inline" id="archiveDraftLessonForm_{{ card.lesson.id }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Delete Draft Lesson"
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Draft Lesson"
                                     data-form-id="archiveDraftLessonForm_{{ card.lesson.id }}"
                                     data-title="{{ card.title }}"
                                     data-is-draft="true"

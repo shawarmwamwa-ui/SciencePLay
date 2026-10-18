@@ -3460,45 +3460,42 @@ def preview_activity(activity_id):
 @teacher_bp.route('/content/delete/<int:activity_id>', methods=['POST'])
 @require_role('teacher')
 def delete_activity(activity_id):
-    """Soft-delete a custom activity or permanently delete an unpublished draft"""
+    """Soft-delete a custom activity or draft to archive"""
     current_user = get_current_user()
     activity = Activity.query.get_or_404(activity_id)
-
-    if activity.is_draft:
-        act_title = activity.type or 'Draft Activity'
-        try:
-            ActivityAssignment.query.filter_by(activity_id=activity.id).delete()
-            ProgressLog.query.filter_by(activity_id=activity.id).delete()
-            attempt_logs = AttemptLog.query.filter_by(activity_id=activity.id).all()
-            for al in attempt_logs:
-                AttemptObjectLog.query.filter_by(attempt_log_id=al.id).delete()
-            AttemptLog.query.filter_by(activity_id=activity.id).delete()
-            db.session.delete(activity)
-            db.session.commit()
-            log_access(current_user, 'delete_draft_activity', f'activity_id={activity_id} title={act_title}')
-            flash(f"Draft activity '{act_title}' has been deleted.", "success")
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Could not delete draft: {e}", "danger")
-        return redirect(url_for('teacher.game_studio', tab='drafts'))
+    is_draft = activity.is_draft
+    act_title = activity.type or ('Draft Activity' if is_draft else 'Activity')
 
     activity.archive()
     db.session.commit()
-    log_access(current_user, 'archive_custom_activity', f'activity_id={activity_id}')
-    flash(f"Activity '{activity.type}' has been moved to archive.", "warning")
+    log_access(current_user, 'archive_custom_activity', f'activity_id={activity_id} is_draft={is_draft}')
+
+    if is_draft:
+        flash(f"Draft activity '{act_title}' has been moved to archive.", "warning")
+        return redirect(url_for('teacher.game_studio', tab='archived'))
+
+    flash(f"Activity '{act_title}' has been moved to archive.", "warning")
     return redirect(url_for('teacher.game_studio'))
 
 
 @teacher_bp.route('/content/restore/<int:activity_id>', methods=['POST'])
 @require_role('teacher')
 def restore_activity(activity_id):
-    """Restore an archived custom activity to active games"""
+    """Restore an archived custom activity or draft"""
     current_user = get_current_user()
     activity = Activity.query.get_or_404(activity_id)
+    is_draft = activity.is_draft
+    act_title = activity.type or ('Draft Activity' if is_draft else 'Activity')
+
     activity.restore()
     db.session.commit()
-    log_access(current_user, 'restore_custom_activity', f'activity_id={activity_id}')
-    flash(f"Activity '{activity.type}' has been successfully restored from archive.", "success")
+    log_access(current_user, 'restore_custom_activity', f'activity_id={activity_id} is_draft={is_draft}')
+
+    if is_draft:
+        flash(f"Draft activity '{act_title}' has been restored to Drafts.", "success")
+        return redirect(url_for('teacher.game_studio', tab='drafts'))
+
+    flash(f"Activity '{act_title}' has been successfully restored from archive.", "success")
     return redirect(url_for('teacher.game_studio'))
 
 
@@ -4509,43 +4506,42 @@ def preview_lesson(lesson_id):
 @teacher_bp.route('/content/lesson/delete/<int:lesson_id>', methods=['POST'])
 @require_role('teacher')
 def delete_lesson(lesson_id):
-    """Soft-delete a custom lesson or permanently delete an unpublished draft"""
+    """Soft-delete a custom lesson or draft to archive"""
     current_user = get_current_user()
     lesson = Lesson.query.get_or_404(lesson_id)
-
-    if lesson.is_draft:
-        lesson_title = lesson.title or 'Draft Lesson'
-        try:
-            LessonAssignment.query.filter_by(lesson_id=lesson.id).delete()
-            LessonProgress.query.filter_by(lesson_id=lesson.id).delete()
-            LessonAttemptLog.query.filter_by(lesson_id=lesson.id).delete()
-            Activity.query.filter_by(lesson_id=lesson.id).update({'lesson_id': None})
-            db.session.delete(lesson)
-            db.session.commit()
-            log_access(current_user, 'delete_draft_lesson', f'lesson_id={lesson_id} title={lesson_title}')
-            flash(f"Draft lesson '{lesson_title}' has been deleted.", "success")
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Could not delete draft lesson: {e}", "danger")
-        return redirect(url_for('teacher.lesson_studio', tab='drafts'))
+    is_draft = lesson.is_draft
+    lesson_title = lesson.title or ('Draft Lesson' if is_draft else 'Lesson')
 
     lesson.archive()
     db.session.commit()
-    log_access(current_user, 'archive_custom_lesson', f'lesson_id={lesson_id}')
-    flash(f"Lesson '{lesson.title}' has been moved to archive.", "warning")
+    log_access(current_user, 'archive_custom_lesson', f'lesson_id={lesson_id} is_draft={is_draft}')
+
+    if is_draft:
+        flash(f"Draft lesson '{lesson_title}' has been moved to archive.", "warning")
+        return redirect(url_for('teacher.lesson_studio', tab='archived'))
+
+    flash(f"Lesson '{lesson_title}' has been moved to archive.", "warning")
     return redirect(url_for('teacher.lesson_studio'))
 
 
 @teacher_bp.route('/content/lesson/restore/<int:lesson_id>', methods=['POST'])
 @require_role('teacher')
 def restore_lesson(lesson_id):
-    """Restore an archived custom lesson to active lessons"""
+    """Restore an archived custom lesson or draft"""
     current_user = get_current_user()
     lesson = Lesson.query.get_or_404(lesson_id)
+    is_draft = lesson.is_draft
+    lesson_title = lesson.title or ('Draft Lesson' if is_draft else 'Lesson')
+
     lesson.restore()
     db.session.commit()
-    log_access(current_user, 'restore_custom_lesson', f'lesson_id={lesson_id}')
-    flash(f"Lesson '{lesson.title}' has been successfully restored from archive.", "success")
+    log_access(current_user, 'restore_custom_lesson', f'lesson_id={lesson_id} is_draft={is_draft}')
+
+    if is_draft:
+        flash(f"Draft lesson '{lesson_title}' has been restored to Drafts.", "success")
+        return redirect(url_for('teacher.lesson_studio', tab='drafts'))
+
+    flash(f"Lesson '{lesson_title}' has been successfully restored from archive.", "success")
     return redirect(url_for('teacher.lesson_studio'))
 
 
