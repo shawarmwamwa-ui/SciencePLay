@@ -1668,7 +1668,7 @@ def lessons():
             LessonAssignment.student_id == user_id,
             (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)
         ).all()
-        lessons = [lesson for _, lesson in lesson_assignment_rows]
+        lessons = [lesson for _, lesson in lesson_assignment_rows if not lesson.is_draft and not lesson.is_archived]
 
         activity_assignment_rows = db.session.query(ActivityAssignment, Activity).join(
             Activity, Activity.id == ActivityAssignment.activity_id
@@ -1676,7 +1676,7 @@ def lessons():
             ActivityAssignment.student_id == user_id,
             (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None)
         ).all()
-        activities = [activity for _, activity in activity_assignment_rows]
+        activities = [activity for _, activity in activity_assignment_rows if not activity.is_draft and not activity.is_archived]
     else:
         lessons = []
         activities = []
@@ -2717,15 +2717,20 @@ def activity_progress():
 def assignments():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'student_assignments')
-    lesson_assignments = LessonAssignment.query.filter_by(student_id=current_user.id).all()
-    active_activity_assignments = ActivityAssignment.query.filter_by(
+    raw_lesson_assignments = LessonAssignment.query.filter_by(student_id=current_user.id).all()
+    lesson_assignments = [la for la in raw_lesson_assignments if la.lesson and not la.lesson.is_draft and not la.lesson.is_archived]
+
+    raw_active_activity_assignments = ActivityAssignment.query.filter_by(
         student_id=current_user.id,
         status='assigned'
     ).all()
-    exhausted_activity_assignments = ActivityAssignment.query.filter(
+    active_activity_assignments = [aa for aa in raw_active_activity_assignments if aa.activity and not aa.activity.is_draft and not aa.activity.is_archived]
+
+    raw_exhausted = ActivityAssignment.query.filter(
         ActivityAssignment.student_id == current_user.id,
         ActivityAssignment.status.in_(['attempts_exhausted', 'completed'])
     ).all()
+    exhausted_activity_assignments = [ea for ea in raw_exhausted if ea.activity and not ea.activity.is_draft and not ea.activity.is_archived]
 
     unlocked_by_activity = {}
     for aa in active_activity_assignments + exhausted_activity_assignments:
