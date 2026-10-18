@@ -1006,3 +1006,63 @@ img {
   color: #dc2626;
   background-color: #fee2e2;
 }
+
+/* User Activity & Last Seen Table Styles */
+.user-activity-table {
+  font-size: 0.86rem;
+}
+
+.user-activity-table th {
+  font-weight: 700;
+  border-bottom: 2px solid #e2e8f0;
+  background-color: #f8fafc;
+  padding: 0.75rem 1rem;
+}
+
+.user-activity-table td {
+  padding: 0.65rem 1rem;
+  vertical-align: middle;
+}
+
+.table-group-header-row td {
+  background-color: #f8fafc !important;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+}
+
+.user-role-label {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  padding: 2px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-dot-green {
+  background-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+}
+
+.status-dot-gray {
+  background-color: #64748b;
+}
+
+.status-dot-amber {
+  background-color: #f59e0b;
+}
+
+.status-dot-neutral {
+  background-color: #94a3b8;
+}

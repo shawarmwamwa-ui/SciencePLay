@@ -51,39 +51,122 @@ def _get_admin_dashboard_data():
 
     from routes.utils import format_relative_time, to_ph_time, get_all_users_effective_last_seen_map
     effective_last_seen = get_all_users_effective_last_seen_map()
+    active_users = [u for u in users if not getattr(u, 'is_archived', False)]
 
     user_activity_status = []
-    for u in users:
-        if getattr(u, 'is_archived', False):
-            continue
-        ls = effective_last_seen.get(u.id) or u.last_seen or u.created_at
-        is_online = bool(ls and ls >= online_threshold)
-        rel_time = 'Online Now' if is_online else (format_relative_time(ls) if ls else 'Never active')
-        fmt_time = to_ph_time(ls).strftime('%b %d, %Y at %I:%M %p') if ls else 'Never active'
+    for u in active_users:
+        ls = effective_last_seen.get(u.id) or u.last_seen
+
+        if ls is None:
+            group_key = 'never'
+            group_label = 'Never logged in'
+            status_text = 'Never logged in'
+            dot_color = 'neutral'
+            time_display = 'Never logged in'
+            tooltip = 'No login record'
+            sort_val = datetime.min
+        elif ls >= online_threshold:
+            group_key = 'online'
+            group_label = 'Online now'
+            status_text = 'Online now'
+            dot_color = 'green'
+            time_display = 'Online now'
+            tooltip = to_ph_time(ls).strftime('%b %d, %Y at %I:%M %p')
+            sort_val = ls
+        elif ls >= week_ago:
+            group_key = 'week'
+            group_label = 'Active this week'
+            status_text = 'Active this week'
+            dot_color = 'gray'
+            diff = datetime.utcnow() - ls
+            total_seconds = int(diff.total_seconds())
+            if total_seconds < 3600:
+                mins = max(1, total_seconds // 60)
+                time_display = f"{mins}m ago"
+            elif total_seconds < 86400:
+                hrs = total_seconds // 3600
+                time_display = f"{hrs}h ago"
+            else:
+                days = max(1, diff.days)
+                time_display = f"{days}d ago"
+            tooltip = to_ph_time(ls).strftime('%b %d, %Y at %I:%M %p')
+            sort_val = ls
+        else:
+            group_key = 'inactive'
+            group_label = 'Inactive 7+ days'
+            status_text = 'Inactive 7+ days'
+            dot_color = 'amber'
+            time_display = to_ph_time(ls).strftime('%b %d, %Y')
+            tooltip = to_ph_time(ls).strftime('%b %d, %Y at %I:%M %p')
+            sort_val = ls
+
         user_activity_status.append({
             'id': u.id,
             'name': u.name,
-            'username': getattr(u, 'username', ''),
+            'username': getattr(u, 'username', '') or '',
             'email': getattr(u, 'email', None) or f"@{getattr(u, 'username', '')}",
             'role': u.role,
-            'is_online': is_online,
+            'group_key': group_key,
+            'group_label': group_label,
+            'status_text': status_text,
+            'dot_color': dot_color,
+            'time_display': time_display,
+            'tooltip': tooltip,
             'last_seen': ls,
-            'last_seen_relative': rel_time,
-            'last_seen_formatted': fmt_time
+            'sort_val': sort_val
         })
-    user_activity_status.sort(key=lambda x: (1 if x['is_online'] else 0, x['last_seen'] or datetime.min), reverse=True)
+
+    group_counts = {
+        'online': sum(1 for x in user_activity_status if x['group_key'] == 'online'),
+        'week': sum(1 for x in user_activity_status if x['group_key'] == 'week'),
+        'inactive': sum(1 for x in user_activity_status if x['group_key'] == 'inactive'),
+        'never': sum(1 for x in user_activity_status if x['group_key'] == 'never'),
+    }
+
+    user_groups = [
+        {
+            'key': 'online',
+            'label': 'Online now',
+            'dot_color': 'green',
+            'count': group_counts['online'],
+            'users': sorted([x for x in user_activity_status if x['group_key'] == 'online'], key=lambda x: x['sort_val'], reverse=True)
+        },
+        {
+            'key': 'week',
+            'label': 'Active this week',
+            'dot_color': 'gray',
+            'count': group_counts['week'],
+            'users': sorted([x for x in user_activity_status if x['group_key'] == 'week'], key=lambda x: x['sort_val'], reverse=True)
+        },
+        {
+            'key': 'inactive',
+            'label': 'Inactive 7+ days',
+            'dot_color': 'amber',
+            'count': group_counts['inactive'],
+            'users': sorted([x for x in user_activity_status if x['group_key'] == 'inactive'], key=lambda x: x['sort_val'], reverse=True)
+        },
+        {
+            'key': 'never',
+            'label': 'Never logged in',
+            'dot_color': 'neutral',
+            'count': group_counts['never'],
+            'users': sorted([x for x in user_activity_status if x['group_key'] == 'never'], key=lambda x: (x['name'] or '').lower())
+        }
+    ]
 
     dashboard_stats = {
-        'total_users': len(users),
-        'admin_count': sum(1 for user in users if user.role == 'admin'),
-        'teacher_count': sum(1 for user in users if user.role == 'teacher'),
-        'student_count': sum(1 for user in users if user.role == 'student'),
-        'new_this_week': sum(1 for user in users if user.created_at and user.created_at >= week_ago),
-        'online_count': len(online_users),
+        'total_users': len(active_users),
+        'admin_count': sum(1 for user in active_users if user.role == 'admin'),
+        'teacher_count': sum(1 for user in active_users if user.role == 'teacher'),
+        'student_count': sum(1 for user in active_users if user.role == 'student'),
+        'new_this_week': sum(1 for user in active_users if user.created_at and user.created_at >= week_ago),
+        'online_count': group_counts['online'],
         'total_audit_logs': audit_count
     }
-    
-    _ADMIN_DASHBOARD_CACHE = (online_users, dashboard_stats, online_threshold, user_activity_status)
+
+    online_users = [u for u in user_activity_status if u['group_key'] == 'online']
+
+    _ADMIN_DASHBOARD_CACHE = (online_users, dashboard_stats, online_threshold, user_activity_status, user_groups, group_counts)
     _ADMIN_DASHBOARD_CACHE_TIME = now
     return _ADMIN_DASHBOARD_CACHE
 
@@ -93,12 +176,14 @@ def _get_admin_dashboard_data():
 def dashboard():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'admin_dashboard')
-    online_users, dashboard_stats, online_threshold, user_activity_status = _get_admin_dashboard_data()
+    online_users, dashboard_stats, online_threshold, user_activity_status, user_groups, group_counts = _get_admin_dashboard_data()
 
     return render_template(
         'admin/admin_dashboard.html',
         online_users=online_users,
         user_activity_status=user_activity_status,
+        user_groups=user_groups,
+        group_counts=group_counts,
         current_user=current_user,
         dashboard_stats=dashboard_stats,
         online_threshold=online_threshold

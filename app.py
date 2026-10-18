@@ -359,7 +359,7 @@ def get_online_users():
     if current_user.role not in ('teacher', 'admin'):
         return jsonify({'error': 'Forbidden'}), 403
 
-    online_threshold = datetime.utcnow() - timedelta(minutes=3)
+    online_threshold = datetime.utcnow() - timedelta(minutes=5)
 
     query = User.query.filter(
         User.last_seen >= online_threshold
@@ -367,10 +367,9 @@ def get_online_users():
 
     if current_user.role == 'teacher':
         query = query.filter(User.role == 'student')
-    elif current_user.role == 'admin':
-        query = query.filter(User.role.in_(['teacher', 'student']))
 
     users = query.order_by(User.name.asc()).all()
+    users = [u for u in users if not getattr(u, 'is_archived', False)]
     
     users_data = [{
         'id': u.id,

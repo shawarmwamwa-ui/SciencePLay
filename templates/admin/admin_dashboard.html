@@ -224,55 +224,141 @@
               </article>
             </section>
 
-            <section class="card border-0 shadow-sm mt-4">
-              <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2">
-                  <h2 class="h5 mb-0 fw-bold"><i class="bi bi-clock-history text-primary me-2"></i>User Activity &amp; Last Seen</h2>
-                  <span class="badge bg-light text-secondary border rounded-pill">{{ user_activity_status|length if user_activity_status else 0 }} Total</span>
+            <section class="card border-0 shadow-sm mt-4" id="userActivityCard">
+              <div class="card-header bg-white py-3 border-bottom">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                  <div class="d-flex align-items-center gap-2">
+                    <h2 class="h5 mb-0 fw-bold text-dark"><i class="bi bi-clock-history text-primary me-2"></i>User Activity &amp; Last Seen</h2>
+                    <span class="badge bg-light text-secondary border rounded-pill">{{ dashboard_stats.total_users }} Total Users</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-pill d-inline-flex align-items-center gap-1.5 fw-semibold" style="font-size: 0.82rem;">
+                      <span class="status-dot status-dot-green"></span>
+                      <span><strong class="online-count-badge">{{ dashboard_stats.online_count }}</strong> Online Now</span>
+                    </span>
+                  </div>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge bg-success online-count-badge">
-                    <span class="status-indicator online me-1" style="width: 8px; height: 8px; display: inline-block;"></span>
-                    {{ dashboard_stats.online_count }} Online Now
-                  </span>
+
+                <!-- Search and Filters Bar -->
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top">
+                  <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1" style="max-width: 700px;">
+                    <!-- Search Input -->
+                    <div class="input-group input-group-sm" style="max-width: 250px;">
+                      <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                      <input type="text" id="userActivitySearch" class="form-control form-control-sm border-start-0 ps-0" placeholder="Search name or username...">
+                    </div>
+
+                    <!-- Role Filter -->
+                    <select id="userActivityRoleFilter" class="form-select form-select-sm" style="width: auto;">
+                      <option value="all">All Roles</option>
+                      <option value="teacher">Teachers</option>
+                      <option value="student">Students</option>
+                      <option value="admin">Admins</option>
+                    </select>
+
+                    <!-- Inactive 7+ Days Quick Filter Toggle -->
+                    <button type="button" class="btn btn-sm btn-outline-warning text-dark d-inline-flex align-items-center gap-1.5" id="userActivityInactiveFilterBtn">
+                      <span class="status-dot status-dot-amber"></span>
+                      <span>Inactive 7+ days ({{ group_counts.inactive if group_counts else 0 }})</span>
+                    </button>
+
+                    <!-- Reset Filters Button -->
+                    <button type="button" class="btn btn-sm btn-light text-muted border" id="userActivityResetFiltersBtn" style="display: none;" title="Reset filters">
+                      <i class="bi bi-x-circle me-1"></i>Reset
+                    </button>
+                  </div>
+
+                  <div class="text-muted small ms-auto" id="userActivityFilteredCount">
+                    Showing <span id="visibleRowCount">0</span> of <span id="totalMatchCount">{{ dashboard_stats.total_users }}</span> users
+                  </div>
                 </div>
               </div>
-              <div class="card-body">
-                {% if user_activity_status %}
-                  <div class="row g-2">
-                    {% for u in user_activity_status %}
-                      <div class="col-md-6 col-lg-4">
-                        <div class="p-2.5 border rounded-3 d-flex align-items-center justify-content-between bg-light">
-                          <div class="d-flex align-items-center gap-2 overflow-hidden" style="min-width: 0;">
-                            {% if u.is_online %}
-                              <span class="status-indicator online flex-shrink-0" title="Online Now"></span>
-                            {% else %}
-                              <i class="bi bi-clock-history text-muted flex-shrink-0" style="font-size: 0.88rem;"></i>
-                            {% endif %}
-                            <div class="text-truncate">
-                              <div class="fw-semibold text-dark text-truncate">{{ u.name }}</div>
-                              <small class="text-muted d-block text-truncate" style="font-size: 0.74rem;">
-                                {% if u.is_online %}
-                                  <span class="text-success fw-bold"><i class="bi bi-broadcast me-1"></i>Online Now</span>
-                                {% else %}
-                                  <span title="{{ u.last_seen_formatted }}">Last seen: {{ u.last_seen_relative }}</span>
-                                {% endif %}
-                              </small>
-                            </div>
-                          </div>
-                          <span class="badge bg-{{ 'primary' if u.role == 'teacher' else ('info text-dark' if u.role == 'student' else 'dark') }} flex-shrink-0 ms-2">
-                            {{ u.role|capitalize }}
-                          </span>
-                        </div>
-                      </div>
-                    {% endfor %}
-                  </div>
-                {% else %}
-                  <div class="text-center text-muted py-3">
-                    <i class="bi bi-person-x fs-3 d-block mb-1 opacity-50"></i>
-                    <span class="small">No users registered yet</span>
-                  </div>
-                {% endif %}
+
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover user-activity-table align-middle mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th scope="col" style="width: 36%;">Name</th>
+                        <th scope="col" style="width: 16%;">Role</th>
+                        <th scope="col" style="width: 24%;">Status</th>
+                        <th scope="col" style="width: 24%;">Last seen</th>
+                      </tr>
+                    </thead>
+                    <tbody id="userActivityTableBody">
+                      {% if user_groups %}
+                        {% for group in user_groups %}
+                          <tr class="table-group-header-row" data-group-key="{{ group.key }}">
+                            <td colspan="4" class="py-2 px-3 text-secondary" style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em;">
+                              <div class="d-flex align-items-center gap-2">
+                                <span class="status-dot status-dot-{{ group.dot_color }}"></span>
+                                <span class="fw-bold text-dark">{{ group.label }}</span>
+                                <span class="badge bg-secondary-subtle text-secondary rounded-pill group-header-badge">{{ group.count }}</span>
+                              </div>
+                            </td>
+                          </tr>
+                          {% for u in group.users %}
+                            <tr class="user-activity-row"
+                                data-group-key="{{ group.key }}"
+                                data-role="{{ u.role }}"
+                                data-name="{{ (u.name or '')|lower }}"
+                                data-username="{{ (u.username or '')|lower }}">
+                              <td>
+                                <div class="d-flex align-items-center gap-2.5">
+                                  <div class="user-avatar-circle flex-shrink-0" style="width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; color: #334155; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">
+                                    {{ (u.name[:1] if u.name else 'U')|upper }}
+                                  </div>
+                                  <div class="text-truncate" style="max-width: 240px;">
+                                    <span class="fw-semibold text-dark d-block text-truncate lh-sm">{{ u.name }}</span>
+                                    {% if u.username %}
+                                      <small class="text-muted text-truncate d-block" style="font-size: 0.72rem;">@{{ u.username }}</small>
+                                    {% endif %}
+                                  </div>
+                                </div>
+                              </td>
+                              <td>
+                                <span class="user-role-label">{{ u.role|capitalize }}</span>
+                              </td>
+                              <td>
+                                <div class="d-flex align-items-center gap-2">
+                                  <span class="status-dot status-dot-{{ u.dot_color }}"></span>
+                                  <span class="fw-semibold {% if u.group_key == 'online' %}text-success{% elif u.group_key == 'inactive' %}text-warning-emphasis{% elif u.group_key == 'never' %}text-muted{% else %}text-dark{% endif %}">
+                                    {{ u.status_text }}
+                                  </span>
+                                </div>
+                              </td>
+                              <td>
+                                <span class="text-secondary fw-medium" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ u.tooltip }}" style="cursor: help;">
+                                  {% if u.group_key == 'online' %}
+                                    <span class="text-success fw-semibold"><i class="bi bi-broadcast me-1"></i>Online now</span>
+                                  {% elif u.group_key == 'never' %}
+                                    <span class="text-muted fst-italic">Never logged in</span>
+                                  {% else %}
+                                    {{ u.time_display }}
+                                  {% endif %}
+                                </span>
+                              </td>
+                            </tr>
+                          {% endfor %}
+                        {% endfor %}
+                      {% endif %}
+                      <tr id="userActivityEmptyRow" style="display: none;">
+                        <td colspan="4" class="text-center py-4 text-muted">
+                          <i class="bi bi-search fs-4 d-block mb-1 opacity-50"></i>
+                          <span>No users match the search or filter criteria.</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Footer with View all / Pagination toggle -->
+              <div class="card-footer bg-white py-2.5 px-3 border-top d-flex justify-content-between align-items-center">
+                <span class="text-muted small" id="userActivityFooterSummary">Showing first 10 users</span>
+                <button type="button" class="btn btn-sm btn-outline-primary fw-semibold" id="toggleViewAllBtn">
+                  <i class="bi bi-chevron-down me-1"></i>View all ({{ dashboard_stats.total_users }})
+                </button>
               </div>
             </section>
           </div>
@@ -286,6 +372,171 @@
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="{{ url_for('static', filename='js/admin.js', v='20260925_2') }}"></script>
   <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      function initTooltips() {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+          const tooltipTriggerList = document.querySelectorAll('#userActivityCard [data-bs-toggle="tooltip"]');
+          tooltipTriggerList.forEach(function (el) {
+            if (!bootstrap.Tooltip.getInstance(el)) {
+              new bootstrap.Tooltip(el);
+            }
+          });
+        }
+      }
+      setTimeout(initTooltips, 200);
+
+      const searchInput = document.getElementById('userActivitySearch');
+      const roleSelect = document.getElementById('userActivityRoleFilter');
+      const inactiveBtn = document.getElementById('userActivityInactiveFilterBtn');
+      const resetBtn = document.getElementById('userActivityResetFiltersBtn');
+      const toggleViewAllBtn = document.getElementById('toggleViewAllBtn');
+      const footerSummary = document.getElementById('userActivityFooterSummary');
+      const visibleCountEl = document.getElementById('visibleRowCount');
+      const totalMatchEl = document.getElementById('totalMatchCount');
+      const emptyRow = document.getElementById('userActivityEmptyRow');
+
+      const rows = Array.from(document.querySelectorAll('.user-activity-row'));
+      const headerRows = Array.from(document.querySelectorAll('.table-group-header-row'));
+
+      let isExpanded = false;
+      let inactiveOnly = false;
+      const DEFAULT_LIMIT = 10;
+
+      function applyFilters() {
+        const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+        const selectedRole = roleSelect ? roleSelect.value : 'all';
+
+        let matchingRows = [];
+        const groupVisibleCounts = { online: 0, week: 0, inactive: 0, never: 0 };
+
+        rows.forEach(function (row) {
+          const name = row.dataset.name || '';
+          const username = row.dataset.username || '';
+          const role = row.dataset.role || '';
+          const groupKey = row.dataset.groupKey || '';
+
+          const matchesSearch = !query || name.includes(query) || username.includes(query);
+          const matchesRole = selectedRole === 'all' || role === selectedRole;
+          const matchesInactive = !inactiveOnly || groupKey === 'inactive';
+
+          if (matchesSearch && matchesRole && matchesInactive) {
+            matchingRows.push(row);
+            groupVisibleCounts[groupKey] = (groupVisibleCounts[groupKey] || 0) + 1;
+          }
+        });
+
+        const totalMatching = matchingRows.length;
+        const limit = isExpanded ? totalMatching : Math.min(DEFAULT_LIMIT, totalMatching);
+
+        // Hide all rows initially
+        rows.forEach(function (r) {
+          r.style.display = 'none';
+        });
+
+        // Show matching rows up to limit
+        const visibleInGroup = { online: 0, week: 0, inactive: 0, never: 0 };
+        for (let i = 0; i < limit; i++) {
+          const row = matchingRows[i];
+          row.style.display = '';
+          const gKey = row.dataset.groupKey;
+          visibleInGroup[gKey] = (visibleInGroup[gKey] || 0) + 1;
+        }
+
+        // Show/hide group headers based on visible rows in that group
+        headerRows.forEach(function (hRow) {
+          const gKey = hRow.dataset.groupKey;
+          if (visibleInGroup[gKey] > 0) {
+            hRow.style.display = '';
+            const badge = hRow.querySelector('.group-header-badge');
+            if (badge) {
+              badge.textContent = groupVisibleCounts[gKey];
+            }
+          } else {
+            hRow.style.display = 'none';
+          }
+        });
+
+        // Toggle empty row
+        if (emptyRow) {
+          emptyRow.style.display = totalMatching === 0 ? '' : 'none';
+        }
+
+        // Update counts
+        if (visibleCountEl) visibleCountEl.textContent = limit;
+        if (totalMatchEl) totalMatchEl.textContent = totalMatching;
+
+        // Update footer and toggle button
+        if (totalMatching <= DEFAULT_LIMIT) {
+          if (toggleViewAllBtn) toggleViewAllBtn.style.display = 'none';
+          if (footerSummary) footerSummary.textContent = `Showing all ${totalMatching} users`;
+        } else {
+          if (toggleViewAllBtn) {
+            toggleViewAllBtn.style.display = '';
+            if (isExpanded) {
+              toggleViewAllBtn.innerHTML = '<i class="bi bi-chevron-up me-1"></i>Show less (10)';
+            } else {
+              toggleViewAllBtn.innerHTML = `<i class="bi bi-chevron-down me-1"></i>View all (${totalMatching})`;
+            }
+          }
+          if (footerSummary) {
+            footerSummary.textContent = isExpanded
+              ? `Showing all ${totalMatching} users`
+              : `Showing first ${limit} of ${totalMatching} users`;
+          }
+        }
+
+        // Reset button visibility
+        const hasFilters = Boolean(query) || selectedRole !== 'all' || inactiveOnly;
+        if (resetBtn) {
+          resetBtn.style.display = hasFilters ? 'inline-block' : 'none';
+        }
+
+        initTooltips();
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+      }
+      if (roleSelect) {
+        roleSelect.addEventListener('change', applyFilters);
+      }
+      if (inactiveBtn) {
+        inactiveBtn.addEventListener('click', function () {
+          inactiveOnly = !inactiveOnly;
+          if (inactiveOnly) {
+            this.classList.remove('btn-outline-warning');
+            this.classList.add('btn-warning');
+          } else {
+            this.classList.remove('btn-warning');
+            this.classList.add('btn-outline-warning');
+          }
+          applyFilters();
+        });
+      }
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+          if (searchInput) searchInput.value = '';
+          if (roleSelect) roleSelect.value = 'all';
+          inactiveOnly = false;
+          if (inactiveBtn) {
+            inactiveBtn.classList.remove('btn-warning');
+            inactiveBtn.classList.add('btn-outline-warning');
+          }
+          applyFilters();
+        });
+      }
+      if (toggleViewAllBtn) {
+        toggleViewAllBtn.addEventListener('click', function () {
+          isExpanded = !isExpanded;
+          applyFilters();
+        });
+      }
+
+      // Initial filter apply
+      applyFilters();
+    });
+  </script>
 </body>
 </html>
 
