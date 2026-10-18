@@ -71,6 +71,16 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `).join('');
 
+    if (btnAddStage) {
+      if (steps.length >= 10) {
+        btnAddStage.classList.add('disabled');
+        btnAddStage.setAttribute('disabled', 'true');
+      } else {
+        btnAddStage.classList.remove('disabled');
+        btnAddStage.removeAttribute('disabled');
+      }
+    }
+
     bindStageEvents();
     renderLivePreview();
   }
@@ -167,8 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Add Stage Button
   if (btnAddStage) {
     btnAddStage.addEventListener('click', () => {
-      if (steps.length >= 6) {
-        alert("A pipeline sequence can have a maximum of 6 stages.");
+      if (steps.length >= 10) {
         return;
       }
       const newOrder = steps.length + 1;
@@ -183,13 +192,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function showInlineFeedback(message, type = 'warning') {
+    let alertBox = document.getElementById('pipelineFeedbackAlert');
+    if (!alertBox) {
+      alertBox = document.createElement('div');
+      alertBox.id = 'pipelineFeedbackAlert';
+      alertBox.className = `alert alert-${type} alert-dismissible fade show shadow-sm rounded-4 mb-4`;
+      const container = document.querySelector('.teacher-main-content');
+      if (container) {
+        const topBar = container.querySelector('.d-flex');
+        if (topBar && topBar.nextSibling) {
+          container.insertBefore(alertBox, topBar.nextSibling);
+        } else {
+          container.prepend(alertBox);
+        }
+      }
+    }
+    alertBox.className = `alert alert-${type} alert-dismissible fade show shadow-sm rounded-4 mb-4`;
+    alertBox.innerHTML = `
+      <i class="bi bi-info-circle-fill me-2"></i>${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   // Save Actions
   function submitForm(isDraft) {
     if (isDraftInput) isDraftInput.value = isDraft ? "1" : "0";
 
     const titleInput = document.getElementById('activityTitleInput');
     if (!isDraft && (!titleInput || !titleInput.value.trim())) {
-      alert("Please enter an Activity Title.");
+      showInlineFeedback("Please enter an Activity Title before publishing.");
       titleInput?.focus();
       return;
     }
@@ -197,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!isDraft) {
       const emptyLabel = steps.find(s => !s.label || !s.label.trim());
       if (emptyLabel) {
-        alert("All sequence stages must have a label.");
+        showInlineFeedback("All sequence stages must have a name or label.");
         return;
       }
     }

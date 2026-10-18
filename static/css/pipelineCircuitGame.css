@@ -173,10 +173,13 @@ body.pipeline-circuit-body {
 .pc-pipeline-track {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  justify-content: safe center;
   gap: 1rem;
   padding: 2.5rem 1rem;
   position: relative;
+  overflow-x: auto;
+  max-width: 100%;
   background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%);
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.08);
