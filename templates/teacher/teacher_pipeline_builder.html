@@ -167,7 +167,7 @@
                 <div class="col-12 col-md-7">
                   <label class="form-label fw-bold text-dark small">Activity Title <span class="text-danger">*</span></label>
                   <input type="text" class="form-control form-control-lg rounded-3 fw-bold" name="title" id="activityTitleInput" 
-                         value="{{ config.title if config and config.title else (activity.type if activity and activity.type else 'Bio-Circuit: Frog Life Cycle') }}" 
+                         value="{% if config and config.is_blank %}{% elif config and config.title %}{{ config.title }}{% elif activity and activity.type %}{{ activity.type }}{% else %}Bio-Circuit: Frog Life Cycle{% endif %}" 
                          required placeholder="e.g. Bio-Circuit: Frog Life Cycle">
                 </div>
                 <div class="col-12 col-md-5">
@@ -183,7 +183,8 @@
                 <div class="col-12 col-md-8">
                   <label class="form-label fw-bold text-dark small">Instructions for Students</label>
                   <input type="text" class="form-control rounded-3" name="instructions" id="instructionsInput" 
-                         value="{{ config.instructions if config and config.instructions else 'Place the life cycle stages in chronological order to complete the circuit!' }}">
+                         value="{% if config and config.is_blank %}{% elif config and config.instructions %}{{ config.instructions }}{% else %}Place the life cycle stages in chronological order to complete the circuit!{% endif %}"
+                         placeholder="e.g. Place the stages in chronological order to complete the circuit!">
                 </div>
                 <div class="col-12 col-md-4">
                   <label class="form-label fw-bold text-dark small">Difficulty Level</label>

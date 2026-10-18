@@ -8,7 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Extract initial steps
   let steps = [];
-  if (Array.isArray(initialConfig.steps) && initialConfig.steps.length > 0) {
+  if (initialConfig.is_blank) {
+    steps = [
+      { id: "step_1", order: 1, label: "", icon: "⚡", hint: "" },
+      { id: "step_2", order: 2, label: "", icon: "⚡", hint: "" },
+      { id: "step_3", order: 3, label: "", icon: "⚡", hint: "" }
+    ];
+  } else if (Array.isArray(initialConfig.steps) && initialConfig.steps.length > 0) {
     steps = initialConfig.steps;
   } else if (Array.isArray(initialConfig.rounds) && initialConfig.rounds.length > 0 && Array.isArray(initialConfig.rounds[0].steps)) {
     steps = initialConfig.rounds[0].steps;
@@ -274,6 +280,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // Save Actions
   function submitForm(isDraft) {
     if (isDraftInput) isDraftInput.value = isDraft ? "1" : "0";
+
+    // Synchronize latest values directly from the DOM
+    if (stagesContainer) {
+      stagesContainer.querySelectorAll('.stage-card').forEach(card => {
+        const idx = parseInt(card.dataset.index, 10);
+        if (steps[idx]) {
+          const lbl = card.querySelector('.input-label');
+          if (lbl) steps[idx].label = lbl.value.trim();
+          const ico = card.querySelector('.input-icon');
+          if (ico) steps[idx].icon = ico.value.trim() || '⚡';
+          const hnt = card.querySelector('.input-hint');
+          if (hnt) steps[idx].hint = hnt.value.trim();
+        }
+      });
+    }
 
     const titleInput = document.getElementById('activityTitleInput');
     if (!isDraft && (!titleInput || !titleInput.value.trim())) {

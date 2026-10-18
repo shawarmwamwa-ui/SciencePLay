@@ -364,6 +364,22 @@ body.pipeline-circuit-body {
   box-shadow: 0 0 8px #38bdf8;
 }
 
+.pc-pod-clue-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 9999px;
+  padding: 0.15rem 0.5rem;
+  margin-top: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
+}
+
 .pc-pod-icon {
   font-size: 2.2rem;
   line-height: 1;

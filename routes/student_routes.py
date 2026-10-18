@@ -753,7 +753,8 @@ def is_activity_unlocked(user_id, activity):
         'find_the_part': 'Animal Body Parts',
         'build_a_plant': 'Plant Parts',
         'metal_logic': 'Properties of Metals',
-        'recycle_sorter': 'Recycling'
+        'recycle_sorter': 'Recycling',
+        'pipeline_circuit': 'Living vs Non-Living'
     }
 
     # Fallback: check by engine matching if lesson_id wasn't satisfied or set
@@ -1455,16 +1456,17 @@ def dashboard():
         ActivityAssignment.student_id == user_id,
         (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None),
         ActivityAssignment.status.in_(['assigned', 'completed', 'attempts_exhausted']),
-        Activity.engine.in_(playable_engines)
+        (Activity.is_draft == False) | (Activity.is_draft == None),
+        (Activity.is_archived == False) | (Activity.is_archived == None),
+        (Activity.engine.in_(playable_engines) | Activity.engine.is_(None))
     ).all()
 
-    # Deduplicate activities by engine so each unique game is counted exactly once
-    seen_engines = set()
+    # Deduplicate activities by activity.id so every assigned activity counts toward the student's tasks
+    seen_activity_ids = set()
     activities = []
     for _, activity in activity_assignment_rows:
-        eng = activity.engine or activity.type
-        if eng not in seen_engines:
-            seen_engines.add(eng)
+        if activity.id not in seen_activity_ids:
+            seen_activity_ids.add(activity.id)
             activities.append(activity)
 
     activity_due_dates = {activity.id: assignment.due_date for assignment, activity in activity_assignment_rows}
@@ -1477,11 +1479,14 @@ def dashboard():
         progress_logs = ProgressLog.query.filter_by(student_id=user_id).all()
         completed_by_activity = {log.activity_id: log for log in progress_logs}
 
-    # Count completed activities: match direct activity_id or any progress under the same engine
+    # Count completed activities: match direct activity_id or completion status on the assignment
     completed_activities_count = 0
     for act in activities:
         has_prog = (act.id in completed_by_activity) or any(
-            p.activity and p.activity.engine == act.engine for p in progress_logs
+            assignment.activity_id == act.id and assignment.status in ('completed', 'attempts_exhausted')
+            for assignment, _ in activity_assignment_rows
+        ) or any(
+            p.activity_id == act.id or (p.activity and p.activity.id == act.id) for p in progress_logs
         )
         if has_prog:
             completed_activities_count += 1

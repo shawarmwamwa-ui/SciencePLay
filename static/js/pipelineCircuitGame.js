@@ -48,6 +48,13 @@ export function initPipelineCircuit() {
     } catch (e) {
       // Audio autoplay policy fallback
     }
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   function sfxSnap() {
@@ -153,11 +160,17 @@ export function initPipelineCircuit() {
               <div class="pc-pod pc-tray-pod"
                    id="pod-${step.id}"
                    data-pod-id="${step.id}"
-                   draggable="true">
+                   draggable="true"
+                   title="${step.hint ? escapeHtml(step.hint) : ''}">
                 ${step.image_url 
-                  ? `<img src="${step.image_url}" class="pc-pod-img" alt="${step.label}">` 
+                  ? `<img src="${step.image_url}" class="pc-pod-img" alt="${escapeHtml(step.label)}">` 
                   : `<div class="pc-pod-icon">${step.icon || '⚡'}</div>`}
-                <div class="pc-pod-label">${step.label}</div>
+                <div class="pc-pod-label">${escapeHtml(step.label)}</div>
+                ${step.hint ? `
+                  <span class="pc-pod-clue-badge">
+                    <i class="bi bi-lightbulb-fill text-warning me-1"></i>Clue
+                  </span>
+                ` : ''}
               </div>
             `).join('')}
           </div>
@@ -171,14 +184,43 @@ export function initPipelineCircuit() {
   let currentDrag = null; // { podId, fromSlot }
 
   function setupInteractions(steps) {
+    const round = rounds[currentRoundIdx] || {};
     const trayPods = container.querySelectorAll('.pc-tray-pod');
     const dropzones = container.querySelectorAll('.pc-dropzone');
     const trayCard = container.querySelector('.pc-tray-card') || document.getElementById('pc-pods-tray');
     const testBtn = document.getElementById('pc-test-btn');
     const hintText = document.getElementById('pc-hint-text');
+    const defaultInstructions = round.instructions || 'Drag or tap the pods below to place them in chronological order along the pipeline.';
+
+    function updateHintDisplay(step) {
+      if (!hintText) return;
+      if (step && step.hint) {
+        hintText.innerHTML = `<span class="text-info fw-bold"><i class="bi bi-lightbulb-fill text-warning me-1"></i>${escapeHtml(step.label)} Clue:</span> <span class="text-light">${escapeHtml(step.hint)}</span>`;
+      } else if (step && step.label) {
+        hintText.innerHTML = `<strong>${escapeHtml(step.label)}</strong>: Place this stage into the correct chronological slot.`;
+      } else {
+        const filledCount = Object.keys(placedPods).length;
+        if (filledCount === steps.length) {
+          hintText.innerHTML = `<strong>Ready!</strong> All slots are filled. Flip the <strong>Test Circuit</strong> switch to verify the energy flow.`;
+        } else {
+          hintText.innerHTML = defaultInstructions;
+        }
+      }
+    }
 
     // Drag and Drop for Tray Pods
     trayPods.forEach(podEl => {
+      podEl.addEventListener('mouseenter', () => {
+        if (isTesting) return;
+        const stepData = steps.find(s => String(s.id) === String(podEl.dataset.podId));
+        updateHintDisplay(stepData);
+      });
+
+      podEl.addEventListener('mouseleave', () => {
+        if (isTesting || selectedTrayPodId) return;
+        updateHintDisplay(null);
+      });
+
       podEl.addEventListener('dragstart', (e) => {
         if (isTesting || podEl.classList.contains('placed')) {
           e.preventDefault();
@@ -188,6 +230,8 @@ export function initPipelineCircuit() {
         e.dataTransfer.setData('text/plain', String(podEl.dataset.podId));
         e.dataTransfer.setData('application/json', JSON.stringify(currentDrag));
         podEl.style.opacity = '0.5';
+        const stepData = steps.find(s => String(s.id) === String(podEl.dataset.podId));
+        updateHintDisplay(stepData);
       });
 
       podEl.addEventListener('dragend', () => {
@@ -195,6 +239,7 @@ export function initPipelineCircuit() {
         currentDrag = null;
         dropzones.forEach(z => z.classList.remove('drag-over'));
         if (trayCard) trayCard.classList.remove('tray-drag-over');
+        if (!selectedTrayPodId) updateHintDisplay(null);
       });
 
       // Tap-to-select for mobile / tablets
@@ -204,11 +249,13 @@ export function initPipelineCircuit() {
         if (selectedTrayPodId === podId) {
           selectedTrayPodId = null;
           podEl.style.borderColor = '';
+          updateHintDisplay(null);
         } else {
           trayPods.forEach(p => p.style.borderColor = '');
           selectedTrayPodId = podId;
           podEl.style.borderColor = '#10b981';
-          if (hintText) hintText.textContent = `Tap any slot on the pipeline to place "${podEl.querySelector('.pc-pod-label').textContent}".`;
+          const stepData = steps.find(s => String(s.id) === String(podId));
+          updateHintDisplay(stepData);
         }
       });
     });
@@ -261,6 +308,20 @@ export function initPipelineCircuit() {
         } else if (placedPods[slotIdx]) {
           removePodFromSlot(slotIdx, steps);
         }
+      });
+
+      zoneEl.addEventListener('mouseenter', () => {
+        if (isTesting) return;
+        if (placedPods[slotIdx]) {
+          updateHintDisplay(placedPods[slotIdx]);
+        } else if (!selectedTrayPodId) {
+          if (hintText) hintText.innerHTML = `<strong>Slot ${slotIdx + 1}</strong>: Drop or tap the stage that occurs #${slotIdx + 1} in this sequence.`;
+        }
+      });
+
+      zoneEl.addEventListener('mouseleave', () => {
+        if (isTesting || selectedTrayPodId) return;
+        updateHintDisplay(null);
       });
     });
 
@@ -328,11 +389,17 @@ export function initPipelineCircuit() {
            data-pod-id="${podData.id}"
            data-slot-index="${slotIdx}"
            draggable="true"
+           title="${podData.hint ? escapeHtml(podData.hint) : ''}"
            style="width: 100%; height: 100%; cursor: grab;">
         ${podData.image_url 
-          ? `<img src="${podData.image_url}" class="pc-pod-img" alt="${podData.label}">` 
+          ? `<img src="${podData.image_url}" class="pc-pod-img" alt="${escapeHtml(podData.label)}">` 
           : `<div class="pc-pod-icon">${podData.icon || '⚡'}</div>`}
-        <div class="pc-pod-label">${podData.label}</div>
+        <div class="pc-pod-label">${escapeHtml(podData.label)}</div>
+        ${podData.hint ? `
+          <span class="pc-pod-clue-badge mb-1" style="font-size: 0.6rem; padding: 0.1rem 0.4rem;">
+            <i class="bi bi-lightbulb-fill text-warning me-1"></i>Clue
+          </span>
+        ` : ''}
         <small class="text-muted mt-1" style="font-size: 0.65rem;">Drag to move or tap to remove</small>
       </div>
     `;
@@ -342,9 +409,36 @@ export function initPipelineCircuit() {
       nodeSlot.classList.remove('correct', 'error');
     }
 
-    // Attach drag events to this placed pod
+    // Attach drag & hover events to this placed pod
     const slotPodEl = dropzone.querySelector('.pc-slot-pod');
     if (slotPodEl) {
+      slotPodEl.addEventListener('mouseenter', () => {
+        if (isTesting) return;
+        const hintEl = document.getElementById('pc-hint-text');
+        if (hintEl) {
+          if (podData.hint) {
+            hintEl.innerHTML = `<span class="text-info fw-bold"><i class="bi bi-lightbulb-fill text-warning me-1"></i>${escapeHtml(podData.label)} Clue:</span> <span class="text-light">${escapeHtml(podData.hint)}</span>`;
+          } else {
+            hintEl.innerHTML = `<strong>${escapeHtml(podData.label)}</strong> placed in Slot ${slotIdx + 1}.`;
+          }
+        }
+      });
+
+      slotPodEl.addEventListener('mouseleave', () => {
+        if (isTesting || selectedTrayPodId) return;
+        const hintEl = document.getElementById('pc-hint-text');
+        if (hintEl) {
+          const round = rounds[currentRoundIdx] || {};
+          const defaultInstructions = round.instructions || 'Drag or tap the pods below to place them in chronological order along the pipeline.';
+          const filledCount = Object.keys(placedPods).length;
+          if (filledCount === steps.length) {
+            hintEl.innerHTML = `<strong>Ready!</strong> All slots are filled. Flip the <strong>Test Circuit</strong> switch to verify the energy flow.`;
+          } else {
+            hintEl.innerHTML = defaultInstructions;
+          }
+        }
+      });
+
       slotPodEl.addEventListener('dragstart', (e) => {
         if (isTesting) {
           e.preventDefault();

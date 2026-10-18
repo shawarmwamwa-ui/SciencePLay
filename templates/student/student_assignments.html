@@ -157,6 +157,7 @@
                       {% set act_engine = assignment.activity.engine if assignment.activity else '' %}
                       {% set target_url = url_for('student.claw_machine', activity_id=assignment.activity_id) if ('Claw Machine' in act_type or act_engine == 'claw_machine')
                              else url_for('student.find_the_part_game', activity_id=assignment.activity_id) if ('Find the Part' in act_type or act_engine == 'find_the_part')
+                             else url_for('student.pipeline_circuit_game', activity_id=assignment.activity_id) if ('Circuit' in act_type or 'Pipeline' in act_type or act_engine == 'pipeline_circuit')
                              else url_for('student.build_a_plant_game', activity_id=assignment.activity_id) if ('Build a Plant' in act_type or act_engine == 'build_a_plant')
                              else url_for('student.materials_game', activity_id=assignment.activity_id) if ('Metal' in act_type or act_engine == 'metal_logic')
                              else url_for('student.recycling_game', activity_id=assignment.activity_id) if ('Recycl' in act_type or act_engine == 'recycle_sorter')

@@ -3497,9 +3497,23 @@ def pipeline_circuit_builder(activity_id=None):
     from routes.student_routes import load_pipeline_circuit_activity_config
 
     activity = None
+    mode = request.args.get('mode', '').strip().lower()
     if activity_id:
         activity = Activity.query.get_or_404(activity_id)
         config = load_pipeline_circuit_activity_config(activity.id)
+    elif mode == 'blank':
+        config = {
+            "title": "",
+            "instructions": "",
+            "difficulty": "Level 1 — Easy",
+            "term": "Term 1",
+            "is_blank": True,
+            "steps": [
+                { "id": "step_1", "order": 1, "label": "", "icon": "⚡", "hint": "" },
+                { "id": "step_2", "order": 2, "label": "", "icon": "⚡", "hint": "" },
+                { "id": "step_3", "order": 3, "label": "", "icon": "⚡", "hint": "" }
+            ]
+        }
     else:
         preset_key = request.args.get('preset', 'frog_cycle')
         presets = {
