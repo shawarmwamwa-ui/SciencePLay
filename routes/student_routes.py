@@ -2795,10 +2795,10 @@ def activity_progress():
 
     try:
         activity_id = int(data.get('activity_id'))
-        score = int(data.get('score'))
-        attempts = int(data.get('attempts', 0))
-        time_spent = int(data.get('time_spent'))
-        correct_first_try = int(data.get('correct_first_try'))
+        score = int(data.get('score', 0) or 0)
+        attempts = int(data.get('attempts', 0) or 0)
+        time_spent = int(data.get('time_spent', 0) or 0)
+        correct_first_try = int(data.get('correct_first_try', 0) or 0)
     except (TypeError, ValueError):
         return jsonify({'error': 'Invalid activity progress values'}), 400
 

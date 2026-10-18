@@ -234,11 +234,9 @@ async function saveResult(silent = false) {
   const totalZones = getTotalZones();
   if (state.correctFirstTry >= totalZones) {
     state.score = 100;
-  } else if (state.matched.size >= totalZones) {
-    // Completion bonus (+4 pts)
-    state.score = Math.min(100, state.score + 4);
+  } else {
+    state.score = Math.min(95, Math.max(20, Math.round(state.score)));
   }
-  state.score = Math.min(100, Math.max(20, state.score));
 
   if (window.isTeacherPreview) {
     if (!silent) showSummary({ attempts_today: 0, attempts_limit: 3 });
@@ -506,21 +504,22 @@ function processMatch(zoneId, labelId, round) {
     const fact = round.facts[zoneId];
     const firstTry = tries === 1;
 
-    // 12 parts total across 3 animals (4 bird + 4 lion + 4 fish):
-    // 1st try: 8 pts (12 * 8 = 96 + 4 completion bonus = 100 pts max)
-    // 2nd try: 5 pts | 3rd try: 3 pts | 4+ tries: 1 pt
-    let pts = 1;
-    let ptsBadge = '+1 pt (Review needed)';
+    // Dynamic point calculation based on total zones in the diagram:
+    const totalZones = Math.max(1, getTotalZones());
+    const ptsPerZone = 100 / totalZones;
+
+    let pts = Math.max(1, Math.round(ptsPerZone * 0.25));
+    let ptsBadge = `+${pts} pts (Needs Review)`;
     if (tries === 1) {
-      pts = 8;
-      ptsBadge = '+8 pts (First Try!)';
+      pts = Math.round(ptsPerZone);
+      ptsBadge = `+${pts} pts (First Try!)`;
       state.correctFirstTry += 1;
     } else if (tries === 2) {
-      pts = 5;
-      ptsBadge = '+5 pts';
+      pts = Math.max(1, Math.round(ptsPerZone * 0.70));
+      ptsBadge = `+${pts} pts (2nd Try)`;
     } else if (tries === 3) {
-      pts = 3;
-      ptsBadge = '+3 pts';
+      pts = Math.max(1, Math.round(ptsPerZone * 0.45));
+      ptsBadge = `+${pts} pts (3rd Try)`;
     }
 
     state.matched.add(zoneId);
@@ -588,17 +587,18 @@ function processMatch(zoneId, labelId, round) {
       attempt_number: tries,
     });
 
-    // Calculate remaining potential points for this slot
-    let nextPotential = 1;
-    if (tries === 1) nextPotential = 6;
-    else if (tries === 2) nextPotential = 3;
-    else nextPotential = 1;
+    // Calculate remaining potential points for this slot dynamically
+    const totalZones = Math.max(1, getTotalZones());
+    const ptsPerZone = 100 / totalZones;
+    let nextPotential = Math.max(1, Math.round(ptsPerZone * 0.25));
+    if (tries === 1) nextPotential = Math.max(1, Math.round(ptsPerZone * 0.70));
+    else if (tries === 2) nextPotential = Math.max(1, Math.round(ptsPerZone * 0.45));
 
     const labelName = chipEl ? chipEl.textContent.trim() : labelId;
     if (banner) {
       banner.className = 'ftp-banner ftp-banner-danger';
       banner.innerHTML = `<i class="bi bi-x-circle-fill me-2"></i>
-        Not quite! <strong>${labelName}</strong> does not go there. (Points for this part lessened to <strong>+${nextPotential} pts</strong>)`;
+        Not quite! <strong>${labelName}</strong> does not go there. (Points for this part lowered to <strong>+${nextPotential} pts</strong>)`;
     }
     playSound('wrong');
     playVoicePrompt('ftp_wrong', "Oops! That part doesn't belong here.");

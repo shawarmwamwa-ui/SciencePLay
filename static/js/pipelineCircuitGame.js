@@ -25,6 +25,10 @@ export function initPipelineCircuit() {
   let selectedTrayPodId = null;
   let placedPods = {}; // slotIndex -> pod object
   let isTesting = false;
+  let roundMistakes = 0;
+  let totalMistakes = 0;
+  let correctFirstTryCount = 0;
+  let startTime = Date.now();
 
   // Audio Synthesizer
   const audioCtx = (typeof window.AudioContext !== 'undefined' || typeof window.webkitAudioContext !== 'undefined')
@@ -95,6 +99,7 @@ export function initPipelineCircuit() {
     placedPods = {};
     selectedTrayPodId = null;
     isTesting = false;
+    roundMistakes = 0;
 
     const round = rounds[currentRoundIdx];
     const steps = round.steps || [];
@@ -586,12 +591,38 @@ export function initPipelineCircuit() {
       // Energy surge through whole tube
       if (tube) tube.classList.add('energized');
       sfxSuccess();
-      score += 100 + (streak * 20);
-      streak += 1;
+
+      const numSteps = Math.max(1, steps.length);
+      const roundMaxPoints = Math.round(100 / rounds.length);
+
+      // Points calculation based on sequence stages and retry deductions:
+      // - Solved on 1st test (0 mistakes): 100% of round max points
+      // - 1 tripped circuit retry: 75%
+      // - 2 tripped circuit retries: 55%
+      // - 3 tripped circuit retries: 40%
+      // - 4+ retries: 25% floor
+      let earnedRatio = 1.0;
+      if (roundMistakes === 1) earnedRatio = 0.75;
+      else if (roundMistakes === 2) earnedRatio = 0.55;
+      else if (roundMistakes === 3) earnedRatio = 0.40;
+      else if (roundMistakes >= 4) earnedRatio = 0.25;
+
+      const earnedPoints = Math.max(15, Math.round(roundMaxPoints * earnedRatio));
+      score += earnedPoints;
+
+      if (roundMistakes === 0) {
+        correctFirstTryCount += numSteps;
+        streak += 1;
+      } else {
+        streak = 0;
+      }
       updateHUD();
 
       if (hintText) {
-        hintText.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Circuit Completed Perfectly! High voltage active!</span>`;
+        const bonusMsg = roundMistakes === 0
+          ? ` (+${earnedPoints} pts, First Try Perfect!)`
+          : ` (+${earnedPoints} pts, ${roundMistakes} retry penalty applied)`;
+        hintText.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Circuit Completed! High voltage active!${bonusMsg}</span>`;
       }
 
       await new Promise(r => setTimeout(r, 1200));
@@ -605,13 +636,26 @@ export function initPipelineCircuit() {
     } else {
       sfxError();
       streak = 0;
+      roundMistakes++;
+      totalMistakes++;
       updateHUD();
+
+      const numSteps = Math.max(1, steps.length);
+      const roundMaxPoints = Math.round(100 / rounds.length);
+
+      let nextRatio = 0.75;
+      if (roundMistakes === 1) nextRatio = 0.75;
+      else if (roundMistakes === 2) nextRatio = 0.55;
+      else if (roundMistakes === 3) nextRatio = 0.40;
+      else nextRatio = 0.25;
+
+      const nextPotential = Math.max(15, Math.round(roundMaxPoints * nextRatio));
 
       const failedPod = placedPods[failedIndex];
       const hint = failedPod && failedPod.hint ? failedPod.hint : "Review what happens earlier or later in this sequence.";
 
       if (hintText) {
-        hintText.innerHTML = `<span class="text-warning fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i> Circuit tripped at Slot ${failedIndex + 1}!</span> ${hint}`;
+        hintText.innerHTML = `<span class="text-warning fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i> Circuit tripped at Slot ${failedIndex + 1}!</span> ${hint} <span class="badge bg-danger ms-2">Max score lowered to +${nextPotential} pts</span>`;
       }
 
       if (testBtn) {
@@ -624,7 +668,7 @@ export function initPipelineCircuit() {
 
   async function finishGame() {
     // Show victory modal
-    const finalScore = score;
+    const finalScore = Math.min(100, Math.max(20, Math.round(score)));
     // Standard SciencePlay star scale: 90%+ = 3 stars, 60%+ = 2 stars, otherwise 1 star
     const stars = finalScore >= 90 ? 3 : (finalScore >= 60 ? 2 : 1);
 
@@ -636,8 +680,11 @@ export function initPipelineCircuit() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             activity_id: activityId,
-            score: Math.min(100, finalScore),
+            score: finalScore,
             stars: stars,
+            time_spent: Math.max(1, Math.round((Date.now() - startTime) / 1000)),
+            attempts: totalMistakes + 1,
+            correct_first_try: correctFirstTryCount,
             completed: true
           })
         });
@@ -661,7 +708,8 @@ export function initPipelineCircuit() {
 
           <div class="p-3 rounded-4 mb-4" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(56, 189, 248, 0.3);">
             <div class="small fw-bold text-uppercase mb-1" style="color: #94a3b8; letter-spacing: 0.05em;">Final Score</div>
-            <div class="h3 fw-bold text-info mb-0">${finalScore} Points</div>
+            <div class="h3 fw-bold text-info mb-1">${finalScore} Points</div>
+            <div class="small text-muted">${totalMistakes === 0 ? '🏆 Solved with 0 mistakes (100% accuracy)' : `⚠️ Circuit tripped ${totalMistakes} ${totalMistakes === 1 ? 'time' : 'times'} before sequence completed`}</div>
           </div>
 
           <div class="d-flex flex-column gap-2">
@@ -680,6 +728,10 @@ export function initPipelineCircuit() {
       currentRoundIdx = 0;
       score = 0;
       streak = 0;
+      roundMistakes = 0;
+      totalMistakes = 0;
+      correctFirstTryCount = 0;
+      startTime = Date.now();
       updateHUD();
       renderCurrentRound();
     });
