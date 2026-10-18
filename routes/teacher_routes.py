@@ -2806,7 +2806,7 @@ def _get_game_engine_templates():
             'category': 'Cycles, Sequences & Causality',
             'icon': 'bi-diagram-3-fill',
             'accent': '#10b981',
-            'description': 'Chronological sequence pipeline where students arrange science stages (life cycles, water cycle, food chains) in order and test the energy flow.',
+            'description': 'Interactive chronological sequence pipeline where students arrange scientific stages, cycles, or processes in order and test the system flow.',
             'status': 'Ready to Customize',
             'is_available': True
         }
@@ -2833,6 +2833,22 @@ def lesson_builder_alias(lesson_id=None):
     if lesson_id:
         return redirect(url_for('teacher.lesson_builder', lesson_id=lesson_id, **request.args))
     return redirect(url_for('teacher.lesson_builder', **request.args))
+
+@teacher_bp.route('/find_the_part_builder')
+@teacher_bp.route('/find_the_part_builder/<int:activity_id>')
+@require_role('teacher')
+def find_the_part_builder_alias(activity_id=None):
+    if activity_id:
+        return redirect(url_for('teacher.find_the_part_builder', activity_id=activity_id, **request.args))
+    return redirect(url_for('teacher.find_the_part_builder', **request.args))
+
+@teacher_bp.route('/pipeline_circuit_builder')
+@teacher_bp.route('/pipeline_circuit_builder/<int:activity_id>')
+@require_role('teacher')
+def pipeline_circuit_builder_alias(activity_id=None):
+    if activity_id:
+        return redirect(url_for('teacher.pipeline_circuit_builder', activity_id=activity_id, **request.args))
+    return redirect(url_for('teacher.pipeline_circuit_builder', **request.args))
 
 
 @teacher_bp.route('/content')
@@ -2896,8 +2912,10 @@ def toggle_supplementary(item_type, item_id):
     return redirect(url_for('teacher.content_management'))
 
 
-@teacher_bp.route('/content/games')
 @teacher_bp.route('/content/game_studio')
+@teacher_bp.route('/content/games')
+@teacher_bp.route('/game_studio')
+@teacher_bp.route('/games')
 @require_role('teacher')
 def game_studio():
     """Dedicated Arcade Game Studio: Game Engines & Configured Sorting Games"""
@@ -2927,8 +2945,9 @@ def game_studio():
     )
 
 
-@teacher_bp.route('/content/lessons')
 @teacher_bp.route('/content/lesson_studio')
+@teacher_bp.route('/content/lessons')
+@teacher_bp.route('/lesson_studio')
 @require_role('teacher')
 def lesson_studio():
     """Dedicated Slide Lesson Studio: Slide Deck Workshops & Configured Lessons"""
@@ -3703,6 +3722,7 @@ def save_pipeline_circuit():
 
 
 @teacher_bp.route('/content/preview/<int:activity_id>')
+@teacher_bp.route('/preview/<int:activity_id>')
 @require_role('teacher')
 def preview_activity(activity_id):
     """Test play a custom activity as teacher without grade tracking"""

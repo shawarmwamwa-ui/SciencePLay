@@ -1242,7 +1242,7 @@ function bindExitHandlers() {
       console.warn('Could not save claw machine state to localStorage', e);
     }
     if (window.isTeacherPreview) {
-      window.location.href = '/teacher/game_studio';
+      window.location.href = window.teacherStudioUrl || '/teacher/content/game_studio';
     } else {
       window.location.href = '/student/activities';
     }

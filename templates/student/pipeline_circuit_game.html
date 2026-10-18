@@ -67,9 +67,10 @@
     window.pipelineCircuitActivityId = {{ activity_id if activity_id else 'null' }};
     window.pipelineCircuitConfig = {{ (config|tojson) if config else 'null' }};
     window.isTeacherPreview = {{ 'true' if is_preview else 'false' }};
+    window.teacherStudioUrl = {{ url_for('teacher.game_studio')|tojson }};
   </script>
   <script type="module">
-    import { initPipelineCircuit } from "{{ url_for('static', filename='js/pipelineCircuitGame.js', v='20261019_4') }}";
+    import { initPipelineCircuit } from "{{ url_for('static', filename='js/pipelineCircuitGame.js', v='20261019_5') }}";
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     initPipelineCircuit();
     initBgmPlayer('game-bgm', { volume: 0.18, storageKey: 'scienceplay_game_bgm_muted' });

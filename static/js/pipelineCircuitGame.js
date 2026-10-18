@@ -769,7 +769,7 @@ export function initPipelineCircuit() {
                 <i class="bi bi-arrow-clockwise me-1"></i> Play Again
               </button>
             `}
-            <a href="${isPreview ? '/teacher/content/games' : '/student/activities'}" class="btn btn-outline-light fw-bold py-2.5 rounded-pill">
+            <a href="${isPreview ? (window.teacherStudioUrl || '/teacher/content/game_studio') : '/student/activities'}" class="btn btn-outline-light fw-bold py-2.5 rounded-pill">
               <i class="bi bi-grid-fill me-1"></i> ${isPreview ? 'Back to Game Studio' : 'Back to Game Hub'}
             </a>
           </div>

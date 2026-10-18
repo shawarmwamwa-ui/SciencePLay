@@ -342,7 +342,7 @@ function showSummary(data) {
       </div>`;
   }
 
-  const finishHref = window.isTeacherPreview ? '/teacher/game_studio' : '/student/activities';
+  const finishHref = window.isTeacherPreview ? (window.teacherStudioUrl || '/teacher/content/game_studio') : '/student/activities';
   const finishText = window.isTeacherPreview ? 'Return to Game Studio' : 'Finish & Return to Playground';
 
   container.innerHTML = `

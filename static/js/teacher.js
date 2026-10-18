@@ -13,6 +13,18 @@ function initTeacherNavigation() {
   };
 
   const resolveActiveKey = () => {
+    if (
+      currentPath.includes('/teacher/content') ||
+      currentPath.includes('/teacher/game_studio') ||
+      currentPath.includes('/teacher/games') ||
+      currentPath.includes('/teacher/lesson_studio') ||
+      currentPath.includes('/teacher/lesson_builder') ||
+      currentPath.includes('/teacher/claw_machine') ||
+      currentPath.includes('/teacher/find_the_part') ||
+      currentPath.includes('/teacher/pipeline')
+    ) {
+      return 'content';
+    }
     if (currentPath.includes('/teacher/students') || currentPath.includes('/teacher/student')) {
       return 'students';
     }

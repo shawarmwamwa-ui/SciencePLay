@@ -82,9 +82,10 @@
     window.initialAttemptsToday = {{ attempts_today if attempts_today is defined else 0 }};
     window.findThePartCustomConfig = {{ (config|tojson) if config else 'null' }};
     window.isTeacherPreview = {{ 'true' if is_preview else 'false' }};
+    window.teacherStudioUrl = {{ url_for('teacher.game_studio')|tojson }};
   </script>
   <script type="module">
-    import { initFindThePart } from "{{ url_for('static', filename='js/findThePartGame.js', v='20261019_3') }}";
+    import { initFindThePart } from "{{ url_for('static', filename='js/findThePartGame.js', v='20261019_4') }}";
     import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
     initFindThePart();
     initBgmPlayer('game-bgm', { volume: 0.20, storageKey: 'scienceplay_game_bgm_muted' });
