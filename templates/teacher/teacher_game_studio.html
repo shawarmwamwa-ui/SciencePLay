@@ -147,6 +147,10 @@
                         <button type="button" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#newFindThePartChoiceModal">
                           <i class="bi bi-plus-lg me-1"></i>Create Activity
                         </button>
+                        {% elif tmpl.engine == 'pipeline_circuit' %}
+                        <button type="button" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#newPipelineCircuitChoiceModal">
+                          <i class="bi bi-plus-lg me-1"></i>Create Activity
+                        </button>
                         {% else %}
                         <button type="button" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#newClawChoiceModal">
                           <i class="bi bi-plus-lg me-1"></i>Create Activity
@@ -267,6 +271,15 @@
                               <i class="bi bi-pin-angle-fill text-danger me-1"></i>{{ card.zones_count }} Callout Pin Target{{ 's' if card.zones_count != 1 else '' }}
                             </span>
                           </div>
+                          {% elif card.engine == 'pipeline_circuit' %}
+                          <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small">
+                              <i class="bi bi-diagram-3 text-success me-1"></i>{{ card.rounds_count }} Circuit Stage{{ 's' if card.rounds_count != 1 else '' }}
+                            </span>
+                            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small">
+                              <i class="bi bi-lightning-charge-fill text-warning me-1"></i>{{ card.objects_count }} Chronological Steps
+                            </span>
+                          </div>
                           {% else %}
                           <div class="d-flex flex-wrap gap-1 align-items-center">
                             <span class="text-muted small me-1 fw-bold" style="font-size: 0.75rem;">Chutes:</span>
@@ -294,6 +307,19 @@
                             <div class="fw-bold text-dark fs-5 lh-1">{{ card.activity.points or 100 }}</div>
                             <div class="text-muted small mt-1" style="font-size: 0.75rem;">Max Pts</div>
                           </div>
+                          {% elif card.engine == 'pipeline_circuit' %}
+                          <div style="min-width: 55px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.rounds_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Circuits</div>
+                          </div>
+                          <div style="min-width: 55px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.objects_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Steps</div>
+                          </div>
+                          <div style="min-width: 65px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.activity.points or 100 }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Max Pts</div>
+                          </div>
                           {% else %}
                           <div style="min-width: 50px;">
                             <div class="fw-bold text-dark fs-5 lh-1">{{ card.objects_count }}</div>
@@ -316,7 +342,13 @@
                             <span>Test Play</span>
                           </a>
                           {% if card.activity.is_draft %}
-                            {% set edit_url = url_for('teacher.find_the_part_builder', activity_id=card.activity.id) if card.engine == 'find_the_part' else url_for('teacher.claw_machine_builder', activity_id=card.activity.id) %}
+                            {% if card.engine == 'find_the_part' %}
+                              {% set edit_url = url_for('teacher.find_the_part_builder', activity_id=card.activity.id) %}
+                            {% elif card.engine == 'pipeline_circuit' %}
+                              {% set edit_url = url_for('teacher.pipeline_circuit_builder', activity_id=card.activity.id) %}
+                            {% else %}
+                              {% set edit_url = url_for('teacher.claw_machine_builder', activity_id=card.activity.id) %}
+                            {% endif %}
                             <a href="{{ edit_url }}" class="btn btn-warning text-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
                               <i class="bi bi-pencil-square"></i>
                               <span>Continue Editing</span>
@@ -324,6 +356,11 @@
                           {% else %}
                             {% if card.engine == 'find_the_part' %}
                             <a href="{{ url_for('teacher.find_the_part_builder', activity_id=card.activity.id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
+                              <i class="bi bi-pencil-square"></i>
+                              <span>Edit</span>
+                            </a>
+                            {% elif card.engine == 'pipeline_circuit' %}
+                            <a href="{{ url_for('teacher.pipeline_circuit_builder', activity_id=card.activity.id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
                               <i class="bi bi-pencil-square"></i>
                               <span>Edit</span>
                             </a>
@@ -451,6 +488,15 @@
                               <i class="bi bi-pin-angle-fill text-danger me-1"></i>{{ card.zones_count }} Callout Pin Target{{ 's' if card.zones_count != 1 else '' }}
                             </span>
                           </div>
+                          {% elif card.engine == 'pipeline_circuit' %}
+                          <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small">
+                              <i class="bi bi-diagram-3 text-success me-1"></i>{{ card.rounds_count }} Circuit Stage{{ 's' if card.rounds_count != 1 else '' }}
+                            </span>
+                            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small">
+                              <i class="bi bi-lightning-charge-fill text-warning me-1"></i>{{ card.objects_count }} Chronological Steps
+                            </span>
+                          </div>
                           {% else %}
                           <div class="d-flex flex-wrap gap-1 align-items-center">
                             <span class="text-muted small me-1 fw-bold" style="font-size: 0.75rem;">Chutes:</span>
@@ -478,6 +524,19 @@
                             <div class="fw-bold text-dark fs-5 lh-1">{{ card.activity.points or 100 }}</div>
                             <div class="text-muted small mt-1" style="font-size: 0.75rem;">Max Pts</div>
                           </div>
+                          {% elif card.engine == 'pipeline_circuit' %}
+                          <div style="min-width: 55px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.rounds_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Circuits</div>
+                          </div>
+                          <div style="min-width: 55px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.objects_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Steps</div>
+                          </div>
+                          <div style="min-width: 65px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.activity.points or 100 }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Max Pts</div>
+                          </div>
                           {% else %}
                           <div style="min-width: 50px;">
                             <div class="fw-bold text-dark fs-5 lh-1">{{ card.objects_count }}</div>
@@ -499,7 +558,13 @@
                             <i class="bi bi-play-circle-fill"></i>
                             <span>Test Play</span>
                           </a>
-                          {% set edit_url = url_for('teacher.find_the_part_builder', activity_id=card.activity.id) if card.engine == 'find_the_part' else url_for('teacher.claw_machine_builder', activity_id=card.activity.id) %}
+                          {% if card.engine == 'find_the_part' %}
+                            {% set edit_url = url_for('teacher.find_the_part_builder', activity_id=card.activity.id) %}
+                          {% elif card.engine == 'pipeline_circuit' %}
+                            {% set edit_url = url_for('teacher.pipeline_circuit_builder', activity_id=card.activity.id) %}
+                          {% else %}
+                            {% set edit_url = url_for('teacher.claw_machine_builder', activity_id=card.activity.id) %}
+                          {% endif %}
                           <a href="{{ edit_url }}" class="btn btn-warning text-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Continue Editing Draft">
                             <i class="bi bi-pencil-square"></i>
                             <span>Continue Editing</span>
@@ -967,6 +1032,139 @@
                         <div class="text-truncate">
                           <div class="fw-bold text-dark small text-truncate">Plant Anatomy (Flower, Roots, etc.)</div>
                           <div class="text-muted" style="font-size: 0.75rem;">5 parts • 1 round • Grades 1–4</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-auto pt-2">
+                  <button type="button" class="btn btn-secondary rounded-pill fw-bold py-2 w-100 d-flex align-items-center justify-content-center gap-2 disabled btn-start-preset shadow-sm" disabled>
+                    <span>Start with this preset</span>
+                    <i class="bi bi-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Choose New Bio-Circuit (Pipeline Sequence) Creation Mode -->
+  <div class="modal fade" id="newPipelineCircuitChoiceModal" tabindex="-1" aria-labelledby="newPipelineCircuitChoiceLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+        <div class="modal-header border-bottom px-4 py-3 bg-white">
+          <div class="d-flex align-items-center gap-2">
+            <div class="game-engine-modal-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+              <i class="bi bi-diagram-3-fill"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold fs-5 text-dark mb-0" id="newPipelineCircuitChoiceLabel">Create Bio-Circuit Activity</h5>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-3 p-md-4">
+          <p class="text-secondary fw-semibold mb-3 fs-6">Choose how you would like to build your chronological sequence game:</p>
+          <div class="row g-3 g-md-4 align-items-stretch">
+            <!-- Left Card: Start from Scratch -->
+            <div class="col-12 col-md-6 d-flex flex-column">
+              <div class="game-choice-card">
+                <div>
+                  <div class="game-choice-icon-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                    <i class="bi bi-plus-square-fill"></i>
+                  </div>
+                  <h3 class="h5 fw-bold text-dark mb-1">Start from Scratch</h3>
+                  <p class="game-choice-description">
+                    Begin with an empty pipeline circuit. Define each step in order, add emojis or icons, and specify clues for when students make mistakes.
+                  </p>
+                </div>
+                <div class="mt-auto pt-3">
+                  <a href="{{ url_for('teacher.pipeline_circuit_builder', mode='blank') }}" class="btn btn-success rounded-pill fw-bold py-2 w-100 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                    <span>Start Blank Circuit</span>
+                    <i class="bi bi-arrow-right"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Card: Use a Science Preset -->
+            <div class="col-12 col-md-6 d-flex flex-column">
+              <div class="game-choice-card">
+                <div>
+                  <div class="game-choice-icon-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                    <i class="bi bi-collection-play-fill"></i>
+                  </div>
+                  <h3 class="h5 fw-bold text-dark mb-1">Use a Science Preset</h3>
+                  <p class="game-choice-description">
+                    Start with pre-made, verified curriculum sequences ready to play or customize.
+                  </p>
+
+                  <div class="preset-options-list my-3">
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.pipeline_circuit_builder', preset='frog_cycle') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0">🐸</span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">Frog Life Cycle</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">Eggs ➔ Tadpole ➔ Froglet ➔ Frog</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
+
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.pipeline_circuit_builder', preset='butterfly_cycle') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0">🦋</span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">Butterfly Metamorphosis</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">Egg ➔ Caterpillar ➔ Chrysalis ➔ Butterfly</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
+
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.pipeline_circuit_builder', preset='water_cycle') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0">💧</span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">The Water Cycle</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">Evaporation ➔ Condensation ➔ Rain</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
+
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.pipeline_circuit_builder', preset='food_chain') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0">🦅</span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">Meadow Food Chain</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">Sun ➔ Grass ➔ Insect ➔ Frog ➔ Hawk</div>
+                        </div>
+                      </div>
+                      <div class="preset-check-radio ms-2 flex-shrink-0">
+                        <i class="bi bi-circle text-muted"></i>
+                      </div>
+                    </div>
+
+                    <div class="preset-option-row" role="button" tabindex="0" data-url="{{ url_for('teacher.pipeline_circuit_builder', preset='matter_water') }}">
+                      <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                        <span class="preset-icon-badge flex-shrink-0">♨️</span>
+                        <div class="text-truncate">
+                          <div class="fw-bold text-dark small text-truncate">States of Matter (Water)</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">Ice ➔ Liquid Water ➔ Boiling ➔ Steam</div>
                         </div>
                       </div>
                       <div class="preset-check-radio ms-2 flex-shrink-0">

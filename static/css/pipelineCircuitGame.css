@@ -1,0 +1,571 @@
+/* ==========================================================================
+   SciencePlay — Pipeline Circuit Game Engine (Bio-Circuit & Cycle Runner)
+   Arcade Neon Laboratory Styling
+   ========================================================================== */
+
+:root {
+  --pc-bg: #0b1120;
+  --pc-card-bg: rgba(15, 23, 42, 0.85);
+  --pc-border: rgba(56, 189, 248, 0.25);
+  --pc-glow-cyan: #06b6d4;
+  --pc-glow-emerald: #10b981;
+  --pc-glow-amber: #f59e0b;
+  --pc-glow-red: #ef4444;
+  --pc-pipe-empty: rgba(255, 255, 255, 0.08);
+  --pc-pipe-active: rgba(16, 185, 129, 0.4);
+}
+
+body.pipeline-circuit-body {
+  background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0b1120 70%, #030712 100%);
+  color: #f8fafc;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+.pc-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 1rem 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header */
+.pc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  margin-bottom: 1.5rem;
+}
+
+.pc-header-title h1 {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 800;
+  margin: 0;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.pc-header-title p {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0.15rem 0 0;
+}
+
+.pc-hud {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pc-hud-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #f8fafc;
+}
+
+.pc-hud-pill.score-pill {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fef08a;
+}
+
+.pc-hud-pill.streak-pill {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.pc-btn-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pc-btn-icon:hover {
+  background: rgba(51, 65, 85, 0.9);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Main Circuit Workspace */
+.pc-workspace {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 1.5rem;
+}
+
+/* Circuit Board */
+.pc-circuit-card {
+  background: var(--pc-card-bg);
+  backdrop-filter: blur(16px);
+  border: 2px solid var(--pc-border);
+  border-radius: 28px;
+  padding: 1.75rem 2rem;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.pc-circuit-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #06b6d4, #10b981, #f59e0b, #06b6d4);
+  background-size: 300% 100%;
+  animation: pcGradientFlow 6s linear infinite;
+}
+
+@keyframes pcGradientFlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+.pc-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.pc-round-badge {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+
+/* The Pipeline Glass Tube Track */
+.pc-pipeline-track {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2.5rem 1rem;
+  position: relative;
+  background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Connecting Glass Tube Line Behind Nodes */
+.pc-pipeline-tube {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  top: 50%;
+  height: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(30, 41, 59, 0.8) 50%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 7px;
+  transform: translateY(-50%);
+  z-index: 1;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
+.pc-pipeline-tube.energized {
+  background: linear-gradient(90deg, #06b6d4, #10b981, #06b6d4);
+  background-size: 200% 100%;
+  animation: pcPulseTube 1.5s linear infinite;
+  box-shadow: 0 0 20px #10b981, 0 0 40px rgba(6, 182, 212, 0.6);
+  border-color: #34d399;
+}
+
+@keyframes pcPulseTube {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* Node Slot (Dropzone) */
+.pc-node-slot {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 140px;
+  max-width: 180px;
+  flex: 1;
+}
+
+.pc-slot-number-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1e293b;
+  border: 2px solid #38bdf8;
+  color: #38bdf8;
+  font-weight: 800;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.6rem;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+  transition: all 0.3s ease;
+}
+
+.pc-node-slot.filled .pc-slot-number-badge {
+  background: #0284c7;
+  border-color: #38bdf8;
+  color: #fff;
+}
+
+.pc-node-slot.correct .pc-slot-number-badge {
+  background: #059669;
+  border-color: #34d399;
+  color: #fff;
+  box-shadow: 0 0 15px #10b981;
+}
+
+.pc-node-slot.error .pc-slot-number-badge {
+  background: #dc2626;
+  border-color: #f87171;
+  color: #fff;
+  box-shadow: 0 0 15px #ef4444;
+  animation: pcShake 0.4s ease-in-out;
+}
+
+/* Empty Drop Zone Box */
+.pc-dropzone {
+  width: 100%;
+  height: 150px;
+  border: 2px dashed rgba(56, 189, 248, 0.4);
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.pc-dropzone:hover,
+.pc-dropzone.drag-over {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+}
+
+.pc-dropzone-placeholder {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  pointer-events: none;
+}
+
+.pc-dropzone-placeholder i {
+  font-size: 1.4rem;
+  opacity: 0.6;
+}
+
+/* Connecting Arrow Between Slots */
+.pc-flow-arrow {
+  position: relative;
+  z-index: 2;
+  font-size: 1.3rem;
+  color: #38bdf8;
+  opacity: 0.6;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  animation: pcPulseArrow 2s infinite ease-in-out;
+}
+
+@keyframes pcPulseArrow {
+  0%, 100% { opacity: 0.4; transform: translateX(0); }
+  50% { opacity: 0.9; transform: translateX(3px); }
+}
+
+/* Power Pod Canisters */
+.pc-pod {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+  border: 2px solid rgba(56, 189, 248, 0.4);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 0.5rem;
+  cursor: grab;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.pc-pod:active {
+  cursor: grabbing;
+}
+
+.pc-pod::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 4px;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+}
+
+.pc-pod-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  margin-bottom: 0.4rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.pc-pod-img {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pc-pod-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  text-align: center;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Pod in Tray */
+.pc-tray-pod {
+  width: 130px;
+  height: 130px;
+  flex-shrink: 0;
+}
+
+.pc-tray-pod:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: #38bdf8;
+  box-shadow: 0 10px 20px -5px rgba(6, 182, 212, 0.4);
+}
+
+.pc-pod.placed {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.7);
+}
+
+/* Controls & Activation Area */
+.pc-controls-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.5rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+}
+
+.pc-hint-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #cbd5e1;
+  font-size: 0.88rem;
+  max-width: 600px;
+}
+
+.pc-hint-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+/* Master Power Switch Button */
+.pc-power-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 2rem;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1rem;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.25s ease;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.pc-power-switch:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.pc-power-switch:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.pc-power-switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #334155;
+  box-shadow: none;
+}
+
+.pc-power-switch i {
+  font-size: 1.25rem;
+}
+
+/* Pod Canister Shelf / Tray at Bottom */
+.pc-tray-card {
+  background: var(--pc-card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 1.25rem 1.75rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+.pc-tray-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.pc-tray-title h3 {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pc-pods-tray {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 0.5rem 0.25rem 0.75rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.3) transparent;
+}
+
+.pc-pods-tray::-webkit-scrollbar {
+  height: 6px;
+}
+
+.pc-pods-tray::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.3);
+  border-radius: 3px;
+}
+
+/* Animations & Effects */
+@keyframes pcShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+/* Victory Modal */
+.pc-modal-content {
+  background: #0f172a;
+  border: 2px solid #38bdf8;
+  border-radius: 28px;
+  color: #fff;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.2);
+}
+
+.pc-stars-wrap {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 2.2rem;
+  color: #fbbf24;
+  margin: 1rem 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .pc-pipeline-track {
+    flex-direction: column;
+    padding: 1.5rem 1rem;
+  }
+  .pc-pipeline-tube {
+    display: none;
+  }
+  .pc-flow-arrow {
+    transform: rotate(90deg);
+    margin: 0.5rem 0;
+  }
+  .pc-node-slot {
+    width: 100%;
+    max-width: 280px;
+  }
+  .pc-dropzone {
+    height: 120px;
+  }
+  .pc-tray-pod {
+    width: 110px;
+    height: 110px;
+  }
+}

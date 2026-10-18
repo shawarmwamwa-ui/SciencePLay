@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ config.title if config and config.title else 'Bio-Circuit: Process & Sequence Game' }} | SciencePlay</title>
+  <meta name="description" content="Science sequence and cycle runner game: Connect the stages in chronological order to complete the circuit.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pipelineCircuitGame.css') }}">
+</head>
+<body class="pipeline-circuit-body">
+  <div class="pc-page">
+
+    <!-- Header HUD -->
+    <header class="pc-header">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <a href="{{ url_for('teacher.game_studio') if is_preview else url_for('student.activities') }}" 
+           class="btn btn-outline-light btn-sm rounded-pill px-3 py-1.5 fw-bold" 
+           title="Leave Game">
+          <i class="bi bi-arrow-left me-1"></i>
+          <span>{{ 'Back to Studio' if is_preview else 'Leave Game' }}</span>
+        </a>
+        <div class="pc-header-title">
+          <h1><i class="bi bi-diagram-3-fill me-2 text-info"></i>{{ config.title if config and config.title else 'Pipeline Circuit' }}</h1>
+          <p>{{ config.instructions if config and config.instructions else 'Place the stages in chronological order to complete the circuit.' }}</p>
+        </div>
+      </div>
+
+      <div class="pc-hud">
+        {% if is_preview %}
+        <span class="badge bg-warning text-dark border border-dark px-3 py-1.5 fw-bold rounded-pill">
+          <i class="bi bi-eye-fill me-1"></i>Teacher Preview
+        </span>
+        {% endif %}
+        <div class="pc-hud-pill score-pill">
+          <i class="bi bi-star-fill text-warning"></i>
+          <span id="pc-score">0</span>
+        </div>
+        <div class="pc-hud-pill streak-pill">
+          <i class="bi bi-fire text-danger"></i>
+          <span id="pc-streak">0x</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Game Canvas -->
+    <main id="pc-game-container" role="main">
+    </main>
+
+  </div>
+
+  <audio id="game-bgm" loop preload="none">
+    <source src="{{ url_for('static', filename='audio/Piki - Happy Walking (freetouse.com).mp3') }}" type="audio/mpeg">
+  </audio>
+
+  <script>
+    window.pipelineCircuitActivityId = {{ activity_id if activity_id else 'null' }};
+    window.pipelineCircuitConfig = {{ (config|tojson) if config else 'null' }};
+    window.isTeacherPreview = {{ 'true' if is_preview else 'false' }};
+  </script>
+  <script type="module">
+    import { initPipelineCircuit } from "{{ url_for('static', filename='js/pipelineCircuitGame.js', v='20261019_1') }}";
+    import { initBgmPlayer } from "{{ url_for('static', filename='js/bgmPlayer.js') }}";
+    initPipelineCircuit();
+    initBgmPlayer('game-bgm', { volume: 0.18, storageKey: 'scienceplay_game_bgm_muted' });
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="{{ url_for('static', filename='js/online_tracker.js') }}"></script>
+</body>
+</html>

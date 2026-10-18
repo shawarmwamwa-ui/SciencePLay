@@ -28,6 +28,7 @@ def safe_student_url_for(endpoint, **values):
         'student.recycling_lesson': '/student/lesson/recycling',
         'student.claw_machine': f"/student/claw_machine?activity_id={values.get('activity_id', 1)}",
         'student.find_the_part_game': f"/student/find_the_part?activity_id={values.get('activity_id', 7)}",
+        'student.pipeline_circuit_game': f"/student/pipeline_circuit?activity_id={values.get('activity_id', 9)}",
         'student.build_a_plant_game': f"/student/build_a_plant?activity_id={values.get('activity_id', 8)}",
         'student.materials_game': f"/student/materials_game?activity_id={values.get('activity_id', 14)}",
         'student.recycling_game': f"/student/recycling_game?activity_id={values.get('activity_id', 15)}",
@@ -176,6 +177,149 @@ def load_find_the_part_activity_config(activity_id):
         merged.update(activity.config)
         if not merged.get("rounds") or not isinstance(merged.get("rounds"), list) or len(merged.get("rounds")) == 0:
             merged["rounds"] = DEFAULT_FIND_THE_PART_ROUNDS
+        return merged
+    return default_payload
+
+
+DEFAULT_PIPELINE_CIRCUIT_ROUNDS = [
+    {
+        "id": "frog_cycle",
+        "title": "Bio-Circuit: Frog Life Cycle",
+        "subtitle": "Amphibian Metamorphosis",
+        "instructions": "Place the life cycle stages in chronological order to complete the bio-circuit!",
+        "theme": "bio",
+        "steps": [
+            {
+                "id": "frog_step_1",
+                "order": 1,
+                "label": "Frog Eggs",
+                "icon": "🥚",
+                "hint": "Life begins in the pond with clusters of jelly-like eggs (frogspawn)."
+            },
+            {
+                "id": "frog_step_2",
+                "order": 2,
+                "label": "Tadpole",
+                "icon": "🐟",
+                "hint": "Hatches with gills to breathe underwater and a long tail for swimming."
+            },
+            {
+                "id": "frog_step_3",
+                "order": 3,
+                "label": "Froglet",
+                "icon": "🐸",
+                "hint": "Grows back legs, develops air-breathing lungs, and begins shrinking its tail."
+            },
+            {
+                "id": "frog_step_4",
+                "order": 4,
+                "label": "Adult Frog",
+                "icon": "🌿",
+                "hint": "A fully grown tailless amphibian that can live on land and lay eggs."
+            }
+        ]
+    },
+    {
+        "id": "butterfly_cycle",
+        "title": "Bio-Circuit: Butterfly Life Cycle",
+        "subtitle": "Complete Insect Metamorphosis",
+        "instructions": "Order the stages from egg to winged pollinator to power the circuit!",
+        "theme": "bio",
+        "steps": [
+            {
+                "id": "bf_step_1",
+                "order": 1,
+                "label": "Tiny Egg",
+                "icon": "🥚",
+                "hint": "Laid carefully under a protective green plant leaf."
+            },
+            {
+                "id": "bf_step_2",
+                "order": 2,
+                "label": "Caterpillar",
+                "icon": "🐛",
+                "hint": "The voracious larva that eats leaves non-stop to grow."
+            },
+            {
+                "id": "bf_step_3",
+                "order": 3,
+                "label": "Chrysalis",
+                "icon": "🏺",
+                "hint": "The protective pupa casing where miraculous metamorphosis happens."
+            },
+            {
+                "id": "bf_step_4",
+                "order": 4,
+                "label": "Adult Butterfly",
+                "icon": "🦋",
+                "hint": "Emerges with colorful patterned wings to fly, feed on nectar, and pollinate."
+            }
+        ]
+    },
+    {
+        "id": "water_cycle",
+        "title": "Aqua-Circuit: The Water Cycle",
+        "subtitle": "Earth's Continuous Water Journey",
+        "instructions": "Sequence how water moves between earth and the sky!",
+        "theme": "aqua",
+        "steps": [
+            {
+                "id": "wc_step_1",
+                "order": 1,
+                "label": "Evaporation",
+                "icon": "☀️",
+                "hint": "Solar heat warms bodies of water, turning liquid into invisible water vapor."
+            },
+            {
+                "id": "wc_step_2",
+                "order": 2,
+                "label": "Condensation",
+                "icon": "☁️",
+                "hint": "Rising vapor cools down high in the atmosphere, forming puffy clouds."
+            },
+            {
+                "id": "wc_step_3",
+                "order": 3,
+                "label": "Precipitation",
+                "icon": "🌧️",
+                "hint": "Heavy droplets fall back down to the ground as rain, hail, or snow."
+            },
+            {
+                "id": "wc_step_4",
+                "order": 4,
+                "label": "Collection",
+                "icon": "🌊",
+                "hint": "Water gathers in lakes, oceans, and groundwater ready to cycle again."
+            }
+        ]
+    }
+]
+
+
+def load_pipeline_circuit_activity_config(activity_id):
+    """Load teacher-configurable Pipeline / Sequence Circuit data by activity_id from DB."""
+    default_payload = {
+        "title": "Bio-Circuit: Frog Life Cycle",
+        "instructions": "Place the life cycle stages in chronological order to complete the circuit!",
+        "difficulty": "Level 1 — Easy",
+        "points": 100,
+        "rounds": DEFAULT_PIPELINE_CIRCUIT_ROUNDS
+    }
+    activity = Activity.query.get(activity_id)
+    if activity and activity.config:
+        merged = dict(default_payload)
+        merged.update(activity.config)
+        if not merged.get("rounds") and merged.get("steps"):
+            merged["rounds"] = [{
+                "id": "custom_round_1",
+                "title": merged.get("title") or "Sequence Circuit",
+                "subtitle": merged.get("subtitle") or "Chronological Sequence",
+                "instructions": merged.get("instructions") or "Place the steps in order to complete the circuit!",
+                "theme": merged.get("theme") or "bio",
+                "steps": merged.get("steps")
+            }]
+        elif not merged.get("rounds") or not isinstance(merged.get("rounds"), list) or len(merged.get("rounds")) == 0:
+            merged["rounds"] = DEFAULT_PIPELINE_CIRCUIT_ROUNDS
         return merged
     return default_payload
 
@@ -390,7 +534,7 @@ def has_student_completed_lesson(user_id, lesson_id):
     return False
 
 
-PLAYABLE_GAME_ENGINES = {'claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter'}
+PLAYABLE_GAME_ENGINES = {'claw_machine', 'find_the_part', 'pipeline_circuit', 'build_a_plant', 'metal_logic', 'recycle_sorter'}
 
 
 def check_and_award_badges(student_id):
@@ -759,7 +903,7 @@ def get_student_curriculum_terms_data(user_id):
 
     # 2. Fetch only default starter core curriculum activities (IDs 1-5 without custom config)
     # Strictly filter for real playable games — SLIDE QUESTIONS / QUICK CHECKS ARE NEVER GAMES!
-    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
+    playable_engines = ['claw_machine', 'find_the_part', 'pipeline_circuit', 'build_a_plant', 'metal_logic', 'recycle_sorter']
     all_term_activities_query = Activity.query.filter(
         Activity.id.in_([1, 2, 3, 4, 5]),
         Activity.config.is_(None),
@@ -946,6 +1090,8 @@ def get_student_curriculum_terms_data(user_id):
             act_url = safe_student_url_for('student.claw_machine', activity_id=act.id)
         elif act.engine == 'find_the_part' or 'Find the Part' in (act.type or ''):
             act_url = safe_student_url_for('student.find_the_part_game', activity_id=act.id)
+        elif act.engine == 'pipeline_circuit' or 'Pipeline' in (act.type or '') or 'Circuit' in (act.type or ''):
+            act_url = safe_student_url_for('student.pipeline_circuit_game', activity_id=act.id)
         elif act.engine == 'build_a_plant' or 'Build a Plant' in (act.type or ''):
             act_url = safe_student_url_for('student.build_a_plant_game', activity_id=act.id)
         elif act.engine == 'metal_logic' or 'Metal' in (act.type or ''):
@@ -1264,7 +1410,7 @@ def dashboard():
     lesson_due_dates = {lesson.id: assignment.due_date for assignment, lesson in lesson_assignment_rows}
 
     # Auto-sync core curriculum activities for enrolled student (Terms 1 & 2)
-    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
+    playable_engines = ['claw_machine', 'find_the_part', 'pipeline_circuit', 'build_a_plant', 'metal_logic', 'recycle_sorter']
     core_activities = Activity.query.filter(
         Activity.engine.in_(playable_engines),
         Activity.id.in_([1, 2, 3, 4, 5]),
@@ -1972,7 +2118,7 @@ def activities():
     current_user = get_current_user()
     user_id = current_user.id
     claw_machine_activity = get_or_create_claw_machine_activity()
-    playable_engines = ['claw_machine', 'find_the_part', 'build_a_plant', 'metal_logic', 'recycle_sorter']
+    playable_engines = ['claw_machine', 'find_the_part', 'pipeline_circuit', 'build_a_plant', 'metal_logic', 'recycle_sorter']
     assigned_activity_ids = [
         a.activity_id for a in ActivityAssignment.query.filter(
             ActivityAssignment.student_id == user_id,
@@ -2164,6 +2310,60 @@ def find_the_part_game():
     config = load_find_the_part_activity_config(activity.id)
     log_access(current_user, 'page_view', f'find_the_part activity_id={activity.id}')
     return render_template('student/find_the_part_game.html', activity=activity, activity_id=activity.id, config=config, attempts_today=used_today)
+
+
+def get_or_create_pipeline_circuit_activity():
+    activity = Activity.query.filter_by(
+        engine='pipeline_circuit',
+    ).first()
+    if activity:
+        return activity
+    activity = Activity(
+        type='Bio-Circuit: Frog Life Cycle',
+        engine='pipeline_circuit',
+        term='Term 1',
+        points=100,
+        config={
+            "title": "Bio-Circuit: Frog Life Cycle",
+            "instructions": "Place the life cycle stages in chronological order to complete the circuit!",
+            "difficulty": "Level 1 — Easy",
+            "rounds": DEFAULT_PIPELINE_CIRCUIT_ROUNDS
+        }
+    )
+    db.session.add(activity)
+    db.session.commit()
+    return activity
+
+
+@student_bp.route('/pipeline_circuit')
+@require_role('student')
+def pipeline_circuit_game():
+    current_user = get_current_user()
+    req_act_id = request.args.get('activity_id', type=int)
+    activity = Activity.query.get(req_act_id) if req_act_id else None
+    if not activity or activity.engine != 'pipeline_circuit':
+        activity = get_or_create_pipeline_circuit_activity()
+
+    if not is_activity_unlocked(current_user.id, activity):
+        lesson_title = activity.lesson.title if activity.lesson else 'lesson'
+        flash(f'Please complete the "{lesson_title}" lesson before playing Pipeline Circuit.', 'warning')
+        return redirect(url_for('student.lessons'))
+
+    used_today = get_attempts_today(current_user.id, activity.id)
+    if used_today >= 3:
+        flash('You have already used all 3 attempts for today on this activity. Check back tomorrow!', 'warning')
+        return redirect(url_for('student.activities'))
+
+    config = load_pipeline_circuit_activity_config(activity.id)
+    log_access(current_user, 'page_view', f'pipeline_circuit activity_id={activity.id}')
+    return render_template(
+        'student/pipeline_circuit_game.html',
+        activity=activity,
+        activity_id=activity.id,
+        config=config,
+        attempts_today=used_today,
+        is_preview=False
+    )
 
 
 # ── Lesson 2B — Plant Parts ───────────────────────────────────────────────────

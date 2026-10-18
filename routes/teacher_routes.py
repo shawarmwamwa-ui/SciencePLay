@@ -2554,10 +2554,14 @@ def api_live_lesson_tracker():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _get_active_game_cards(default_claw_id):
-    """Helper to load all active Claw Machine and Diagram Match activity cards"""
-    from routes.student_routes import load_sorting_activity_config, load_find_the_part_activity_config
+    """Helper to load all active Claw Machine, Diagram Match, and Pipeline Circuit activity cards"""
+    from routes.student_routes import (
+        load_sorting_activity_config,
+        load_find_the_part_activity_config,
+        load_pipeline_circuit_activity_config
+    )
     raw_activities = Activity.query.filter(
-        Activity.engine.in_(['claw_machine', 'find_the_part']),
+        Activity.engine.in_(['claw_machine', 'find_the_part', 'pipeline_circuit']),
         (Activity.is_archived == False) | (Activity.is_archived == None)
     ).order_by(Activity.id.asc()).all()
 
@@ -2587,6 +2591,26 @@ def _get_active_game_cards(default_claw_id):
                 'term': term,
                 'lesson_title': lesson_title
             })
+        elif act.engine == 'pipeline_circuit':
+            cfg = load_pipeline_circuit_activity_config(act.id)
+            rounds = cfg.get('rounds', [])
+            total_steps = sum(len(r.get('steps', [])) for r in rounds)
+            activity_cards.append({
+                'activity': act,
+                'engine': 'pipeline_circuit',
+                'engine_name': 'Bio-Circuit: Process & Sequence',
+                'config': cfg,
+                'title': cfg.get('title') or act.type or 'Sequence Circuit',
+                'instructions': cfg.get('instructions') or '',
+                'rounds_count': len(rounds),
+                'zones_count': total_steps,
+                'objects_count': total_steps,
+                'thumbnail': '/static/images/pipeline_preview.webp',
+                'is_default': False,
+                'is_supplementary': is_supp,
+                'term': term,
+                'lesson_title': lesson_title
+            })
         else:
             cfg = load_sorting_activity_config(act.id)
             activity_cards.append({
@@ -2609,9 +2633,13 @@ def _get_active_game_cards(default_claw_id):
 
 def _get_archived_game_cards():
     """Helper to load all archived game activity cards"""
-    from routes.student_routes import load_sorting_activity_config, load_find_the_part_activity_config
+    from routes.student_routes import (
+        load_sorting_activity_config,
+        load_find_the_part_activity_config,
+        load_pipeline_circuit_activity_config
+    )
     raw_activities = Activity.query.filter(
-        Activity.engine.in_(['claw_machine', 'find_the_part']),
+        Activity.engine.in_(['claw_machine', 'find_the_part', 'pipeline_circuit']),
         Activity.is_archived == True
     ).order_by(Activity.deleted_at.desc(), Activity.id.desc()).all()
 
@@ -2634,6 +2662,24 @@ def _get_archived_game_cards():
                 'zones_count': zones_count,
                 'objects_count': zones_count,
                 'thumbnail': thumb,
+                'deleted_at': act.deleted_at.strftime('%b %d, %Y %I:%M %p') if act.deleted_at else 'Archived',
+                'lesson_title': lesson_title
+            })
+        elif act.engine == 'pipeline_circuit':
+            cfg = load_pipeline_circuit_activity_config(act.id)
+            rounds = cfg.get('rounds', [])
+            total_steps = sum(len(r.get('steps', [])) for r in rounds)
+            archived_cards.append({
+                'activity': act,
+                'engine': 'pipeline_circuit',
+                'engine_name': 'Bio-Circuit: Process & Sequence',
+                'config': cfg,
+                'title': cfg.get('title') or act.type or 'Sequence Circuit',
+                'instructions': cfg.get('instructions') or '',
+                'rounds_count': len(rounds),
+                'zones_count': total_steps,
+                'objects_count': total_steps,
+                'thumbnail': '/static/images/pipeline_preview.webp',
                 'deleted_at': act.deleted_at.strftime('%b %d, %Y %I:%M %p') if act.deleted_at else 'Archived',
                 'lesson_title': lesson_title
             })
@@ -2755,14 +2801,14 @@ def _get_game_engine_templates():
             'is_available': True
         },
         {
-            'engine': 'build_a_plant',
-            'name': 'Assembly Builder',
-            'category': 'Structure & Functions',
-            'icon': 'bi-puzzle-fill',
+            'engine': 'pipeline_circuit',
+            'name': 'Bio-Circuit (Process & Sequence)',
+            'category': 'Cycles, Sequences & Causality',
+            'icon': 'bi-diagram-3-fill',
             'accent': '#10b981',
-            'description': 'Drag-and-assemble building block game to construct plants, life cycles, or systems in order.',
-            'status': 'Engine Template Coming Soon',
-            'is_available': False
+            'description': 'Chronological sequence pipeline where students arrange science stages (life cycles, water cycle, food chains) in order and test the energy flow.',
+            'status': 'Ready to Customize',
+            'is_available': True
         }
     ]
 
@@ -3442,6 +3488,165 @@ def save_find_the_part():
     return redirect(url_for('teacher.game_studio'))
 
 
+@teacher_bp.route('/content/pipeline_circuit/builder')
+@teacher_bp.route('/content/pipeline_circuit/builder/<int:activity_id>')
+@require_role('teacher')
+def pipeline_circuit_builder(activity_id=None):
+    """Visual workspace for customizing the Bio-Circuit (Pipeline Sequence) Template"""
+    current_user = get_current_user()
+    from routes.student_routes import load_pipeline_circuit_activity_config
+
+    activity = None
+    if activity_id:
+        activity = Activity.query.get_or_404(activity_id)
+        config = load_pipeline_circuit_activity_config(activity.id)
+    else:
+        preset_key = request.args.get('preset', 'frog_cycle')
+        presets = {
+            'frog_cycle': {
+                "title": "Bio-Circuit: Frog Life Cycle",
+                "instructions": "Place the life cycle stages in chronological order to complete the circuit!",
+                "difficulty": "Level 1 — Easy",
+                "term": "Term 1",
+                "steps": [
+                    { "id": "step_1", "order": 1, "label": "Frog Eggs", "icon": "🥚", "hint": "Clusters of jelly-like eggs laid in the pond." },
+                    { "id": "step_2", "order": 2, "label": "Tadpole", "icon": "🐟", "hint": "Breathes with gills and swims using a tail." },
+                    { "id": "step_3", "order": 3, "label": "Froglet", "icon": "🐸", "hint": "Develops lungs and back legs while tail shrinks." },
+                    { "id": "step_4", "order": 4, "label": "Adult Green Frog", "icon": "🌿", "hint": "Full-grown tailless amphibian with strong jumping legs." }
+                ]
+            },
+            'butterfly_cycle': {
+                "title": "Bio-Circuit: Butterfly Life Cycle",
+                "instructions": "Connect the complete metamorphosis stages from egg to adult butterfly!",
+                "difficulty": "Level 1 — Easy",
+                "term": "Term 1",
+                "steps": [
+                    { "id": "step_1", "order": 1, "label": "Butterfly Egg", "icon": "🥚", "hint": "Tiny round egg laid under a green leaf." },
+                    { "id": "step_2", "order": 2, "label": "Caterpillar (Larva)", "icon": "🐛", "hint": "Feeds hungrily on leaves and grows rapidly." },
+                    { "id": "step_3", "order": 3, "label": "Chrysalis (Pupa)", "icon": "🪵", "hint": "Protective shell where radical transformation occurs." },
+                    { "id": "step_4", "order": 4, "label": "Adult Monarch", "icon": "🦋", "hint": "Emerges with colorful wings to pollinate flowers." }
+                ]
+            },
+            'water_cycle': {
+                "title": "Hydro-Circuit: The Water Cycle",
+                "instructions": "Follow the continuous movement of water on, above, and below Earth!",
+                "difficulty": "Level 2 — Medium",
+                "term": "Term 2",
+                "steps": [
+                    { "id": "step_1", "order": 1, "label": "Evaporation", "icon": "☀️", "hint": "Sun warms surface water turning liquid into invisible vapor." },
+                    { "id": "step_2", "order": 2, "label": "Condensation", "icon": "☁️", "hint": "Rising water vapor cools to form fluffy clouds." },
+                    { "id": "step_3", "order": 3, "label": "Precipitation", "icon": "🌧️", "hint": "Water falls back to Earth as rain, snow, or hail." },
+                    { "id": "step_4", "order": 4, "label": "Collection & Runoff", "icon": "🌊", "hint": "Water gathers in lakes, rivers, and deep underground aquifers." }
+                ]
+            },
+            'food_chain': {
+                "title": "Eco-Circuit: Meadow Food Chain",
+                "instructions": "Trace the flow of energy from primary producer up to apex predator!",
+                "difficulty": "Level 2 — Medium",
+                "term": "Term 2",
+                "steps": [
+                    { "id": "step_1", "order": 1, "label": "Solar Energy", "icon": "☀️", "hint": "Sunlight powers all life through photosynthesis." },
+                    { "id": "step_2", "order": 2, "label": "Green Grass", "icon": "🌱", "hint": "Primary producer converting solar light into chemical energy." },
+                    { "id": "step_3", "order": 3, "label": "Grasshopper", "icon": "🦗", "hint": "Herbivore consumer eating plant foliage." },
+                    { "id": "step_4", "order": 4, "label": "Spotted Frog", "icon": "🐸", "hint": "Secondary carnivore hunting insects." },
+                    { "id": "step_5", "order": 5, "label": "Red-Tailed Hawk", "icon": "🦅", "hint": "Apex predator at top of the meadow food chain." }
+                ]
+            },
+            'matter_water': {
+                "title": "Phase-Circuit: States of Matter",
+                "instructions": "Order thermal phase changes as thermal energy increases!",
+                "difficulty": "Level 2 — Medium",
+                "term": "Term 1",
+                "steps": [
+                    { "id": "step_1", "order": 1, "label": "Solid Ice", "icon": "🧊", "hint": "Fixed shape and volume with rigid molecular bonds." },
+                    { "id": "step_2", "order": 2, "label": "Melting Transition", "icon": "💧", "hint": "Absorption of heat loosening molecular lattice." },
+                    { "id": "step_3", "order": 3, "label": "Liquid Water", "icon": "🌊", "hint": "Takes the shape of its container with loose fluid bonds." },
+                    { "id": "step_4", "order": 4, "label": "Boiling / Vaporization", "icon": "♨️", "hint": "Reaching boiling point turning liquid into gas." },
+                    { "id": "step_5", "order": 5, "label": "Invisible Steam", "icon": "💨", "hint": "High-energy free moving gas molecules." }
+                ]
+            }
+        }
+        config = presets.get(preset_key, presets['frog_cycle'])
+
+    return render_template('teacher/teacher_pipeline_builder.html', activity=activity, config=config)
+
+
+@teacher_bp.route('/content/pipeline_circuit/save', methods=['POST'])
+@require_role('teacher')
+def save_pipeline_circuit():
+    """Save or update custom Pipeline Circuit activity configuration"""
+    current_user = get_current_user()
+    activity_id = request.form.get('activity_id', type=int)
+    title = request.form.get('title', 'Bio-Circuit').strip() or 'Bio-Circuit'
+    instructions = request.form.get('instructions', 'Place the stages in chronological order.').strip()
+    difficulty = request.form.get('difficulty', 'Level 1 — Easy').strip()
+    term = request.form.get('term', 'Term 1').strip() or 'Term 1'
+    is_supplementary = (str(request.form.get('is_supplementary', '')).strip().lower() in ['1', 'true', 'on'])
+    is_draft = (str(request.form.get('is_draft', '')).strip().lower() in ['1', 'true', 'on'])
+
+    steps_json = request.form.get('steps_data', '[]')
+    try:
+        steps = json.loads(steps_json)
+        if not isinstance(steps, list):
+            steps = []
+        if not is_draft and len(steps) < 3:
+            raise ValueError("At least 3 sequence stages are required.")
+    except Exception as e:
+        flash(f"Invalid sequence configuration: {e}", "danger")
+        return redirect(url_for('teacher.game_studio'))
+
+    config_payload = {
+        "title": title,
+        "instructions": instructions,
+        "difficulty": difficulty,
+        "term": term,
+        "is_supplementary": is_supplementary,
+        "rounds": [
+            {
+                "id": "round_1",
+                "title": title,
+                "subtitle": "Chronological Sequence",
+                "instructions": instructions,
+                "steps": steps
+            }
+        ]
+    }
+
+    if activity_id:
+        activity = Activity.query.get_or_404(activity_id)
+        activity.type = title
+        activity.engine = 'pipeline_circuit'
+        activity.term = term
+        activity.is_supplementary = is_supplementary
+        activity.config = config_payload
+        activity.is_draft = is_draft
+        role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
+        if is_draft:
+            flash(f"Draft '{title}' updated successfully. You can continue editing anytime.", "info")
+        else:
+            flash(f"{role_label} Pipeline Circuit '{title}' updated and published successfully!", "success")
+    else:
+        activity = Activity(
+            type=title,
+            engine='pipeline_circuit',
+            points=100,
+            term=term,
+            is_supplementary=is_supplementary,
+            config=config_payload,
+            is_draft=is_draft
+        )
+        db.session.add(activity)
+        role_label = "Supplementary Practice" if is_supplementary else "Core Curriculum"
+        if is_draft:
+            flash(f"New Pipeline Circuit game '{title}' saved as draft. You can continue editing anytime.", "info")
+        else:
+            flash(f"New {role_label} Pipeline Circuit game '{title}' created successfully!", "success")
+
+    db.session.commit()
+    log_access(current_user, 'save_custom_activity', f'activity_id={activity.id} title={title} is_draft={is_draft}')
+    return redirect(url_for('teacher.game_studio', tab='drafts' if is_draft else 'active'))
+
+
 @teacher_bp.route('/content/preview/<int:activity_id>')
 @require_role('teacher')
 def preview_activity(activity_id):
@@ -3453,6 +3658,10 @@ def preview_activity(activity_id):
         from routes.student_routes import load_find_the_part_activity_config
         config = load_find_the_part_activity_config(activity.id)
         return render_template('student/find_the_part_game.html', activity=activity, activity_id=activity.id, config=config, attempts_today=0, is_preview=True)
+    elif activity.engine == 'pipeline_circuit':
+        from routes.student_routes import load_pipeline_circuit_activity_config
+        config = load_pipeline_circuit_activity_config(activity.id)
+        return render_template('student/pipeline_circuit_game.html', activity=activity, activity_id=activity.id, config=config, attempts_today=0, is_preview=True)
     flash(f"Live preview is not supported for engine {activity.engine}.", "info")
     return redirect(url_for('teacher.game_studio'))
 
