@@ -592,9 +592,10 @@ def archive():
     )
 
 
+@admin_bp.route('/archive_logs', methods=['POST'])
 @admin_bp.route('/clear_logs', methods=['POST'])
 @require_role('admin')
-def clear_logs():
+def archive_logs():
     current_user = get_current_user()
     role_target = request.form.get('role_target', 'all').lower()
 
@@ -625,10 +626,14 @@ def clear_logs():
 
     return redirect(request.referrer or url_for('admin.compliance'))
 
+# Backwards compatibility alias for clear_logs endpoint
+clear_logs = archive_logs
 
+
+@admin_bp.route('/archive_user_logs/<int:target_user_id>', methods=['POST'])
 @admin_bp.route('/clear_user_logs/<int:target_user_id>', methods=['POST'])
 @require_role('admin')
-def clear_user_logs(target_user_id):
+def archive_user_logs(target_user_id):
     current_user = get_current_user()
     target_user = User.query.get(target_user_id)
     if not target_user:
@@ -648,6 +653,9 @@ def clear_user_logs(target_user_id):
         flash(f"Failed to archive user logs: {str(e)}", "danger")
 
     return redirect(request.referrer or url_for('admin.compliance'))
+
+# Backwards compatibility alias for clear_user_logs endpoint
+clear_user_logs = archive_user_logs
 
 
 @admin_bp.route('/restore_logs', methods=['POST'])

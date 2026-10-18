@@ -91,7 +91,7 @@
                 <p class="page-subtitle text-muted mb-0">Engine Template: <strong>Arcade Dual-Chute Claw Machine</strong> (Left Chute vs Right Chute).</p>
               </div>
 
-              <div class="d-flex align-items-center gap-2">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
                 <a href="{{ url_for('teacher.game_studio') }}" class="btn btn-outline-secondary rounded-pill px-3 fw-bold">
                   <i class="bi bi-arrow-left me-1"></i>Cancel
                 </a>
@@ -100,6 +100,12 @@
                     <i class="bi bi-play-circle-fill me-1"></i>Test Play
                   </a>
                 {% endif %}
+                <button type="button" class="btn btn-outline-primary rounded-pill px-3 fw-bold" id="btn-save-draft-top">
+                  <i class="bi bi-bookmark-check me-1"></i>Save as Draft
+                </button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btn-save-activity-top">
+                  <i class="bi bi-cloud-arrow-up-fill me-1"></i>Save &amp; Publish
+                </button>
               </div>
             </div>
 
@@ -415,6 +421,51 @@
               </div>
             </div>
           </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Modal for Picking Chute Emoji / Icon -->
+  <div class="modal fade" id="chuteEmojiModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-bottom pb-3">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-4">🎨</span>
+            <h5 class="modal-title fw-bold text-dark mb-0" id="chuteEmojiModalTitle">Choose Chute Icon / Emoji</h5>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <!-- Top Row: Custom Input & Active Preview -->
+          <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-4 border mb-3 flex-wrap">
+            <div class="d-flex align-items-center justify-content-center bg-white rounded-3 border shadow-sm fs-1" style="width: 58px; height: 58px; line-height: 1;" id="modalCurrentEmojiDisplay">
+              📦
+            </div>
+            <div class="flex-grow-1" style="min-width: 220px;">
+              <label class="form-label text-muted small fw-bold mb-1">Type or Paste Any Custom Emoji</label>
+              <div class="input-group">
+                <input type="text" id="modalCustomEmojiInput" class="form-control fw-bold fs-5" maxlength="6" placeholder="Paste or type emoji..." oninput="handleModalCustomEmojiInput(this.value)">
+                <button class="btn btn-primary fw-bold px-3" type="button" onclick="applyModalCustomEmoji()">Use This Emoji</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search Filter -->
+          <div class="input-group mb-3">
+            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+            <input type="text" id="chuteEmojiSearchInput" class="form-control border-start-0 ps-0" placeholder="Search emojis (e.g. water, plant, star, rock, metal, trash, animal)..." oninput="filterChuteModalEmojis(this.value)">
+            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="document.getElementById('chuteEmojiSearchInput').value=''; filterChuteModalEmojis('');">Clear</button>
+          </div>
+
+          <!-- Categorized Emoji Grid -->
+          <div id="chuteEmojiCategoriesContainer" style="max-height: 380px; overflow-y: auto; padding-right: 6px;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+        <div class="modal-footer border-top py-2 px-4 d-flex justify-content-between">
+          <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Click any icon to assign it to this chute.</span>
+          <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3 fw-bold" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>

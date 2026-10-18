@@ -257,22 +257,16 @@
     el.addEventListener('pointerdown', onPointerDown);
   }
 
-  // ── CLICK ON DIAGRAM TO ADD PIN ──────────────────────────────────────────────
-  diagramImage.addEventListener('click', (e) => {
-    const rect = diagramImage.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-
-    const clickX = clamp(((e.clientX - rect.left) / rect.width) * 100, 4, 96);
-    const clickY = clamp(((e.clientY - rect.top) / rect.height) * 100, 4, 96);
-
-    addNewPinAt(clickX, clickY);
+  // ── CLICK ON DIAGRAM DESELECTS ACTIVE PIN (NO UNINTENDED PIN ADDED) ───────────
+  diagramImage.addEventListener('click', () => {
+    setActiveZone(null);
   });
 
   function addNewPinAt(pinX, pinY) {
     const round = getCurrentRound();
     const nextNum = (round.zones.length + 1);
     const newId = `part_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    const slotX = clamp(pinX > 50 ? pinX + 16 : pinX - 16, 8, 92);
+    const slotX = clamp(pinX > 50 ? pinX + 18 : pinX - 18, 8, 92);
     const slotY = clamp(pinY, 8, 92);
     const color = PRESET_COLORS[(nextNum - 1) % PRESET_COLORS.length];
 
@@ -301,9 +295,17 @@
     }, 60);
   }
 
-  btnAddPinManual.addEventListener('click', () => {
-    addNewPinAt(50, 50);
-  });
+  function handleAddPinClick() {
+    const round = getCurrentRound();
+    const count = round.zones.length;
+    // Stagger initial positions nicely across the canvas so pins do not stack on top of each other
+    const posX = 30 + ((count * 12) % 45);
+    const posY = 30 + ((count * 14) % 45);
+    addNewPinAt(posX, posY);
+  }
+
+  btnAddPinManual?.addEventListener('click', handleAddPinClick);
+  document.getElementById('btnAddPinManualTop')?.addEventListener('click', handleAddPinClick);
 
   function setActiveZone(zoneId) {
     activeZoneId = zoneId;
@@ -620,20 +622,35 @@
   });
 
   // ── SAVE AS DRAFT ────────────────────────────────────────────────────────────
+  function triggerSaveDraft() {
+    const isDraftInput = document.getElementById('isDraftInput');
+    if (isDraftInput) isDraftInput.value = '1';
+
+    const titleInput = document.getElementById('activityTitleInput');
+    if (!titleInput.value.trim()) {
+      titleInput.value = 'Untitled Diagram Match Draft';
+    }
+
+    // Serialize rounds without blocking on incomplete pins
+    roundsDataInput.value = JSON.stringify(rounds);
+    diagramBuilderForm.submit();
+  }
+
   const btnSaveDraft = document.getElementById('btnSaveDraft');
   if (btnSaveDraft) {
-    btnSaveDraft.addEventListener('click', () => {
+    btnSaveDraft.addEventListener('click', triggerSaveDraft);
+  }
+  const btnSaveDraftTop = document.getElementById('btnSaveDraftTop');
+  if (btnSaveDraftTop) {
+    btnSaveDraftTop.addEventListener('click', triggerSaveDraft);
+  }
+
+  const btnSaveActivityTop = document.getElementById('btnSaveActivityTop');
+  if (btnSaveActivityTop) {
+    btnSaveActivityTop.addEventListener('click', () => {
       const isDraftInput = document.getElementById('isDraftInput');
-      if (isDraftInput) isDraftInput.value = '1';
-
-      const titleInput = document.getElementById('activityTitleInput');
-      if (!titleInput.value.trim()) {
-        titleInput.value = 'Untitled Diagram Match Draft';
-      }
-
-      // Serialize rounds without blocking on incomplete pins
-      roundsDataInput.value = JSON.stringify(rounds);
-      diagramBuilderForm.submit();
+      if (isDraftInput) isDraftInput.value = '0';
+      diagramBuilderForm.requestSubmit ? diagramBuilderForm.requestSubmit() : diagramBuilderForm.submit();
     });
   }
 

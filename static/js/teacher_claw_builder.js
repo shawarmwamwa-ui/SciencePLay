@@ -223,10 +223,13 @@ const TOPIC_PRESETS = {
 
             <div class="chute-card-layout">
               <div>
-                <div class="mini-arcade-bin" id="mini_bin_${idx}" style="background: linear-gradient(180deg, ${currentColor} 0%, rgba(15, 23, 42, 0.45) 140%), ${currentColor};">
+                <div class="mini-arcade-bin position-relative" id="mini_bin_${idx}" style="background: linear-gradient(180deg, ${currentColor} 0%, rgba(15, 23, 42, 0.45) 140%), ${currentColor}; cursor: pointer;" onclick="openChuteEmojiPicker(${idx})" title="Click to choose icon / emoji for this chute">
                   <div class="mini-bin-icon" id="mini_icon_${idx}">${chute.icon || '📦'}</div>
                   <div class="mini-bin-title" id="mini_label_${idx}">${chute.label || `Chute ${idx + 1}`}</div>
                   <div class="mini-bin-catch"></div>
+                  <span class="position-absolute top-0 end-0 m-1 badge bg-dark bg-opacity-50 text-white rounded-pill px-1.5 py-0.5 mini-bin-edit-badge" style="font-size: 0.6rem; opacity: 0.7; transition: opacity 0.2s;" title="Edit icon">
+                    <i class="bi bi-pencil-fill"></i>
+                  </span>
                 </div>
                 <div class="text-center text-muted mt-1" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em;">IN-GAME LOOK</div>
               </div>
@@ -238,13 +241,23 @@ const TOPIC_PRESETS = {
                 </div>
 
                 <div class="row g-2 align-items-end">
-                  <div class="col-4">
-                    <label class="form-label text-muted small fw-bold mb-1">Emoji</label>
-                    <input type="text" class="form-control form-control-sm text-center fs-5 rounded-3 p-1" value="${chute.icon || '📦'}" oninput="updateChuteField(${idx}, 'icon', this.value)" maxlength="4" placeholder="📦">
+                  <div class="col-5">
+                    <label class="form-label text-muted small fw-bold mb-1 d-flex justify-content-between align-items-center">
+                      <span>Emoji / Icon</span>
+                      <button type="button" class="btn btn-link p-0 text-primary text-decoration-none fw-bold" style="font-size: 0.7rem;" onclick="openChuteEmojiPicker(${idx})">
+                        <i class="bi bi-pencil-square me-1"></i>Pick
+                      </button>
+                    </label>
+                    <div class="input-group input-group-sm chute-emoji-input-group shadow-xs">
+                      <input type="text" class="form-control form-control-sm text-center fs-5 rounded-start-3 p-1 fw-bold bg-white" style="border: 1.5px solid #cbd5e1; border-right: none;" id="chute_icon_input_${idx}" value="${chute.icon || '📦'}" oninput="updateChuteField(${idx}, 'icon', this.value)" maxlength="6" placeholder="📦" title="Type or paste emoji directly">
+                      <button class="btn btn-outline-primary rounded-end-3 px-2 d-flex align-items-center justify-content-center" style="border: 1.5px solid #cbd5e1; border-left: 1px solid #e2e8f0;" type="button" onclick="openChuteEmojiPicker(${idx})" title="Choose from Emoji Library">
+                        <i class="bi bi-emoji-smile-fill"></i>
+                      </button>
+                    </div>
                   </div>
-                  <div class="col-8">
+                  <div class="col-7">
                     <label class="form-label text-muted small fw-bold mb-1">Glow Color</label>
-                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                    <div class="d-flex align-items-center gap-1 flex-wrap pt-0.5">
                       <input type="color" class="color-picker-btn" id="chute_picker_${idx}" value="${currentColor}" oninput="updateChuteField(${idx}, 'color', this.value)" title="Choose custom color">
                       <button type="button" class="color-swatch-circle" style="background-color: #4ade80;" onclick="updateChuteField(${idx}, 'color', '#4ade80')" title="Green"></button>
                       <button type="button" class="color-swatch-circle" style="background-color: #60a5fa;" onclick="updateChuteField(${idx}, 'color', '#60a5fa')" title="Blue"></button>
@@ -275,6 +288,8 @@ const TOPIC_PRESETS = {
       if (field === 'icon') {
         const ico = document.getElementById(`mini_icon_${idx}`);
         if (ico) ico.textContent = value || '📦';
+        const inp = document.getElementById(`chute_icon_input_${idx}`);
+        if (inp && inp.value !== value) inp.value = value;
       }
       if (field === 'color') {
         const bin = document.getElementById(`mini_bin_${idx}`);
@@ -285,7 +300,233 @@ const TOPIC_PRESETS = {
         if (picker && picker.value !== value) picker.value = value;
       }
       renderObjects();
+      updateLiveCanvas();
     }
+
+    // CHUTE EMOJI PICKER MODAL CONTROLLER
+    let activeChuteEmojiIndex = null;
+
+    const CHUTE_EMOJI_CATEGORIES = [
+      {
+        name: "States of Matter & Science",
+        icon: "bi-droplet-half",
+        emojis: [
+          { emoji: "💧", label: "Water / Liquid" },
+          { emoji: "🧊", label: "Ice / Solid" },
+          { emoji: "💨", label: "Gas / Air / Vapor" },
+          { emoji: "🔥", label: "Fire / Heat" },
+          { emoji: "🪨", label: "Rock / Solid Mineral" },
+          { emoji: "⚡", label: "Electricity / Energy" },
+          { emoji: "🧪", label: "Chemical / Flask" },
+          { emoji: "🔬", label: "Microscope / Lab" },
+          { emoji: "🧲", label: "Magnet / Magnetic Force" },
+          { emoji: "💡", label: "Light / Bulb" },
+          { emoji: "☀️", label: "Sun / Solar Heat" },
+          { emoji: "🌪️", label: "Tornado / Wind" },
+          { emoji: "🌋", label: "Volcano / Earth Science" },
+          { emoji: "🌊", label: "Wave / Water Current" },
+          { emoji: "❄️", label: "Snowflake / Freezing" },
+          { emoji: "🪐", label: "Planet / Astronomy" },
+          { emoji: "🌈", label: "Rainbow / Light Optics" },
+          { emoji: "🌡️", label: "Thermometer / Temperature" }
+        ]
+      },
+      {
+        name: "Living & Biology",
+        icon: "bi-flower1",
+        emojis: [
+          { emoji: "🌱", label: "Seedling / Plant Growth" },
+          { emoji: "🌿", label: "Herb / Leaves" },
+          { emoji: "🌳", label: "Tree / Flora" },
+          { emoji: "🌺", label: "Flower / Bloom" },
+          { emoji: "🍄", label: "Fungi / Mushroom" },
+          { emoji: "🐶", label: "Dog / Animal" },
+          { emoji: "🐱", label: "Cat / Mammal" },
+          { emoji: "🐟", label: "Fish / Aquatic Life" },
+          { emoji: "🐦", label: "Bird / Avian" },
+          { emoji: "🦋", label: "Butterfly / Insect" },
+          { emoji: "🐢", label: "Turtle / Reptile" },
+          { emoji: "🐸", label: "Frog / Amphibian" },
+          { emoji: "🦠", label: "Microbe / Bacteria" },
+          { emoji: "🦴", label: "Bone / Skeletal" },
+          { emoji: "🫀", label: "Heart / Organ" },
+          { emoji: "🧠", label: "Brain / Nervous System" },
+          { emoji: "🍎", label: "Apple / Organic Fruit" },
+          { emoji: "🥕", label: "Carrot / Plant Food" }
+        ]
+      },
+      {
+        name: "Materials & Objects",
+        icon: "bi-box-seam",
+        emojis: [
+          { emoji: "📦", label: "Box / Parcel" },
+          { emoji: "🪵", label: "Wood / Timber" },
+          { emoji: "🧱", label: "Brick / Inanimate Solid" },
+          { emoji: "💎", label: "Gem / Crystal" },
+          { emoji: "⚙️", label: "Gear / Mechanical Metal" },
+          { emoji: "🗑️", label: "Trash / Waste" },
+          { emoji: "♻️", label: "Recycling / Eco" },
+          { emoji: "🧴", label: "Plastic Bottle" },
+          { emoji: "📄", label: "Paper / Non-living" },
+          { emoji: "🔋", label: "Battery / Electric Power" },
+          { emoji: "🚗", label: "Car / Vehicle" },
+          { emoji: "🚀", label: "Rocket / Aerospace" },
+          { emoji: "📚", label: "Book / Learning" },
+          { emoji: "✏️", label: "Pencil / School Tool" },
+          { emoji: "✂️", label: "Scissors / Metal Tool" },
+          { emoji: "🔔", label: "Bell / Sound Energy" },
+          { emoji: "🔧", label: "Wrench / Hardware" },
+          { emoji: "🪞", label: "Mirror / Reflection" }
+        ]
+      },
+      {
+        name: "Colors & Symbols",
+        icon: "bi-palette",
+        emojis: [
+          { emoji: "⭐", label: "Star" },
+          { emoji: "🌟", label: "Glowing Star" },
+          { emoji: "🎯", label: "Target / Goal" },
+          { emoji: "🏆", label: "Trophy / Winner" },
+          { emoji: "🟢", label: "Green Circle" },
+          { emoji: "🔴", label: "Red Circle" },
+          { emoji: "🔵", label: "Blue Circle" },
+          { emoji: "🟡", label: "Yellow Circle" },
+          { emoji: "🟣", label: "Purple Circle" },
+          { emoji: "🟠", label: "Orange Circle" },
+          { emoji: "⚪", label: "White Circle" },
+          { emoji: "⬛", label: "Black Square" },
+          { emoji: "❓", label: "Question / Unknown" },
+          { emoji: "❗", label: "Exclamation / Important" },
+          { emoji: "✅", label: "Check / Correct" },
+          { emoji: "❌", label: "Cross / False" },
+          { emoji: "🏷️", label: "Tag / Category" },
+          { emoji: "🛡️", label: "Shield / Safe" }
+        ]
+      }
+    ];
+
+    function openChuteEmojiPicker(idx) {
+      if (idx < 0 || idx >= chutes.length) return;
+      activeChuteEmojiIndex = idx;
+      const chute = chutes[idx];
+
+      const modalTitle = document.getElementById('chuteEmojiModalTitle');
+      if (modalTitle) {
+        modalTitle.textContent = `Choose Icon for Chute ${idx + 1} (${chute.label || 'Unnamed'})`;
+      }
+
+      const display = document.getElementById('modalCurrentEmojiDisplay');
+      if (display) {
+        display.textContent = chute.icon || '📦';
+      }
+
+      const customInput = document.getElementById('modalCustomEmojiInput');
+      if (customInput) {
+        customInput.value = chute.icon || '';
+      }
+
+      const searchInput = document.getElementById('chuteEmojiSearchInput');
+      if (searchInput) {
+        searchInput.value = '';
+      }
+
+      renderChuteEmojiPickerGrid('');
+
+      const modalEl = document.getElementById('chuteEmojiModal');
+      if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+      }
+    }
+
+    function renderChuteEmojiPickerGrid(filterText = '') {
+      const container = document.getElementById('chuteEmojiCategoriesContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const query = (filterText || '').trim().toLowerCase();
+      let matchCount = 0;
+
+      CHUTE_EMOJI_CATEGORIES.forEach(cat => {
+        const filteredEmojis = cat.emojis.filter(item => {
+          if (!query) return true;
+          return item.label.toLowerCase().includes(query) ||
+                 item.emoji.includes(query) ||
+                 cat.name.toLowerCase().includes(query);
+        });
+
+        if (filteredEmojis.length === 0) return;
+        matchCount += filteredEmojis.length;
+
+        const catSection = document.createElement('div');
+        catSection.className = 'mb-3';
+
+        catSection.innerHTML = `
+          <div class="chute-emoji-category-header">
+            <i class="bi ${cat.icon} text-primary"></i>
+            <span>${cat.name}</span>
+            <span class="badge bg-light text-muted border rounded-pill small ms-1" style="font-size: 0.65rem;">${filteredEmojis.length}</span>
+          </div>
+          <div class="chute-emoji-grid">
+            ${filteredEmojis.map(item => `
+              <button type="button" class="chute-emoji-tile" title="${item.label}" onclick="selectChuteEmoji('${item.emoji}')">
+                ${item.emoji}
+              </button>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(catSection);
+      });
+
+      if (matchCount === 0) {
+        container.innerHTML = `
+          <div class="text-center py-4 text-muted">
+            <i class="bi bi-emoji-neutral fs-2 d-block mb-1 text-secondary opacity-50"></i>
+            <div class="fw-bold">No matching preset emojis found</div>
+            <div class="small">You can paste any custom emoji into the box above and click "Use This Emoji"!</div>
+          </div>
+        `;
+      }
+    }
+
+    function selectChuteEmoji(emoji) {
+      if (activeChuteEmojiIndex !== null && chutes[activeChuteEmojiIndex]) {
+        updateChuteField(activeChuteEmojiIndex, 'icon', emoji);
+        showBuilderToast(`Updated Chute ${activeChuteEmojiIndex + 1} icon to ${emoji}`, 'success');
+      }
+      const modalEl = document.getElementById('chuteEmojiModal');
+      if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+        bootstrap.Modal.getInstance(modalEl)?.hide();
+      }
+    }
+
+    function filterChuteModalEmojis(query) {
+      renderChuteEmojiPickerGrid(query);
+    }
+
+    function handleModalCustomEmojiInput(val) {
+      const display = document.getElementById('modalCurrentEmojiDisplay');
+      if (display) {
+        display.textContent = val.trim() || '📦';
+      }
+    }
+
+    function applyModalCustomEmoji() {
+      const input = document.getElementById('modalCustomEmojiInput');
+      const val = input ? input.value.trim() : '';
+      if (!val) {
+        showBuilderToast("Please type or paste an emoji first.", "warning");
+        return;
+      }
+      selectChuteEmoji(val);
+    }
+
+    window.openChuteEmojiPicker = openChuteEmojiPicker;
+    window.selectChuteEmoji = selectChuteEmoji;
+    window.filterChuteModalEmojis = filterChuteModalEmojis;
+    window.handleModalCustomEmojiInput = handleModalCustomEmojiInput;
+    window.applyModalCustomEmoji = applyModalCustomEmoji;
+
 
     // RENDER OBJECTS
     function renderObjects() {
@@ -819,7 +1060,9 @@ const TOPIC_PRESETS = {
     }
 
     document.getElementById('btn-save-activity-bottom')?.addEventListener('click', () => submitBuilderForm(false));
+    document.getElementById('btn-save-activity-top')?.addEventListener('click', () => submitBuilderForm(false));
     document.getElementById('btn-save-draft')?.addEventListener('click', () => submitBuilderForm(true));
+    document.getElementById('btn-save-draft-top')?.addEventListener('click', () => submitBuilderForm(true));
 
     // Initial render & listeners
     document.addEventListener('DOMContentLoaded', () => {

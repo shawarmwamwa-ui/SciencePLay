@@ -1045,14 +1045,18 @@ def lessons():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'teacher_lessons')
 
-    lessons = Lesson.query.filter(
+    raw_lessons = Lesson.query.filter(
         (Lesson.is_archived == False) | (Lesson.is_archived == None)
     ).order_by(Lesson.id.asc()).all()
-    activities = Activity.query.filter(
+    lessons = [l for l in raw_lessons if not l.is_draft]
+
+    raw_activities = Activity.query.filter(
+        (Activity.is_archived == False) | (Activity.is_archived == None),
         ~Activity.engine.in_(['quick_check', 'lesson']),
         ~Activity.type.ilike('%Quick Check%'),
         ~Activity.type.ilike('%Slide Questions%')
     ).order_by(Activity.created_at.desc()).all()
+    activities = [a for a in raw_activities if not a.is_draft]
     students = User.query.filter_by(role='student').order_by(User.name.asc()).all()
 
     lesson_assignments = LessonAssignment.query.order_by(LessonAssignment.created_at.desc()).all()
@@ -2853,7 +2857,9 @@ def game_studio():
 
     from routes.student_routes import get_or_create_claw_machine_activity
     default_claw = get_or_create_claw_machine_activity()
-    activity_cards = _get_active_game_cards(default_claw.id)
+    all_game_cards = _get_active_game_cards(default_claw.id)
+    activity_cards = [c for c in all_game_cards if not c['activity'].is_draft]
+    draft_cards = [c for c in all_game_cards if c['activity'].is_draft]
     archived_cards = _get_archived_game_cards()
     templates = _get_game_engine_templates()
     students = User.query.filter_by(role='student').filter(
@@ -2864,6 +2870,7 @@ def game_studio():
         'teacher/teacher_game_studio.html',
         current_user=current_user,
         activity_cards=activity_cards,
+        draft_cards=draft_cards,
         archived_cards=archived_cards,
         templates=templates,
         default_claw_id=default_claw.id,
@@ -2879,7 +2886,9 @@ def lesson_studio():
     current_user = get_current_user()
     log_access(current_user, 'page_view', 'teacher_lesson_studio')
 
-    lesson_cards = _get_active_lesson_cards()
+    all_lesson_cards = _get_active_lesson_cards()
+    lesson_cards = [c for c in all_lesson_cards if not c['lesson'].is_draft]
+    draft_cards = [c for c in all_lesson_cards if c['lesson'].is_draft]
     archived_cards = _get_archived_lesson_cards()
     students = User.query.filter_by(role='student').filter(
         (User.is_archived == False) | (User.is_archived == None)
@@ -2889,6 +2898,7 @@ def lesson_studio():
         'teacher/teacher_lesson_studio.html',
         current_user=current_user,
         lesson_cards=lesson_cards,
+        draft_cards=draft_cards,
         archived_cards=archived_cards,
         students=students
     )

@@ -373,3 +373,59 @@
       font-size: 0.75rem;
       color: #94a3b8;
     }
+
+    /* Chute Emoji Picker Modal & Tile Grid */
+    .chute-emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+      gap: 8px;
+    }
+    .chute-emoji-tile {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 0;
+      outline: none;
+    }
+    .chute-emoji-tile:hover {
+      transform: scale(1.18);
+      border-color: #4318ff;
+      background: #eff6ff;
+      box-shadow: 0 4px 12px rgba(67, 24, 255, 0.15);
+      z-index: 2;
+    }
+    .chute-emoji-tile:active {
+      transform: scale(0.95);
+    }
+    .chute-emoji-category-header {
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .chute-emoji-category-header:first-child {
+      margin-top: 0;
+    }
+    .mini-arcade-bin:hover .mini-bin-edit-badge {
+      opacity: 1 !important;
+      transform: scale(1.05);
+    }
+    .chute-emoji-input-group .form-control:focus {
+      border-color: #4318ff !important;
+      box-shadow: 0 0 0 3px rgba(67, 24, 255, 0.15) !important;
+    }
+

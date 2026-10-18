@@ -2535,8 +2535,8 @@ def sorting_activity_config(activity_id):
             {"id": "category_1", "label": "Chute 1", "icon": "🌱", "color": "#4ade80"},
             {"id": "category_2", "label": "Chute 2", "icon": "🪨", "color": "#fb923c"}
         ]
-    elif len(bins) > 2:
-        bins = bins[:2]
+    elif len(bins) > 6:
+        bins = bins[:6]
 
     valid_ids = {b['id'] for b in bins}
     for obj in objects:

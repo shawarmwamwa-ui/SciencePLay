@@ -10,7 +10,7 @@
 .diagram-canvas-wrap {
   position: relative;
   width: 100%;
-  min-height: 380px;
+  min-height: 440px;
   background-color: #f1f5f9;
   overflow: hidden;
   display: flex;
@@ -20,11 +20,13 @@
 
 .diagram-canvas-wrap img {
   display: block;
-  max-height: 520px;
+  max-height: 640px;
+  width: auto;
+  max-width: 100%;
   object-fit: contain;
   margin: 0 auto;
   pointer-events: auto;
-  cursor: crosshair;
+  cursor: default;
 }
 
 .diagram-svg-overlay {
@@ -152,13 +154,19 @@
   text-overflow: ellipsis;
 }
 
-/* Inspector Target Card */
+/* Inspector Target Card Grid & Cards */
+.pin-targets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
 .pin-target-card {
   border: 1.5px solid #e2e8f0;
   border-radius: 14px;
   background: #ffffff;
   padding: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 0;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 

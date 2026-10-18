@@ -78,7 +78,7 @@
 
       <main class="col-12 col-lg-9 col-xl-10">
         <section class="teacher-content">
-          <div class="teacher-center-wrap" style="max-width: 1180px;">
+          <div class="teacher-center-wrap" style="max-width: 1280px;">
 
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
               <div>
@@ -91,7 +91,7 @@
                 <p class="page-subtitle text-muted mb-0">Engine Template: <strong>Visual Diagram Match &amp; Callout Pins</strong> (Position pins, set answers, and manage word bank).</p>
               </div>
 
-              <div class="d-flex align-items-center gap-2">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
                 <a href="{{ url_for('teacher.game_studio') }}" class="btn btn-outline-secondary rounded-pill px-3 fw-bold">
                   <i class="bi bi-arrow-left me-1"></i>Cancel
                 </a>
@@ -100,6 +100,12 @@
                     <i class="bi bi-play-circle-fill me-1"></i>Test Play
                   </a>
                 {% endif %}
+                <button type="button" class="btn btn-outline-primary rounded-pill px-3 fw-bold" id="btnSaveDraftTop">
+                  <i class="bi bi-bookmark-check me-1"></i>Save as Draft
+                </button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btnSaveActivityTop">
+                  <i class="bi bi-cloud-arrow-up-fill me-1"></i>Save &amp; Publish
+                </button>
               </div>
             </div>
 
@@ -239,84 +245,90 @@
                     </div>
                   </div>
 
-                  <!-- Visual Interactive Canvas & Pin Inspector Layout -->
-                  <div class="row g-4">
-                    <!-- Left: Interactive Canvas -->
-                    <div class="col-12 col-xl-7">
-                      <div class="interactive-diagram-container rounded-4 border overflow-hidden position-relative" id="diagramCanvasContainer">
-                        <div class="diagram-canvas-wrap position-relative" id="diagramCanvasWrap">
-                          <div id="diagramEmptyPlaceholder" class="p-5 text-center d-flex flex-column align-items-center justify-content-center bg-light rounded-4 w-100" style="min-height: 380px; display: none;">
-                            <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-3" style="width: 68px; height: 68px; font-size: 2rem;">
-                              <i class="bi bi-cloud-arrow-up-fill"></i>
-                            </div>
-                            <h4 class="h5 fw-bold text-dark mb-1">No Diagram Illustration Selected</h4>
-                            <p class="text-muted small mb-3" style="max-width: 380px;">Upload your own science diagram or select a preset illustration from the toolbar above to drop target pins and labels.</p>
-                            <label class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="cursor: pointer;">
-                              <i class="bi bi-upload me-1"></i>Upload Diagram Image
-                              <input type="file" class="d-none" id="emptyPlaceholderFileInput" accept="image/png,image/jpeg,image/webp">
-                            </label>
+                  <!-- Visual Interactive Canvas (Spanning Full Width for Bigger, Clearer View) -->
+                  <div class="mb-4">
+                    <div class="interactive-diagram-container rounded-4 border overflow-hidden position-relative shadow-sm" id="diagramCanvasContainer">
+                      <div class="diagram-canvas-wrap position-relative" id="diagramCanvasWrap">
+                        <div id="diagramEmptyPlaceholder" class="p-5 text-center d-flex flex-column align-items-center justify-content-center bg-light rounded-4 w-100" style="min-height: 420px; display: none;">
+                          <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-3" style="width: 68px; height: 68px; font-size: 2rem;">
+                            <i class="bi bi-cloud-arrow-up-fill"></i>
                           </div>
-                          <img src="/static/images/ftp_earth_layers.jpg" alt="Science Diagram" id="diagramImage" class="img-fluid w-100 select-none">
-                          <svg class="diagram-svg-overlay position-absolute top-0 start-0 w-100 h-100" id="diagramSvgOverlay" viewBox="0 0 100 100" preserveAspectRatio="none">
-                            <!-- SVG leader lines rendered here -->
-                          </svg>
-                          <div class="pins-slots-layer position-absolute top-0 start-0 w-100 h-100" id="pinsSlotsLayer">
-                            <!-- Draggable Pins and Callout Slots rendered here -->
-                          </div>
+                          <h4 class="h5 fw-bold text-dark mb-1">No Diagram Illustration Selected</h4>
+                          <p class="text-muted small mb-3" style="max-width: 380px;">Upload your own science diagram or select a preset illustration from the toolbar above to drop target pins and labels.</p>
+                          <label class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="cursor: pointer;">
+                            <i class="bi bi-upload me-1"></i>Upload Diagram Image
+                            <input type="file" class="d-none" id="emptyPlaceholderFileInput" accept="image/png,image/jpeg,image/webp">
+                          </label>
                         </div>
+                        <img src="/static/images/ftp_earth_layers.jpg" alt="Science Diagram" id="diagramImage" class="img-fluid select-none">
+                        <svg class="diagram-svg-overlay position-absolute top-0 start-0 w-100 h-100" id="diagramSvgOverlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+                          <!-- SVG leader lines rendered here -->
+                        </svg>
+                        <div class="pins-slots-layer position-absolute top-0 start-0 w-100 h-100" id="pinsSlotsLayer">
+                          <!-- Draggable Pins and Callout Slots rendered here -->
+                        </div>
+                      </div>
 
-                        <div class="diagram-canvas-hint text-center py-2 px-3 bg-light border-top small text-muted d-flex align-items-center justify-content-between flex-wrap gap-2">
-                          <span>
-                            <i class="bi bi-hand-index-thumb-fill text-primary me-1"></i>
-                            <strong>Click diagram</strong> to place a target pin. Drag pin dots or callout boxes to position anywhere!
-                          </span>
+                      <div class="diagram-canvas-hint text-center py-2.5 px-3 bg-light border-top small text-muted d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <span>
+                          <i class="bi bi-info-circle-fill text-primary me-1"></i>
+                          Click <strong>+ Add Pin</strong> to create a callout. Drag the pin dots or callout boxes to position anywhere!
+                        </span>
+                        <div class="d-flex align-items-center gap-2">
                           <span class="badge bg-secondary-subtle text-secondary rounded-pill" id="pinCountBadge">0 Pins Placed</span>
+                          <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" id="btnAddPinManualTop">
+                            <i class="bi bi-plus-lg me-1"></i>Add Pin
+                          </button>
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    <!-- Right: Pin Targets Inspector & Answers Editor -->
-                    <div class="col-12 col-xl-5">
-                      <div class="pin-inspector-panel border rounded-4 p-3 bg-light h-100 d-flex flex-column">
+                  <!-- Labeling & Word Bank Section (Placed Below the Canvas) -->
+                  <div class="row g-4 mb-2">
+                    <!-- Left: Placed Callout Targets & Answers -->
+                    <div class="col-12 col-lg-8">
+                      <div class="pin-inspector-panel border rounded-4 p-3 bg-light h-100">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                           <h3 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-1.5">
                             <i class="bi bi-list-check text-primary"></i>
                             <span>Placed Callout Targets &amp; Answers</span>
                           </h3>
-                          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill fw-bold" id="btnAddPinManual">
-                            <i class="bi bi-plus me-1"></i>Add Pin
+                          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill fw-bold px-3" id="btnAddPinManual">
+                            <i class="bi bi-plus-lg me-1"></i>Add Pin
                           </button>
                         </div>
 
-                        <div class="pin-list-scroll flex-grow-1 overflow-auto pe-1" id="pinTargetsList" style="max-height: 480px;">
-                          <!-- Target pin configuration cards rendered here -->
+                        <div class="pin-targets-grid" id="pinTargetsList">
+                          <!-- Target pin configuration cards rendered in responsive grid -->
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Right: Word Bank Decoys Section -->
+                    <div class="col-12 col-lg-4">
+                      <div class="word-bank-box border rounded-4 p-3 bg-light h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <label class="fw-bold small text-dark mb-0 d-flex align-items-center gap-1">
+                            <i class="bi bi-card-text text-success"></i>
+                            <span>Word Bank Decoy Words (Distractors)</span>
+                          </label>
+                          <span class="badge bg-white text-muted border rounded-pill small" id="decoyCountBadge">0 Decoys</span>
+                        </div>
+                        <p class="text-muted small mb-2" style="font-size: 0.74rem; line-height: 1.5;">
+                          Correct answers are automatically added to the student's word bank. Add extra decoy options below to test mastery:
+                        </p>
+
+                        <div class="d-flex gap-2 mb-3">
+                          <input type="text" class="form-control form-control-sm rounded-pill" id="decoyInput" placeholder="e.g. Atmosphere">
+                          <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-bold flex-shrink-0 px-3" id="btnAddDecoy">
+                            <i class="bi bi-plus-lg me-1"></i>Add
+                          </button>
                         </div>
 
-                        <!-- Word Bank Decoys Section -->
-                        <div class="word-bank-box mt-3 pt-3 border-top">
-                          <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="fw-bold small text-dark mb-0 d-flex align-items-center gap-1">
-                              <i class="bi bi-card-text text-success"></i>
-                              <span>Word Bank Decoy Words (Distractors)</span>
-                            </label>
-                            <span class="badge bg-light text-muted border rounded-pill small" id="decoyCountBadge">0 Decoys</span>
-                          </div>
-                          <p class="text-muted small mb-2" style="font-size: 0.74rem;">
-                            Correct answers are automatically added to the student's word bank. Add extra decoy options below to test mastery:
-                          </p>
-
-                          <div class="d-flex gap-2 mb-2">
-                            <input type="text" class="form-control form-control-sm rounded-pill" id="decoyInput" placeholder="e.g. Atmosphere">
-                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-bold flex-shrink-0 px-3" id="btnAddDecoy">
-                              <i class="bi bi-plus-lg me-1"></i>Add
-                            </button>
-                          </div>
-
-                          <div class="decoy-chips-wrap d-flex flex-wrap gap-1.5" id="decoyChipsList">
-                            <!-- Decoy word chips rendered here -->
-                          </div>
+                        <div class="decoy-chips-wrap d-flex flex-wrap gap-1.5" id="decoyChipsList">
+                          <!-- Decoy word chips rendered here -->
                         </div>
-
                       </div>
                     </div>
                   </div>

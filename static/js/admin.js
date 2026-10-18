@@ -275,7 +275,7 @@ function initAdminSlidingIndicator() {
 }
 
 function initClearUserLogsModal() {
-  const modal = document.getElementById('clearUserLogsModal');
+  const modal = document.getElementById('archiveUserLogsModal') || document.getElementById('clearUserLogsModal');
   if (!modal) return;
 
   modal.addEventListener('show.bs.modal', (event) => {
@@ -287,12 +287,12 @@ function initClearUserLogsModal() {
     const username = button.getAttribute('data-username');
     const actionCount = button.getAttribute('data-action-count');
 
-    const form = document.getElementById('clearUserLogsForm');
-    const nameEl = document.getElementById('clearUserLogsTargetName');
-    const usernameEl = document.getElementById('clearUserLogsTargetUsername');
-    const countEl = document.getElementById('clearUserLogsTargetCount');
+    const form = document.getElementById('archiveUserLogsForm') || document.getElementById('clearUserLogsForm');
+    const nameEl = document.getElementById('archiveUserLogsTargetName') || document.getElementById('clearUserLogsTargetName');
+    const usernameEl = document.getElementById('archiveUserLogsTargetUsername') || document.getElementById('clearUserLogsTargetUsername');
+    const countEl = document.getElementById('archiveUserLogsTargetCount') || document.getElementById('clearUserLogsTargetCount');
 
-    if (form) form.action = `/admin/clear_user_logs/${userId}`;
+    if (form) form.action = `/admin/archive_user_logs/${userId}`;
     if (nameEl) nameEl.textContent = userName || 'this user';
     if (usernameEl) usernameEl.textContent = username ? `@${username}` : '';
     if (countEl) countEl.textContent = actionCount || '0';

@@ -54,7 +54,7 @@ function normalizeObject(object, index, isLivingActivity = true) {
 }
 
 function normalizeBin(bin, index) {
-  const defaultColors = ['#4ade80', '#fb923c', '#60a5fa', '#facc15'];
+  const defaultColors = ['#4ade80', '#fb923c', '#60a5fa', '#a855f7', '#ec4899', '#06b6d4'];
   return {
     id: bin.id,
     label: bin.label || `Bin ${index + 1}`,
@@ -134,7 +134,7 @@ async function getSortingActivityConfig(activityId) {
       .filter(isValidBinEntry)
       .map((bin, index) => normalizeBin(bin, index));
 
-    if (bins.length < 2 || bins.length > 4) {
+    if (bins.length < 2 || bins.length > 6) {
       return getDefaultFallbackConfig();
     }
 

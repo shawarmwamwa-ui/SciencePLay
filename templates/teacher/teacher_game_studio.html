@@ -101,12 +101,6 @@
                 <p class="page-subtitle text-muted mb-0">Select an arcade game engine to customize science sorting activities, chute categories, difficulty levels, and automated scoring.</p>
               </div>
 
-              <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#newClawChoiceModal">
-                  <i class="bi bi-plus-circle-fill fs-5"></i>
-                  <span>New Custom Game</span>
-                </button>
-              </div>
             </div>
 
             <div class="mb-5">
@@ -175,6 +169,12 @@
                 <button class="nav-link active" id="tab-active-games" data-bs-toggle="pill" data-bs-target="#pane-active-games" type="button" role="tab" aria-controls="pane-active-games" aria-selected="true">
                   <i class="bi bi-joystick me-2"></i>Active Games
                   <span class="badge bg-light text-dark border ms-1 rounded-pill">{{ activity_cards|length }}</span>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-draft-games" data-bs-toggle="pill" data-bs-target="#pane-draft-games" type="button" role="tab" aria-controls="pane-draft-games" aria-selected="false">
+                  <i class="bi bi-pencil-square me-2 text-warning"></i>Draft Games
+                  <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1 rounded-pill">{{ draft_cards|length if draft_cards else 0 }}</span>
                 </button>
               </li>
               <li class="nav-item" role="presentation">
@@ -377,6 +377,160 @@
                 </div>
               </div>
 
+              <div class="tab-pane fade" id="pane-draft-games" role="tabpanel" aria-labelledby="tab-draft-games">
+                <div class="dashboard-section teacher-panel p-4 mb-5">
+                  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div>
+                      <h2 class="h5 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-pencil-square text-warning"></i>
+                        <span>Draft Activities (In-Progress)</span>
+                      </h2>
+                      <p class="teacher-panel-note mb-0 text-muted">Incomplete or unpublished games saved as drafts. You can test play, continue editing, switch between core and supplementary curriculum, or move them to archive.</p>
+                    </div>
+                  </div>
+
+                  {% if draft_cards %}
+                    <div class="activity-catalog-list">
+                      {% for card in draft_cards %}
+                      <div class="activity-row-card border-warning-subtle" style="border-left: 4px solid #f59e0b;">
+                        <div class="activity-col-info">
+                          <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            {% if card.engine == 'find_the_part' %}
+                            <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              <i class="bi bi-pin-map-fill me-1"></i>Diagram Match
+                            </span>
+                            {% else %}
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              <i class="bi bi-joystick me-1"></i>Sorting Claw
+                            </span>
+                            {% endif %}
+                            {% if card.is_supplementary %}
+                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-bandaid me-1"></i>Supplementary Practice
+                              </span>
+                            {% else %}
+                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-controller me-1"></i>Core Curriculum
+                              </span>
+                            {% endif %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.72rem;">
+                              <i class="bi bi-pencil-fill me-1"></i>Draft
+                            </span>
+                            <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              {{ card.term or 'Term 1' }}
+                            </span>
+                            {% if card.lesson_title %}
+                              <span class="badge bg-light text-primary border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-journal-bookmark me-1"></i>{{ card.lesson_title }}
+                              </span>
+                            {% else %}
+                              <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-dash-circle me-1"></i>Standalone Game
+                              </span>
+                            {% endif %}
+                            {% if card.config and card.config.difficulty %}
+                              <span class="badge bg-warning-subtle text-dark border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.7rem;">{{ card.config.difficulty }}</span>
+                            {% endif %}
+                            <span class="activity-meta-badge"><i class="bi bi-star-fill text-warning"></i>{{ card.activity.points or 100 }} pts</span>
+                          </div>
+                          <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
+                          <p class="text-muted small mb-2 text-truncate" title="{{ card.instructions }}">
+                            {{ card.instructions or 'Game configuration currently saved as draft.' }}
+                          </p>
+
+                          {% if card.engine == 'find_the_part' %}
+                          <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small">
+                              <i class="bi bi-images text-primary me-1"></i>{{ card.rounds_count }} Illustration Round{{ 's' if card.rounds_count != 1 else '' }}
+                            </span>
+                            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small">
+                              <i class="bi bi-pin-angle-fill text-danger me-1"></i>{{ card.zones_count }} Callout Pin Target{{ 's' if card.zones_count != 1 else '' }}
+                            </span>
+                          </div>
+                          {% else %}
+                          <div class="d-flex flex-wrap gap-1 align-items-center">
+                            <span class="text-muted small me-1 fw-bold" style="font-size: 0.75rem;">Chutes:</span>
+                            {% for bin in card.bins %}
+                              <span class="chute-chip" style="border-color: {{ bin.color or '#60a5fa' }}40; background: {{ bin.color or '#60a5fa' }}15; color: #1e293b;">
+                                <span>{{ bin.icon or '📦' }}</span>
+                                <span>{{ bin.label }}</span>
+                              </span>
+                            {% endfor %}
+                          </div>
+                          {% endif %}
+                        </div>
+
+                        <div class="activity-col-stats text-center">
+                          {% if card.engine == 'find_the_part' %}
+                          <div style="min-width: 55px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.rounds_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Rounds</div>
+                          </div>
+                          <div style="min-width: 55px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.zones_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Pins</div>
+                          </div>
+                          <div style="min-width: 65px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.activity.points or 100 }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Max Pts</div>
+                          </div>
+                          {% else %}
+                          <div style="min-width: 50px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.objects_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Objects</div>
+                          </div>
+                          <div style="min-width: 50px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.bins|length }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Chutes</div>
+                          </div>
+                          <div style="min-width: 65px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.round_size }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Round Size</div>
+                          </div>
+                          {% endif %}
+                        </div>
+
+                        <div class="activity-col-actions">
+                          <a href="{{ url_for('teacher.preview_activity', activity_id=card.activity.id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Test Play in Preview Mode">
+                            <i class="bi bi-play-circle-fill"></i>
+                            <span>Test Play</span>
+                          </a>
+                          {% set edit_url = url_for('teacher.find_the_part_builder', activity_id=card.activity.id) if card.engine == 'find_the_part' else url_for('teacher.claw_machine_builder', activity_id=card.activity.id) %}
+                          <a href="{{ edit_url }}" class="btn btn-warning text-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Continue Editing Draft">
+                            <i class="bi bi-pencil-square"></i>
+                            <span>Continue Editing</span>
+                          </a>
+                          <form method="POST" action="{{ url_for('teacher.toggle_supplementary', item_type='game', item_id=card.activity.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm {% if card.is_supplementary %}btn-warning text-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-2.5 fw-bold shadow-sm d-flex align-items-center gap-1" title="Toggle between Core Curriculum and Supplementary Practice">
+                              <i class="bi bi-arrow-left-right"></i>
+                              <span>{% if card.is_supplementary %}Supplementary{% else %}Core{% endif %}</span>
+                            </button>
+                          </form>
+                          <form method="POST" action="{{ url_for('teacher.delete_activity', activity_id=card.activity.id) }}" class="d-inline" id="archiveDraftGameForm_{{ card.activity.id }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Draft Activity" onclick="archiveGameWithConfirm('archiveDraftGameForm_{{ card.activity.id }}', '{{ card.title|escape }}')">
+                              <i class="bi bi-trash3"></i>
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="text-center py-5">
+                      <div class="mb-3">
+                        <span class="rounded-circle d-inline-flex p-3 bg-light text-warning fs-1">
+                          <i class="bi bi-pencil-square"></i>
+                        </span>
+                      </div>
+                      <h4 class="fw-bold text-dark mb-2">No Saved Drafts</h4>
+                      <p class="text-muted mb-4 max-w-md mx-auto">When you start creating a game and save it as a draft, it will appear here so you can continue editing later.</p>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
               <div class="tab-pane fade" id="pane-archived-games" role="tabpanel" aria-labelledby="tab-archived-games">
                 <div class="dashboard-section teacher-panel p-4 mb-5">
                   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
@@ -398,6 +552,11 @@
                             <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
                               <i class="bi bi-archive me-1"></i>Archived
                             </span>
+                            {% if card.activity.is_draft %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              <i class="bi bi-pencil-fill me-1"></i>Draft
+                            </span>
+                            {% endif %}
                             <span class="badge bg-white text-muted border rounded-pill px-2 py-1 small">
                               <i class="bi bi-clock-history me-1"></i>Archived: {{ card.deleted_at }}
                             </span>

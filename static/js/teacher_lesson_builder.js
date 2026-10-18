@@ -1384,7 +1384,9 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
     }
 
     document.getElementById('btn-save-lesson')?.addEventListener('click', () => submitLessonForm(false));
+    document.getElementById('btn-save-lesson-top')?.addEventListener('click', () => submitLessonForm(false));
     document.getElementById('btn-save-draft')?.addEventListener('click', () => submitLessonForm(true));
+    document.getElementById('btn-save-draft-top')?.addEventListener('click', () => submitLessonForm(true));
 
     document.addEventListener('DOMContentLoaded', () => {
       if (new URLSearchParams(location.search).get('preset') === 'basic_needs' && LESSON_PRESETS.basic_needs) {

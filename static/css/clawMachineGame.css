@@ -185,7 +185,7 @@ body.arcade-page {
 
 .claw-game-wrapper {
   position: relative;
-  width: min(100%, 760px);
+  width: min(100%, 860px);
   height: 100%;
   max-height: calc(100vh - 10px);
   display: flex;
@@ -346,18 +346,18 @@ body.arcade-page {
   --bin-main: var(--bin-color, var(--living-a));
   --bin-dark: var(--bin-border-color, var(--living-b));
   flex: 1 1 0;
-  min-width: clamp(48px, 5.5vw, 95px);
-  max-width: clamp(70px, 9vw, 130px);
+  min-width: clamp(40px, 4.2vw, 95px);
+  max-width: clamp(65px, 7.5vw, 130px);
   min-height: 0;
-  padding: 6px 4px;
+  padding: 6px 3px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
+  gap: 3px;
   color: #fff;
   text-align: center;
-  border: 3.5px solid var(--bin-dark);
+  border: 3px solid var(--bin-dark);
   border-radius: 14px;
   background: linear-gradient(180deg, var(--bin-main) 0%, var(--bin-dark) 100%);
   box-shadow: inset 0 6px 0 rgba(255, 255, 255, 0.28), 0 4px 0 rgba(15, 23, 42, 0.25);
@@ -381,19 +381,27 @@ body.arcade-page {
 }
 
 .bin-icon {
-  font-size: clamp(20px, 2vw, 28px);
+  font-size: clamp(16px, 1.6vw, 26px);
   line-height: 1;
 }
 
 .collection-bin strong {
-  font-size: clamp(12px, 0.9vw, 15px);
+  font-size: clamp(10px, 0.78vw, 14px);
   line-height: 1.1;
+  word-break: break-word;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .collection-bin small {
-  font-size: clamp(9px, 0.7vw, 11px);
+  font-size: clamp(8px, 0.62vw, 10px);
   line-height: 1.15;
   opacity: 0.95;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .bin-catch {

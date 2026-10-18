@@ -102,41 +102,41 @@
                 <p class="page-subtitle text-muted mb-0">Build and customize interactive science slide decks with live canvas previews, voice read-aloud narrations, and quiz questions.</p>
               </div>
 
-              <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-success text-white rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#newLessonChoiceModal">
-                  <i class="bi bi-plus-circle-fill fs-5"></i>
-                  <span>New Custom Lesson</span>
-                </button>
-              </div>
             </div>
-
-            <div class="lesson-hero-banner shadow-sm">
-              <div class="row align-items-center g-4">
-                <div class="col-12 col-lg-8">
-                  <div class="d-flex gap-2 flex-wrap mb-2">
-                    <span class="lesson-feature-badge"><i class="bi bi-magic"></i>Interactive Slide Canvas</span>
-                    <span class="lesson-feature-badge"><i class="bi bi-volume-up-fill"></i>Speech Synthesis Read Aloud</span>
-                    <span class="lesson-feature-badge"><i class="bi bi-question-circle-fill"></i>Quick Check Quizzes</span>
-                  </div>
-                  <h2 class="h4 fw-bold text-dark mb-2">Visual Slide Canvas Workspace</h2>
-                  <p class="text-muted mb-0" style="line-height: 1.6;">
-                    Create custom lessons from scratch or edit existing decks. Design slides with live window previews, upload images with zero file-size restrictions, test voice read-aloud narration, and add instant knowledge checks.
-                  </p>
-                </div>
-                <div class="col-12 col-lg-4 text-lg-end">
-                  <button type="button" class="btn btn-success text-white rounded-pill px-4 py-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#newLessonChoiceModal">
-                    <i class="bi bi-easel-fill fs-5"></i>
-                    <span>Open Slide Builder</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+ 
+             <div class="lesson-hero-banner shadow-sm">
+               <div class="row align-items-center g-4">
+                 <div class="col-12 col-lg-8">
+                   <div class="d-flex gap-2 flex-wrap mb-2">
+                     <span class="lesson-feature-badge"><i class="bi bi-magic"></i>Interactive Slide Canvas</span>
+                     <span class="lesson-feature-badge"><i class="bi bi-volume-up-fill"></i>Speech Synthesis Read Aloud</span>
+                     <span class="lesson-feature-badge"><i class="bi bi-question-circle-fill"></i>Quick Check Quizzes</span>
+                   </div>
+                   <h2 class="h4 fw-bold text-dark mb-2">Visual Slide Canvas Workspace</h2>
+                   <p class="text-muted mb-0" style="line-height: 1.6;">
+                     Create custom lessons from scratch or edit existing decks. Design slides with live window previews, upload images with zero file-size restrictions, test voice read-aloud narration, and add instant knowledge checks.
+                   </p>
+                 </div>
+                 <div class="col-12 col-lg-4 text-lg-end">
+                   <button type="button" class="btn btn-success text-white rounded-pill px-4 py-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#newLessonChoiceModal">
+                     <i class="bi bi-plus-circle-fill fs-5"></i>
+                     <span>Open Slide Builder</span>
+                   </button>
+                 </div>
+               </div>
+             </div>
 
             <ul class="nav nav-pills teacher-view-pills mb-4 gap-2" id="lessonsStudioTabs" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tab-active-lessons" data-bs-toggle="pill" data-bs-target="#pane-active-lessons" type="button" role="tab" aria-controls="pane-active-lessons" aria-selected="true">
                   <i class="bi bi-journal-bookmark-fill me-2 text-success"></i>Active Lessons
                   <span class="badge bg-light text-dark border ms-1 rounded-pill">{{ lesson_cards|length }}</span>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-draft-lessons" data-bs-toggle="pill" data-bs-target="#pane-draft-lessons" type="button" role="tab" aria-controls="pane-draft-lessons" aria-selected="false">
+                  <i class="bi bi-pencil-square me-2 text-warning"></i>Draft Lessons
+                  <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1 rounded-pill">{{ draft_cards|length if draft_cards else 0 }}</span>
                 </button>
               </li>
               <li class="nav-item" role="presentation">
@@ -272,6 +272,100 @@
                 </div>
               </div>
 
+              <div class="tab-pane fade" id="pane-draft-lessons" role="tabpanel" aria-labelledby="tab-draft-lessons">
+                <div class="dashboard-section teacher-panel p-4 mb-5">
+                  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div>
+                      <h2 class="h5 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-pencil-square text-warning"></i>
+                        <span>Draft Lessons (In-Progress)</span>
+                      </h2>
+                      <p class="teacher-panel-note mb-0 text-muted">Incomplete or unpublished slide presentations saved as drafts. You can test play, continue editing, switch between core and supplementary curriculum, or move them to archive.</p>
+                    </div>
+                  </div>
+
+                  {% if draft_cards %}
+                    <div class="activity-catalog-list">
+                      {% for card in draft_cards %}
+                      <div class="activity-row-card border-warning-subtle" style="border-left: 4px solid #f59e0b;">
+                        <div class="activity-col-info">
+                          <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              <i class="bi bi-easel me-1"></i>Slide Presentation
+                            </span>
+                            {% if card.is_supplementary %}
+                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-bandaid me-1"></i>Supplementary / Remedial
+                              </span>
+                            {% else %}
+                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.72rem;">
+                                <i class="bi bi-journal-check me-1"></i>Core Curriculum
+                              </span>
+                            {% endif %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.72rem;">
+                              <i class="bi bi-pencil-fill me-1"></i>Draft
+                            </span>
+                            <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              {{ card.term or 'Term 1' }}
+                            </span>
+                          </div>
+                          <h4 class="h6 fw-bold text-dark mb-1">{{ card.title }}</h4>
+                          <p class="text-muted small mb-0 text-truncate" title="{{ card.description }}">
+                            {{ card.description or 'Interactive science lesson slides saved as draft.' }}
+                          </p>
+                        </div>
+
+                        <div class="activity-col-stats text-center">
+                          <div style="min-width: 50px;">
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ card.slides_count }}</div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Slides</div>
+                          </div>
+                          <div style="min-width: 65px;">
+                            <div class="fw-bold text-dark fs-5 lh-1"><i class="bi bi-volume-up text-success"></i></div>
+                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">Read Aloud</div>
+                          </div>
+                        </div>
+
+                        <div class="activity-col-actions">
+                          <a href="{{ url_for('teacher.preview_lesson', lesson_id=card.lesson.id) }}" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Preview Lesson as Student">
+                            <i class="bi bi-play-circle-fill"></i>
+                            <span>Test Play</span>
+                          </a>
+                          <a href="{{ url_for('teacher.lesson_builder', lesson_id=card.lesson.id) }}" class="btn btn-warning text-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Continue Editing Draft">
+                            <i class="bi bi-pencil-square"></i>
+                            <span>Continue Editing</span>
+                          </a>
+                          <form method="POST" action="{{ url_for('teacher.toggle_supplementary', item_type='lesson', item_id=card.lesson.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm {% if card.is_supplementary %}btn-warning text-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-2.5 fw-bold shadow-sm d-flex align-items-center gap-1" title="Toggle between Core Curriculum and Supplementary / Remedial">
+                              <i class="bi bi-arrow-left-right"></i>
+                              <span>{% if card.is_supplementary %}Supplementary{% else %}Core{% endif %}</span>
+                            </button>
+                          </form>
+                          <form method="POST" action="{{ url_for('teacher.delete_lesson', lesson_id=card.lesson.id) }}" class="d-inline" id="archiveDraftLessonForm_{{ card.lesson.id }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2" title="Archive Draft Lesson" onclick="archiveLessonWithConfirm('archiveDraftLessonForm_{{ card.lesson.id }}', '{{ card.title|escape }}')">
+                              <i class="bi bi-trash3"></i>
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="text-center py-5">
+                      <div class="mb-3">
+                        <span class="rounded-circle d-inline-flex p-3 bg-light text-warning fs-1">
+                          <i class="bi bi-pencil-square"></i>
+                        </span>
+                      </div>
+                      <h4 class="fw-bold text-dark mb-2">No Saved Drafts</h4>
+                      <p class="text-muted mb-4 max-w-md mx-auto">When you start creating a lesson and save it as a draft, it will appear here so you can continue editing later.</p>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
               <div class="tab-pane fade" id="pane-archived-lessons" role="tabpanel" aria-labelledby="tab-archived-lessons">
                 <div class="dashboard-section teacher-panel p-4 mb-5">
                   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
@@ -293,6 +387,11 @@
                             <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
                               <i class="bi bi-archive me-1"></i>Archived
                             </span>
+                            {% if card.lesson.is_draft %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem;">
+                              <i class="bi bi-pencil-fill me-1"></i>Draft
+                            </span>
+                            {% endif %}
                             <span class="badge bg-white text-muted border rounded-pill px-2 py-1 small">
                               <i class="bi bi-clock-history me-1"></i>Archived: {{ card.deleted_at }}
                             </span>

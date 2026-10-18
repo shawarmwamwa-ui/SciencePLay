@@ -87,13 +87,18 @@
                 <a href="{{ url_for('teacher.lesson_studio') }}" class="text-decoration-none text-muted small fw-bold d-inline-flex align-items-center gap-1 mb-2">
                   <i class="bi bi-arrow-left"></i><span>Back to Lesson Studio</span>
                 </a>
-                <h1 class="page-title fw-black text-dark mb-1">
-                  {% if is_core_lesson %}Configure Lesson: {{ lesson.title }}{% elif lesson %}Edit Lesson: {{ lesson.title }}{% else %}New Lesson Studio Builder{% endif %}
+                <h1 class="page-title fw-black text-dark mb-1 d-flex align-items-center flex-wrap gap-2">
+                  <span>{% if is_core_lesson %}Configure Lesson: {{ lesson.title }}{% elif lesson %}Edit Lesson: {{ lesson.title }}{% else %}New Lesson Studio Builder{% endif %}</span>
+                  {% if lesson and lesson.is_draft %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold fs-6">
+                      <i class="bi bi-pencil-fill me-1"></i>Draft
+                    </span>
+                  {% endif %}
                 </h1>
                 <p class="page-subtitle text-muted mb-0">Create interactive slide decks, voice narrations, and quick-check questions for students.</p>
               </div>
 
-              <div class="d-flex align-items-center gap-2">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
                 <a href="{{ url_for('teacher.lesson_studio') }}" class="btn btn-outline-secondary rounded-pill px-3 fw-bold">
                   <i class="bi bi-arrow-left me-1"></i>Cancel
                 </a>
@@ -102,6 +107,12 @@
                     <i class="bi bi-play-circle-fill me-1"></i>Test Play
                   </a>
                 {% endif %}
+                <button type="button" class="btn btn-outline-success rounded-pill px-3 fw-bold" id="btn-save-draft-top">
+                  <i class="bi bi-bookmark-check me-1"></i>Save as Draft
+                </button>
+                <button type="button" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm" id="btn-save-lesson-top">
+                  <i class="bi bi-cloud-arrow-up-fill me-1"></i>Save &amp; Publish
+                </button>
               </div>
             </div>
 
