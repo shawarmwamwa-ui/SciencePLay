@@ -354,7 +354,85 @@ body.pipeline-circuit-body {
 .pc-slot-pod {
   user-select: none;
   -webkit-user-drag: element;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.75rem 0.5rem;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 }
+
+.pc-slot-pod .pc-pod-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.pc-slot-pod .pc-pod-icon {
+  font-size: 2.6rem;
+  line-height: 1;
+  margin: 0;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pc-slot-pod .pc-pod-img {
+  width: 58px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 0;
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  display: block;
+}
+
+.pc-slot-pod .pc-pod-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  text-align: center;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.pc-slot-pod .pc-pod-clue-badge {
+  margin: 0;
+  font-size: 0.62rem;
+  padding: 0.12rem 0.45rem;
+}
+
+/* Track Helper Bar below slots */
+.pc-track-helper-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(56, 189, 248, 0.2);
+}
+
+.pc-track-helper-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  padding: 0.35rem 0.95rem;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  letter-spacing: 0.01em;
+}
+
 
 .pc-tray-card.tray-drag-over {
   border-color: #38bdf8 !important;

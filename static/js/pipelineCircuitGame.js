@@ -140,6 +140,14 @@ export function initPipelineCircuit() {
               ${idx < steps.length - 1 ? `<div class="pc-flow-arrow"><i class="bi bi-chevron-right"></i></div>` : ''}
             `).join('')}
           </div>
+
+          <!-- Track Helper Bar -->
+          <div class="pc-track-helper-bar">
+            <span class="pc-track-helper-pill">
+              <i class="bi bi-arrows-move text-info me-1"></i>
+              <span>Drag to move or tap to remove</span>
+            </span>
+          </div>
         </div>
 
         <!-- Controls Bar -->
@@ -398,16 +406,17 @@ export function initPipelineCircuit() {
            draggable="true"
            title="${podData.hint ? escapeHtml(podData.hint) : ''}"
            style="width: 100%; height: 100%; cursor: grab;">
-        ${podData.image_url 
-          ? `<img src="${podData.image_url}" class="pc-pod-img" alt="${escapeHtml(podData.label)}">` 
-          : `<div class="pc-pod-icon">${podData.icon || '⚡'}</div>`}
-        <div class="pc-pod-label">${escapeHtml(podData.label)}</div>
+        <div class="pc-pod-media">
+          ${podData.image_url 
+            ? `<img src="${podData.image_url}" class="pc-pod-img" alt="${escapeHtml(podData.label)}">` 
+            : `<div class="pc-pod-icon">${podData.icon || '⚡'}</div>`}
+        </div>
+        ${podData.label ? `<div class="pc-pod-label">${escapeHtml(podData.label)}</div>` : ''}
         ${podData.hint ? `
-          <span class="pc-pod-clue-badge mb-1" style="font-size: 0.6rem; padding: 0.1rem 0.4rem;">
+          <span class="pc-pod-clue-badge" style="font-size: 0.6rem; padding: 0.1rem 0.4rem;">
             <i class="bi bi-lightbulb-fill text-warning me-1"></i>Clue
           </span>
         ` : ''}
-        <small class="mt-1" style="font-size: 0.68rem; color: #94a3b8;">Drag to move or tap to remove</small>
       </div>
     `;
 
@@ -423,10 +432,11 @@ export function initPipelineCircuit() {
         if (isTesting) return;
         const hintEl = document.getElementById('pc-hint-text');
         if (hintEl) {
+          const itemLabel = podData.label || ('Slot ' + (slotIdx + 1));
           if (podData.hint) {
-            hintEl.innerHTML = `<span class="text-info fw-bold"><i class="bi bi-lightbulb-fill text-warning me-1"></i>${escapeHtml(podData.label)} Clue:</span> <span class="text-light">${escapeHtml(podData.hint)}</span>`;
+            hintEl.innerHTML = `<span class="text-info fw-bold"><i class="bi bi-lightbulb-fill text-warning me-1"></i>${escapeHtml(itemLabel)} Clue:</span> <span class="text-light">${escapeHtml(podData.hint)}</span> <span class="text-secondary ms-2" style="font-size: 0.85em;">&bull; Drag to move or tap to remove</span>`;
           } else {
-            hintEl.innerHTML = `<strong>${escapeHtml(podData.label)}</strong> placed in Slot ${slotIdx + 1}.`;
+            hintEl.innerHTML = `<strong>${escapeHtml(itemLabel)}</strong> placed in Slot ${slotIdx + 1}. <span class="text-secondary ms-2" style="font-size: 0.85em;">&bull; Drag to move or tap to remove</span>`;
           }
         }
       });
