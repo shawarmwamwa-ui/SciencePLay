@@ -160,7 +160,7 @@ export function initPipelineCircuit() {
         <div class="pc-tray-card">
           <div class="pc-tray-title">
             <h3><i class="bi bi-collection-fill text-info"></i> Power Pods (Stages)</h3>
-            <span class="text-muted small">Tap or drag into empty slots</span>
+            <span class="small" style="color: #94a3b8;">Tap or drag into empty slots</span>
           </div>
           <div class="pc-pods-tray" id="pc-pods-tray">
             ${shuffledSteps.map(step => `
@@ -407,7 +407,7 @@ export function initPipelineCircuit() {
             <i class="bi bi-lightbulb-fill text-warning me-1"></i>Clue
           </span>
         ` : ''}
-        <small class="text-muted mt-1" style="font-size: 0.65rem;">Drag to move or tap to remove</small>
+        <small class="mt-1" style="font-size: 0.68rem; color: #94a3b8;">Drag to move or tap to remove</small>
       </div>
     `;
 
@@ -751,7 +751,16 @@ export function initPipelineCircuit() {
           <div class="p-3 rounded-4 mb-4" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(56, 189, 248, 0.3);">
             <div class="small fw-bold text-uppercase mb-1" style="color: #94a3b8; letter-spacing: 0.05em;">Final Score</div>
             <div class="h3 fw-bold text-info mb-1">${finalScore} Points</div>
-            <div class="small text-muted mb-3">${totalMistakes === 0 ? '🏆 Solved with 0 mistakes (100% accuracy)' : `⚠️ Circuit tripped ${totalMistakes} ${totalMistakes === 1 ? 'time' : 'times'} before sequence completed`}</div>
+            <div class="d-flex justify-content-center ${!isPreview ? 'mb-3' : 'mb-1'} mt-2">
+              <div class="small fw-bold px-3 py-1.5 rounded-3 d-inline-flex align-items-center justify-content-center gap-1.5"
+                   style="${totalMistakes === 0 
+                     ? 'background: rgba(34, 197, 94, 0.18); border: 1px solid rgba(34, 197, 94, 0.5); color: #86efac;' 
+                     : 'background: rgba(245, 158, 11, 0.22); border: 1px solid rgba(245, 158, 11, 0.55); color: #fef08a;'} font-size: 0.95rem; line-height: 1.4;">
+                ${totalMistakes === 0 
+                  ? '<i class="bi bi-trophy-fill text-success me-1"></i> Solved with 0 mistakes (100% accuracy)' 
+                  : `<i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Circuit tripped ${totalMistakes} ${totalMistakes === 1 ? 'time' : 'times'} before sequence completed`}
+              </div>
+            </div>
             ${!isPreview ? `
               <div class="d-inline-flex align-items-center gap-1.5 px-3 py-1 rounded-pill ${progressResult.attemptsExhausted ? 'bg-danger text-white' : 'bg-primary text-white'} fw-bold" style="font-size: 0.85rem;">
                 <i class="bi bi-clock-history"></i> Attempts today: ${progressResult.attemptsToday}/${progressResult.attemptsLimit}
