@@ -406,17 +406,17 @@ export function initPipelineCircuit() {
            draggable="true"
            title="${podData.hint ? escapeHtml(podData.hint) : ''}"
            style="width: 100%; height: 100%; cursor: grab;">
+        ${podData.hint ? `
+          <span class="pc-pod-clue-badge">
+            <i class="bi bi-lightbulb-fill text-warning me-1"></i>Clue
+          </span>
+        ` : ''}
         <div class="pc-pod-media">
           ${podData.image_url 
             ? `<img src="${podData.image_url}" class="pc-pod-img" alt="${escapeHtml(podData.label)}">` 
             : `<div class="pc-pod-icon">${podData.icon || '⚡'}</div>`}
         </div>
         ${podData.label ? `<div class="pc-pod-label">${escapeHtml(podData.label)}</div>` : ''}
-        ${podData.hint ? `
-          <span class="pc-pod-clue-badge" style="font-size: 0.6rem; padding: 0.1rem 0.4rem;">
-            <i class="bi bi-lightbulb-fill text-warning me-1"></i>Clue
-          </span>
-        ` : ''}
       </div>
     `;
 
