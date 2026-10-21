@@ -317,14 +317,18 @@
   document.getElementById('btnAddPinManualTop')?.addEventListener('click', handleAddPinClick);
 
   function setActiveZone(zoneId) {
+    if (activeZoneId === zoneId) return;
     activeZoneId = zoneId;
     renderCanvas();
-    renderInspector();
 
-    const card = document.querySelector(`.pin-target-card[data-zone-id="${zoneId}"]`);
-    if (card) {
-      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    // Toggle active state in inspector without destroying input elements
+    document.querySelectorAll('.pin-target-card').forEach(c => {
+      const isActive = c.dataset.zoneId === zoneId;
+      c.classList.toggle('active', isActive);
+      if (isActive) {
+        c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
   }
 
   // ── RENDER INSPECTOR PANEL ───────────────────────────────────────────────────
@@ -353,10 +357,10 @@
       card.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-2">
           <div class="d-flex align-items-center gap-2">
-            <span class="badge rounded-circle p-1 d-inline-flex align-items-center justify-content-center text-dark fw-black" style="width: 24px; height: 24px; background: ${z.color || '#fef08a'}; font-size: 0.75rem;">
+            <span class="badge rounded-circle p-1 d-inline-flex align-items-center justify-content-center text-dark fw-black pin-number-badge" style="width: 24px; height: 24px; background: ${z.color || '#fef08a'}; font-size: 0.75rem;">
               ${z.number}
             </span>
-            <span class="fw-bold small text-dark">${z.label || `Target Pin #${z.number}`}</span>
+            <span class="fw-bold small text-dark pin-card-header-label">${escapeHtml(z.label) || `Target Pin #${z.number}`}</span>
           </div>
           <button type="button" class="btn btn-sm text-danger p-0 border-0 btn-delete-pin" data-zone-id="${z.id}" title="Delete this pin">
             <i class="bi bi-trash3"></i>
@@ -385,25 +389,34 @@
 
       // Event listeners for inputs
       const labelInput = card.querySelector('.pin-label-input');
+      labelInput.addEventListener('click', (e) => e.stopPropagation());
+      labelInput.addEventListener('pointerdown', (e) => e.stopPropagation());
       labelInput.addEventListener('input', (e) => {
-        z.label = e.target.value.trim();
-        // Update slot text in DOM
+        z.label = e.target.value;
+        // Update slot text on canvas
         const slotText = document.querySelector(`.builder-slot-box[data-zone-id="${z.id}"] .builder-slot-label-text`);
-        if (slotText) slotText.textContent = z.label || 'Drop / Tap Target';
+        if (slotText) slotText.textContent = z.label.trim() || 'Drop / Tap Target';
+        // Update card header label
+        const headerLabel = card.querySelector('.pin-card-header-label');
+        if (headerLabel) headerLabel.textContent = z.label.trim() || `Target Pin #${z.number}`;
         syncWordBank();
       });
 
       const factInput = card.querySelector('.pin-fact-input');
+      factInput.addEventListener('click', (e) => e.stopPropagation());
+      factInput.addEventListener('pointerdown', (e) => e.stopPropagation());
       factInput.addEventListener('input', (e) => {
-        round.facts[z.id] = e.target.value.trim();
+        round.facts[z.id] = e.target.value;
       });
 
       card.querySelectorAll('.pin-color-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
           z.color = btn.dataset.color;
+          card.querySelectorAll('.pin-color-btn').forEach(b => b.classList.toggle('active', b === btn));
+          const numBadge = card.querySelector('.pin-number-badge');
+          if (numBadge) numBadge.style.background = z.color;
           renderCanvas();
-          renderInspector();
         });
       });
 
@@ -413,7 +426,8 @@
         deletePin(z.id);
       });
 
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('input, textarea, button, a')) return;
         setActiveZone(z.id);
       });
 
