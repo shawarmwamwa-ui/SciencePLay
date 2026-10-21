@@ -656,17 +656,20 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
     }
 
     function toggleCanvasExpand() {
-      const grid = document.querySelector('.lesson-workspace-grid');
+      const layout = document.querySelector('.lesson-workspace-layout') || document.querySelector('.lesson-workspace-grid');
       const btn = document.getElementById('btnToggleExpandCanvas');
-      if (!grid || !btn) return;
-      const isExpanded = grid.classList.toggle('canvas-expanded');
-      if (isExpanded) {
-        btn.innerHTML = '<i class="bi bi-arrows-angle-contract me-1"></i>Standard View';
-        btn.classList.replace('btn-outline-dark', 'btn-dark');
-        showBuilderToast("Canvas expanded to full width preview", "info");
-      } else {
-        btn.innerHTML = '<i class="bi bi-arrows-angle-expand me-1"></i>Expand Canvas';
-        btn.classList.replace('btn-dark', 'btn-outline-dark');
+      if (!layout) return;
+      const isExpanded = layout.classList.toggle('canvas-expanded');
+      if (btn) {
+        if (isExpanded) {
+          btn.innerHTML = '<i class="bi bi-arrows-angle-contract me-1"></i>Standard View';
+          btn.classList.replace('btn-outline-dark', 'btn-dark');
+          showBuilderToast("Canvas expanded to full width preview", "info");
+        } else {
+          btn.innerHTML = '<i class="bi bi-arrows-angle-expand me-1"></i>Expand Canvas';
+          btn.classList.replace('btn-dark', 'btn-outline-dark');
+          showBuilderToast("Canvas restored to standard side-by-side view", "info");
+        }
       }
     }
 
@@ -1475,3 +1478,5 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
     window.updateSummaryBullet = updateSummaryBullet;
     window.removeSummaryBullet = removeSummaryBullet;
     window.removeSlideImage = removeSlideImage;
+    window.toggleCanvasExpand = toggleCanvasExpand;
+    window.handleSlideFileUpload = handleSlideFileUpload;
