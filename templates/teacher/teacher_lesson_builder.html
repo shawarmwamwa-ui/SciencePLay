@@ -299,6 +299,24 @@
                           </div>
                         </div>
 
+                        <!-- Dedicated Characteristics (Multi-Select Traits) Canvas Preview -->
+                        <div class="canvas-characteristics-card d-none" id="canvasCharacteristicsBox">
+                          <div class="characteristics-banner mb-3" id="canvasCharacteristicsBanner">
+                            Tap all the traits that prove this fish is alive! 🐟
+                          </div>
+                          <div class="characteristics-object mb-3" id="canvasCharacteristicsObject">
+                            <img src="/static/images/fish.webp" alt="Subject" class="characteristics-object-image" id="canvasCharacteristicsImg">
+                            <div class="characteristics-object-info">
+                              <div class="object-label" id="canvasCharacteristicsLabel">Fish</div>
+                              <p id="canvasCharacteristicsDesc">A fish shows life in many ways: it breathes through gills, swims by itself, grows, and needs food.</p>
+                            </div>
+                          </div>
+                          <div class="traits-grid" id="canvasCharacteristicsTraitsGrid">
+                            <!-- Trait buttons rendered dynamically via JS -->
+                          </div>
+                          <div id="canvasCharacteristicsFeedback" class="characteristics-feedback mt-2"></div>
+                        </div>
+
                         <div class="canvas-bottom-nav">
                           <button type="button" class="canvas-nav-btn btn-secondary" id="canvasBackBtn" onclick="canvasStep(-1)">
                             <i class="bi bi-arrow-left me-1"></i>Back
@@ -337,6 +355,7 @@
                             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
                               <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('concept'); return false;">📝 Concept &amp; Story Slide</a></li>
                               <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('quick-check'); return false;">❓ Interactive Quick Check</a></li>
+                              <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('characteristics'); return false;">🧬 Multi-Select Traits Activity</a></li>
                               <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('summary'); return false;">🏆 Milestone &amp; Summary Slide</a></li>
                             </ul>
                           </div>
@@ -374,6 +393,7 @@
                         <select class="form-select form-select-sm rounded-3 fw-semibold" id="editSlideType" onchange="updateCurrentSlideField('type', this.value)">
                           <option value="concept">📝 Concept &amp; Story Slide</option>
                           <option value="quick-check">❓ Interactive Quick Check</option>
+                          <option value="characteristics">🧬 Multi-Select Traits Activity</option>
                           <option value="summary">🏆 Milestone Summary Slide</option>
                         </select>
                       </div>
@@ -431,6 +451,48 @@
                           </div>
                           <div id="quizOptionsEditor" class="d-flex flex-column gap-2">
                           </div>
+                        </div>
+                      </div>
+
+                      <!-- Dedicated Characteristics (Multi-Select Traits) Inspector Fields -->
+                      <div id="characteristicsEditFields" class="d-none border-top pt-2 mt-2">
+                        <div class="mb-2">
+                          <label class="form-label text-muted small fw-bold mb-1">Instruction Banner Prompt</label>
+                          <input type="text" class="form-control form-control-sm rounded-3 fw-bold" id="editCharacteristicsPrompt" oninput="updateCharacteristicsPrompt(this.value)" placeholder="e.g. Tap all the traits that prove this fish is alive! 🐟">
+                        </div>
+
+                        <div class="p-2 bg-white rounded-3 border mb-2">
+                          <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label text-muted small fw-bold mb-0">Target Subject / Card</label>
+                            <span class="badge bg-light text-dark border small fw-bold">Active Subject</span>
+                          </div>
+                          <div class="mb-2">
+                            <label class="form-label text-muted small mb-0">Object Name</label>
+                            <input type="text" class="form-control form-control-sm rounded-2 fw-bold" id="editCharacteristicsObjLabel" oninput="updateCharacteristicsObjField('label', this.value)" placeholder="e.g. Fish">
+                          </div>
+                          <div class="d-flex align-items-center gap-2 mb-2">
+                            <img id="editCharacteristicsObjImgThumb" src="/static/images/fish.webp" alt="Subject" style="width: 44px; height: 44px; object-fit: contain; border-radius: 8px; border: 1.5px solid #0f172a; background: #f8fafc; padding: 2px;">
+                            <div class="flex-grow-1">
+                              <button type="button" class="btn btn-outline-primary btn-sm rounded-pill fw-bold py-1 px-3 w-100" onclick="openCharacteristicsPresetPicker()">
+                                <i class="bi bi-image me-1"></i>Change Subject Image
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <label class="form-label text-muted small mb-0">Subject Explanation</label>
+                            <textarea class="form-control form-control-sm rounded-2" rows="2" id="editCharacteristicsObjDesc" oninput="updateCharacteristicsObjField('explanation', this.value)" placeholder="Describe how this object exhibits life or non-living properties..."></textarea>
+                          </div>
+                        </div>
+
+                        <div class="mb-2">
+                          <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label text-muted small fw-bold mb-0">Interactive Traits (Check if correct)</label>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-bold small text-primary" onclick="addCharacteristicsTrait()">+ Add Trait</button>
+                          </div>
+                          <div id="characteristicsTraitsEditor" class="d-flex flex-column gap-2 mb-2">
+                            <!-- Traits pills editor items -->
+                          </div>
+                          <small class="text-muted" style="font-size: 0.68rem;">Checked traits are correct traits students must tap. Unchecked are distractors / decoys.</small>
                         </div>
                       </div>
 

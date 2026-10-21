@@ -567,6 +567,156 @@
       object-fit: contain;
     }
 
+    /* ── Dedicated Characteristics (Multi-Select Traits) Canvas Styles ── */
+    .canvas-characteristics-card {
+      background: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 1rem;
+      padding: 1.15rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 4px 4px 0px #0f172a;
+    }
+
+    .characteristics-banner {
+      background: #ede9fe;
+      border: 2px solid #7c3aed;
+      border-radius: 0.75rem;
+      padding: 0.65rem 1rem;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #5b21b6;
+      box-shadow: 2px 2px 0px #7c3aed;
+      text-align: center;
+    }
+
+    .characteristics-object {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      border: 2px solid #0f172a;
+      border-radius: 0.85rem;
+      background: #ffffff;
+      box-shadow: 3px 3px 0px #0f172a;
+    }
+
+    .characteristics-object-image {
+      width: 68px;
+      height: 68px;
+      object-fit: contain;
+      border-radius: 0.65rem;
+      border: 1.5px solid #0f172a;
+      background: #f8fafc;
+      padding: 4px;
+      flex-shrink: 0;
+    }
+
+    .characteristics-object-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      text-align: left;
+    }
+
+    .characteristics-object-info .object-label {
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: #0f172a;
+    }
+
+    .characteristics-object-info p {
+      margin: 0;
+      font-size: 0.88rem;
+      color: #334155;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    .traits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .trait-option {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.7rem 1rem;
+      font-size: 0.92rem;
+      font-weight: 800;
+      border: 2px solid #0f172a;
+      border-radius: 0.75rem;
+      box-shadow: 3px 3px 0px #0f172a;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: #0f172a;
+      user-select: none;
+    }
+
+    .trait-option:nth-child(5n+1) { background: #fef08a; }
+    .trait-option:nth-child(5n+2) { background: #bae6fd; }
+    .trait-option:nth-child(5n+3) { background: #bbf7d0; }
+    .trait-option:nth-child(5n+4) { background: #fbcfe8; }
+    .trait-option:nth-child(5n+5) { background: #ddd6fe; }
+
+    .trait-option:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0px #0f172a;
+    }
+
+    .trait-option.trait-selected.trait-correct {
+      border-color: #16a34a !important;
+      box-shadow: 3px 3px 0px #16a34a !important;
+      outline: 2px solid #16a34a;
+    }
+
+    .trait-option.trait-selected.trait-incorrect {
+      border-color: #dc2626 !important;
+      box-shadow: 3px 3px 0px #dc2626 !important;
+      outline: 2px solid #dc2626;
+      animation: shakeWrong 0.35s ease;
+    }
+
+    .trait-check-badge {
+      font-size: 1.1rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+    }
+    .trait-selected.trait-correct .trait-check-badge {
+      color: #16a34a;
+    }
+    .trait-selected.trait-incorrect .trait-check-badge {
+      color: #dc2626;
+    }
+
+    @keyframes shakeWrong {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* Traits Editor items in right inspector */
+    .characteristics-trait-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.6rem;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 0.65rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .characteristics-trait-item.is-correct-trait {
+      border-color: #86efac;
+      background: #f0fdf4;
+    }
+
     .canvas-bottom-nav {
       margin-top: auto;
       padding-top: 1rem;

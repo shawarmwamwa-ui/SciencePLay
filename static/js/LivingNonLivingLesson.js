@@ -74,11 +74,11 @@ function getActiveLessonSlides() {
         successMessage: slide.successMessage || slide.metadata?.correctFeedback || 'Correct! Well done!',
         retryMessage: slide.retryMessage || slide.metadata?.incorrectFeedback || 'Try again!',
         retryHint: slide.retryHint || slide.metadata?.hintText || (isLivingTopic ? 'Think carefully about what living things do.' : 'Think carefully about the clues and try again.'),
-        bullets: Array.isArray(slide.contentData?.bullets) ? slide.contentData.bullets : [],
-        hotspots: Array.isArray(slide.contentData?.hotspots) ? slide.contentData.hotspots : [],
-        traits: Array.isArray(slide.contentData?.traits) ? slide.contentData.traits : [],
-        object: slide.contentData?.object || {},
-        correctTraits: Array.isArray(slide.contentData?.correctTraits) ? slide.contentData.correctTraits : [],
+        bullets: Array.isArray(slide.bullets) ? slide.bullets : (Array.isArray(slide.contentData?.bullets) ? slide.contentData.bullets : []),
+        hotspots: Array.isArray(slide.hotspots) ? slide.hotspots : (Array.isArray(slide.contentData?.hotspots) ? slide.contentData.hotspots : []),
+        traits: Array.isArray(slide.traits) ? slide.traits : (Array.isArray(slide.contentData?.traits) ? slide.contentData.traits : []),
+        object: slide.object || slide.contentData?.object || {},
+        correctTraits: Array.isArray(slide.correctTraits) ? slide.correctTraits : (Array.isArray(slide.contentData?.correctTraits) ? slide.contentData.correctTraits : []),
         isCustom: true
       };
     });

@@ -103,11 +103,27 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
       {
         id: "slide-6",
         title: "Why is this fish a living thing?",
-        type: "concept",
+        type: "characteristics",
+        description: "Tap all the traits that prove this fish is alive! 🐟",
+        prompt: "Tap all the traits that prove this fish is alive! 🐟",
         image: "/static/images/fish.webp",
         images: ["/static/images/fish.webp"],
         captions: ["Fish"],
-        explanation: "Awesome! A fish is living because it breathes water through gills, moves on its own, and needs food to grow! 🐟"
+        object: {
+          label: "Fish",
+          image: "/static/images/fish.webp",
+          icon: "/static/images/fish.webp",
+          explanation: "A fish shows life in many ways: it breathes through gills, swims by itself, grows, and needs food."
+        },
+        traits: [
+          { id: "grows", label: "Grows", isCorrect: true },
+          { id: "breathes", label: "Breathes", isCorrect: true },
+          { id: "moves", label: "Moves on its own", isCorrect: true },
+          { id: "needs-food", label: "Needs food", isCorrect: true },
+          { id: "made-by-people", label: "Made by people", isCorrect: false }
+        ],
+        correctTraits: ["grows", "breathes", "moves", "needs-food"],
+        explanation: "A fish shows life in many ways: it breathes through gills, swims by itself, grows, and needs food."
       },
       {
         id: "slide-7",
@@ -375,6 +391,33 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
           { id: `opt-${Date.now()}-1`, label: "Option A", icon: "/static/images/tree.webp", isCorrect: true },
           { id: `opt-${Date.now()}-2`, label: "Option B", icon: "/static/images/rock.webp", isCorrect: false }
         ];
+      } else if (type === 'characteristics') {
+        newSlide.title = "Why is this fish a living thing?";
+        newSlide.description = "Tap all the traits that prove this subject is alive! 🐟";
+        newSlide.prompt = "Tap all the traits that prove this subject is alive! 🐟";
+        newSlide.image = "/static/images/fish.webp";
+        newSlide.images = ["/static/images/fish.webp"];
+        newSlide.captions = ["Fish"];
+        newSlide.object = {
+          label: "Fish",
+          image: "/static/images/fish.webp",
+          icon: "/static/images/fish.webp",
+          explanation: "A fish shows life in many ways: it breathes through gills, swims by itself, grows, and needs food."
+        };
+        newSlide.traits = [
+          { id: `trait-${Date.now()}-1`, label: "Grows", isCorrect: true },
+          { id: `trait-${Date.now()}-2`, label: "Breathes", isCorrect: true },
+          { id: `trait-${Date.now()}-3`, label: "Moves on its own", isCorrect: true },
+          { id: `trait-${Date.now()}-4`, label: "Needs food", isCorrect: true },
+          { id: `trait-${Date.now()}-5`, label: "Made by people", isCorrect: false }
+        ];
+        newSlide.correctTraits = [
+          newSlide.traits[0].id,
+          newSlide.traits[1].id,
+          newSlide.traits[2].id,
+          newSlide.traits[3].id
+        ];
+        newSlide.explanation = "A fish shows life in many ways: it breathes through gills, swims by itself, grows, and needs food.";
       } else if (type === 'summary') {
         const curTitle = document.getElementById('lessonTitleInput')?.value?.trim() || 'Lesson';
         newSlide.title = `${curTitle}: Big Ideas`;
@@ -458,6 +501,10 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
         if (slide.type === 'quick-check') {
           typeBadge.textContent = '❓ Quick Check';
           typeBadge.className = 'badge bg-warning-subtle text-dark border small fw-bold';
+        } else if (slide.type === 'characteristics') {
+          typeBadge.textContent = '🧬 Traits Activity';
+          typeBadge.className = 'badge bg-purple text-white border small fw-bold' || 'badge bg-primary text-white border small fw-bold';
+          typeBadge.style.background = '#7c3aed';
         } else if (slide.type === 'summary') {
           typeBadge.textContent = '🏆 Milestone';
           typeBadge.className = 'badge bg-success-subtle text-success border small fw-bold';
@@ -486,18 +533,35 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
       const mediaSection = document.getElementById('slideMediaConfigSection');
       const quizBox = document.getElementById('quickCheckEditFields');
       const summaryBulletsBox = document.getElementById('summaryBulletsEditFields');
+      const charSection = document.getElementById('characteristicsEditFields');
 
       if (slide.type === 'quick-check') {
         if (mediaSection) mediaSection.classList.add('d-none');
         if (summaryBulletsBox) summaryBulletsBox.classList.add('d-none');
+        if (charSection) charSection.classList.add('d-none');
         if (quizBox) {
           quizBox.classList.remove('d-none');
           document.getElementById('editQuizPrompt').value = slide.prompt || '';
           renderQuizOptionsEditor();
         }
+      } else if (slide.type === 'characteristics') {
+        if (mediaSection) mediaSection.classList.add('d-none');
+        if (quizBox) quizBox.classList.add('d-none');
+        if (summaryBulletsBox) summaryBulletsBox.classList.add('d-none');
+        if (charSection) {
+          charSection.classList.remove('d-none');
+          document.getElementById('editCharacteristicsPrompt').value = slide.description || slide.prompt || '';
+          const obj = slide.object || {};
+          document.getElementById('editCharacteristicsObjLabel').value = obj.label || 'Fish';
+          document.getElementById('editCharacteristicsObjDesc').value = obj.explanation || obj.description || slide.explanation || '';
+          const thumb = document.getElementById('editCharacteristicsObjImgThumb');
+          if (thumb) thumb.src = obj.image || slide.image || '/static/images/fish.webp';
+          renderCharacteristicsTraitsEditor();
+        }
       } else if (slide.type === 'summary') {
         if (mediaSection) mediaSection.classList.remove('d-none');
         if (quizBox) quizBox.classList.add('d-none');
+        if (charSection) charSection.classList.add('d-none');
         if (summaryBulletsBox) {
           summaryBulletsBox.classList.remove('d-none');
           renderSummaryBulletsEditor();
@@ -506,6 +570,7 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
       } else {
         if (mediaSection) mediaSection.classList.remove('d-none');
         if (quizBox) quizBox.classList.add('d-none');
+        if (charSection) charSection.classList.add('d-none');
         if (summaryBulletsBox) summaryBulletsBox.classList.add('d-none');
         renderSlideMediaStrip(slide);
       }
@@ -772,6 +837,31 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
             { id: "opt-1", label: "Choice A", icon: "/static/images/tree.webp", isCorrect: true },
             { id: "opt-2", label: "Choice B", icon: "/static/images/rock.webp", isCorrect: false }
           ];
+        } else if (value === 'characteristics' && (!slide.traits || slide.traits.length === 0)) {
+          slide.title = slide.title || "Why is this fish a living thing?";
+          slide.description = "Tap all the traits that prove this subject is alive! 🐟";
+          slide.prompt = "Tap all the traits that prove this subject is alive! 🐟";
+          slide.image = slide.image || "/static/images/fish.webp";
+          slide.object = slide.object || {
+            label: "Fish",
+            image: "/static/images/fish.webp",
+            icon: "/static/images/fish.webp",
+            explanation: "A fish shows life in many ways: it breathes through gills, swims by itself, grows, and needs food."
+          };
+          slide.traits = [
+            { id: `trait-${Date.now()}-1`, label: "Grows", isCorrect: true },
+            { id: `trait-${Date.now()}-2`, label: "Breathes", isCorrect: true },
+            { id: `trait-${Date.now()}-3`, label: "Moves on its own", isCorrect: true },
+            { id: `trait-${Date.now()}-4`, label: "Needs food", isCorrect: true },
+            { id: `trait-${Date.now()}-5`, label: "Made by people", isCorrect: false }
+          ];
+          slide.correctTraits = [
+            slide.traits[0].id,
+            slide.traits[1].id,
+            slide.traits[2].id,
+            slide.traits[3].id
+          ];
+          slide.explanation = "A fish shows life in many ways: it breathes through gills, swims by itself, grows, and needs food.";
         } else if (value === 'summary') {
           const curTitle = document.getElementById('lessonTitleInput')?.value?.trim() || 'Lesson';
           if (!slide.title || slide.title.startsWith('Concept') || slide.title.startsWith('Quick Check') || slide.title === 'Living vs Non-Living: Big Ideas') {
@@ -803,8 +893,12 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
       const quizBox = document.getElementById('canvasQuizBox');
       const quizPrompt = document.getElementById('canvasQuizPromptDisplay');
       const quizOpts = document.getElementById('canvasQuizOptionsContainer');
+      const charBox = document.getElementById('canvasCharacteristicsBox');
+      const narrationBox = document.getElementById('canvasNarrationDisplay');
 
       if (slide.type === 'quick-check') {
+        if (charBox) charBox.classList.add('d-none');
+        if (narrationBox) narrationBox.classList.remove('d-none');
         heroBox.classList.add('d-none');
         quizBox.classList.remove('d-none');
         quizPrompt.textContent = slide.prompt || 'Answer the question:';
@@ -845,7 +939,67 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
           };
           quizOpts.appendChild(btn);
         });
+      } else if (slide.type === 'characteristics') {
+        heroBox.classList.add('d-none');
+        quizBox.classList.add('d-none');
+        if (narrationBox) narrationBox.classList.add('d-none');
+        if (charBox) {
+          charBox.classList.remove('d-none');
+          const bannerEl = document.getElementById('canvasCharacteristicsBanner');
+          if (bannerEl) bannerEl.textContent = slide.description || slide.prompt || 'Tap all the traits that prove this subject is alive! 🐟';
+
+          const obj = slide.object || {};
+          const charImg = document.getElementById('canvasCharacteristicsImg');
+          if (charImg) charImg.src = obj.image || slide.image || '/static/images/fish.webp';
+          const charLabel = document.getElementById('canvasCharacteristicsLabel');
+          if (charLabel) charLabel.textContent = obj.label || 'Fish';
+          const charDesc = document.getElementById('canvasCharacteristicsDesc');
+          if (charDesc) charDesc.textContent = obj.explanation || obj.description || slide.explanation || '';
+
+          const traitsGrid = document.getElementById('canvasCharacteristicsTraitsGrid');
+          if (traitsGrid) {
+            traitsGrid.innerHTML = '';
+            const traits = Array.isArray(slide.traits) ? slide.traits : [];
+            const correctIds = Array.isArray(slide.correctTraits) && slide.correctTraits.length > 0
+              ? slide.correctTraits
+              : traits.filter(t => t.isCorrect).map(t => t.id);
+
+            traits.forEach(trait => {
+              const btn = document.createElement('div');
+              btn.className = 'trait-option';
+              btn.setAttribute('data-id', trait.id);
+              btn.innerHTML = `
+                <span class="trait-label">${escapeAttr(trait.label)}</span>
+                <span class="trait-check-badge"></span>
+              `;
+              btn.onclick = () => {
+                const isSelected = btn.classList.contains('trait-selected');
+                if (isSelected) {
+                  btn.classList.remove('trait-selected', 'trait-correct', 'trait-incorrect');
+                  const badge = btn.querySelector('.trait-check-badge');
+                  if (badge) badge.innerHTML = '';
+                } else {
+                  btn.classList.add('trait-selected');
+                  const isCorrect = trait.isCorrect ?? correctIds.includes(trait.id);
+                  const badge = btn.querySelector('.trait-check-badge');
+                  if (isCorrect) {
+                    btn.classList.add('trait-correct');
+                    if (badge) badge.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+                    showBuilderToast(`Awesome! "${trait.label}" is a living characteristic! 🌟`, 'success');
+                  } else {
+                    btn.classList.add('trait-incorrect');
+                    if (badge) badge.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+                    showBuilderToast(`"${trait.label}" is a decoy! Only pick traits living things do on their own.`, 'warning');
+                  }
+                }
+              };
+              traitsGrid.appendChild(btn);
+            });
+          }
+        }
       } else {
+        if (charBox) charBox.classList.add('d-none');
+        if (narrationBox) narrationBox.classList.remove('d-none');
         quizBox.classList.add('d-none');
         heroBox.classList.remove('d-none');
         const lottieBox = document.getElementById('canvasLottieContainer');
@@ -1221,6 +1375,21 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
           return;
         }
 
+        if (activeImagePickerMode?.action === 'char_obj') {
+          if (!slide.object) slide.object = {};
+          slide.object.image = src;
+          slide.image = src;
+          if (label && (!slide.object.label || slide.object.label === 'Fish' || slide.object.label === 'Subject')) {
+            slide.object.label = label;
+          }
+          loadSlideIntoEditor();
+          updateCanvasPreview();
+          showBuilderToast(`Updated subject image to "${label || 'illustration'}"!`, "success");
+          const modalEl = document.getElementById('presetImageModal');
+          bootstrap.Modal.getInstance(modalEl)?.hide();
+          return;
+        }
+
         const imgs = ensureSlideImages(slide);
         if (activeImagePickerMode?.action === 'add') {
           if (imgs.length < 4) {
@@ -1244,6 +1413,125 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
       }
       const modalEl = document.getElementById('presetImageModal');
       bootstrap.Modal.getInstance(modalEl)?.hide();
+    }
+
+    // Characteristics (Multi-Select Traits) Editor Handlers
+    function renderCharacteristicsTraitsEditor() {
+      const container = document.getElementById('characteristicsTraitsEditor');
+      if (!container) return;
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      if (!Array.isArray(slide.traits)) {
+        slide.traits = [];
+      }
+      container.innerHTML = '';
+
+      if (slide.traits.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-2 text-muted small bg-white rounded-3 border">
+            No traits yet. Click <strong class="text-primary">+ Add Trait</strong> to create interactive trait buttons.
+          </div>
+        `;
+        return;
+      }
+
+      slide.traits.forEach((trait, idx) => {
+        const item = document.createElement('div');
+        item.className = `characteristics-trait-item ${trait.isCorrect ? 'is-correct-trait' : ''}`;
+        item.innerHTML = `
+          <input type="checkbox" class="form-check-input mt-0 me-1" ${trait.isCorrect ? 'checked' : ''} title="Mark as correct living trait" onchange="toggleCharacteristicsTraitCorrect(${idx}, this.checked)" style="cursor: pointer;">
+          <input type="text" class="form-control form-control-sm rounded-2 fw-bold" value="${escapeAttr(trait.label)}" placeholder="Trait label" oninput="updateCharacteristicsTraitLabel(${idx}, this.value)">
+          <button type="button" class="btn btn-outline-danger btn-sm p-1 border-0 rounded-2" onclick="removeCharacteristicsTrait(${idx})" title="Remove trait">✕</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function addCharacteristicsTrait() {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      if (!Array.isArray(slide.traits)) slide.traits = [];
+      if (slide.traits.length >= 8) {
+        showBuilderToast("Maximum 8 traits recommended for clean layout.", "warning");
+        return;
+      }
+      const newId = `trait-${Date.now()}`;
+      slide.traits.push({ id: newId, label: 'New Trait', isCorrect: true });
+      if (!Array.isArray(slide.correctTraits)) slide.correctTraits = [];
+      slide.correctTraits.push(newId);
+      renderCharacteristicsTraitsEditor();
+      updateCanvasPreview();
+      showBuilderToast('Added new trait button!', 'success');
+      setTimeout(() => {
+        const inputs = document.querySelectorAll('#characteristicsTraitsEditor input[type="text"]');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+      }, 50);
+    }
+
+    function toggleCharacteristicsTraitCorrect(idx, checked) {
+      const slide = slides[currentSlideIndex];
+      if (!slide || !slide.traits || !slide.traits[idx]) return;
+      slide.traits[idx].isCorrect = Boolean(checked);
+      const tid = slide.traits[idx].id;
+      if (!Array.isArray(slide.correctTraits)) slide.correctTraits = [];
+      if (checked) {
+        if (!slide.correctTraits.includes(tid)) slide.correctTraits.push(tid);
+      } else {
+        slide.correctTraits = slide.correctTraits.filter(id => id !== tid);
+      }
+      renderCharacteristicsTraitsEditor();
+      updateCanvasPreview();
+    }
+
+    function updateCharacteristicsTraitLabel(idx, label) {
+      const slide = slides[currentSlideIndex];
+      if (!slide || !slide.traits || !slide.traits[idx]) return;
+      slide.traits[idx].label = label;
+      updateCanvasPreview();
+    }
+
+    function removeCharacteristicsTrait(idx) {
+      const slide = slides[currentSlideIndex];
+      if (!slide || !slide.traits || !slide.traits[idx]) return;
+      if (slide.traits.length <= 2) {
+        showBuilderToast("Activity needs at least 2 traits.", "warning");
+        return;
+      }
+      const tid = slide.traits[idx].id;
+      slide.traits.splice(idx, 1);
+      if (Array.isArray(slide.correctTraits)) {
+        slide.correctTraits = slide.correctTraits.filter(id => id !== tid);
+      }
+      renderCharacteristicsTraitsEditor();
+      updateCanvasPreview();
+    }
+
+    function updateCharacteristicsPrompt(val) {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      slide.description = val;
+      slide.prompt = val;
+      const bannerEl = document.getElementById('canvasCharacteristicsBanner');
+      if (bannerEl) bannerEl.textContent = val || 'Tap all the traits that prove this subject is alive! 🐟';
+    }
+
+    function updateCharacteristicsObjField(field, val) {
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+      if (!slide.object) slide.object = {};
+      slide.object[field] = val;
+      if (field === 'explanation') {
+        slide.explanation = val;
+      }
+      updateCanvasPreview();
+    }
+
+    function openCharacteristicsPresetPicker() {
+      activeImagePickerMode = { action: 'char_obj', index: null };
+      const modalEl = document.getElementById('presetImageModal');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+      loadTeacherAssets('image');
     }
 
     // Preset Animation Picker
@@ -1480,3 +1768,13 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
     window.removeSlideImage = removeSlideImage;
     window.toggleCanvasExpand = toggleCanvasExpand;
     window.handleSlideFileUpload = handleSlideFileUpload;
+
+    // Characteristics exports
+    window.renderCharacteristicsTraitsEditor = renderCharacteristicsTraitsEditor;
+    window.addCharacteristicsTrait = addCharacteristicsTrait;
+    window.toggleCharacteristicsTraitCorrect = toggleCharacteristicsTraitCorrect;
+    window.updateCharacteristicsTraitLabel = updateCharacteristicsTraitLabel;
+    window.removeCharacteristicsTrait = removeCharacteristicsTrait;
+    window.updateCharacteristicsPrompt = updateCharacteristicsPrompt;
+    window.updateCharacteristicsObjField = updateCharacteristicsObjField;
+    window.openCharacteristicsPresetPicker = openCharacteristicsPresetPicker;
