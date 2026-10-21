@@ -4368,6 +4368,9 @@ def _get_core_lesson_starter_slides(title):
                 ]
             }
         ]
+    elif 'basic' in t_lower or 'need' in t_lower:
+        from routes.student_routes import BASIC_NEEDS_DEFAULT_SLIDES
+        return BASIC_NEEDS_DEFAULT_SLIDES
     else:
         # Default Living vs Non-Living full 7 slides
         return [
@@ -4449,18 +4452,19 @@ def lesson_builder(lesson_id=None):
     if lesson_id:
         lesson = Lesson.query.get_or_404(lesson_id)
         has_custom = bool(lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'))
-        # If this is one of the 5 default core curriculum lessons or has no custom slides, initialize starter slides and mark as core
-        if lesson.id in [1, 2, 3, 4, 5] or not has_custom:
-            is_core_lesson = True
+        # If the lesson already has saved custom slides, load them directly.
+        # Otherwise, populate with the authentic curriculum starter slides for that topic.
+        if has_custom:
+            config = lesson.config
+        else:
             starter_slides = _get_core_lesson_starter_slides(lesson.title)
             config = {
-                "title": f"{lesson.title} (Configured)",
-                "description": lesson.description or f"Configured {lesson.title} interactive slide presentation.",
+                "title": lesson.title,
+                "description": lesson.description or f"Interactive {lesson.title} slide presentation.",
                 "grade_level": "Grade 3",
+                "term": lesson.term or "Term 1",
                 "slides": starter_slides
             }
-        else:
-            config = lesson.config or {}
     else:
         # Creating a brand new lesson
         if preset_key:
@@ -4736,26 +4740,8 @@ def save_lesson():
         "slides": slides
     }
 
-    # When editing a default core lesson, always create a separate configured lesson so core records are never overwritten
-    if is_core_lesson or not lesson_id:
-        new_lesson = Lesson(
-            title=title,
-            description=description,
-            config=config_payload,
-            term=term,
-            is_supplementary=is_supplementary,
-            is_archived=False
-        )
-        db.session.add(new_lesson)
-        db.session.commit()
-        role_label = "Supplementary / Remedial" if is_supplementary else "Core Curriculum"
-        if is_draft:
-            flash(f"Lesson '{title}' saved as draft. You can continue editing anytime from Lessons & Assignments.", "info")
-        else:
-            flash(f"New {role_label} lesson '{title}' created successfully! It is now available to assign.", "success")
-        log_access(current_user, 'create_configured_lesson', f'lesson_id={new_lesson.id} title={title} is_draft={is_draft}')
-        return redirect(url_for('teacher.lesson_studio'))
-    else:
+    # If updating an existing lesson (core curriculum or custom), update the record directly
+    if lesson_id:
         lesson = Lesson.query.get(lesson_id)
         if not lesson:
             flash("Lesson not found.", "danger")
@@ -4765,6 +4751,7 @@ def save_lesson():
         lesson.config = config_payload
         lesson.term = term
         lesson.is_supplementary = is_supplementary
+        lesson.is_draft = is_draft
         db.session.commit()
         role_label = "Supplementary / Remedial" if is_supplementary else "Core Curriculum"
         if is_draft:
@@ -4772,6 +4759,26 @@ def save_lesson():
         else:
             flash(f"{role_label} lesson '{title}' updated successfully!", "success")
         log_access(current_user, 'save_custom_lesson', f'lesson_id={lesson.id} title={title} is_draft={is_draft}')
+        return redirect(url_for('teacher.lesson_studio'))
+    else:
+        # Creating a brand new lesson
+        new_lesson = Lesson(
+            title=title,
+            description=description,
+            config=config_payload,
+            term=term,
+            is_supplementary=is_supplementary,
+            is_archived=False,
+            is_draft=is_draft
+        )
+        db.session.add(new_lesson)
+        db.session.commit()
+        role_label = "Supplementary / Remedial" if is_supplementary else "Core Curriculum"
+        if is_draft:
+            flash(f"Lesson '{title}' saved as draft. You can continue editing anytime from Lessons & Assignments.", "info")
+        else:
+            flash(f"New {role_label} lesson '{title}' created successfully! It is now available to assign.", "success")
+        log_access(current_user, 'create_configured_lesson', f'lesson_id={new_lesson.id} title={title} is_draft={is_draft}')
         return redirect(url_for('teacher.lesson_studio'))
 
 

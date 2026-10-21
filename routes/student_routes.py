@@ -2359,7 +2359,15 @@ def animal_body_parts_lesson():
         flash(msg, 'warning')
         return redirect(url_for(redir))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
-    initial_slide = log.current_slide if log else 0
+    has_custom = bool(lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'))
+    if has_custom:
+        return render_template(
+            'student/living_non_living_lesson.html',
+            lesson=lesson,
+            initial_slide=initial_slide,
+            published_payload=lesson.config,
+            is_preview=False
+        )
     return render_template(
         'student/animal_body_parts_lesson.html',
         lesson=lesson,
@@ -2477,7 +2485,15 @@ def plant_parts_lesson():
         flash(msg, 'warning')
         return redirect(url_for(redir))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
-    initial_slide = log.current_slide if log else 0
+    has_custom = bool(lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'))
+    if has_custom:
+        return render_template(
+            'student/living_non_living_lesson.html',
+            lesson=lesson,
+            initial_slide=initial_slide,
+            published_payload=lesson.config,
+            is_preview=False
+        )
     return render_template(
         'student/plant_parts_lesson.html',
         lesson=lesson,
@@ -2564,6 +2580,15 @@ def properties_of_metals_lesson():
         return redirect(url_for(redir))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
+    has_custom = bool(lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'))
+    if has_custom:
+        return render_template(
+            'student/living_non_living_lesson.html',
+            lesson=lesson,
+            initial_slide=initial_slide,
+            published_payload=lesson.config,
+            is_preview=False
+        )
     return render_template(
         'student/properties_of_metals_lesson.html',
         lesson=lesson,
@@ -2598,6 +2623,15 @@ def recycling_lesson():
         return redirect(url_for(redir))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
+    has_custom = bool(lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'))
+    if has_custom:
+        return render_template(
+            'student/living_non_living_lesson.html',
+            lesson=lesson,
+            initial_slide=initial_slide,
+            published_payload=lesson.config,
+            is_preview=False
+        )
     return render_template(
         'student/recycling_lesson.html',
         lesson=lesson,
