@@ -2359,6 +2359,7 @@ def animal_body_parts_lesson():
         flash(msg, 'warning')
         return redirect(url_for(redir))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
+    initial_slide = log.current_slide if log else 0
     has_custom = bool(lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'))
     if has_custom:
         return render_template(
@@ -2485,6 +2486,7 @@ def plant_parts_lesson():
         flash(msg, 'warning')
         return redirect(url_for(redir))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
+    initial_slide = log.current_slide if log else 0
     has_custom = bool(lesson.config and isinstance(lesson.config, dict) and lesson.config.get('slides'))
     if has_custom:
         return render_template(
