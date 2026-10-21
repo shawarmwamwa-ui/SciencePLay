@@ -29,21 +29,35 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
       }
     }
 
-    // Default starter slide deck (Living vs Non-Living 7 slides)
+    // Default starter slide deck (Living vs Non-Living 7 slides matching exact predefined curriculum)
     const DEFAULT_SLIDES = [
       {
         id: "slide-1",
         title: "Living vs Non-Living",
         type: "concept",
         image: "/static/images/tree.webp",
+        images: ["/static/images/tree.webp"],
+        captions: ["Living vs Non-Living"],
         explanation: "Living things grow, breathe, and need food and water! 🌱 Non-living things do not do these on their own. 🪨"
       },
       {
         id: "slide-2",
         title: "Tap to Explore",
         type: "concept",
-        image: "/static/images/tree.webp",
-        explanation: "Observe the world around us: trees grow tall, birds fly and breathe, but bicycles and puddles cannot grow or eat!"
+        images: [
+          "/static/images/tree.webp",
+          "/static/images/puddle.webp",
+          "/static/images/bicycle.webp",
+          "/static/images/bird.webp"
+        ],
+        captions: ["Tree", "Puddle", "Bicycle", "Bird"],
+        itemExplanations: {
+          "Tree": "A tree grows tall over many years, breathes air, and needs water and sunlight! 🌱 (Living Thing)",
+          "Puddle": "A puddle is water on the ground. It does not eat, breathe, or grow on its own. 💧 (Non-Living Thing)",
+          "Bicycle": "A bicycle only moves when a person pedals it. It cannot grow, eat, or breathe. 🚲 (Non-Living Thing)",
+          "Bird": "A bird is a living thing. It can fly around, look for food, and breathe on its own! 🐦 (Living Thing)"
+        },
+        explanation: "Tap each item to see what makes it living or non-living! 🔍"
       },
       {
         id: "slide-3",
@@ -51,7 +65,7 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
         type: "quick-check",
         prompt: "Which one can grow and needs water to stay alive? 🌱",
         image: "/static/images/plant.webp",
-        explanation: "Plants are living things because they absorb water and grow.",
+        explanation: "Great job! Plants are living things because they absorb water, make food from sunlight, and grow!",
         options: [
           { id: "opt-1", label: "Rock", icon: "/static/images/rock.webp", isCorrect: false },
           { id: "opt-2", label: "Plant", icon: "/static/images/plant.webp", isCorrect: true }
@@ -61,8 +75,18 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
         id: "slide-4",
         title: "More Objects to Classify",
         type: "concept",
-        image: "/static/images/cat.webp",
-        explanation: "Cats eat food and run around. Toys, balls, and chairs are made by people and cannot breathe!"
+        images: [
+          "/static/images/cat.webp",
+          "/static/images/ball.webp",
+          "/static/images/flower.webp"
+        ],
+        captions: ["Cat", "Ball", "Flower"],
+        itemExplanations: {
+          "Cat": "A cat breathes, moves on its own, eats food, and grows from a tiny kitten! 🐱 (Living Thing)",
+          "Ball": "A toy ball only rolls after someone kicks or throws it. It cannot breathe or grow. ⚽ (Non-Living Thing)",
+          "Flower": "A flower blooms in the garden and needs soil, water, and sunlight to stay healthy! 🌸 (Living Thing)"
+        },
+        explanation: "Tap each object! Is it living or non-living? ✨"
       },
       {
         id: "slide-5",
@@ -70,7 +94,7 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
         type: "quick-check",
         prompt: "Which object cannot breathe or move by itself? 🪑",
         image: "/static/images/chair.webp",
-        explanation: "A chair is made of wood or plastic by people and cannot breathe or grow.",
+        explanation: "Spot on! A chair is made of wood or plastic by people and cannot breathe, eat, or grow.",
         options: [
           { id: "opt-1", label: "Butterfly", icon: "/static/images/butterfly.webp", isCorrect: false },
           { id: "opt-2", label: "Chair", icon: "/static/images/chair.webp", isCorrect: true }
@@ -78,17 +102,27 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
       },
       {
         id: "slide-6",
-        title: "Why is this Fish a Living Thing?",
+        title: "Why is this fish a living thing?",
         type: "concept",
         image: "/static/images/fish.webp",
-        explanation: "A fish is living because it breathes water through gills, moves on its own, eats food, and grows larger!"
+        images: ["/static/images/fish.webp"],
+        captions: ["Fish"],
+        explanation: "Awesome! A fish is living because it breathes water through gills, moves on its own, and needs food to grow! 🐟"
       },
       {
         id: "slide-7",
         title: "Living vs Non-Living: Big Ideas",
         type: "summary",
-        image: "/static/images/star.webp",
-        explanation: "🌱 Living things grow, breathe, and need food. 🪨 Non-living things do not eat, breathe, or grow on their own. Awesome job!"
+        image: "/static/images/app_icon.png",
+        images: ["/static/images/app_icon.png"],
+        captions: ["Science Champion"],
+        bullets: [
+          "Living things grow, breathe, and need food and water.",
+          "Non-living things do not eat, breathe, or grow on their own.",
+          "Examples of living things: Trees, birds, plants, cats, and fish.",
+          "Examples of non-living things: Rocks, bicycles, balls, puddles, and chairs."
+        ],
+        explanation: "🌱 Living things grow, breathe, and need food. 🪨 Non-living things do not eat, breathe, or grow on their own. Fantastic job, Science Explorer!"
       }
     ];
 
@@ -278,11 +312,12 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
 
     function renderSlideStrip() {
       const container = document.getElementById('slideStripContainer');
+      if (!container) return;
       container.innerHTML = '';
 
       slides.forEach((slide, idx) => {
         const item = document.createElement('div');
-        item.className = `slide-strip-item ${idx === currentSlideIndex ? 'active' : ''}`;
+        item.className = `slide-ribbon-item ${idx === currentSlideIndex ? 'active' : ''}`;
         item.onclick = () => selectSlide(idx);
 
         let typePill = '<span class="slide-strip-type-pill st-concept">Concept</span>';
@@ -292,18 +327,28 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
           typePill = '<span class="slide-strip-type-pill st-summary">Summary</span>';
         }
 
+        const thumbImg = (slide.images && slide.images.length > 0) ? slide.images[0] : (slide.image || '/static/images/tree.webp');
+
         item.innerHTML = `
-          <div class="d-flex align-items-center gap-2 overflow-hidden">
+          <div class="d-flex align-items-center justify-content-between mb-1">
             <span class="slide-strip-num">${idx + 1}</span>
-            <span class="slide-strip-title">${slide.title || 'Untitled Slide'}</span>
+            ${typePill}
           </div>
-          ${typePill}
+          <div class="d-flex align-items-center gap-2 overflow-hidden">
+            <img src="${thumbImg}" alt="Thumb" class="rounded-2 border object-fit-cover flex-shrink-0" style="width: 32px; height: 32px; background: #ffffff;">
+            <div class="slide-strip-title text-truncate" title="${escapeAttr(slide.title || 'Untitled Slide')}">${escapeAttr(slide.title || 'Untitled Slide')}</div>
+          </div>
         `;
         container.appendChild(item);
       });
 
       const badge = document.getElementById('slidesCountBadge');
       if (badge) badge.textContent = `${slides.length} Slides`;
+
+      const activeEl = container.querySelector('.slide-ribbon-item.active');
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
     }
 
     function selectSlide(idx) {
@@ -898,33 +943,36 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
                   ${captionLabelHtml(slide, 0, 'canvas-img-caption')}
                 </div>
               `;
-            } else if (imgs.length === 2) {
-              mediaDisplay.innerHTML = `
-                <div class="canvas-compare-row">
-                  <div class="canvas-compare-card">
-                    <span class="badge bg-primary-subtle text-primary border small mb-2 fw-bold">Image 1</span>
-                    <img src="${imgs[0]}" alt="Comparison item 1">
-                    ${captionLabelHtml(slide, 0, 'canvas-img-caption')}
-                  </div>
-                  <div class="canvas-compare-card">
-                    <span class="badge bg-warning-subtle text-dark border small mb-2 fw-bold">Image 2</span>
-                    <img src="${imgs[1]}" alt="Comparison item 2">
-                    ${captionLabelHtml(slide, 1, 'canvas-img-caption')}
-                  </div>
-                </div>
-              `;
             } else {
+              // 2 or more images: render as interactive explore scene matching student lesson (Image 2)
               mediaDisplay.innerHTML = `
-                <div class="canvas-gallery-grid">
-                  ${imgs.map((src, i) => `
-                    <div class="canvas-gallery-card">
-                      <span class="badge bg-light text-dark border small mb-1">#${i + 1}</span>
-                      <img src="${src}" alt="Gallery item ${i + 1}">
-                      ${captionLabelHtml(slide, i, 'canvas-img-caption')}
-                    </div>
-                  `).join('')}
+                <div class="canvas-explore-scene">
+                  ${imgs.map((src, i) => {
+                    const cap = (Array.isArray(slide.captions) && slide.captions[i]) ? slide.captions[i] : `Item ${i + 1}`;
+                    return `
+                      <div class="canvas-explore-chip" data-index="${i}" data-caption="${escapeAttr(cap)}" title="Tap to inspect ${escapeAttr(cap)}">
+                        <img src="${src}" alt="${escapeAttr(cap)}">
+                        <span>${escapeAttr(cap)}</span>
+                      </div>
+                    `;
+                  }).join('')}
                 </div>
               `;
+
+              // Add interactive click behavior to preview what student sees
+              mediaDisplay.querySelectorAll('.canvas-explore-chip').forEach(chip => {
+                chip.onclick = function() {
+                  mediaDisplay.querySelectorAll('.canvas-explore-chip').forEach(c => c.classList.remove('active-chip'));
+                  this.classList.add('active-chip');
+                  const cap = this.getAttribute('data-caption');
+                  const narration = document.getElementById('canvasNarrationText');
+                  if (narration && slide.itemExplanations && slide.itemExplanations[cap]) {
+                    narration.textContent = slide.itemExplanations[cap];
+                  } else if (narration && cap) {
+                    narration.textContent = `${cap}: Tap to explore how it lives and interacts with its environment!`;
+                  }
+                };
+              });
             }
           }
         }

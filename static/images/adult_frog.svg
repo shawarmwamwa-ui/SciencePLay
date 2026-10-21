@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <radialGradient id="frogSkin" cx="40%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="55%" stop-color="#16a34a"/>
+      <stop offset="100%" stop-color="#14532d"/>
+    </radialGradient>
+    <radialGradient id="bellyGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="70%" stop-color="#bbf7d0"/>
+      <stop offset="100%" stop-color="#86efac"/>
+    </radialGradient>
+    <filter id="frogShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#052e16" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#frogShadow)">
+    <!-- Powerful Left Jumping Leg -->
+    <path d="M 32 68 C 12 60, 10 92, 24 96 C 32 98, 38 94, 38 88" fill="#16a34a" stroke="#14532d" stroke-width="3" stroke-linejoin="round"/>
+    <!-- Left Webbed Foot -->
+    <circle cx="18" cy="97" r="3.5" fill="#14532d"/>
+    <circle cx="24" cy="98" r="3.5" fill="#14532d"/>
+    <circle cx="30" cy="97" r="3" fill="#14532d"/>
+
+    <!-- Powerful Right Jumping Leg -->
+    <path d="M 88 68 C 108 60, 110 92, 96 96 C 88 98, 82 94, 82 88" fill="#16a34a" stroke="#14532d" stroke-width="3" stroke-linejoin="round"/>
+    <!-- Right Webbed Foot -->
+    <circle cx="102" cy="97" r="3.5" fill="#14532d"/>
+    <circle cx="96" cy="98" r="3.5" fill="#14532d"/>
+    <circle cx="90" cy="97" r="3" fill="#14532d"/>
+
+    <!-- Main Frog Body -->
+    <ellipse cx="60" cy="68" rx="28" ry="24" fill="url(#frogSkin)" stroke="#14532d" stroke-width="3"/>
+    <!-- Bright Yellow-Green Belly -->
+    <ellipse cx="60" cy="74" rx="18" ry="15" fill="url(#bellyGrad)" stroke="#16a34a" stroke-width="1.5"/>
+
+    <!-- Front Arms / Hands -->
+    <path d="M 44 80 L 42 98" stroke="#14532d" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="42" cy="98" r="3" fill="#14532d"/>
+    <path d="M 76 80 L 78 98" stroke="#14532d" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="78" cy="98" r="3" fill="#14532d"/>
+
+    <!-- Big Left Eye Dome -->
+    <circle cx="42" cy="46" r="12" fill="#16a34a" stroke="#14532d" stroke-width="3"/>
+    <circle cx="42" cy="46" r="8" fill="#fef08a"/>
+    <ellipse cx="42" cy="46" rx="4" ry="7" fill="#0f172a"/>
+    <circle cx="40" cy="43" r="2.5" fill="#ffffff"/>
+
+    <!-- Big Right Eye Dome -->
+    <circle cx="78" cy="46" r="12" fill="#16a34a" stroke="#14532d" stroke-width="3"/>
+    <circle cx="78" cy="46" r="8" fill="#fef08a"/>
+    <ellipse cx="78" cy="46" rx="4" ry="7" fill="#0f172a"/>
+    <circle cx="76" cy="43" r="2.5" fill="#ffffff"/>
+
+    <!-- Wide Happy Smile -->
+    <path d="M 42 66 Q 60 76 78 66" fill="none" stroke="#14532d" stroke-width="3" stroke-linecap="round"/>
+    <!-- Cute Cheeks -->
+    <ellipse cx="38" cy="65" rx="4" ry="2.5" fill="#f43f5e" opacity="0.4"/>
+    <ellipse cx="82" cy="65" rx="4" ry="2.5" fill="#f43f5e" opacity="0.4"/>
+
+    <!-- Nostril Dots -->
+    <circle cx="56" cy="58" r="1.5" fill="#14532d"/>
+    <circle cx="64" cy="58" r="1.5" fill="#14532d"/>
+  </g>
+</svg>

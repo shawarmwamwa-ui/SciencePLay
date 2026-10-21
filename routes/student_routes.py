@@ -193,14 +193,16 @@ DEFAULT_PIPELINE_CIRCUIT_ROUNDS = [
                 "id": "frog_step_1",
                 "order": 1,
                 "label": "Frog Eggs",
-                "icon": "🥚",
+                "icon": "🫧",
+                "image_url": "/static/images/frog_eggs.svg",
                 "hint": "Life begins in the pond with clusters of jelly-like eggs (frogspawn)."
             },
             {
                 "id": "frog_step_2",
                 "order": 2,
                 "label": "Tadpole",
-                "icon": "🐟",
+                "icon": "🦎",
+                "image_url": "/static/images/tadpole.svg",
                 "hint": "Hatches with gills to breathe underwater and a long tail for swimming."
             },
             {
@@ -208,13 +210,15 @@ DEFAULT_PIPELINE_CIRCUIT_ROUNDS = [
                 "order": 3,
                 "label": "Froglet",
                 "icon": "🐸",
+                "image_url": "/static/images/froglet.svg",
                 "hint": "Grows back legs, develops air-breathing lungs, and begins shrinking its tail."
             },
             {
                 "id": "frog_step_4",
                 "order": 4,
                 "label": "Adult Frog",
-                "icon": "🌿",
+                "icon": "🐸",
+                "image_url": "/static/images/adult_frog.svg",
                 "hint": "A fully grown tailless amphibian that can live on land and lay eggs."
             }
         ]
@@ -783,25 +787,51 @@ def is_lesson_unlocked_for_student(user_id, lesson):
     if has_student_completed_lesson(user_id, lesson.id):
         return True
 
-    # Explicitly assigned lessons are always accessible
-    assigned = LessonAssignment.query.filter_by(student_id=user_id, lesson_id=lesson.id).filter(
-        (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)
-    ).first()
-    if assigned:
-        return True
-
+    # Supplementary lessons are always unlocked
     if getattr(lesson, 'is_supplementary', False):
         return True
 
-    # Custom lessons created in Content Studio are unlocked for enrolled students
-    if getattr(lesson, 'config', None) or lesson.id > 5:
-        return True
+    # Check explicit prerequisite lesson ID if defined on the model
+    if getattr(lesson, 'prerequisite_lesson_id', None):
+        if not has_student_completed_lesson(user_id, lesson.prerequisite_lesson_id):
+            return False
 
     title = (lesson.title or '').strip()
 
     def is_title_completed(t_name):
         matching = Lesson.query.filter(Lesson.title.ilike(t_name)).all()
         return any(has_student_completed_lesson(user_id, m.id) for m in matching)
+
+    # Core curriculum sequential progression (cannot be bypassed by assignment alone)
+    core_titles = ['properties of metals', 'recycling', 'living vs non-living', 'animal body parts', 'plant parts', 'basic needs of living things']
+    if title.lower() in core_titles or lesson.id in [1, 2, 3, 4, 5]:
+        # Term 1: Matter & Materials
+        if title.lower() == 'properties of metals':
+            return True
+
+        if title.lower() == 'recycling':
+            return is_title_completed('Properties of Metals')
+
+        # Term 2: Living Things & Their Environment
+        if title.lower() == 'living vs non-living':
+            return is_title_completed('Properties of Metals') or is_title_completed('Recycling')
+
+        if title.lower() == 'animal body parts':
+            return is_title_completed('Living vs Non-Living')
+
+        if title.lower() == 'plant parts':
+            return is_title_completed('Living vs Non-Living') or is_title_completed('Animal Body Parts')
+
+        if title.lower() == 'basic needs of living things':
+            return is_title_completed('Living vs Non-Living')
+
+    # Custom lessons created in Content Studio are unlocked for enrolled/assigned students
+    if getattr(lesson, 'config', None) or lesson.id > 5:
+        assigned = LessonAssignment.query.filter_by(student_id=user_id, lesson_id=lesson.id).filter(
+            (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)
+        ).first()
+        if assigned:
+            return True
 
     # Term 1: Matter & Materials
     if title.lower() == 'properties of metals':
@@ -834,6 +864,73 @@ def is_lesson_unlocked_for_student(user_id, lesson):
         return is_title_completed('Plant Parts') or is_title_completed('Living vs Non-Living')
 
     return True
+
+
+def check_student_activity_access(user_id, activity):
+    """
+    Guards game direct URL access for students:
+    1. Blocks access if activity is draft.
+    2. Blocks access if activity has not been assigned to the student.
+    3. Blocks access if prerequisite lesson is not completed.
+    Returns (allowed: bool, message: str, redirect_target: str)
+    """
+    if not activity or not activity.id:
+        return False, "Activity not found.", 'student.activities'
+
+    # Block draft games from students
+    if getattr(activity, 'is_draft', False):
+        return False, "This activity is currently in draft mode and not available.", 'student.activities'
+
+    # Check active assignment
+    is_assigned = ActivityAssignment.query.filter_by(
+        student_id=user_id,
+        activity_id=activity.id
+    ).filter(
+        (ActivityAssignment.is_archived == False) | (ActivityAssignment.is_archived == None)
+    ).first() is not None
+
+    if not is_assigned:
+        return False, "This activity has not been assigned to you by your teacher.", 'student.activities'
+
+    # Check lesson prerequisites
+    if not is_activity_unlocked(user_id, activity):
+        lesson_title = activity.lesson.title if activity.lesson else 'required'
+        return False, f'Please complete the "{lesson_title}" lesson before playing this activity.', 'student.lessons'
+
+    return True, None, None
+
+
+def check_student_lesson_access(user_id, lesson):
+    """
+    Guards lesson direct URL access for students:
+    1. Blocks access if lesson is draft.
+    2. Enforces prerequisite completion.
+    3. Blocks custom lessons if not assigned.
+    Returns (allowed: bool, message: str, redirect_target: str)
+    """
+    if not lesson or not lesson.id:
+        return False, "Lesson not found.", 'student.lessons'
+
+    # Block draft lessons from students
+    if getattr(lesson, 'is_draft', False):
+        return False, "This lesson is currently in draft mode and not available.", 'student.lessons'
+
+    # Custom lessons must be assigned
+    if getattr(lesson, 'config', None) or lesson.id > 5:
+        is_assigned = LessonAssignment.query.filter_by(
+            student_id=user_id,
+            lesson_id=lesson.id
+        ).filter(
+            (LessonAssignment.is_archived == False) | (LessonAssignment.is_archived == None)
+        ).first() is not None
+        if not is_assigned:
+            return False, "This lesson has not been assigned to you by your teacher.", 'student.lessons'
+
+    # Check prerequisite progression
+    if not is_lesson_unlocked_for_student(user_id, lesson):
+        return False, "Please complete earlier prerequisite lessons before starting this lesson.", 'student.lessons'
+
+    return True, None, None
 
 
 _ALL_LESSONS_CACHE = None
@@ -2108,19 +2205,8 @@ def activities():
 
 @student_bp.route('/activity_complete/<int:activity_id>/<int:score>')
 def activity_complete(activity_id, score):
-    user_id = session.get('user_id')
-    if user_id:
-        log = ProgressLog.query.filter_by(student_id=user_id, activity_id=activity_id).first()
-        if log:
-            log.score = score
-            log.updated_at = db.func.now()
-        else:
-            log = ProgressLog(student_id=user_id, activity_id=activity_id, score=score, time_spent=0)
-            db.session.add(log)
-        db.session.commit()
-        flash(f"Activity {activity_id} completed with score {score}!", "success")
-    else:
-        flash("You must be logged in to complete an activity.", "danger")
+    # Deprecated insecure GET route. Score logging must use authenticated POST endpoints.
+    flash("Direct score submission is not permitted.", "danger")
     return redirect(url_for('student.dashboard'))
 
 @student_bp.route('/lesson/living-non-living')
@@ -2132,10 +2218,12 @@ def living_non_living_lesson(lesson_id=None):
     else:
         lesson = get_or_create_default_lesson()
 
-    if user_id and lesson and getattr(lesson, 'term', None):
-        if not is_lesson_unlocked_for_student(user_id, lesson):
-            flash('Please complete Term 1 (Properties of Metals and Recycling) before starting Living vs Non-Living.', 'warning')
-            return redirect(url_for('student.lessons'))
+    if user_id and lesson:
+        allowed, msg, redir = check_student_lesson_access(user_id, lesson)
+        if not allowed:
+            flash(msg, 'warning')
+            return redirect(url_for(redir))
+
     if user_id:
         attempt, log = start_or_resume_lesson_attempt(user_id, lesson.id)
         initial_slide = log.current_slide if log else 0
@@ -2163,9 +2251,10 @@ def claw_machine():
     if not activity or (activity.engine != 'claw_machine' and 'Claw Machine' not in (activity.type or '')):
         activity = get_or_create_claw_machine_activity()
 
-    if not is_activity_unlocked(current_user.id, activity):
-        flash('Please complete the Living vs Non-Living lesson before playing the claw machine.', 'warning')
-        return redirect(url_for('student.lessons'))
+    allowed, msg, redir = check_student_activity_access(current_user.id, activity)
+    if not allowed:
+        flash(msg, 'warning')
+        return redirect(url_for(redir))
 
     used_today = get_attempts_today(current_user.id, activity.id)
     if used_today >= 3:
@@ -2222,9 +2311,10 @@ def get_or_create_find_the_part_activity():
 def animal_body_parts_lesson():
     current_user = get_current_user()
     lesson = get_or_create_animal_body_parts_lesson()
-    if not is_lesson_unlocked_for_student(current_user.id, lesson):
-        flash('Please complete Living vs Non-Living before starting Animal Body Parts.', 'warning')
-        return redirect(url_for('student.lessons'))
+    allowed, msg, redir = check_student_lesson_access(current_user.id, lesson)
+    if not allowed:
+        flash(msg, 'warning')
+        return redirect(url_for(redir))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
     return render_template(
@@ -2243,10 +2333,10 @@ def find_the_part_game():
     if not activity or activity.engine != 'find_the_part':
         activity = get_or_create_find_the_part_activity()
 
-    if not is_activity_unlocked(current_user.id, activity):
-        lesson_title = activity.lesson.title if activity.lesson else 'lesson'
-        flash(f'Please complete the "{lesson_title}" lesson before playing Find the Part.', 'warning')
-        return redirect(url_for('student.lessons'))
+    allowed, msg, redir = check_student_activity_access(current_user.id, activity)
+    if not allowed:
+        flash(msg, 'warning')
+        return redirect(url_for(redir))
 
     used_today = get_attempts_today(current_user.id, activity.id)
     if used_today >= 3:
@@ -2290,10 +2380,10 @@ def pipeline_circuit_game():
     if not activity or activity.engine != 'pipeline_circuit':
         activity = get_or_create_pipeline_circuit_activity()
 
-    if not is_activity_unlocked(current_user.id, activity):
-        lesson_title = activity.lesson.title if activity.lesson else 'lesson'
-        flash(f'Please complete the "{lesson_title}" lesson before playing Pipeline Circuit.', 'warning')
-        return redirect(url_for('student.lessons'))
+    allowed, msg, redir = check_student_activity_access(current_user.id, activity)
+    if not allowed:
+        flash(msg, 'warning')
+        return redirect(url_for(redir))
 
     used_today = get_attempts_today(current_user.id, activity.id)
     if used_today >= 3:
@@ -2339,9 +2429,10 @@ def get_or_create_streak_race_activity():
 def plant_parts_lesson():
     current_user = get_current_user()
     lesson = get_or_create_plant_parts_lesson()
-    if not is_lesson_unlocked_for_student(current_user.id, lesson):
-        flash('Please complete Animal Body Parts before starting Plant Parts.', 'warning')
-        return redirect(url_for('student.lessons'))
+    allowed, msg, redir = check_student_lesson_access(current_user.id, lesson)
+    if not allowed:
+        flash(msg, 'warning')
+        return redirect(url_for(redir))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
     return render_template(
@@ -2389,10 +2480,10 @@ def build_a_plant_game():
     if not activity or activity.engine != 'build_a_plant':
         activity = get_or_create_build_a_plant_activity()
 
-    if not is_activity_unlocked(current_user.id, activity):
-        lesson_title = activity.lesson.title if activity.lesson else 'lesson'
-        flash(f'Please complete the "{lesson_title}" lesson before playing Build a Plant.', 'warning')
-        return redirect(url_for('student.lessons'))
+    allowed, msg, redir = check_student_activity_access(current_user.id, activity)
+    if not allowed:
+        flash(msg, 'warning')
+        return redirect(url_for(redir))
 
     used_today = get_attempts_today(current_user.id, activity.id)
     if used_today >= 3:
@@ -2424,9 +2515,10 @@ def get_or_create_properties_of_metals_lesson():
 def properties_of_metals_lesson():
     current_user = get_current_user()
     lesson = get_or_create_properties_of_metals_lesson()
-    if not is_lesson_unlocked_for_student(current_user.id, lesson):
-        flash('Please complete earlier prerequisites before starting Properties of Metals.', 'warning')
-        return redirect(url_for('student.lessons'))
+    allowed, msg, redir = check_student_lesson_access(current_user.id, lesson)
+    if not allowed:
+        flash(msg, 'warning')
+        return redirect(url_for(redir))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
     return render_template(
@@ -2457,9 +2549,10 @@ def get_or_create_recycling_lesson():
 def recycling_lesson():
     current_user = get_current_user()
     lesson = get_or_create_recycling_lesson()
-    if not is_lesson_unlocked_for_student(current_user.id, lesson):
-        flash('Please complete Properties of Metals before starting Recycling.', 'warning')
-        return redirect(url_for('student.lessons'))
+    allowed, msg, redir = check_student_lesson_access(current_user.id, lesson)
+    if not allowed:
+        flash(msg, 'warning')
+        return redirect(url_for(redir))
     attempt, log = start_or_resume_lesson_attempt(current_user.id, lesson.id)
     initial_slide = log.current_slide if log else 0
     return render_template(
@@ -2604,9 +2697,10 @@ def materials_game():
         flash('Metal Clue Detective activity is not available.', 'danger')
         return redirect(url_for('student.activities'))
 
-    if not is_activity_unlocked(current_user.id, activity):
-        flash('Please complete the "Properties of Metals" lesson before playing Metal Clue Detective.', 'warning')
-        return redirect(url_for('student.lessons'))
+    allowed, msg, redir = check_student_activity_access(current_user.id, activity)
+    if not allowed:
+        flash(msg, 'warning')
+        return redirect(url_for(redir))
 
     used_today = get_attempts_today(current_user.id, activity.id)
     if used_today >= 3:
@@ -2649,9 +2743,10 @@ def recycling_game():
         flash('EcoSwipe activity is not available.', 'danger')
         return redirect(url_for('student.activities'))
 
-    if not is_activity_unlocked(current_user.id, activity):
-        flash('Please complete the "Recycling" lesson before playing EcoSwipe.', 'warning')
-        return redirect(url_for('student.lessons'))
+    allowed, msg, redir = check_student_activity_access(current_user.id, activity)
+    if not allowed:
+        flash(msg, 'warning')
+        return redirect(url_for(redir))
 
     used_today = get_attempts_today(current_user.id, activity.id)
     if used_today >= 3:

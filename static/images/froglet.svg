@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <radialGradient id="frogletSkin" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#86efac"/>
+      <stop offset="60%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </radialGradient>
+    <linearGradient id="tailFade" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#15803d"/>
+      <stop offset="60%" stop-color="#4ade80" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#86efac" stop-opacity="0.2"/>
+    </linearGradient>
+    <filter id="frogletShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="2" dy="3" stdDeviation="2.5" flood-color="#14532d" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#frogletShadow)">
+    <!-- Shrinking Tail Stub -->
+    <path d="M 68 66 C 82 68, 96 60, 106 58 C 96 72, 80 75, 66 72 Z" fill="url(#tailFade)" stroke="#15803d" stroke-width="2"/>
+
+    <!-- Developing Hind Leg -->
+    <path d="M 62 70 Q 75 88 58 92 Q 52 92 56 84" fill="#22c55e" stroke="#15803d" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- Webbed Hind Foot -->
+    <circle cx="58" cy="92" r="3" fill="#15803d"/>
+    <circle cx="63" cy="92" r="2.5" fill="#15803d"/>
+
+    <!-- Front Leg Bud -->
+    <path d="M 40 76 Q 38 90 44 92" fill="none" stroke="#15803d" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Froglet Body -->
+    <ellipse cx="50" cy="62" rx="22" ry="17" fill="url(#frogletSkin)" stroke="#14532d" stroke-width="2.5"/>
+    <!-- Tummy Patch -->
+    <ellipse cx="46" cy="65" rx="14" ry="10" fill="#dcfce7" opacity="0.8"/>
+
+    <!-- Left Eye Bump -->
+    <circle cx="36" cy="46" r="8" fill="#22c55e" stroke="#14532d" stroke-width="2.5"/>
+    <circle cx="36" cy="46" r="4.5" fill="#ffffff"/>
+    <circle cx="35" cy="46" r="2.8" fill="#0f172a"/>
+    <circle cx="34" cy="44.5" r="1.2" fill="#ffffff"/>
+
+    <!-- Right Eye Bump -->
+    <circle cx="52" cy="46" r="8" fill="#22c55e" stroke="#14532d" stroke-width="2.5"/>
+    <circle cx="52" cy="46" r="4.5" fill="#ffffff"/>
+    <circle cx="52" cy="46" r="2.8" fill="#0f172a"/>
+    <circle cx="51" cy="44.5" r="1.2" fill="#ffffff"/>
+
+    <!-- Smiling Mouth -->
+    <path d="M 32 64 Q 42 70 48 63" fill="none" stroke="#14532d" stroke-width="2" stroke-linecap="round"/>
+    <!-- Cute Cheek Blush -->
+    <ellipse cx="32" cy="60" rx="3.5" ry="2" fill="#f43f5e" opacity="0.35"/>
+  </g>
+</svg>

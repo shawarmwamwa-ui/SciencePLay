@@ -250,32 +250,9 @@
                   </div>
                 </div>
 
-                <div class="lesson-workspace-grid">
-                  <div class="slide-strip-col">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <span class="fw-bold text-muted small text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">Slide Deck</span>
-                      <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-secondary p-1" onclick="moveSlide(-1)" title="Move slide up"><i class="bi bi-chevron-up"></i></button>
-                        <button type="button" class="btn btn-outline-secondary p-1" onclick="moveSlide(1)" title="Move slide down"><i class="bi bi-chevron-down"></i></button>
-                      </div>
-                    </div>
-
-                    <div class="slide-strip-list" id="slideStripContainer">
-                    </div>
-
-                    <div class="dropdown mt-3">
-                      <button class="btn btn-outline-primary w-100 rounded-3 py-2 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-plus-circle-fill me-1"></i>Add Slide
-                      </button>
-                      <ul class="dropdown-menu shadow-lg border-0 rounded-3">
-                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('concept'); return false;">📝 Concept &amp; Story Slide</a></li>
-                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('quick-check'); return false;">❓ Interactive Quick Check</a></li>
-                        <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('summary'); return false;">🏆 Milestone &amp; Summary Slide</a></li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div class="canvas-col">
+                <div class="lesson-workspace-layout">
+                  <div class="canvas-and-ribbon-col">
+                    <!-- Large Widescreen Student View Canvas -->
                     <div class="neubrutal-slide-canvas">
                       <div class="canvas-window-header">
                         <div class="canvas-dots">
@@ -295,18 +272,21 @@
 
                       <div class="canvas-slide-body">
                         <div class="canvas-slide-top">
-                          <h3 class="canvas-slide-title" id="canvasTitleDisplay">Slide Title</h3>
-                          <button type="button" class="canvas-tts-btn" onclick="previewCurrentSlideTTS()" title="Test speech synthesis audio">
-                            <i class="bi bi-volume-up-fill text-primary"></i>
-                            <span>Read Aloud</span>
-                          </button>
+                          <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h3 class="canvas-slide-title" id="canvasTitleDisplay">Slide Title</h3>
+                            <button type="button" class="canvas-tts-btn" onclick="previewCurrentSlideTTS()" title="Test speech synthesis audio">
+                              <i class="bi bi-volume-up-fill text-primary"></i>
+                              <span>Read Aloud</span>
+                            </button>
+                          </div>
+                          <span class="lesson-progress-text" id="canvasSlideIndicator">Slide 1 / 7</span>
                         </div>
 
                         <div class="canvas-hero-box" id="canvasHeroBox">
                           <div id="canvasMediaDisplayArea" class="w-100 h-100 d-flex align-items-center justify-content-center">
                             <img src="/static/images/tree.webp" alt="Slide Illustration" class="canvas-hero-img" id="canvasHeroImg">
                           </div>
-                          <div id="canvasLottieContainer" class="d-none" style="width: 100%; height: 230px; max-height: 240px; margin: 0 auto;"></div>
+                          <div id="canvasLottieContainer" class="d-none" style="width: 100%; height: 260px; max-height: 280px; margin: 0 auto;"></div>
                         </div>
 
                         <div class="canvas-narration-box" id="canvasNarrationDisplay">
@@ -323,11 +303,48 @@
                           <button type="button" class="canvas-nav-btn btn-secondary" id="canvasBackBtn" onclick="canvasStep(-1)">
                             <i class="bi bi-arrow-left me-1"></i>Back
                           </button>
-                          <span class="text-muted fw-bold small" id="canvasSlideIndicator">Slide 1 / 5</span>
                           <button type="button" class="canvas-nav-btn btn-primary" id="canvasNextBtn" onclick="canvasStep(1)">
                             Next<i class="bi bi-arrow-right ms-1"></i>
                           </button>
                         </div>
+                      </div>
+                    </div>
+
+                    <!-- Slide Deck Horizontal Ribbon (Below Canvas) -->
+                    <div class="slide-ribbon-container mt-3 p-3 bg-white rounded-4 border shadow-sm">
+                      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="fw-bold text-dark small text-uppercase" style="letter-spacing: 0.05em; font-size: 0.8rem;">
+                            <i class="bi bi-collection-play me-1 text-primary"></i>Slide Deck Track
+                          </span>
+                          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-0.5 rounded-pill fw-bold" id="slidesCountBadge">
+                            7 Slides
+                          </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-secondary px-2.5 py-1 fw-bold" onclick="moveSlide(-1)" title="Move current slide left / earlier">
+                              <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary px-2.5 py-1 fw-bold" onclick="moveSlide(1)" title="Move current slide right / later">
+                              <i class="bi bi-chevron-right"></i>
+                            </button>
+                          </div>
+                          <div class="dropdown">
+                            <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold dropdown-toggle shadow-xs" type="button" data-bs-toggle="dropdown">
+                              <i class="bi bi-plus-circle-fill me-1"></i>Add Slide
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
+                              <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('concept'); return false;">📝 Concept &amp; Story Slide</a></li>
+                              <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('quick-check'); return false;">❓ Interactive Quick Check</a></li>
+                              <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="addSlide('summary'); return false;">🏆 Milestone &amp; Summary Slide</a></li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="slide-ribbon-track" id="slideStripContainer">
+                        <!-- Horizontal slide cards populated dynamically via JS -->
                       </div>
                     </div>
                   </div>

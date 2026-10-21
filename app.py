@@ -194,6 +194,13 @@ def ensure_database_schema_migrations():
                         except Exception as e:
                             db.session.rollback()
                             print(f"[Migration] term on {tbl}: {e}")
+                    if tbl == 'activity' and 'type' in cols:
+                        try:
+                            if dialect_name == 'mysql':
+                                db.session.execute(text(f'ALTER TABLE {q_tbl} MODIFY COLUMN type VARCHAR(150)'))
+                                db.session.commit()
+                        except Exception:
+                            db.session.rollback()
         except Exception as e:
             print("[Migration Notice]:", e)
 

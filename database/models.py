@@ -64,7 +64,7 @@ class Activity(BaseModel, ArchivableMixin):
     __tablename__ = 'activity'
     id = db.Column(db.Integer, primary_key=True)
     lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'))
-    type = db.Column(db.String(50))
+    type = db.Column(db.String(120))
     engine = db.Column(db.String(50), nullable=True)
     points = db.Column(db.Integer)
     config = db.Column(db.JSON, nullable=True)

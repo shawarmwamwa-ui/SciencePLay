@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <radialGradient id="tadpoleHead" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="60%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </radialGradient>
+    <linearGradient id="tadpoleTail" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#0284c7" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#bae6fd" stop-opacity="0.2"/>
+    </linearGradient>
+    <filter id="tadpoleShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="2" dy="3" stdDeviation="2.5" flood-color="#0f172a" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#tadpoleShadow)">
+    <!-- Wavy Translucent Tail Fin -->
+    <path d="M 45 60 C 65 42, 85 75, 105 50 C 95 72, 70 82, 45 66 Z" fill="url(#tadpoleTail)" stroke="#0284c7" stroke-width="2"/>
+    <!-- Tail Fin Spine -->
+    <path d="M 48 62 Q 72 58 105 50" fill="none" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Rounded Tadpole Body/Head -->
+    <ellipse cx="38" cy="60" rx="22" ry="18" fill="url(#tadpoleHead)" stroke="#0f172a" stroke-width="2.5"/>
+
+    <!-- Cute Big Eye -->
+    <circle cx="28" cy="54" r="5.5" fill="#ffffff"/>
+    <circle cx="27" cy="54" r="3.2" fill="#0f172a"/>
+    <circle cx="26" cy="52.5" r="1.2" fill="#ffffff"/>
+
+    <!-- Tiny Breathing Gill / Fin Hint -->
+    <path d="M 40 68 Q 45 74 38 76" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round"/>
+    <!-- Cheek Blush -->
+    <ellipse cx="26" cy="64" rx="4" ry="2" fill="#f43f5e" opacity="0.4"/>
+  </g>
+</svg>

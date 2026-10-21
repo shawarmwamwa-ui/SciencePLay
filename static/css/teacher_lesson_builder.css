@@ -56,109 +56,115 @@
       transform: translateX(2px) !important;
     }
     .teacher-center-wrap {
-      width: min(1560px, 98%) !important;
-      max-width: 1560px !important;
+      width: min(1680px, 98%) !important;
+      max-width: 1680px !important;
     }
-    .lesson-workspace-grid {
+    .lesson-workspace-layout {
       display: grid;
-      grid-template-columns: 210px minmax(0, 1fr) 320px;
-      gap: 1.25rem;
+      grid-template-columns: minmax(0, 1.85fr) minmax(360px, 1fr);
+      gap: 1.5rem;
       align-items: start;
       width: 100%;
       box-sizing: border-box;
       transition: all 0.3s ease;
     }
-    .slide-strip-col,
-    .canvas-col,
+    .canvas-and-ribbon-col,
     .slide-editor-col {
       min-width: 0;
       width: 100%;
       box-sizing: border-box;
     }
-    .neubrutal-slide-canvas {
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
-    .lesson-workspace-grid.canvas-expanded {
+    .lesson-workspace-layout.canvas-expanded {
       grid-template-columns: 1fr !important;
     }
-    .lesson-workspace-grid.canvas-expanded .slide-strip-col,
-    .lesson-workspace-grid.canvas-expanded .slide-editor-col {
+    .lesson-workspace-layout.canvas-expanded .slide-editor-col {
       display: none !important;
     }
-    .lesson-workspace-grid.canvas-expanded .canvas-col {
+    .lesson-workspace-layout.canvas-expanded .canvas-and-ribbon-col {
       grid-column: 1 / -1 !important;
       width: 100% !important;
     }
-    @media (max-width: 1250px) {
-      .lesson-workspace-grid {
-        grid-template-columns: 210px minmax(0, 1fr);
-        gap: 1.25rem;
-      }
-      .slide-editor-col {
-        grid-column: 1 / -1;
-      }
-    }
-    @media (max-width: 860px) {
-      .lesson-workspace-grid {
+    @media (max-width: 1180px) {
+      .lesson-workspace-layout {
         grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-      .slide-editor-col {
-        grid-column: auto;
+        gap: 1.5rem;
       }
     }
 
-    .slide-strip-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.65rem;
-      max-height: 580px;
-      overflow-y: auto;
-      padding-right: 0.35rem;
+    /* Horizontal Slide Deck Ribbon (Below Canvas) */
+    .slide-ribbon-container {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1.15rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
-    .slide-strip-item {
+    .slide-ribbon-track {
+      display: flex;
+      align-items: stretch;
+      gap: 0.85rem;
+      overflow-x: auto;
+      padding: 0.35rem 0.25rem 0.65rem 0.25rem;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 #f8fafc;
+    }
+    .slide-ribbon-track::-webkit-scrollbar {
+      height: 6px;
+    }
+    .slide-ribbon-track::-webkit-scrollbar-track {
+      background: #f8fafc;
+      border-radius: 9999px;
+    }
+    .slide-ribbon-track::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .slide-ribbon-item {
+      flex: 0 0 175px;
+      min-width: 175px;
       background: #f8fafc;
       border: 2px solid #e2e8f0;
-      border-radius: 0.85rem;
-      padding: 0.75rem 0.85rem;
+      border-radius: 1rem;
+      padding: 0.85rem 0.95rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.18s ease;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: space-between;
-      gap: 0.5rem;
+      gap: 0.65rem;
+      user-select: none;
     }
-    .slide-strip-item:hover {
+    .slide-ribbon-item:hover {
       background: #f1f5f9;
-      border-color: #cbd5e1;
+      border-color: #38bdf8;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(2, 132, 199, 0.12);
     }
-    .slide-strip-item.active {
-      background: #eff6ff;
+    .slide-ribbon-item.active {
+      background: #ffffff;
       border-color: #0284c7;
-      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+      border-width: 2.5px;
+      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.2), 0 0 0 1px #0284c7;
     }
     .slide-strip-num {
-      width: 24px;
-      height: 24px;
-      border-radius: 6px;
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
       background: #e2e8f0;
-      color: #475569;
-      font-size: 0.75rem;
+      color: #334155;
+      font-size: 0.78rem;
       font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
     }
-    .slide-strip-item.active .slide-strip-num {
+    .slide-ribbon-item.active .slide-strip-num {
       background: #0284c7;
       color: #ffffff;
     }
     .slide-strip-title {
-      font-size: 0.82rem;
-      font-weight: 700;
+      font-size: 0.85rem;
+      font-weight: 800;
       color: #0f172a;
       white-space: nowrap;
       overflow: hidden;
@@ -166,16 +172,81 @@
       flex-grow: 1;
     }
     .slide-strip-type-pill {
-      font-size: 0.65rem;
+      font-size: 0.68rem;
       font-weight: 800;
-      padding: 0.15rem 0.45rem;
+      padding: 0.2rem 0.55rem;
       border-radius: 9999px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
+      display: inline-block;
+      width: fit-content;
     }
     .st-concept { background: #e0f2fe; color: #0369a1; }
     .st-quiz { background: #fef3c7; color: #b45309; }
     .st-summary { background: #dcfce7; color: #15803d; }
+
+    /* Exploration Scene & Hotspots (Matching Student View Image 2) */
+    .canvas-explore-scene {
+      width: 100%;
+      background: #bae6fd;
+      border: 3px solid #0f172a;
+      border-radius: 1.25rem;
+      box-shadow: 4px 4px 0px #0f172a;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      min-height: 180px;
+    }
+    .canvas-explore-chip {
+      background: #4ade80;
+      border: 2.5px solid #0f172a;
+      border-radius: 16px;
+      box-shadow: 3.5px 3.5px 0px #0f172a;
+      padding: 0.75rem 1.15rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-width: 105px;
+      user-select: none;
+    }
+    .canvas-explore-chip:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 5px 5px 0px #0f172a;
+      background: #22c55e;
+    }
+    .canvas-explore-chip.active-chip {
+      background: #fde047;
+      border-color: #0f172a;
+      transform: translateY(-2px);
+      box-shadow: 4px 4px 0px #0f172a;
+    }
+    .canvas-explore-chip img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+    }
+    .canvas-explore-chip span {
+      font-size: 0.88rem;
+      font-weight: 900;
+      color: #0f172a;
+    }
+    .lesson-progress-text {
+      font-size: 0.85rem;
+      font-weight: 900;
+      color: #0f172a;
+      background: #fde047;
+      border: 2px solid #0f172a;
+      border-radius: 9999px;
+      padding: 0.2rem 0.65rem;
+      box-shadow: 2px 2px 0px #0f172a;
+    }
 
     .neubrutal-slide-canvas {
       background: #ffffff;

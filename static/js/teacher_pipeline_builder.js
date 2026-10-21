@@ -21,10 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     // Default 4-step sequence
     steps = [
-      { id: "step_1", order: 1, label: "Frog Eggs", icon: "🥚", hint: "Clusters of jelly-like eggs laid in the pond." },
-      { id: "step_2", order: 2, label: "Tadpole", icon: "🐟", hint: "Breathes with gills and swims using a tail." },
-      { id: "step_3", order: 3, label: "Froglet", icon: "🐸", hint: "Develops lungs and back legs while tail shrinks." },
-      { id: "step_4", order: 4, label: "Adult Green Frog", icon: "🌿", hint: "Full-grown tailless amphibian with strong jumping legs." }
+      { id: "step_1", order: 1, label: "Frog Eggs", icon: "🫧", image_url: "/static/images/frog_eggs.svg", hint: "Clusters of jelly-like eggs laid in the pond." },
+      { id: "step_2", order: 2, label: "Tadpole", icon: "🦎", image_url: "/static/images/tadpole.svg", hint: "Breathes with gills and swims using a tail." },
+      { id: "step_3", order: 3, label: "Froglet", icon: "🐸", image_url: "/static/images/froglet.svg", hint: "Develops lungs and back legs while tail shrinks." },
+      { id: "step_4", order: 4, label: "Adult Frog", icon: "🐸", image_url: "/static/images/adult_frog.svg", hint: "Full-grown tailless amphibian with strong jumping legs." }
     ];
   }
 
@@ -110,6 +110,44 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLivePreview();
   }
 
+  function compressImageFile(file, maxWidth = 600, maxHeight = 600, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Keep png if transparent or png, otherwise jpeg for optimal lightweight payload
+          const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+          const dataUrl = canvas.toDataURL(mimeType, quality);
+          resolve(dataUrl);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   function bindStageEvents() {
     // Inputs
     stagesContainer.querySelectorAll('.input-label').forEach(inp => {
@@ -138,9 +176,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // File upload
+    // File upload with client-side canvas compression (prevents Render 512MB RAM OOM / 500 crash)
     stagesContainer.querySelectorAll('.stage-file-input').forEach(inp => {
-      inp.addEventListener('change', (e) => {
+      inp.addEventListener('change', async (e) => {
         const idx = parseInt(e.target.dataset.index, 10);
         const file = e.target.files && e.target.files[0];
         if (!file) return;
@@ -153,12 +191,20 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        const reader = new FileReader();
-        reader.onload = function(loadEvent) {
-          steps[idx].image_url = loadEvent.target.result;
+        if (file.size > 10 * 1024 * 1024) {
+          showInlineFeedback("Image is larger than 10MB. Please choose a smaller photo.", "warning");
+          inp.value = '';
+          return;
+        }
+
+        try {
+          const compressedDataUrl = await compressImageFile(file, 600, 600, 0.85);
+          steps[idx].image_url = compressedDataUrl;
           renderStages();
-        };
-        reader.readAsDataURL(file);
+        } catch (err) {
+          console.error("Image compression error:", err);
+          showInlineFeedback("Could not process this image file. Please try another image.", "danger");
+        }
       });
     });
 

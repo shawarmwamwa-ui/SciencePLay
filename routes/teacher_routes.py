@@ -3614,7 +3614,8 @@ def save_pipeline_circuit():
     current_user = get_current_user()
     try:
         activity_id = request.form.get('activity_id', type=int)
-        title = request.form.get('title', 'Bio-Circuit').strip() or 'Bio-Circuit'
+        raw_title = request.form.get('title', 'Bio-Circuit').strip() or 'Bio-Circuit'
+        title = raw_title[:100]
         instructions = request.form.get('instructions', 'Place the stages in chronological order.').strip()
         difficulty = request.form.get('difficulty', 'Level 1 — Easy').strip()
         term = request.form.get('term', 'Term 1').strip() or 'Term 1'
@@ -3633,7 +3634,11 @@ def save_pipeline_circuit():
             return redirect(url_for('teacher.game_studio'))
 
         upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'activities')
-        os.makedirs(upload_dir, exist_ok=True)
+        try:
+            os.makedirs(upload_dir, exist_ok=True)
+        except Exception as err:
+            current_app.logger.warning(f"Could not create upload directory {upload_dir}: {err}")
+
         ALLOWED_IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp'}
 
         for idx, step in enumerate(steps):
@@ -3646,8 +3651,11 @@ def save_pipeline_circuit():
                     if ext in ALLOWED_IMAGE_EXTS and mimetype.startswith('image/'):
                         unique_name = f"pipe_{uuid.uuid4().hex[:12]}{ext}"
                         filepath = os.path.join(upload_dir, unique_name)
-                        f.save(filepath)
-                        step['image_url'] = f"/static/uploads/activities/{unique_name}"
+                        try:
+                            f.save(filepath)
+                            step['image_url'] = f"/static/uploads/activities/{unique_name}"
+                        except Exception as save_err:
+                            current_app.logger.warning(f"Could not save file to disk: {save_err}")
             elif isinstance(step.get('image_url'), str) and step['image_url'].startswith('data:image/'):
                 try:
                     header, encoded = step['image_url'].split(',', 1)
@@ -3663,7 +3671,9 @@ def save_pipeline_circuit():
                         out_f.write(base64.b64decode(encoded))
                     step['image_url'] = f"/static/uploads/activities/{unique_name}"
                 except Exception as err:
-                    current_app.logger.warning(f"Could not decode base64 step image: {err}")
+                    current_app.logger.warning(f"Could not decode or save base64 step image: {err}")
+                    if len(step.get('image_url', '')) > 250000:
+                        del step['image_url']
 
         config_payload = {
             "title": title,

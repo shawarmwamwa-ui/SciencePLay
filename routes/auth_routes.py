@@ -17,6 +17,10 @@ def login():
         ).first()
 
         if user and user.check_password(password):
+            if getattr(user, 'is_archived', False) or getattr(user, 'deleted_at', None) is not None:
+                flash("This account has been deactivated or archived. Please contact your administrator.", "danger")
+                return redirect(url_for('auth.login'))
+
             session['user_id'] = user.id
             session['role'] = user.role
             user.last_seen = datetime.utcnow()
