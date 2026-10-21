@@ -6,6 +6,25 @@
 document.addEventListener('DOMContentLoaded', () => {
   const initialConfig = window.pipelineInitialConfig || {};
 
+  function normalizeStepData(s) {
+    if (!s) return s;
+    const label = (s.label || '').trim().toLowerCase();
+    if (label.includes('tadpole')) {
+      if (s.icon === '🐟' || s.icon === '⚡' || !s.icon) s.icon = '🦎';
+      if (!s.image_url || s.image_url.includes('tadpole')) s.image_url = '/static/images/tadpole.svg';
+    } else if (label.includes('egg') && (label.includes('frog') || s.icon === '🥚' || s.icon === '🐟' || s.icon === '🫧' || s.icon === '⚡')) {
+      if (s.icon === '🥚' || s.icon === '⚡' || s.icon === '🐟' || !s.icon) s.icon = '🫧';
+      if (!s.image_url) s.image_url = '/static/images/frog_eggs.svg';
+    } else if (label.includes('froglet')) {
+      if (s.icon === '⚡' || !s.icon) s.icon = '🐸';
+      if (!s.image_url) s.image_url = '/static/images/froglet.svg';
+    } else if ((label.includes('adult') || label.includes('frog')) && !label.includes('egg') && !label.includes('tadpole')) {
+      if (s.icon === '🌿' || s.icon === '⚡' || !s.icon) s.icon = '🐸';
+      if (!s.image_url) s.image_url = '/static/images/adult_frog.svg';
+    }
+    return s;
+  }
+
   // Extract initial steps
   let steps = [];
   if (initialConfig.is_blank) {
@@ -15,9 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: "step_3", order: 3, label: "", icon: "⚡", hint: "" }
     ];
   } else if (Array.isArray(initialConfig.steps) && initialConfig.steps.length > 0) {
-    steps = initialConfig.steps;
+    steps = initialConfig.steps.map(normalizeStepData);
   } else if (Array.isArray(initialConfig.rounds) && initialConfig.rounds.length > 0 && Array.isArray(initialConfig.rounds[0].steps)) {
-    steps = initialConfig.rounds[0].steps;
+    steps = initialConfig.rounds[0].steps.map(normalizeStepData);
   } else {
     // Default 4-step sequence
     steps = [
@@ -27,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: "step_4", order: 4, label: "Adult Frog", icon: "🐸", image_url: "/static/images/adult_frog.svg", hint: "Full-grown tailless amphibian with strong jumping legs." }
     ];
   }
+  steps = steps.map(normalizeStepData);
 
   const stagesContainer = document.getElementById('stagesContainer');
   const previewTrack = document.getElementById('builderPreviewTrack');

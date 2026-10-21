@@ -300,6 +300,37 @@ DEFAULT_PIPELINE_CIRCUIT_ROUNDS = [
 ]
 
 
+def normalize_pipeline_circuit_steps(steps):
+    """Ensure accurate biology emojis and custom SVGs for frog life cycle stages."""
+    if not isinstance(steps, list):
+        return steps
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        label = (step.get("label") or "").strip().lower()
+        if "tadpole" in label:
+            if step.get("icon") in ("🐟", "⚡", None, ""):
+                step["icon"] = "🦎"
+            if not step.get("image_url") or "tadpole" in step.get("image_url", ""):
+                step["image_url"] = "/static/images/tadpole.svg"
+        elif "egg" in label and ("frog" in label or step.get("icon") in ("🥚", "🐟", "🫧", "⚡")):
+            if step.get("icon") in ("🥚", "⚡", "🐟", None, ""):
+                step["icon"] = "🫧"
+            if not step.get("image_url"):
+                step["image_url"] = "/static/images/frog_eggs.svg"
+        elif "froglet" in label:
+            if step.get("icon") in ("⚡", None, ""):
+                step["icon"] = "🐸"
+            if not step.get("image_url"):
+                step["image_url"] = "/static/images/froglet.svg"
+        elif ("adult" in label or "frog" in label) and "egg" not in label and "tadpole" not in label:
+            if step.get("icon") in ("🌿", "⚡", None, ""):
+                step["icon"] = "🐸"
+            if not step.get("image_url"):
+                step["image_url"] = "/static/images/adult_frog.svg"
+    return steps
+
+
 def load_pipeline_circuit_activity_config(activity_id):
     """Load teacher-configurable Pipeline / Sequence Circuit data by activity_id from DB."""
     default_payload = {
@@ -324,7 +355,19 @@ def load_pipeline_circuit_activity_config(activity_id):
             }]
         elif not merged.get("rounds") or not isinstance(merged.get("rounds"), list) or len(merged.get("rounds")) == 0:
             merged["rounds"] = DEFAULT_PIPELINE_CIRCUIT_ROUNDS
+
+        if merged.get("steps"):
+            merged["steps"] = normalize_pipeline_circuit_steps(merged["steps"])
+        if merged.get("rounds"):
+            for r in merged["rounds"]:
+                if isinstance(r, dict) and r.get("steps"):
+                    r["steps"] = normalize_pipeline_circuit_steps(r["steps"])
         return merged
+
+    if default_payload.get("rounds"):
+        for r in default_payload["rounds"]:
+            if isinstance(r, dict) and r.get("steps"):
+                r["steps"] = normalize_pipeline_circuit_steps(r["steps"])
     return default_payload
 
 

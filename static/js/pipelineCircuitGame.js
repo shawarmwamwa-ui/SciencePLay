@@ -8,7 +8,26 @@ export function initPipelineCircuit() {
   const isPreview = Boolean(window.isTeacherPreview);
   const activityId = window.pipelineCircuitActivityId || null;
 
-  const rounds = Array.isArray(config.rounds) && config.rounds.length > 0
+  function normalizeStep(s) {
+    if (!s) return s;
+    const label = (s.label || '').trim().toLowerCase();
+    if (label.includes('tadpole')) {
+      if (s.icon === '🐟' || s.icon === '⚡' || !s.icon) s.icon = '🦎';
+      if (!s.image_url || s.image_url.includes('tadpole')) s.image_url = '/static/images/tadpole.svg';
+    } else if (label.includes('egg') && (label.includes('frog') || s.icon === '🥚' || s.icon === '🐟' || s.icon === '🫧' || s.icon === '⚡')) {
+      if (s.icon === '🥚' || s.icon === '⚡' || s.icon === '🐟' || !s.icon) s.icon = '🫧';
+      if (!s.image_url) s.image_url = '/static/images/frog_eggs.svg';
+    } else if (label.includes('froglet')) {
+      if (s.icon === '⚡' || !s.icon) s.icon = '🐸';
+      if (!s.image_url) s.image_url = '/static/images/froglet.svg';
+    } else if ((label.includes('adult') || label.includes('frog')) && !label.includes('egg') && !label.includes('tadpole')) {
+      if (s.icon === '🌿' || s.icon === '⚡' || !s.icon) s.icon = '🐸';
+      if (!s.image_url) s.image_url = '/static/images/adult_frog.svg';
+    }
+    return s;
+  }
+
+  const rawRounds = Array.isArray(config.rounds) && config.rounds.length > 0
     ? config.rounds
     : [{
         id: "default_round",
@@ -18,6 +37,11 @@ export function initPipelineCircuit() {
         theme: "bio",
         steps: config.steps || []
       }];
+
+  const rounds = rawRounds.map(r => ({
+    ...r,
+    steps: Array.isArray(r.steps) ? r.steps.map(normalizeStep) : []
+  }));
 
   let currentRoundIdx = 0;
   let score = 0;

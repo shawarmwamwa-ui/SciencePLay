@@ -3516,7 +3516,7 @@ def save_find_the_part():
 def pipeline_circuit_builder(activity_id=None):
     """Visual workspace for customizing the Bio-Circuit (Pipeline Sequence) Template"""
     current_user = get_current_user()
-    from routes.student_routes import load_pipeline_circuit_activity_config
+    from routes.student_routes import load_pipeline_circuit_activity_config, normalize_pipeline_circuit_steps
 
     activity = None
     mode = request.args.get('mode', '').strip().lower()
@@ -3545,10 +3545,10 @@ def pipeline_circuit_builder(activity_id=None):
                 "difficulty": "Level 1 — Easy",
                 "term": "Term 1",
                 "steps": [
-                    { "id": "step_1", "order": 1, "label": "Frog Eggs", "icon": "🥚", "hint": "Clusters of jelly-like eggs laid in the pond." },
-                    { "id": "step_2", "order": 2, "label": "Tadpole", "icon": "🐟", "hint": "Breathes with gills and swims using a tail." },
-                    { "id": "step_3", "order": 3, "label": "Froglet", "icon": "🐸", "hint": "Develops lungs and back legs while tail shrinks." },
-                    { "id": "step_4", "order": 4, "label": "Adult Green Frog", "icon": "🌿", "hint": "Full-grown tailless amphibian with strong jumping legs." }
+                    { "id": "step_1", "order": 1, "label": "Frog Eggs", "icon": "🫧", "image_url": "/static/images/frog_eggs.svg", "hint": "Clusters of jelly-like eggs laid in the pond." },
+                    { "id": "step_2", "order": 2, "label": "Tadpole", "icon": "🦎", "image_url": "/static/images/tadpole.svg", "hint": "Breathes with gills and swims using a tail." },
+                    { "id": "step_3", "order": 3, "label": "Froglet", "icon": "🐸", "image_url": "/static/images/froglet.svg", "hint": "Develops lungs and back legs while tail shrinks." },
+                    { "id": "step_4", "order": 4, "label": "Adult Green Frog", "icon": "🐸", "image_url": "/static/images/adult_frog.svg", "hint": "Full-grown tailless amphibian with strong jumping legs." }
                 ]
             },
             'butterfly_cycle': {
@@ -3603,6 +3603,14 @@ def pipeline_circuit_builder(activity_id=None):
             }
         }
         config = presets.get(preset_key, presets['frog_cycle'])
+
+    if config:
+        if config.get("steps"):
+            config["steps"] = normalize_pipeline_circuit_steps(config["steps"])
+        if config.get("rounds"):
+            for r in config["rounds"]:
+                if isinstance(r, dict) and r.get("steps"):
+                    r["steps"] = normalize_pipeline_circuit_steps(r["steps"])
 
     return render_template('teacher/teacher_pipeline_builder.html', activity=activity, config=config)
 
