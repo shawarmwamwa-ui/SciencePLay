@@ -58,6 +58,8 @@ function getActiveLessonSlides() {
         type: normalizedType,
         image: slide.image || '',
         images: Array.isArray(slide.images) && slide.images.length > 0 ? slide.images : (slide.image ? [slide.image] : []),
+        animationSrc: slide.animationSrc || (typeof slide.image === 'string' && slide.image.endsWith('.json') ? slide.image : ''),
+        animationLabel: slide.animationLabel || '',
         captions: Array.isArray(slide.captions) ? slide.captions : [],
         description: slide.description || slide.explanation || slide.metadata?.hintText || '',
         explanation: slide.explanation || slide.description || '',
@@ -85,6 +87,39 @@ function getActiveLessonSlides() {
   }
 
   return LESSON_SLIDES;
+}
+
+let currentLottieInstances = [];
+
+function clearLottieInstances() {
+  currentLottieInstances.forEach(anim => {
+    try { anim.destroy(); } catch (_) {}
+  });
+  currentLottieInstances = [];
+}
+
+function initLottieAnimationsInDom() {
+  clearLottieInstances();
+  const lottieEngine = window.lottie || (typeof lottie !== 'undefined' ? lottie : null);
+  if (!lottieEngine) return;
+
+  const boxes = document.querySelectorAll('#slide-content [data-lottie-path]');
+  boxes.forEach(box => {
+    const path = box.getAttribute('data-lottie-path');
+    if (!path) return;
+    try {
+      const anim = lottieEngine.loadAnimation({
+        container: box,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: path
+      });
+      currentLottieInstances.push(anim);
+    } catch (err) {
+      console.warn('Lottie render notice for', path, err);
+    }
+  });
 }
 
 let lessonHeartbeatInterval = null;
@@ -357,6 +392,8 @@ function renderLesson() {
     renderSummarySlide(slide, slideContainer, explanationContainer);
   }
 
+  initLottieAnimationsInDom();
+
   updateNavigationState();
   console.log('Slide rendered, slideContainer innerHTML length:', slideContainer.innerHTML.length);
 }
@@ -413,7 +450,14 @@ function renderIntroSlide(slide, container) {
   const capHtml = (i) => caps[i] ? `<span class="lesson-img-caption">${String(caps[i]).replace(/</g, '&lt;')}</span>` : '';
 
   let mediaHtml = '';
-  if (images.length === 1) {
+  if (slide.animationSrc) {
+    mediaHtml = `
+      <div class="lesson-single-captioned">
+        <div class="lesson-lottie-container" data-lottie-path="${slide.animationSrc}"></div>
+        ${slide.animationLabel ? `<span class="lesson-img-caption">${String(slide.animationLabel).replace(/</g, '&lt;')}</span>` : capHtml(0)}
+      </div>
+    `;
+  } else if (images.length === 1) {
     mediaHtml = `<div class="lesson-single-captioned"><img src="${images[0]}" alt="Lesson illustration" class="lesson-intro-image">${capHtml(0)}</div>`;
   } else if (images.length === 2) {
     mediaHtml = `
@@ -530,8 +574,16 @@ function renderQuickCheckSlide(slide, container, explanationContainer) {
   }
   const optionsToRender = slideState.shuffledOptions;
 
+  let mediaHeader = '';
+  if (slide.animationSrc) {
+    mediaHeader = `<div class="lesson-lottie-container mb-2" data-lottie-path="${slide.animationSrc}" style="max-height: 140px;"></div>`;
+  } else if (slide.image && typeof slide.image === 'string' && slide.image.trim() && !slide.image.endsWith('.json')) {
+    mediaHeader = `<div class="text-center mb-2"><img src="${slide.image}" alt="Prompt visual" style="max-height: 120px; object-fit: contain; border-radius: 10px;"></div>`;
+  }
+
   const promptMarkup = slide.prompt
     ? `<div class="quick-check-header-card">
+         ${mediaHeader}
          <span class="quick-check-badge"><i class="bi bi-lightbulb-fill me-1"></i>Quick Check</span>
          <p class="quick-check-prompt">${slide.prompt}</p>
        </div>`

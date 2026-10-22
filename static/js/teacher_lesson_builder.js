@@ -343,7 +343,9 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
           typePill = '<span class="slide-strip-type-pill st-summary">Summary</span>';
         }
 
+        const isAnim = Boolean(slide.animationSrc || (typeof slide.image === 'string' && slide.image.endsWith('.json')));
         const thumbImg = (slide.images && slide.images.length > 0) ? slide.images[0] : (slide.image || '/static/images/tree.webp');
+        const animBadge = isAnim ? '<span class="position-absolute bottom-0 end-0 bg-info text-white rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 14px; height: 14px; font-size: 8px;" title="Animated Slide">▶</span>' : '';
 
         item.innerHTML = `
           <div class="d-flex align-items-center justify-content-between mb-1">
@@ -351,7 +353,10 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
             ${typePill}
           </div>
           <div class="d-flex align-items-center gap-2 overflow-hidden">
-            <img src="${thumbImg}" alt="Thumb" class="rounded-2 border object-fit-cover flex-shrink-0" style="width: 32px; height: 32px; background: #ffffff;">
+            <div class="position-relative flex-shrink-0" style="width: 32px; height: 32px;">
+              <img src="${thumbImg}" alt="Thumb" class="rounded-2 border object-fit-cover w-100 h-100" style="background: #ffffff;">
+              ${animBadge}
+            </div>
             <div class="slide-strip-title text-truncate" title="${escapeAttr(slide.title || 'Untitled Slide')}">${escapeAttr(slide.title || 'Untitled Slide')}</div>
           </div>
         `;
@@ -360,6 +365,8 @@ const getCsrfToken = () => lessonConfig.csrfToken || document.querySelector('inp
 
       const badge = document.getElementById('slidesCountBadge');
       if (badge) badge.textContent = `${slides.length} Slides`;
+      const trackBadge = document.getElementById('slidesTrackCountBadge');
+      if (trackBadge) trackBadge.textContent = `${slides.length} Slides`;
 
       const activeEl = container.querySelector('.slide-ribbon-item.active');
       if (activeEl) {
